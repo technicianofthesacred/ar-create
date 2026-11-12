@@ -35,7 +35,7 @@ async function newSubject(base){
  assert.equal(r.status,200);
  return id;
 }
-async function livePage(base,id,{search='',slowSave=0,slowCreate=0,failCreate=false,query=''}={}){
+async function livePage(base,id,{search='',slowSave=0,slowCreate=0,failCreate=false,createStatus=409,query=''}={}){
  const html=read('public/v2/index.html');
  const dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:base+'/v2/index.html'+search+'#/write/'+id+query,runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,calls=[];windows.push(w);
@@ -44,7 +44,7 @@ async function livePage(base,id,{search='',slowSave=0,slowCreate=0,failCreate=fa
  w.HTMLDialogElement.prototype.showModal||=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close||=function(){this.removeAttribute('open');};
  w.fetch=async(input,options={})=>{
   const u=new URL(String(input),w.location.href),method=options.method||'GET',entry={path:u.pathname,method,body:options.body?JSON.parse(options.body):null,status:0};calls.push(entry);
-  if(u.pathname==='/api/study/outputs/create'){if(slowCreate)await settle(slowCreate);if(failCreate){entry.status=409;return {ok:false,status:409,text:async()=>JSON.stringify({error:'This changed since it was opened here. Invented refusal.'})};}}
+  if(u.pathname==='/api/study/outputs/create'){if(slowCreate)await settle(slowCreate);if(failCreate){entry.status=createStatus;return {ok:false,status:createStatus,text:async()=>JSON.stringify({error:createStatus===403?'Only Adrian can do this.':'This changed since it was opened here. Invented refusal.'})};}}
   const r=await fetch(base+u.pathname+u.search,{method,headers:{...options.headers,...(method!=='GET'?{Origin:base}:{})},body:options.body});
   const text=await r.text();entry.status=r.status;
   if(slowSave&&u.pathname==='/api/study-draft/save')await settle(slowSave);
@@ -123,7 +123,7 @@ const saveWords=async(base,id,text)=>{
 const key=(w,el,k)=>el.dispatchEvent(new w.KeyboardEvent('keydown',{key:k,bubbles:true,cancelable:true}));
 const savedLine=doc=>doc.querySelector('.wr-bar [data-wr-saved]').textContent;
 
-test('while the Article is being made the line says so, the box stays open to type in, and Enter waits for the Article: no warning shows',{timeout:90000},async()=>{
+test('while the Article is being made the line says so, the box stays open to type in, and Enter and Backspace do nothing until the Article exists: no warning shows',{timeout:90000},async()=>{
  const {base}=await theWorld(),id=await newSubject(base);
  const pg=await livePage(base,id,{slowCreate:1500});
  type(pg.w,pg.doc.querySelector('textarea.wr-ed'),'Words before the Article exists.');
@@ -228,4 +228,55 @@ test('a subject that has another form gets an Article from Write only when he ca
  const asked=await livePage(base,id,{query:'?start=article'});
  await until(()=>/piece=/.test(asked.w.location.hash),30000);
  assert.equal((await articlesOf(base,id)).length,1);
+});
+
+test('Enter and Backspace while the Article is being made do nothing at all: every letter is saved in order in one paragraph, no break appears later, the cursor never jumps',{timeout:120000},async()=>{
+ const {base}=await theWorld(),id=await newSubject(base);
+ const pg=await livePage(base,id,{slowCreate:2500});
+ type(pg.w,pg.doc.querySelector('textarea.wr-ed'),'abcdef');
+ await until(()=>savedLine(pg.doc)==='Starting the Article',30000);
+ const box=pg.doc.activeElement;assert.equal(box.value,'abcdef');
+ const letter=ch=>{const el=pg.doc.activeElement,at=el.selectionStart;el.value=el.value.slice(0,at)+ch+el.value.slice(at);el.setSelectionRange(at+1,at+1);el.dispatchEvent(new pg.w.Event('input',{bubbles:true}));};
+ const saves=()=>pg.calls.filter(c=>c.path==='/api/study-draft/save').length,before=saves();
+ for(const ch of 'ghi')letter(ch);
+ key(pg.w,pg.doc.activeElement,'Enter');
+ const filled=()=>[...pg.doc.querySelectorAll('textarea.wr-ed')].filter(t=>t.value.trim()).length,boxes=pg.doc.querySelectorAll('textarea.wr-ed').length;
+ assert.equal(filled(),1,'no break on the page');
+ for(const ch of 'jk')letter(ch);
+ pg.doc.activeElement.setSelectionRange(0,0);
+ key(pg.w,pg.doc.activeElement,'Backspace');
+ assert.equal(pg.doc.activeElement,box,'the cursor did not move');assert.equal(box.selectionStart,0);
+ pg.doc.activeElement.setSelectionRange(box.value.length,box.value.length);
+ key(pg.w,pg.doc.activeElement,'Enter');
+ assert.equal(pg.doc.querySelectorAll('textarea.wr-ed').length,boxes,'no new box');assert.equal(pg.doc.activeElement,box);
+ for(const ch of 'lm')letter(ch);
+ assert.equal(saves(),before,'nothing is saved while the Article is made');
+ assert.equal(box.value,'abcdefghijklm','the letters are kept, in order');
+ await until(()=>/[?&]piece=/.test(pg.w.location.hash),30000);
+ await until(()=>!/Not saved|Saving|Starting/.test(savedLine(pg.doc)),40000);await settle(500);await until(()=>!/Not saved|Saving|Starting/.test(savedLine(pg.doc)),40000);
+ const piece=decodeURIComponent(pg.w.location.hash.match(/piece=([^&]+)/)[1]);
+ assert.deepEqual(await pieceWords(base,id,piece),['abcdefghijklm'],'one paragraph, no break later');
+ assert.deepEqual([...pg.doc.querySelectorAll('textarea.wr-ed')].map(t=>t.value).filter(x=>x.trim()),['abcdefghijklm']);
+ assert.deepEqual(pg.said,[],'no warning');
+});
+
+test('a create refused for good (403) is said once, plainly, and never tried again; his words stay saved',{timeout:90000},async()=>{
+ const {base}=await theWorld(),id=await newSubject(base);
+ const pg=await livePage(base,id,{failCreate:true,createStatus:403});
+ type(pg.w,pg.doc.querySelector('textarea.wr-ed'),'Words that stay saved.');
+ await until(()=>pg.calls.filter(c=>c.path==='/api/study/outputs/create').length>=1&&pg.said.length>=1,30000);
+ await settle(18000);
+ assert.equal(pg.calls.filter(c=>c.path==='/api/study/outputs/create').length,1,'tried once, not again');
+ assert.equal(pg.said.length,1,'one message');assert.match(pg.said[0],/Your words are saved, but the Article could not be started/);assert.doesNotMatch(pg.said[0],/Only Adrian/);
+ type(pg.w,pg.doc.querySelector('textarea.wr-ed'),'Words that stay saved. And more.');
+ await until(()=>pg.calls.filter(c=>c.path==='/api/study-draft/save').length>=2,20000);await settle(1500);
+ assert.equal(pg.calls.filter(c=>c.path==='/api/study/outputs/create').length,1,'still tried once');
+});
+
+test('a create held by someone (423) is tried again quietly, and said once',{timeout:90000},async()=>{
+ const {base}=await theWorld(),id=await newSubject(base);
+ const pg=await livePage(base,id,{failCreate:true,createStatus:423});
+ type(pg.w,pg.doc.querySelector('textarea.wr-ed'),'Words kept while it is held.');
+ await until(()=>pg.calls.filter(c=>c.path==='/api/study/outputs/create').length>=2,40000);
+ assert.equal(pg.said.length,1,'one message, not one every retry');assert.match(pg.said[0],/Your words are saved, but the Article could not be started/);
 });

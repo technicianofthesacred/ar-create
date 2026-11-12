@@ -172,9 +172,9 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
  function open(page,ctx,pre=null){
   const id=ctx.params.id,human=v2.isHuman();
   const st={standing:null,form:null,forms:[],bindingId:null,piece:null,missing:false,base:null,rows:[],edits:new Map(),added:[],
-   starting:false,creating:false,making:false,makingP:null,startSaid:false,saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
+   starting:false,creating:false,making:false,makingP:null,startSaid:false,saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],retryMs:8000,baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
    src:root.matchMedia&&root.matchMedia('(min-width:1101px)').matches,focus:false,ops:new Set(),human};
-  let timer=null,propTimer=null,presenceTimer=null,presenceSeq=0,presenceOk=true,presenceSent='',gone=false;
+  let timer=null,startTimer=null,propTimer=null,presenceTimer=null,presenceSeq=0,presenceOk=true,presenceSent='',gone=false;
   const session=uuid().slice(0,8);
   const $=sel=>page.querySelector(sel);
   const scope=()=>({bindingId:st.bindingId,parentStudyId:id});
@@ -476,7 +476,16 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     const joined=now.get(j.leftId)?.words||'',sep=joined.startsWith(j.leftText)&&joined.endsWith(j.rightText)&&joined.length>=j.leftText.length+j.rightText.length?joined.slice(j.leftText.length,joined.length-j.rightText.length):' ';
     later.push([j.leftId,cl+sep+cr]);
    }
-   for(const [rid,text] of info.edits||[]){if(st.edits.get(rid)?.text===text)st.edits.delete(rid);}
+   for(const [rid,text] of info.edits||[]){
+    const e=st.edits.get(rid);
+    if(e){if(e.text===text)st.edits.delete(rid);}
+    else if(text!==''){
+     // He put the paragraph back to what it was before this save went out. The save has changed it on the server, so what he
+     // sees is now a change of its own (it is not "the same as saved"), and it must be saved too.
+     const was=st.rows.find(r=>r.id===rid)?.words;
+     if(was!==undefined&&was!==text)later.push([rid,was]);
+    }
+   }
    const sentAdd=new Map(info.added||[]);
    st.added=st.added.filter(a=>!(sentAdd.has(a.id)&&sentAdd.get(a.id)===a.text));
    adopt(read);
@@ -559,7 +568,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
       Article. Anything he types while the first save runs is saved first. The boxes stay as they are, open for typing, while the
       Article is made, and the page is not rebuilt afterwards. If it cannot be made, his words stay saved and it is tried again. */
   async function startArticle(){
-   if(st.creating||gone||!st.starting||!st.human)return;
+   if(st.creating||gone||!st.starting||!st.human||st.startStopped)return;
    st.creating=true;
    try{
     for(let i=0;i<8&&(dirty()||st.saving)&&!st.conflict&&!st.stopped;i++){clearTimeout(timer);if(st.saving)await settled();else await save({quiet:true,hold:null});}
@@ -601,9 +610,11 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
      st.creating=false;st.making=false;paintSaved();
      if(gone)return;
      if(dirty())schedule(300);
-     // Said once; the retries that follow are quiet.
-     if(!st.startSaid){st.startSaid=true;say('Your words are saved. The Article could not be started yet: '+(error?.message||'try again.'),'bad');}
-     clearTimeout(timer);timer=setTimeout(()=>{void startArticle();},8000);
+     // Said once, plainly. A refusal for good (403: only Adrian decides this, and the page is his) is not tried again; a hold
+     // (423) or any other failure is tried again, quietly, a little less often each time.
+     if(!st.startSaid){st.startSaid=true;say('Your words are saved, but the Article could not be started.','bad');}
+     if(error?.kind==='owner-only'){st.startStopped=true;return;}
+     clearTimeout(startTimer);const wait=st.retryMs;st.retryMs=Math.min(60000,Math.round(st.retryMs*1.5));startTimer=setTimeout(()=>{void startArticle();},wait);
     }finally{st.making=false;release();}
    }catch(error){st.creating=false;st.making=false;}
   }
@@ -625,7 +636,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    t.scrollIntoView?.({block:'nearest'});
   }
   async function enter(t){
-   if(st.making)await st.makingP;
+   if(st.making)return;// while the Article is being made Enter does nothing: not queued, not run later, the caret stays
    const rid=t.dataset.ed,at=t.selectionStart,atEnd=at>=t.value.length&&t.selectionEnd>=t.value.length;
    const a=st.added.find(x=>x.id===rid);
    if(atEnd){
@@ -645,7 +656,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   /** Backspace at the start of a paragraph joins it to the one before. A paragraph that was never saved is joined on the
       page; a saved one is saved first and joined in the same save. A paragraph he emptied is deleted. */
   async function join(t){
-   if(st.making)await st.makingP;
+   if(st.making)return;// likewise Backspace at the start of a paragraph
    const rid=t.dataset.ed,list=order(),i=list.findIndex(x=>x.id===rid);if(i<1)return;
    const prev=list[i-1],cur=list[i];if(!prev.safe||!cur.safe)return;
    const curAdded=st.added.find(a=>a.id===rid),prevAdded=st.added.find(a=>a.id===prev.id);
@@ -827,7 +838,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   }
   function shell0(text){shell();$('[data-wr-text]').innerHTML=`<p class="wr-dim" role="status">${esc(text)}</p>`;$('.wr-todo')?.remove();}
   function leave(){
-   gone=true;clearTimeout(timer);clearTimeout(propTimer);clearInterval(presenceTimer);
+   gone=true;clearTimeout(timer);clearTimeout(startTimer);clearTimeout(propTimer);clearInterval(presenceTimer);
    doc.removeEventListener('visibilitychange',onHide);root.removeEventListener('pagehide',onUnload);root.removeEventListener('resize',onResize);
    if(st.human&&dirty()&&!st.conflict&&st.bindingId&&!st.stopped){try{void save({quiet:true,hold:null});}catch{/* kept on this device */}}
    if(presenceOk&&presenceSent==='true'){presenceSent='';v2.call('presence.post',{stage:'Write',scope:{kind:'draft',id:st.bindingId},dirty:false,sequence:++presenceSeq,session,leaving:true}).catch(()=>{});}

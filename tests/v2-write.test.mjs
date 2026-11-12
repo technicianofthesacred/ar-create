@@ -714,3 +714,16 @@ test('the Add a piece plus is never hidden at any width',()=>{
  const css=read('public/v2/screens/write.css');
  assert.doesNotMatch(css,/Add a piece[^}]*\{[^}]*display:none/,'the plus stays at every width');
 });
+
+test('real server: typing a paragraph back to what it was before a save, while that save runs, is saved too and not forgotten',{timeout:120000},async()=>{
+ const {base}=await theWorld(),sub=await subjectOf(base,'studio-after-rain');
+ const a=await livePage(base,sub,{slowSave:2500});
+ const box=longRows(a.doc)[0],original=box.value,idx=edsOf(a.doc).indexOf(original);
+ type(a.w,box,original+' CHANGED');blur(a.w,box);await savedOnServer(a);// the server has the change; the answer is on its way
+ type(a.w,box,original);// he takes his words back before the answer comes
+ await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);await settle(3000);await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);
+ const server=wordsOf(await draftOf(base,sub));
+ assert.equal(server[idx],original,'the server holds the words as he put them back');
+ assert.ok(!server.some(x=>x.includes('CHANGED')),'the change he took back is gone');
+ assert.equal(edsOf(a.doc)[idx],original);
+});
