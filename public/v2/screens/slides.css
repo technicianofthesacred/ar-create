@@ -159,8 +159,6 @@
 .sl .sl-empty header p{color:var(--dim);font-size:var(--v2-t14)}
 .sl .sl-empty>p{font-size:var(--v2-t14);line-height:1.5}
 .sl .sl-empty-go{display:flex;flex-wrap:wrap;gap:8px 20px}
-<<<<<<< HEAD
-=======
 
 /* An older Outputs carousel, read only: the same studio, with the controls that change it left out. */
 .sl .sl-back span{min-width:0;max-width:34vw;overflow:hidden;text-overflow:ellipsis}
@@ -175,4 +173,3 @@
 .sl .sl-rochip{display:none;font-size:var(--v2-t13);color:var(--c3-ink2);text-align:center;margin:0}
 .sl .sl-rochip b{color:var(--ink)}
 @media (max-width:850px){.sl .sl-rochip{display:block}}
->>>>>>> origin/main
