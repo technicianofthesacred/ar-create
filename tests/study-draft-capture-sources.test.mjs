@@ -7,8 +7,8 @@ const NOTE='A typed note from the studio. Cobalt comes from a small blue mine an
 function material(){
  const records=new Map(),calls=[];
  const api={records,calls,
-  add(id,title,kind,raw,{reviewed=true,setAside=false,hash}={}){records.set(id,{id,title,kind,sourcePath:'Library/'+title+'.md',hash:hash||digest('library:'+raw),role:'current-parent-library-material-source-words-not-editorial-instruction-or-verified-evidence',origin:'current-parent-library-material',eligible:reviewed&&!setAside,...(setAside?{setAside:true}:{}),review:{state:reviewed&&!setAside?'reviewed':'unreviewed',basis:kind==='transcript'?'canonical-recording-review':'exact-first-flow-source-use-review',hash:hash||digest('library:'+raw)},...(reviewed&&!setAside?{raw,bodyHash:digest(raw)}:{})});return id;},
-  async parentContext({parentStudyId},{sourceIds,withBody}={}){calls.push({parentStudyId,sourceIds});
+  add(id,title,kind,raw,{reviewed=true,setAside=false,hash,by='human:adrian'}={}){records.set(id,{id,title,kind,sourcePath:'Library/'+title+'.md',hash:hash||digest('library:'+raw),role:'current-parent-library-material-source-words-not-editorial-instruction-or-verified-evidence',origin:'current-parent-library-material',eligible:reviewed&&!setAside,...(setAside?{setAside:true}:{}),review:{state:reviewed&&!setAside?'reviewed':'unreviewed',basis:kind==='transcript'?'canonical-recording-review':'exact-first-flow-source-use-review',hash:hash||digest('library:'+raw),...(reviewed&&!setAside&&by?{by,at:'2026-11-12T10:00:00.000Z'}:{})},...(reviewed&&!setAside?{raw,bodyHash:digest(raw)}:{})});return id;},
+  async context({parentStudyId},{sourceIds,withBody}={}){calls.push({parentStudyId,sourceIds});
    if(sourceIds===undefined)return {records:[...records.values()].map(({raw,...r})=>withBody&&raw!==undefined?{...r,raw}:r)};
    return {records:sourceIds.map(id=>{const r=records.get(id);if(!r?.eligible||r.review.state!=='reviewed'||typeof r.raw!=='string')throw Object.assign(new Error('Selected parent material is missing, unreadable or unreviewed.'),{status:400});return structuredClone(r);})};}};
  return api;
@@ -179,11 +179,11 @@ test('a copy left behind by a crash whose bytes differ is kept and refused, not 
  await assert.rejects(f.capture([f.transcript],{operationId}),e=>e.status===409);assert.equal(fs.readFileSync(path.join(f.room,'capture','added-'+operationId+'-0.md'),'utf8'),'Someone else\'s bytes');
 });
 
-test('each entry keeps the review state at the moment of capture, and who reviewed it is said to be unrecorded', async t=>{
+test('each entry keeps the review state at the moment of capture, and who confirmed it', async t=>{
  const f=await fixture(t),out=await f.capture([f.transcript,f.note]),file=JSON.parse(fs.readFileSync(path.join(f.room,'added-sources.json'),'utf8'));
  assert.equal(file.schema,'ar-create.study-draft-added-sources.v1');assert.equal(file.entries.length,2);assert.equal(file.entries[0].previousHash,file.captureHash);assert.equal(file.entries[1].previousHash,file.entries[0].entryHash);
- const [t1,n1]=file.entries;assert.equal(t1.actor,'human:adrian');assert.equal(t1.review.state,'reviewed');assert.equal(t1.review.basis,'canonical-recording-review');assert.equal(t1.review.by,'not recorded');assert.equal(t1.review.hash,f.lib.records.get(f.transcript).hash);assert.equal(t1.eligibleAtCapture,true);assert.equal(t1.setAsideAtCapture,false);assert.equal(t1.libraryHash,f.lib.records.get(f.transcript).hash);assert.equal(t1.copiedHash,digest(TRANSCRIPT));assert.equal(t1.title,'Interview transcript');assert.equal(t1.kind,'transcript');
- assert.equal(n1.review.basis,'exact-first-flow-source-use-review');assert.equal(n1.role,'context');assert.ok(out.document.addedSources.records.every(r=>r.review.by==='not recorded'));
+ const [t1,n1]=file.entries;assert.equal(t1.actor,'human:adrian');assert.equal(t1.review.state,'reviewed');assert.equal(t1.review.basis,'canonical-recording-review');assert.equal(t1.review.by,'human:adrian');assert.equal(t1.review.hash,f.lib.records.get(f.transcript).hash);assert.equal(t1.eligibleAtCapture,true);assert.equal(t1.setAsideAtCapture,false);assert.equal(t1.libraryHash,f.lib.records.get(f.transcript).hash);assert.equal(t1.copiedHash,digest(TRANSCRIPT));assert.equal(t1.title,'Interview transcript');assert.equal(t1.kind,'transcript');
+ assert.equal(n1.review.basis,'exact-first-flow-source-use-review');assert.equal(n1.role,'context');assert.ok(out.document.addedSources.records.every(r=>r.review.by==='human:adrian'));
 });
 
 test('a broken added record never stops Write; Check refuses with 409 and says so', async t=>{
@@ -208,11 +208,11 @@ test('a broken added record never stops Write; Check refuses with 409 and says s
 test('a recapture after the Library changed makes Check read only the new copy; both files stay', async t=>{
  const f=await fixture(t);await f.write('"We fire the cups slowly."\n');
  const first=await f.capture([f.transcript]);assert.equal((await f.check()).status,'checked');
- const changed='## Full Transcript\n\nSpeaker: We now fire the cups quickly, and the kiln hums.\n';f.lib.records.get(f.transcript).raw=changed;Object.assign(f.lib.records.get(f.transcript),{hash:digest('library:'+changed),bodyHash:digest(changed)});
+ const changed='## Full Transcript\n\nSpeaker: We now fire the cups quickly, and the kiln hums.\n';f.lib.records.get(f.transcript).raw=changed;Object.assign(f.lib.records.get(f.transcript),{hash:digest('library:'+changed),bodyHash:digest(changed)});f.lib.records.get(f.transcript).review.hash=f.lib.records.get(f.transcript).hash;
  const listed=(await f.list()).sources.find(s=>s.id===f.transcript);assert.deepEqual([listed.captured,listed.capturedCurrent,listed.changedSinceCapture,listed.eligible],[true,false,true,true]);
  const second=await f.capture([f.transcript],{expectedSourcesHash:first.sourcesHash});assert.equal(second.captured.length,1);
  assert.equal(fs.readdirSync(path.join(f.room,'capture')).filter(n=>n.startsWith('added-')).length,2);
- const read=await f.drafts.read(f.scope);assert.equal(read.addedSources.records.length,1);assert.equal(read.addedSources.records[0].raw,changed);
+ const read=await f.drafts.read(f.scope);assert.equal(read.addedSources.records.length,1);assert.equal(read.addedSources.records[0].raw,undefined);assert.equal(read.addedSources.records[0].length,changed.length);
  const result=await f.check();assert.equal(result.status,'needs-review');assert.match(issueText(result),/NOT FOUND/);
 });
 
@@ -223,7 +223,7 @@ test('Check does not pass on words that no captured source supports', async t=>{
   'a quote found only in an attached source that was not captured':async g=>{await g.capture([g.transcript]);return '"Cobalt comes from a small blue mine."\n';},
   'a quote found only in a set-aside source':async g=>{const aside=g.lib.add(randomUUID(),'Aside','markdown','Porcelain whispers under the rain.',{setAside:true});await g.capture([g.transcript]);assert.ok(aside);return '"Porcelain whispers under the rain."\n';},
   'a quote found only in the Library version that changed after capture':async g=>{await g.capture([g.transcript]);const r=g.lib.records.get(g.transcript);r.raw=r.raw+'Speaker: A brand new sentence arrives later.\n';return '"A brand new sentence arrives later."\n';},
-  'a quote found only in the old copy after a recapture':async g=>{const first=await g.capture([g.transcript]);const r=g.lib.records.get(g.transcript),changed='## Full Transcript\n\nSpeaker: Entirely different words now.\n';r.raw=changed;r.hash=digest('library:'+changed);r.bodyHash=digest(changed);await g.capture([g.transcript],{expectedSourcesHash:first.sourcesHash});return '"The clay remembers every hand that has pressed it."\n';}};
+  'a quote found only in the old copy after a recapture':async g=>{const first=await g.capture([g.transcript]);const r=g.lib.records.get(g.transcript),changed='## Full Transcript\n\nSpeaker: Entirely different words now.\n';r.raw=changed;r.hash=digest('library:'+changed);r.review.hash=r.hash;r.bodyHash=digest(changed);await g.capture([g.transcript],{expectedSourcesHash:first.sourcesHash});return '"The clay remembers every hand that has pressed it."\n';}};
  for(const [name,setup] of Object.entries(cases)){
   const g=await fixture(t),words=await setup(g);await g.write(words);const r=await g.check();
   assert.notEqual(r.status,'checked',name);assert.equal(r.status,'needs-review',name);assert.match(issueText(r),/NOT FOUND/,name);
@@ -277,12 +277,16 @@ test('a fork and a stand-in made before a capture keep their seeds and validate;
  assert.equal((await reopened.read(f.scope)).addedSources.records.length,2);
 });
 
-test('a quote that straddles the join of two captured sources is not caught (known gap, existing guard left alone)', {todo:'The pinned quote guard joins every source file into one word list. Needs a reviewed change to guards/mag-check-quotes.mjs and its pin; see the report.'}, async t=>{
+test('a quote that straddles the join of two captured sources does not pass; a quote wholly inside either does', async t=>{
  const f=await fixture(t);
  const end=f.lib.add(randomUUID(),'Interview','transcript','## Full Transcript\n\nSpeaker: We fire the cups slowly and then we wait for the glaze to settle like dusk\n');
  const start=f.lib.add(randomUUID(),'Notes','markdown','Cobalt comes from a small blue mine and costs more each year.\n');
  await f.capture([end,start]);await f.write('"settle like dusk cobalt comes from a small blue mine."\n');
  const r=await f.check();assert.notEqual(r.status,'checked','a quote made of the last words of one source and the first words of the next must not pass');
+ for(const quote of ['"We fire the cups slowly and then we wait for the glaze to settle like dusk."','"Cobalt comes from a small blue mine and costs more each year."']){
+  const g=await fixture(t),a=g.lib.add(randomUUID(),'Interview','transcript','## Full Transcript\n\nSpeaker: We fire the cups slowly and then we wait for the glaze to settle like dusk\n'),b=g.lib.add(randomUUID(),'Notes','markdown','Cobalt comes from a small blue mine and costs more each year.\n');
+  await g.capture([a,b]);await g.write(quote+'\n');assert.equal((await g.check()).status,'checked','a quote wholly inside one source passes: '+quote);
+ }
 });
 
 // ---- One pass over real HTTP: the subject is made exactly as version two makes it (home.js, New subject), with the
@@ -316,7 +320,7 @@ test('over HTTP: a version two subject lists, refuses an agent, captures what Ad
  assert.equal(fs.existsSync(path.join(room,'added-sources.json')),false);assert.deepEqual(fs.readdirSync(path.join(room,'capture')).filter(n=>n.startsWith('added-')),[]);
  assert.equal((await h.call('/api/study-draft/capture-sources',{...input,sources:[{sourceId:raw.id,sourceHash:raw.hash}]})).status,400);
  const done=await h.call('/api/study-draft/capture-sources',input);assert.equal(done.status,200,JSON.stringify(done.body));assert.equal(done.body.captured[0].role,'context');assert.equal(done.body.document.addedSources.records[0].title,by(note.id).title);
- assert.equal(done.body.document.addedSources.records[0].review.by,'not recorded');
+ assert.equal(done.body.document.addedSources.records[0].review.by,'human:adrian');assert.equal(done.body.document.addedSources.records[0].raw,undefined);
  const after=await h.call('/api/study-draft/read'+q);assert.equal(after.body.addedSources.hash,done.body.sourcesHash);assert.equal(after.body.raw,read0.raw);assert.deepEqual(after.body.expected,read0.expected);
  const stale=await h.call('/api/study-draft/check'+q);assert.equal(stale.body.status,'stale');
  const again=await h.call('/api/study-draft/check',{...scope,operationId:randomUUID(),expected:after.body.expected});assert.equal(again.status,200);assert.equal(again.body.status,'held');assert.ok(again.body.proof.sources.some(s=>s.id.startsWith('added:')));
@@ -326,25 +330,25 @@ test('over HTTP: a version two subject lists, refuses an agent, captures what Ad
  assert.ok(c&&l);assert.deepEqual(c.actors,['human']);assert.equal(c.section,'draft');assert.equal(c.relay,undefined);assert.equal(c.undo,undefined);assert.equal(l.readOnly,true);
 });
 
-test('the material authority reads a subject that has only the parent connection, and the part version still refuses it', async t=>{
+test('the material authority serves a subject begun in version two through context(), with and without text', async t=>{
  const {createStudyProjectMaterialContext}=await import('../runtime/services/study-project-material-context.mjs');
  const dataDir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'capture-sources-parent-')));t.after(()=>fs.rmSync(dataDir,{recursive:true,force:true}));
  const stable=v=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.entries(x).sort(([a],[b])=>a.localeCompare(b))):x),docs=new Map();
- const parentStudyId='subject-'+randomUUID(),projectId=randomUUID(),documentId=randomUUID(),other='someone-else-'+randomUUID();
- const bind=(key,pid,did)=>{docs.set(pid,did);fs.mkdirSync(path.join(dataDir,'study-project-bindings'),{recursive:true});fs.writeFileSync(path.join(dataDir,'study-project-bindings',digest(key)+'.json'),JSON.stringify({schema:'ar-create.study-binding.v1',status:'ready',projectKey:key,projectId:pid,documentId:did}));};
- bind(parentStudyId,projectId,documentId);bind(other,randomUUID(),randomUUID());
+ const parentStudyId='subject-'+randomUUID(),bindingId=randomUUID(),projectId=randomUUID(),documentId=randomUUID(),other='someone-else-'+randomUUID();
+ const bind=(key,pid,did)=>{docs.set(pid,did);fs.mkdirSync(path.join(dataDir,'study-project-bindings'),{recursive:true});fs.writeFileSync(path.join(dataDir,'study-project-bindings',digest(key)+'.json'),JSON.stringify({schema:'ar-create.study-binding.v1',status:'ready',projectKey:key,projectId:pid,documentId:did,}));};
+ // New subject makes the parent connection and the owned-draft connection (create-collection); no first-flow.select.
+ bind(parentStudyId,projectId,documentId);bind('owned-draft:'+bindingId,randomUUID(),randomUUID());bind(other,randomUUID(),randomUUID());
  const sourceId=randomUUID(),raw='Invented words.',unreviewed=randomUUID(),asked=[];
  const records=[{id:sourceId,title:'Note',kind:'markdown',hash:digest('h'),eligible:true,review:{state:'reviewed'},raw,bodyHash:digest(raw)},{id:unreviewed,title:'Raw',kind:'markdown',hash:digest('r'),eligible:false,review:{state:'unreviewed'}}];
  const firstFlow={materialContext:async input=>{asked.push(input.projectId);const out={schema:'ar-create.first-flow-material-context.v1',projectId:input.projectId,documentId:docs.get(input.projectId),role:'x',revision:1,records};return {...out,hash:digest(stable(out))};}};
- const authority=createStudyProjectMaterialContext({dataDir,firstFlow,drafts:{read:async()=>{throw new Error('no drafts needed');}}});
- const got=await authority.parentContext({parentStudyId},{sourceIds:[sourceId]});assert.equal(got.records[0].raw,raw);assert.deepEqual(asked,[projectId]);
- await assert.rejects(authority.parentContext({parentStudyId},{sourceIds:[unreviewed]}),e=>e.status===400);
- await assert.rejects(authority.parentContext({parentStudyId},{sourceIds:[randomUUID()]}),e=>e.status===400);
- await assert.rejects(authority.parentContext({parentStudyId:'no-such-subject'},{sourceIds:[sourceId]}),e=>e.status===409);
- assert.equal((await authority.parentContext({parentStudyId},{})).records.some(r=>Object.hasOwn(r,'raw')),false);
- assert.equal((await authority.parentContext({parentStudyId},{withBody:true})).records[0].raw,raw);
- // It reads only this subject's own material: another subject's connection is another project.
- await authority.parentContext({parentStudyId:other},{sourceIds:[sourceId]});assert.notEqual(asked.at(-1),projectId);
- // The part version still needs the part connection, as before.
+ const authority=createStudyProjectMaterialContext({dataDir,firstFlow,drafts:{read:async()=>{throw new Error('no drafts needed');}}}),scope={bindingId,parentStudyId};
+ assert.equal('parentContext' in authority,false);
+ const got=await authority.context(scope,{sourceIds:[sourceId]});assert.equal(got.records[0].raw,raw);assert.deepEqual(asked,[projectId]);
+ await assert.rejects(authority.context(scope,{sourceIds:[unreviewed]}),e=>e.status===400);
+ await assert.rejects(authority.context(scope,{sourceIds:[randomUUID()]}),e=>e.status===400);
+ await assert.rejects(authority.context({bindingId,parentStudyId:'no-such-subject'},{sourceIds:[sourceId]}),e=>e.status===409);
+ assert.equal((await authority.context(scope,{})).records.some(r=>Object.hasOwn(r,'raw')),false);
+ assert.equal((await authority.context(scope,{withBody:true})).records[0].raw,raw);
+ // A part with no connection of its own is still refused.
  await assert.rejects(authority.context({bindingId:randomUUID(),parentStudyId},{sourceIds:[sourceId]}));
 });

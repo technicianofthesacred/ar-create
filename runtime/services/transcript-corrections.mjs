@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {StateError} from '../store.mjs';
+import {provenance} from './actor.mjs';
 import {atomicWrite, digest, ensurePrivateDirectory, readJson, regular, resolveInside} from './files.mjs';
 import {markdownTranscript, readableTranscript, timestamp, reviewEligibility} from './magazine/outputs.mjs';
 import {markdownText} from './magazine/conversation.mjs';
@@ -139,7 +140,8 @@ export function createTranscriptCorrections({dir,config,afterPublishFile=null}){
     const base=readJson(path.join(receiptDir,'base.json'),null),result=JSON.parse(text(path.join(output,'transcript.json'))),markdown=text(path.join(output,'transcript.md'));
     const coherent=base ? base.json===text(path.join(output,'transcript.json'))&&base.markdown===markdown&&readableTranscript(result)===text(path.join(output,'transcript.txt')) : markdown===markdownTranscript(job,result,config);
     const expected={jobId:id,jsonHash:hash(path.join(output,'transcript.json')),markdownHash:digest(markdown),revision:digest(text(path.join(output,'transcript.json'))+'\0'+markdown)};
-    return {managed:true,coherent,reviewStatus:coherent?result.metadata?.review?.status||'unreviewed':'unreviewed',jobId:id,expected,reason:coherent?null:'Physical transcript edits need inspection in the recording workshop.'};
+    const rv=coherent&&result.metadata?.review?.status==='reviewed'?result.metadata.review:null;
+    return {managed:true,coherent,reviewStatus:coherent?result.metadata?.review?.status||'unreviewed':'unreviewed',...(rv?{reviewedBy:typeof rv.by==='string'?rv.by:null,reviewedAt:rv.reviewedAt||null}:{}),jobId:id,expected,reason:coherent?null:'Physical transcript edits need inspection in the recording workshop.'};
    }catch(error){return {managed:true,coherent:false,reviewStatus:'unreviewed',reason:error.message};}
   },
   // Inspection never initializes, recovers or acquires the writer's lock.
@@ -160,7 +162,7 @@ export function createTranscriptCorrections({dir,config,afterPublishFile=null}){
   }),
   edit:(id,{expected,corrections})=>lock(id,f=>{initialize(f);const current=clean(f,expected),next=apply(current.result,corrections);return publish(f,next,physicalTranscriptMarkdown(f.job,next,config),{expected});}),
   speakers:(id,{expected,names})=>lock(id,f=>{initialize(f);const current=clean(f,expected),next=structuredClone(current.result);if(!names||typeof names!=='object'||Array.isArray(names))throw new StateError('Expected speaker names.');for(const [id,name] of Object.entries(names)){const s=next.speakers.find(s=>s.id===id);if(!s||typeof name!=='string'||name.length>120||/[\x00-\x1f]/.test(name))throw new StateError('Invalid speaker name.');s.name=name.trim()||null;}next.metadata={...next.metadata,review:{status:'unreviewed',reviewedAt:null}};return publish(f,next,physicalTranscriptMarkdown(f.job,next,config),{expected});}),
-  review:(id,{expected,confirmed})=>lock(id,f=>{initialize(f);const current=clean(f,expected);if(confirmed!==true||!reviewEligibility(current.result))throw new StateError('Name every speaker and resolve unattributed segments before confirming review.');const next=structuredClone(current.result);next.metadata={...next.metadata,review:{status:'reviewed',reviewedAt:new Date().toISOString(),inspectedRevision:current.expected.revision}};return publish(f,next,physicalTranscriptMarkdown(f.job,next,config),{expected});}),
+  review:(id,{expected,confirmed})=>lock(id,f=>{initialize(f);const current=clean(f,expected);if(confirmed!==true||!reviewEligibility(current.result))throw new StateError('Name every speaker and resolve unattributed segments before confirming review.');const next=structuredClone(current.result);const by=provenance();next.metadata={...next.metadata,review:{status:'reviewed',reviewedAt:by.at,inspectedRevision:current.expected.revision,by:by.actor}};return publish(f,next,physicalTranscriptMarkdown(f.job,next,config),{expected});}),
   save:(id,{expected}={})=>lock(id,f=>{initialize(f);const current=clean(f,expected),base=`/transcription/${id}`,saved={state:'saved',savedAt:new Date().toISOString(),inspectedRevision:current.expected.revision,files:[{kind:'original',format:'md',name:`Transcript - ${f.job.story}.md`,url:base+'/transcript.md'},{kind:'structured',format:'json',name:`Transcript - ${f.job.story}.json`,url:base+'/transcript.json'}],excludedTranslations:[]};
    for(const status of translationStatus(f.job,current.result)){const translated=loadTranslation(f.job,current.result,status.language);if(status.state!=='complete'||status.stale||status.outdated||!translated||translated.stale||translated.outdated){saved.excludedTranslations.push({language:status.language,reason:'Translation needs updating.'});continue;}saved.files.push({kind:'bilingual',language:status.language,format:'md',url:base+'/bilingual.md?language='+encodeURIComponent(status.language)},{kind:'translation',language:status.language,format:'md',url:base+'/translation.md?language='+encodeURIComponent(status.language)});}
    atomicWrite(f.paths.job,json({...f.job,saved}),{expectedHash:current.expected.jobHash});return {...snapshot(f),saved};}),

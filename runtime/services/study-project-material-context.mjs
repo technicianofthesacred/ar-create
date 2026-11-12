@@ -31,19 +31,11 @@ export function createStudyProjectMaterialContext({dataDir,firstFlow,drafts}){
   if(sourceIds!==undefined&&(!Array.isArray(sourceIds)||new Set(sourceIds).size!==sourceIds.length||sourceIds.some(id=>!UUID.test(id))))fail('Select explicit parent Library source IDs.',400);
   return sourceIds===undefined?capture.records.map(({raw,...record})=>keepBody&&typeof raw==='string'?{...record,raw}:record):sourceIds.map(id=>{const record=capture.records.find(r=>r.id===id);if(!record?.eligible||record.review?.state!=='reviewed'||typeof record.raw!=='string')fail('Selected parent material is missing, unreadable or unreviewed.',400);return structuredClone(record);});
  }
- return {/** The subject's own attached material with no part connection. A subject begun in version two (New subject)
-  * has only the parent connection. Same parent connection, same eligible-and-reviewed test and same refusals as
-  * context(); nothing is attached, reviewed or connected as a side effect. The caller has already checked that its
-  * draft belongs to this parent. */
- async parentContext({parentStudyId}={},{sourceIds,withBody=false}={}){
-  if(typeof parentStudyId!=='string'||!parentStudyId)fail('Explicit study binding required.',400);
-  const parent=owned(parentStudyId),capture=await parentCapture(parent),records=select(capture,sourceIds,withBody);
-  const out={schema:'ar-create.study-project-material-context.v1',role:PROJECT_MATERIAL_ROLE,binding:{parentStudyId},parent:{projectId:parent.projectId,documentId:parent.documentId},records};return {...out,hash:digest(stable(out))};
- },
- async context(binding,{sourceIds}={}){
+ return {/** withBody: keep each eligible record's text (a caller that must show its length). */
+ async context(binding,{sourceIds,withBody=false}={}){
   if(!UUID.test(binding?.bindingId||'')||typeof binding.parentStudyId!=='string'||!binding.parentStudyId)fail('Explicit study part binding required.',400);
   const parent=owned(binding.parentStudyId),resolved=await materialPart(binding),part=resolved.record;if(parent.projectId===part.projectId)fail('Parent material and owned manuscript part rooms must remain distinct.');
-  const capture=await parentCapture(parent),records=select(capture,sourceIds);
+  const capture=await parentCapture(parent),records=select(capture,sourceIds,withBody);
   const out={schema:'ar-create.study-project-material-context.v1',role:PROJECT_MATERIAL_ROLE,binding:structuredClone(binding),parent:{projectId:parent.projectId,documentId:parent.documentId},part:{projectId:part.projectId,documentId:part.documentId},...(resolved.inheritance?{materialOwner:resolved.inheritance}:{}),records};return {...out,hash:digest(stable(out))};
  }};
 }

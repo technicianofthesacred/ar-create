@@ -235,7 +235,7 @@ export function createStudyDraftCopies({dataDir,originals,afterCopyFile,afterCom
  // Sources Adrian chose to use for Check. The locked capture-manifest.json is never opened for writing: each copy is a
  // new read-only file in capture/ named added-<operationId>-<n>.md, and one append-only, hash-chained record
  // (added-sources.json) names them. Only Check reads it (as draft.addedSources); every other reader of context is unchanged.
- const ADDED_SCHEMA='ar-create.study-draft-added-sources.v1',ADDED_COPY=/^added-[0-9a-f-]{36}-\d+\.md$/,SHA=/^[a-f0-9]{64}$/,MAX_ADDED_SOURCE=2*1024*1024,MAX_ADDED_TOTAL=4*1024*1024,ADDED_BROKEN='Captured sources for Check changed; nothing was used.';
+ const ADDED_SCHEMA='ar-create.study-draft-added-sources.v1',ADDED_COPY=/^added-[0-9a-f-]{36}-\d+\.md$/,SHA=/^[a-f0-9]{64}$/,MAX_ADDED_SOURCE=2*1024*1024,MAX_ADDED_TOTAL=4*1024*1024,ADDED_BROKEN='Captured sources for Check changed; nothing was used.',ADDED_DAMAGED='The sources saved for Check were changed outside the app, so Check will not run and nothing more can be added until that is put right.';
  const addedFile=b=>path.join(dirs(b).room,'added-sources.json'),addedEntryHash=e=>{const {entryHash:_,...rest}=e;return digest(stable(rest));};
  /** null when nothing was ever captured; {error} when the record or a copy no longer matches its pins. */
  function added(b){
@@ -252,9 +252,16 @@ export function createStudyDraftCopies({dataDir,originals,afterCopyFile,afterCom
    return {hash:digest(raw),entries:v.entries,records:[...latest.values()]};
   }catch{return {error:ADDED_BROKEN};}
  }
- const addedForRead=a=>a?a.error?{error:a.error}:{hash:a.hash,records:a.records}:null;
+ // The read carries ids, titles, kinds, hashes and lengths, never the text: Check reads each copy from copiedPath and re-hashes it.
+ const addedForRead=a=>a?a.error?{error:a.error}:{hash:a.hash,records:a.records.map(({raw,...r})=>({...r,length:raw.length}))}:null;
  /** Why this draft cannot take added sources, or null. Only a subject begun here; never a copy, stand-in or fork. */
  const cannotTakeSources=b=>b.kind!=='collection-root'||b.origin!=='authored-collection'?'Only a subject begun here can use material for Check. A copy, stand-in or fork reads the sources it was made with.':relocation?.has?.(b.id)?'This subject was moved from an older folder; its sources cannot be added here.':null;
+ // Only a person's own confirmation, made on these exact bytes, lets material be used for Check. A review with no recorded
+ // reviewer (made before reviews were stamped), or by an assistant, a schedule or an import, does not. The material
+ // authority has already dropped a stamp made for other bytes. Role "source" (the words quotes are checked against) goes only
+ // to a recording's own transcript, confirmed by a person; a file's own kind or front matter never earns it.
+ const confirmedByHuman=r=>r?.review?.state==='reviewed'&&HUMAN_ACTORS.includes(r.review.by)&&(r.review.hash===undefined||r.review.hash===r.hash);
+ const roleFor=r=>confirmedByHuman(r)&&r.review?.basis==='canonical-recording-review'?'source':'context';
  function humanOnly(){const actor=currentActor()?.actor;if(!actor||!HUMAN_ACTORS.includes(actor))fail('Using material for Check is for Adrian to do'+(actor?'; '+actor+' may not.':'.'),403);}
  async function captureSources(input,{material}={}){
   humanOnly();
@@ -264,7 +271,7 @@ export function createStudyDraftCopies({dataDir,originals,afterCopyFile,afterCom
   if(!Array.isArray(sources)||!sources.length||sources.length>20)fail('Choose one to twenty sources.',400);
   for(const s of sources)if(!s||typeof s!=='object'||Array.isArray(s)||Object.keys(s).sort().join()!=='sourceHash,sourceId'||!uuid.test(s.sourceId||'')||!SHA.test(s.sourceHash||''))fail('Each source needs its id and the hash you saw it at.',400);
   if(new Set(sources.map(s=>s.sourceId)).size!==sources.length)fail('Name each source once.',400);
-  if(typeof material?.parentContext!=='function')fail('Attached material is unavailable.',503);
+  if(typeof material?.context!=='function')fail('Attached material is unavailable.',503);
   const b=binding(input),why=cannotTakeSources(b);if(why)fail(why);
   capture(b);
   const inputHash=digest(stable({bindingId:input.bindingId,parentStudyId:input.parentStudyId,expectedSourcesHash,sources}));
@@ -278,16 +285,17 @@ export function createStudyDraftCopies({dataDir,originals,afterCopyFile,afterCom
   let known=true;try{owner(b).inspectOperation({projectId:b.id,operationId:input.operationId});}catch(error){if(error.status!==404)throw error;known=false;}
   if(known)fail('This operation ID already belongs to another draft operation.');
   // 2. The material authority decides what qualifies: attached to this subject, reviewed, not set aside, readable.
-  const context=await material.parentContext({parentStudyId:b.parentStudyId},{sourceIds:sources.map(s=>s.sourceId)}),own=digest(owner(b).readWorkflow(b.id).draft);
+  const context=await material.context({bindingId:b.id,parentStudyId:b.parentStudyId},{sourceIds:sources.map(s=>s.sourceId)}),own=digest(owner(b).readWorkflow(b.id).draft);
   const rows=sources.map((s,index)=>{
    const r=context.records.find(x=>x.id===s.sourceId);
    if(!r||typeof r.raw!=='string')fail('Selected parent material is missing, unreadable or unreviewed.',400);
    if(r.hash!==s.sourceHash)fail('This material changed in the Library after you looked. Look again before using it.');
+   if(!confirmedByHuman(r))fail('Not confirmed by you yet. Confirm this material yourself before using it for Check.',409);
    if(Buffer.byteLength(r.raw)>MAX_ADDED_SOURCE)fail('This material is over 2 MB; it is too long to use for Check.',413);
    const copiedHash=digest(r.raw);if(r.bodyHash!==undefined&&r.bodyHash!==copiedHash)fail('The Library text changed while it was read. Look again.');
    if(copiedHash===own)fail('That file holds this draft\'s own words, so it cannot check them.');
    const have=cur?.records.find(x=>x.sourceId===s.sourceId);
-   return {index,record:r,raw:r.raw,copiedHash,role:r.kind==='transcript'?'source':'context',already:have?.copiedHash===copiedHash};
+   return {index,record:r,raw:r.raw,copiedHash,role:roleFor(r),already:have?.copiedHash===copiedHash};
   });
   const fresh=rows.filter(r=>!r.already),already=rows.filter(r=>r.already).map(r=>r.record.id);
   // 3. Everything asked for is already used: settled, whatever the hash says (a second press from a stale page).
@@ -303,8 +311,8 @@ export function createStudyDraftCopies({dataDir,originals,afterCopyFile,afterCom
    if(fs.lstatSync(copiedPath,{throwIfNoEntry:false})){regular(copiedPath);if(digest(fs.readFileSync(copiedPath))!==r.copiedHash)fail('Interrupted copy bytes differ; the existing copy is kept.');}
    else{atomicWrite(copiedPath,r.raw,{exclusive:true});fs.chmodSync(copiedPath,0o400);if(afterCopyFile)afterCopyFile({binding:b,record:{id:r.record.id,role:r.role},copiedPath});}
    const e={sequence:++sequence,operationId:input.operationId,inputHash,actor,capturedAt,id:'added:'+r.record.id+':'+r.copiedHash.slice(0,12),sourceId:r.record.id,role:r.role,kind:r.record.kind||'',title:r.record.title||'',sourcePath:r.record.sourcePath||'',libraryHash:r.record.hash,
-    // Everything the material authority knew about the review at this moment. It does not say who reviewed it.
-    review:{...structuredClone(r.record.review||{}),by:'not recorded'},eligibleAtCapture:r.record.eligible===true,setAsideAtCapture:r.record.setAside===true,copiedName,copiedHash:r.copiedHash,previousHash:previous};
+    // Everything the material authority knew about the review at this moment, with who confirmed it (the stamp it holds).
+    review:{...structuredClone(r.record.review||{}),by:typeof r.record.review?.by==='string'?r.record.review.by:'not recorded'},eligibleAtCapture:r.record.eligible===true,setAsideAtCapture:r.record.setAside===true,copiedName,copiedHash:r.copiedHash,previousHash:previous};
    e.entryHash=addedEntryHash(e);previous=e.entryHash;entries.push(e);
   }
   const doc={schema:ADDED_SCHEMA,bindingId:b.id,parentStudyId:b.parentStudyId,captureHash:b.captureHash,entries:[...(cur?.entries||[]),...entries]};
@@ -315,15 +323,16 @@ export function createStudyDraftCopies({dataDir,originals,afterCopyFile,afterCom
  /** What can be used for Check, before anything is pressed. Any actor may read this. */
  async function listCaptureSources(input,{material}={}){
   readable(input?.parentStudyId,'Parent study ID');if(!uuid.test(input.bindingId||''))fail('Owned draft binding UUID required.',400);
-  const b=binding(input),why=cannotTakeSources(b),cur=added(b),locked=capture(b),hasQuoteSource=[...locked.records,...(cur?.records||[])].some(r=>r.role==='source'&&!r.missing);
-  const base={bindingId:b.id,parentStudyId:b.parentStudyId,canCapture:!why,...(why?{reason:why}:{}),sourcesHash:cur?.hash??null,...(cur?.error?{addedError:cur.error}:{}),hasQuoteSource};
+  const b=binding(input),cur=added(b),damaged=!!cur?.error,why=cannotTakeSources(b)||(damaged?ADDED_DAMAGED:null),locked=capture(b),hasQuoteSource=[...locked.records,...(damaged?[]:cur?.records||[])].some(r=>r.role==='source'&&!r.missing);
+  const base={bindingId:b.id,parentStudyId:b.parentStudyId,canCapture:!why,...(why?{reason:why}:{}),sourcesHash:cur?.hash??null,...(damaged?{addedError:ADDED_DAMAGED,damaged:true}:{}),hasQuoteSource};
   if(why)return {...base,sources:[]};
-  if(typeof material?.parentContext!=='function')fail('Attached material is unavailable.',503);
-  const context=await material.parentContext({parentStudyId:b.parentStudyId},{withBody:true});
+  if(typeof material?.context!=='function')fail('Attached material is unavailable.',503);
+  const context=await material.context({bindingId:b.id,parentStudyId:b.parentStudyId},{withBody:true});
   return {...base,sources:context.records.map(r=>{
-   const reviewed=r.review?.state==='reviewed',setAside=r.setAside===true,have=cur?.records?.find(x=>x.sourceId===r.id),current=!!have&&r.bodyHash!==undefined&&have.copiedHash===r.bodyHash,length=typeof r.raw==='string'?r.raw.length:null;
-   const reason=r.missing?'This material could not be read.':setAside?'You set this aside, so it is not used.':!reviewed?'Not reviewed yet. Review it before using it for Check.':!r.eligible||length===null?'There is nothing readable here to use.':current?'Already used for Check.':Buffer.byteLength(r.raw)>MAX_ADDED_SOURCE?'Over 2 MB, too long to use for Check.':cur?.error?'The sources saved for Check need repair before more can be added.':null;
-   return {id:r.id,title:r.title||'Unavailable material',kind:r.kind||null,hash:r.hash||null,length,reviewed,setAside,captured:!!have,capturedCurrent:current,changedSinceCapture:!!have&&!current,...(have?{capturedAt:have.capturedAt}:{}),eligible:reason===null,...(reason?{reason}:{}),role:r.kind==='transcript'?'source':'context',review:{state:r.review?.state||'unreviewed',basis:r.review?.basis||null,by:'not recorded'}};
+   const reviewed=r.review?.state==='reviewed',setAside=r.setAside===true,have=cur?.records?.find(x=>x.sourceId===r.id),current=!!have&&r.bodyHash!==undefined&&have.copiedHash===r.bodyHash,length=typeof r.raw==='string'?r.raw.length:null,confirmed=confirmedByHuman(r);
+   // A captured source keeps counting for Check from its pinned copy, whatever happens to the Library item afterwards, so the list never says "not used" for one.
+   const reason=r.missing?'This material could not be read.':have&&setAside?'Captured; set aside in the Library since.':have&&current?'Already used for Check.':setAside?'You set this aside, so it is not used.':!reviewed?(have?'Captured earlier; changed in the Library since, and not reviewed again.':'Not reviewed yet. Review it before using it for Check.'):!confirmed?'Not confirmed by you yet. Confirm this material yourself before using it for Check.':!r.eligible||length===null?'There is nothing readable here to use.':Buffer.byteLength(r.raw)>MAX_ADDED_SOURCE?'Over 2 MB, too long to use for Check.':null;
+   return {id:r.id,title:r.title||'Unavailable material',kind:r.kind||null,hash:r.hash||null,length,reviewed,confirmedByYou:confirmed,setAside,captured:!!have,capturedCurrent:current,changedSinceCapture:!!have&&!current,...(have?{capturedAt:have.capturedAt,capturedRole:have.role}:{}),eligible:reason===null,...(reason?{reason}:{}),role:roleFor(r),review:{state:r.review?.state||'unreviewed',basis:r.review?.basis||null,by:typeof r.review?.by==='string'?r.review.by:'not recorded',at:r.review?.at||null}};
   })};
  }
  function rootRecovery(input){const b=binding(input);capture(b);return createStudyRootRecovery({copyRoot:root,bindingId:b.id,parentStudyId:b.parentStudyId,originalId:b.originalId});}

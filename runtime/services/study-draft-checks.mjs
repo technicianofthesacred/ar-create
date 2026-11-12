@@ -31,13 +31,37 @@ async function evidence(drafts,args,known) {
     const raw = await fs.readFile(r.copiedPath,'utf8');
     const actual = hash(raw);
     if (actual !== r.copiedHash || (r.raw !== undefined && r.raw !== raw)) throw fail('Captured source bytes changed; recapture before checking.');
-    sources.push({id:r.id,role:r.role,copiedPath:r.copiedPath,hash:actual,raw});
+    sources.push({id:r.id,role:r.role,copiedPath:r.copiedPath,hash:actual,raw,...(r.added?{added:true}:{})});
   }
   return {draft,sources,proof:{bindingId:args.bindingId,parentStudyId:args.parentStudyId,draftHash:hash(draft.raw),expected:draft.expected,sources:sources.map(({id,role,hash})=>({id,role,hash}))}};
 }
 async function guard(name,args) {
   try { const r = await execute(process.execPath,[path.join(guards,name),...args],{timeout:30000,maxBuffer:1024*1024}); return {exitCode:0,output:r.stdout+r.stderr}; }
   catch(error) { if (typeof error.code !== 'number') throw error; return {exitCode:error.code,output:(error.stdout||'')+(error.stderr||'')}; }
+}
+/** The pinned quote guard joins every file it is given into one word list, so a quote could start in one file and end in the
+ * next. Files captured for Check are therefore each tried alone. A draft with no captured files calls the guard exactly as it
+ * always did. With them: the locked files go in together as before (if the locked capture has a source; otherwise each alone),
+ * every captured file goes in alone, and a passage counts as not found only when every run could not find it. Counts of
+ * bad brackets and unsupported spans do not depend on the source, so they come from the first run. */
+async function quoteRuns(dev,primary,sourceFiles) {
+  const added=sourceFiles.filter(s=>s.added);
+  if(!added.length)return guard('mag-check-quotes.mjs',[dev,primary.path,...sourceFiles.filter(s=>s!==primary).map(s=>s.path)]);
+  const locked=sourceFiles.filter(s=>!s.added),lockedPrimary=locked.find(s=>s.role==='source');
+  const argSets=[...(lockedPrimary?[[lockedPrimary,...locked.filter(s=>s!==lockedPrimary)]]:locked.map(s=>[s])),...added.map(s=>[s])];
+  const runs=[];for(const set of argSets)runs.push(await guard('mag-check-quotes.mjs',[dev,set[0].path,...set.slice(1).map(s=>s.path)]));
+  const missing=run=>run.output.split('\n').filter(l=>l.startsWith('NOT FOUND:'));
+  const counts=new Map();for(const l of missing(runs[0]))counts.set(l,(counts.get(l)||0)+1);
+  for(const run of runs.slice(1)){const here=new Map();for(const l of missing(run))here.set(l,(here.get(l)||0)+1);for(const [l,n] of counts)counts.set(l,Math.min(n,here.get(l)||0));}
+  const notFound=[];for(const l of missing(runs[0])){const n=counts.get(l);if(n>0){notFound.push(l);counts.set(l,n-1);}}
+  const first=coverage(runs[0],'QUOTE'),total=Number(/^(\d+) of (\d+) quoted passages found/m.exec(runs[0].output)?.[2]??first['checked-chunks']??0),bad=notFound.length,brackets=first['invalid-brackets']||0,unsupported=first.unsupported||0,spans=first['visible-spans']||0;
+  const status=bad||brackets?'failed':unsupported?'unsupported':spans?'checked-pass':'not-applicable';
+  const lines=runs[0].output.split('\n').filter(l=>!l.startsWith('NOT FOUND:')),at=lines.findIndex(l=>/^\d+ of \d+ quoted passages found/.test(l));
+  const summary=[...notFound,`${total-bad} of ${total} quoted passages found in the transcript.`];
+  if(at>=0)lines.splice(at,1,...summary);else lines.unshift(...summary);
+  const cov=lines.findIndex(l=>l.startsWith('QUOTE COVERAGE:'));
+  if(cov>=0)lines[cov]=`QUOTE COVERAGE: status=${status}; visible-spans=${spans}; checked-chunks=${first['checked-chunks']||0}; unsupported=${unsupported}; invalid-brackets=${brackets}.`;
+  return {exitCode:bad||brackets?1:unsupported?2:0,output:lines.join('\n')};
 }
 function coverage(result,label) {
   const line = result.output.split('\n').find(l=>l.startsWith(label+' COVERAGE:'));
@@ -177,11 +201,11 @@ export function createStudyDraftChecks({dataDir,drafts,outputs}) {
     try {
       const snap=path.join(bucket,args.operationId);await fs.mkdir(snap,{recursive:true});
       const dev=path.join(snap,'draft.md');await fs.writeFile(dev,before.draft.raw,{flag:'wx'});
-      const sourceFiles=[];for(const [i,s] of before.sources.entries()){const p=path.join(snap,`source-${i}.md`);await fs.writeFile(p,s.raw,{flag:'wx'});sourceFiles.push({role:s.role,path:p});}
+      const sourceFiles=[];for(const [i,s] of before.sources.entries()){const p=path.join(snap,`source-${i}.md`);await fs.writeFile(p,s.raw,{flag:'wx'});sourceFiles.push({role:s.role,path:p,...(s.added?{added:true}:{})});}
       const primary=sourceFiles.find(s=>s.role==='source');
       if(!primary){record.quote={status:'held',reason:'No captured SRC available.'};record.split={status:'held',reason:'No captured SRC available.'};record.issues=[];record.status='held';}
       else {
-        const q=await guard('mag-check-quotes.mjs',[dev,primary.path,...sourceFiles.filter(s=>s!==primary).map(s=>s.path)]);
+        const q=await quoteRuns(dev,primary,sourceFiles);
         const s=await guard('mag-check-splits.mjs',[dev,primary.path]);
         record.quote=coverage(q,'QUOTE');record.split=coverage(s,'SPLIT');record.bodyCoverage={status:q.output.includes('Unclosed leading frontmatter')?'held':'covered-by-conservative-body-extractor',narrationParagraphs:Number(/(\d+) paragraphs with no quotation marks/.exec(q.output)?.[1]||0),narration:'not-verified',language:record.quote.unsupported?'unsupported-spans-held':'ASCII-quoted-words-only'};record.issues=[...issuesFor(q,'quote',before.draft),...issuesFor(s,'split',before.draft)];
         record.status=record.quote.status==='failed' || record.split.status==='split-detected' || record.split.splits>0?'needs-review':record.quote.status==='unsupported'||record.split.status==='unsupported'?'held':'checked';
