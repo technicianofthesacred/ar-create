@@ -27,7 +27,7 @@ async function page({hash='',answers={},search=''}={}){
  w.CSS={escape:v=>String(v).replace(/["\\]/g,'\\$&')};
  const commands=[['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true],['look','GET','/api/look',true],
   ['subject.standing','GET','/api/subject/standing',true],['study.outputs','GET','/api/study/outputs',true],['study-draft.read','GET','/api/study-draft/read',true],['study-draft.save','POST','/api/study-draft/save',false],
-  ['study-ai.requests','GET','/api/study-ai/requests',true],['study-ai.review','GET','/api/study-ai/review',true],['study-ai.read','GET','/api/study-ai/read',true],['study-ai.accept','POST','/api/study-ai/accept',false],['study-ai.reject','POST','/api/study-ai/reject',false],['study-ai.finish','POST','/api/study-ai/finish',false],['study-draft.undo','POST','/api/study-draft/undo',false],['presence.post','POST','/api/presence',false]]
+  ['study-ai.requests','GET','/api/study-ai/requests',true],['study-ai.review','GET','/api/study-ai/review',true],['study-ai.read','GET','/api/study-ai/read',true],['study-ai.accept','POST','/api/study-ai/accept',false],['study-ai.reject','POST','/api/study-ai/reject',false],['study-ai.finish','POST','/api/study-ai/finish',false],['study-draft.undo','POST','/api/study-draft/undo',false],['study-draft.set-aside','POST','/api/study-draft/set-aside',false],['study-draft.set-aside.list','GET','/api/study-draft/set-aside/list',true],['presence.post','POST','/api/presence',false]]
   .map(([name,method,route,readOnly])=>({name,method,route,readOnly,schema:{},actors:['any']}));
  w.fetch=async(input,options={})=>{const u=new URL(String(input),w.location.href);calls.push({path:u.pathname,method:options.method||'GET',body:options.body?JSON.parse(options.body):null});
   const answer=u.pathname==='/api/capabilities'?{commands}:answers[u.pathname]??{};const [status,body]=Array.isArray(answer)?answer:[200,answer];
@@ -124,7 +124,7 @@ test('Write opens the real draft of the piece, with the forms of the subject as 
  assert.ok(calls.every(c=>!/speech|dictat/i.test(c.path)));
 });
 
-test('typing saves through study-draft.save with the revision he read; a stale save shows both and merges nothing',async()=>{
+test('typing saves through study-draft.save with the revision he read; a stale save shows both versions of that paragraph in place and merges nothing',async()=>{
  const answers={'/api/subject/standing':standing,'/api/study/outputs':{outputBindings:[{outputId:'o1',wordOwner:{kind:'native',bindingId:'b1'}}]},'/api/study-draft/read':draft(['First words.','Second words.']),'/api/study-ai/requests':{items:[]},'/api/study-ai/read':{sourceCatalog:[]}};
  const {w,doc,calls}=await page({hash:'#/write/s1?piece=o1',answers});await settle(150);
  const t=doc.querySelector('[data-ed="r0"]');t.value='First words, edited.';t.dispatchEvent(new w.Event('input',{bubbles:true}));
@@ -136,15 +136,24 @@ test('typing saves through study-draft.save with the revision he read; a stale s
  assert.ok(save,'the save was sent');assert.deepEqual(plain(save.body.expected),{workflow:{draft:'h1'}},'the revision he read goes with it');
  assert.equal(save.body.bindingId,'b1');assert.equal(save.body.parentStudyId,'s1');assert.match(save.body.operationId,/^[0-9a-f-]{36}$/);
  assert.deepEqual(plain(save.body.operations.map(o=>o.kind)),['text']);
- const panel=doc.querySelector('[data-wr-conflict]');assert.equal(panel.hidden,false);
- assert.match(panel.textContent,/First words, edited\./);assert.match(panel.textContent,/First words changed elsewhere\./);
- assert.equal(doc.querySelector('[data-ed="r0"]').value,'First words, edited.','his words are left as he typed them');
- assert.ok(panel.querySelector('[data-act="mine"]')&&panel.querySelector('[data-act="theirs"]'),'he chooses');
+ // Both changed the first paragraph: both versions stand in its place, each named, and he keeps one, or both.
+ const two=doc.querySelector('[data-row="r0"] .wr-two');assert.ok(two,'both versions are in the page, in place');
+ const [theirs,mine]=[...two.querySelectorAll('.wr-v')];
+ assert.match(theirs.textContent,/Written elsewhere/);assert.match(theirs.textContent,/First words changed elsewhere\./);
+ assert.match(mine.textContent,/Written here, \d\d:\d\d/);assert.match(mine.textContent,/First words, edited\./);
+ assert.ok(two.querySelector('mark.wr-dif'),'what differs is marked');
+ assert.equal(doc.querySelector('[data-ed="r0"]'),null,'nothing is typed into a paragraph while it has two versions');
+ assert.match(doc.querySelector('[data-wr-saved]').textContent,/One paragraph has two versions/);
+ assert.match(doc.querySelector('[data-wr-conflict]').textContent,/One paragraph, written in two places/);
+ assert.ok(two.querySelector('[data-act="keep"][data-v="theirs"]')&&two.querySelector('[data-act="keep"][data-v="mine"]')&&two.querySelector('[data-act="keep"][data-v="both"]'),'he chooses');
  assert.equal(calls.filter(c=>c.path==='/api/study-draft/save').length,1,'nothing is sent again until he chooses');
- // he keeps the saved version
- panel.querySelector('[data-act="theirs"]').click();await settle(50);
- assert.equal(doc.querySelector('[data-ed="r0"]').value,'First words changed elsewhere.');assert.equal(panel.hidden,true);
- assert.equal(w.localStorage.getItem('ar-v3-write:b1'),null,'nothing is kept once he chose the saved words');
+ assert.equal(JSON.parse(w.localStorage.getItem('ar-v3-write:b1')).edits[0][1],'First words, edited.','his words wait on the device meanwhile');
+ // he keeps the saved version: his words are set aside on the app first
+ two.querySelector('[data-act="keep"][data-v="theirs"]').click();await settle(80);
+ const aside=calls.find(c=>c.path==='/api/study-draft/set-aside');
+ assert.deepEqual(plain(aside?.body.paragraphs),[{id:'r0',words:'First words, edited.'}]);assert.equal(aside.body.reason,'conflict');
+ assert.equal(doc.querySelector('[data-ed="r0"]').value,'First words changed elsewhere.');assert.equal(doc.querySelector('.wr-two'),null);
+ assert.equal(w.localStorage.getItem('ar-v3-write:b1'),null,'nothing unsaved is left once he chose the saved words, and his are on the app');
 });
 
 test('unsaved words are kept on this device and come back after a reload',async()=>{
@@ -158,6 +167,46 @@ test('unsaved words are kept on this device and come back after a reload',async(
  second.w.localStorage.setItem('ar-v3-write:b1',JSON.stringify(kept));
  second.w.v2.go('write/:id',{id:'s1'},{piece:'o1'});await settle(30);second.w.location.hash='#/';await settle(30);second.w.v2.go('write/:id',{id:'s1'},{piece:'o1'});await settle(200);
  assert.equal(second.doc.querySelector('[data-ed="r0"]').value,'First words, kept safe.');
+});
+
+test('after a reload, words typed into a paragraph removed elsewhere, or one that now holds formatting, come back as new paragraphs: never dropped',async()=>{
+ // Kept on this device before the reload: two paragraphs he changed. Meanwhile the second was removed elsewhere and the third
+ // was given formatting this page keeps as it is. Both of his come back, where they stood, and wait to be saved.
+ const kept={v:2,at:Date.now(),draft:'h1',edits:[['r1','Second words, mine.','Second words.'],['r2','Third words, mine.','Third words.']],added:[],sent:[],base:[['r0','First words.'],['r1','Second words.'],['r2','Third words.']]};
+ const now={...draft(['First words.']),expected:{workflow:{draft:'h2'}}};now.projection.push(row('r2','Third **words**.',{safe:false}));
+ const answers={'/api/subject/standing':standing,'/api/study/outputs':{outputBindings:[{outputId:'o1',wordOwner:{kind:'native',bindingId:'b1'}}]},'/api/study-draft/read':now,'/api/study-ai/requests':{items:[]},'/api/study-ai/read':{sourceCatalog:[]},'/api/study-draft/save':[500,{error:'down'}]};
+ const pg=await page({hash:'#/',answers});
+ pg.w.localStorage.setItem('ar-v3-write:b1',JSON.stringify(kept));
+ pg.w.v2.go('write/:id',{id:'s1'},{piece:'o1'});await settle(250);
+ const values=[...pg.doc.querySelectorAll('.wr-ed[data-ed]')].map(t=>t.value);
+ assert.ok(values.includes('Second words, mine.'),'words typed into a paragraph removed elsewhere are on the page: '+JSON.stringify(values));
+ assert.ok(values.includes('Third words, mine.'),'words typed into a paragraph that now holds formatting are on the page');
+ const stored=JSON.parse(pg.w.localStorage.getItem('ar-v3-write:b1'));
+ assert.deepEqual(plain(stored.added.map(a=>[a.afterId,a.text])),[['r0','Second words, mine.'],['r2','Third words, mine.']],'and kept on the device, each after the paragraph it followed');
+});
+
+test('a paragraph that now holds formatting never swallows his words: a newer version, and a closed tab\'s kept words, bring them back as a new paragraph after it',async()=>{
+ const base=()=>({'/api/subject/standing':standing,'/api/study/outputs':{outputBindings:[{outputId:'o1',wordOwner:{kind:'native',bindingId:'b1'}}]},'/api/study-ai/requests':{items:[]},'/api/study-ai/read':{sourceCatalog:[]}});
+ const formatted=()=>{const d={...draft(['First words.']),expected:{workflow:{draft:'h2'}}};d.projection.push(row('r1','Second **words**.',{safe:false}));return d;};
+ // A newer version arrives while he has typed into the paragraph that it gave formatting.
+ const answers={...base(),'/api/study-draft/read':draft(['First words.','Second words.'])};
+ const {w,doc}=await page({hash:'#/write/s1?piece=o1',answers});await settle(150);
+ const t=doc.querySelector('[data-ed="r1"]');t.value='Second words, mine.';t.dispatchEvent(new w.Event('input',{bubbles:true}));
+ answers['/api/study-draft/save']=[409,{error:'stale'}];answers['/api/study-draft/read']=formatted();
+ await settle(1800);
+ assert.ok([...doc.querySelectorAll('.wr-ed[data-ed]')].some(e=>e.value==='Second words, mine.'),'his words stand on the page as a new paragraph');
+ assert.deepEqual(plain(JSON.parse(w.localStorage.getItem('ar-v3-write:b1')).added.map(a=>[a.afterId,a.text])),[['r1','Second words, mine.']],'after the paragraph they were typed into');
+ // A tab that closed with words typed into that paragraph: they are offered, not removed.
+ const held=new Set(),locks={request(name,opts,cb){if(typeof opts==='function')cb=opts;if(held.has(name))return Promise.resolve().then(()=>cb(null));held.add(name);return Promise.resolve().then(()=>cb({name})).finally(()=>held.delete(name));}};
+ const kept={v:2,at:Date.now(),tab:'a-closed-tab',draft:'h1',edits:[['r1','Second words, from the closed tab.','Second words.']],added:[],sent:[],base:[['r0','First words.'],['r1','Second words.']]};
+ const pg=await page({hash:'#/',answers:{...base(),'/api/study-draft/read':formatted()}});
+ Object.defineProperty(pg.w.navigator,'locks',{configurable:true,get:()=>locks});
+ pg.w.localStorage.setItem('ar-v3-write:b1',JSON.stringify(kept));
+ pg.w.v2.go('write/:id',{id:'s1'},{piece:'o1'});await settle(300);
+ assert.deepEqual([...pg.doc.querySelectorAll('.wr-rec')].map(e=>e.textContent),['Second words, from the closed tab.'],'offered in place');
+ assert.ok(pg.w.localStorage.getItem('ar-v3-write:b1'),'and still on the device until he chooses');
+ pg.doc.querySelector('[data-act="rec"][data-v="back"]').click();await settle(100);
+ assert.ok([...pg.doc.querySelectorAll('.wr-ed[data-ed]')].some(e=>e.value==='Second words, from the closed tab.'),'Put them back: a new paragraph after it');
 });
 
 test('an assistant opens the page: the paragraphs are read only, nothing is kept on the device, a decision answers 403 plainly',async()=>{
@@ -607,7 +656,7 @@ test('real server: a read that was started before a save is never taken for a ne
  await quiet(b.doc);assert.ok(reads()>n0+1,'it was read again after the save');
 });
 
-test('real server: the newer-version box shows the saved version\'s changed paragraphs beside his',{timeout:60000},async()=>{
+test('real server: a paragraph changed only elsewhere is taken, his own change is kept, both are saved, and the page says so with a way to see them',{timeout:60000},async()=>{
  const {base}=await theWorld(),sub=await subjectOf(base,'shade-and-patience');
  const {w,doc}=await livePage(base,sub);
  const rows=longRows(doc),mine=rows[0],other=rows[1];
@@ -617,13 +666,20 @@ test('real server: the newer-version box shows the saved version\'s changed para
  const target=cur.projection.find(r=>r.id===other.dataset.ed);
  await adrian.call('study-draft.save',{bindingId:sub.binding,parentStudyId:sub.id,expected:cur.expected,operations:[{kind:'text',id:target.id,from:0,to:0,insert:'Elsewhere: ',seenBlockHash:target.blockHash}]});
  blur(w,mine);
- const panel=await until(()=>{const p=doc.querySelector('[data-wr-conflict]');return p&&!p.hidden?p:null;},20000);
- assert.match(panel.textContent,/\(his change\)/,'his paragraph');
- assert.match(panel.textContent,/Elsewhere: /,'the paragraph the saved version changed, which he did not touch');
- assert.match(panel.textContent,/You have not changed this paragraph/);
+ const panel=await until(()=>{const p=doc.querySelector('[data-wr-conflict] [data-wr-side="merged"]');return p||null;},20000);
+ assert.match(panel.textContent,/1 paragraph changed elsewhere was taken as it is/);
+ assert.match(panel.textContent,/Your words in 1 paragraph changed only here stay as you wrote them/);
  assert.match(panel.querySelector('h2').textContent,/at \d\d:\d\d\b/,'the time reads as the bar does, in 24 hours');
  assert.doesNotMatch(panel.querySelector('h2').textContent,/[AP]M/);
- assert.equal(doc.querySelector('[data-ed="'+mine.dataset.ed+'"]').value,mine.value);
+ assert.equal(doc.querySelector('.wr-two'),null,'nothing was changed in both places, so nothing waits');
+ await quiet(doc);
+ const server=wordsOf(await draftOf(base,sub));
+ assert.ok(server.some(x=>x.endsWith('(his change)')),'his change is saved');assert.ok(server.some(x=>x.startsWith('Elsewhere: ')),'and the other, untouched');
+ // he can see what was taken, and put back the words he had there
+ doc.querySelector('[data-wr-conflict] [data-act="merged-see"]').click();
+ const seen=doc.querySelector('[data-wr-conflict] [data-wr-side="merged"]');assert.match(seen.textContent,/Changed elsewhere/);assert.match(seen.textContent,/Elsewhere: /);
+ seen.querySelector('[data-act="earlier"]').click();await settle(100);await quiet(doc);
+ const back=wordsOf(await draftOf(base,sub));assert.equal(back.some(x=>x.startsWith('Elsewhere: ')),false,'the words he had are back');assert.ok(back.some(x=>x.endsWith('(his change)')));
 });
 
 test('real server: a split has an Undo that takes back that split',{timeout:60000},async()=>{
@@ -974,13 +1030,11 @@ test('real server: Put back after one paragraph is taken back; when the app\'s v
  const mid=await adrian.call('study-draft.read',{bindingId:sub.binding,parentStudyId:sub.id}),other=mid.projection.filter(r=>r.safe!==false&&r.words).at(-1);
  await adrian.call('study-draft.save',{bindingId:sub.binding,parentStudyId:sub.id,expected:mid.expected,operations:[{kind:'text',id:other.id,from:0,to:0,insert:'Elsewhere: ',seenBlockHash:other.blockHash}]});
  clickWr(doc,'putback');
- await until(()=>doc.querySelector('[data-wr-conflict]:not([hidden])'));
- const server=wordsOf(await draftOf(base,sub));
- assert.equal(server.includes(words),false,'nothing was forced over the newer version');assert.ok(server.some(x=>x.startsWith('Elsewhere: ')),'the other change is intact');
- assert.ok(edsOf(doc).includes(words),'his put back words are still on the page, unsaved');
- assert.match(doc.querySelector('[data-wr-conflict]').textContent,/Keep my words/);
- doc.querySelector('[data-act="mine"]').click();await quiet(doc);
- const done=wordsOf(await draftOf(base,sub));assert.ok(done.includes(words));assert.ok(done.some(x=>x.startsWith('Elsewhere: ')),'his choice kept both');
+ // The other change touched another paragraph only, so his put back words go on top of it and nothing is overwritten.
+ await until(()=>doc.querySelector('[data-wr-conflict] [data-wr-side="merged"]'));
+ assert.equal(doc.querySelector('.wr-two'),null,'no paragraph was changed in both places');
+ await quiet(doc);
+ const done=wordsOf(await draftOf(base,sub));assert.ok(done.includes(words),'his words are back');assert.ok(done.some(x=>x.startsWith('Elsewhere: ')),'the other change is intact');
 });
 
 test('real server: a paragraph written new, saved and taken back comes back with Put back, once, with the same words',{timeout:90000},async()=>{

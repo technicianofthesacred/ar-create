@@ -27,7 +27,7 @@ async function page({hash='',answers={},search=''}={}){
  w.CSS={escape:v=>String(v).replace(/["\\]/g,'\\$&')};
  const commands=[['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true],['look','GET','/api/look',true],
   ['subject.standing','GET','/api/subject/standing',true],['study.outputs','GET','/api/study/outputs',true],['study-draft.read','GET','/api/study-draft/read',true],['study-draft.save','POST','/api/study-draft/save',false],
-  ['study-ai.requests','GET','/api/study-ai/requests',true],['study-ai.review','GET','/api/study-ai/review',true],['study-ai.read','GET','/api/study-ai/read',true],['study-ai.accept','POST','/api/study-ai/accept',false],['study-ai.reject','POST','/api/study-ai/reject',false],['study-ai.finish','POST','/api/study-ai/finish',false],['study-draft.undo','POST','/api/study-draft/undo',false],['presence.post','POST','/api/presence',false]]
+  ['study-ai.requests','GET','/api/study-ai/requests',true],['study-ai.review','GET','/api/study-ai/review',true],['study-ai.read','GET','/api/study-ai/read',true],['study-ai.accept','POST','/api/study-ai/accept',false],['study-ai.reject','POST','/api/study-ai/reject',false],['study-ai.finish','POST','/api/study-ai/finish',false],['study-draft.undo','POST','/api/study-draft/undo',false],['study-draft.set-aside','POST','/api/study-draft/set-aside',false],['presence.post','POST','/api/presence',false]]
   .map(([name,method,route,readOnly])=>({name,method,route,readOnly,schema:{},actors:['any']}));
  w.fetch=async(input,options={})=>{const u=new URL(String(input),w.location.href);calls.push({path:u.pathname,method:options.method||'GET',body:options.body?JSON.parse(options.body):null});
   const answer=u.pathname==='/api/capabilities'?{commands}:answers[u.pathname]??{};const [status,body]=Array.isArray(answer)?answer:[200,answer];
@@ -139,6 +139,8 @@ test('typing saves through study-draft.save with the revision he read; a stale s
  assert.equal(calls.filter(c=>c.path==='/api/study-draft/save').length,1,'nothing is sent again until he chooses');
  // he keeps the saved version
  panel.querySelector('[data-act="theirs"]').click();await settle(50);
+ const aside=calls.find(c=>c.path==='/api/study-draft/set-aside');
+ assert.deepEqual(plain(aside?.body.paragraphs),[{id:'r0',words:'First words, edited.'}],'his unsaved words are set aside on the server first');
  assert.equal(doc.querySelector('textarea[data-ed="r0"]').value,'First words changed elsewhere.');assert.equal(panel.hidden,true);
  assert.equal(w.localStorage.getItem('ar-v2-write:b1'),null,'nothing is kept once he chose the saved words');
 });
@@ -154,6 +156,22 @@ test('unsaved words are kept on this device and come back after a reload',async(
  second.w.localStorage.setItem('ar-v2-write:b1',JSON.stringify(kept));
  second.w.v2.go('write/:id',{id:'s1'},{piece:'o1'});await settle(30);second.w.location.hash='#/';await settle(30);second.w.v2.go('write/:id',{id:'s1'},{piece:'o1'});await settle(200);
  assert.equal(second.doc.querySelector('textarea[data-ed="r0"]').value,'First words, kept safe.');
+});
+
+test('after a reload, words typed into a paragraph removed elsewhere, or one that now holds formatting, come back as new paragraphs: never dropped',async()=>{
+ // Kept on this device before the reload: two paragraphs he changed. Meanwhile the second was removed elsewhere and the third
+ // was given formatting this page keeps as it is. Both of his come back, where they stood, and wait to be saved.
+ const kept={v:2,at:Date.now(),draft:'h1',edits:[['r1','Second words, mine.','Second words.'],['r2','Third words, mine.','Third words.']],added:[],sent:[],base:[['r0','First words.'],['r1','Second words.'],['r2','Third words.']]};
+ const now={...draft(['First words.']),expected:{workflow:{draft:'h2'}}};now.projection.push(row('r2','Third **words**.',{safe:false}));
+ const answers={'/api/subject/standing':standing,'/api/study/outputs':{outputBindings:[{outputId:'o1',wordOwner:{kind:'native',bindingId:'b1'}}]},'/api/study-draft/read':now,'/api/study-ai/requests':{items:[]},'/api/study-ai/read':{sourceCatalog:[]},'/api/study-draft/save':[500,{error:'down'}]};
+ const pg=await page({hash:'#/',answers});
+ pg.w.localStorage.setItem('ar-v2-write:b1',JSON.stringify(kept));
+ pg.w.v2.go('write/:id',{id:'s1'},{piece:'o1'});await settle(250);
+ const values=[...pg.doc.querySelectorAll('textarea.wr-ed[data-ed]')].map(t=>t.value);
+ assert.ok(values.includes('Second words, mine.'),'words typed into a paragraph removed elsewhere are on the page: '+JSON.stringify(values));
+ assert.ok(values.includes('Third words, mine.'),'words typed into a paragraph that now holds formatting are on the page');
+ const stored=JSON.parse(pg.w.localStorage.getItem('ar-v2-write:b1'));
+ assert.deepEqual(plain(stored.added.map(a=>[a.afterId,a.text])),[['r0','Second words, mine.'],['r2','Third words, mine.']],'and kept on the device, each after the paragraph it followed');
 });
 
 test('an assistant opens the page: the paragraphs are read only, nothing is kept on the device, a decision answers 403 plainly',async()=>{
