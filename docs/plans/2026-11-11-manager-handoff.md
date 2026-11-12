@@ -30,6 +30,8 @@ Consequences:
 - **Always `git fetch origin main` and read main's record before starting or briefing any app thread.** This coordinator did not, and nearly had Write built twice.
 - The small fixes are already on `main` (through 240). Nothing to merge.
 - This thread's Write director (`session_017kitFe2b6MQFZwy3MNMGpN`) designed a new look for Write, Read and Check that Adrian approved on 12 November, on a branch cut before any of that. It was told at once to read `main` and apply the approved look to the Write that is already there, not build a second one.
+- The Write director then merged `main` into its branch, kept `main`'s saving machinery, and is applying the approved look to it (plan: `docs/plans/2026-11-12-write-read-check-build.md` on `claude/v2-write-read-check`). It told the stage 5 thread which files it will change.
+- **Two faults it found in the Write that is on `main`, both against the promise about his words:** "Use the saved version" discards his unsaved words, and "Keep my words" overwrites the other version whole; and two tabs on one piece share one device key. Its plan's third piece fixes both. Until that is merged, a conflict in Write can lose words.
 - **Open decision with Adrian: which line coordinates the build from here.** Until he answers, start no new app threads.
 
 ## Focus, set by Adrian on 11 November
