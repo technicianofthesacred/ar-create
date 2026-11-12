@@ -827,3 +827,13 @@ into a passing one and the correction is two lines.
     four the diff touches (653 tests: 645 pass, 3 skipped, 3 todo, 2 fail). The two failures were run alone and fail
     the same way; neither touches this change: `native-language-edition.test.mjs` needs a headless renderer this
     machine lacks, and `native-language-proposal-owner.test.mjs` fails identically on a copy of `origin/main` here.
+
+## Piece B, as built
+
+Piece B is the smallest self-contained change, kept in marked blocks so the thread restyling these screens can carry it.
+
+- `public/v2/screens/subject.js` (blocks marked "capture sources"): the recording's row offers "Confirm this transcript" when the transcript is ready and not confirmed by him. It opens in place with the words (read only, in the speech face), one name box per unnamed speaker and a primary "Confirm"; Confirm calls the recording's own `speakers` then `review` actions through `.transcription.id.action` as the page's actor, and the row then says "Confirmed by you". The words and the speakers are read with the same command's `recover` action, which only returns the transcript's current snapshot (the registry has no plain read of it). Once the transcript is kept and confirmed, the list from `study-draft.capture-sources.list` is shown (title, kind, "Confirmed by you"; what is not eligible with the list's own reason) with one primary "Use it for Check" that sends exactly the eligible ones shown to `study-draft.capture-sources`; on success "Check can now read this". The list is read again after every confirm and capture, so either order works.
+- `public/v2/screens/check.js`: when the check is held only for want of a source, the same list and button are drawn below the sentence (through `v2.shared.subject.createCaptureSources`, read when the screen opens; without it Check does without). With nothing eligible it shows the reasons and a link back to the subject; a damaged record shows the list's sentence and no button. After a capture Check reads the draft and the receipt again and runs by itself.
+- An assistant's page has every control; pressing shows the refusal and nothing is faked.
+- `scripts/review-journey.mjs`: step 4 confirms the transcript and presses "Use it for Check"; step 8 asserts a real result (the held break is gone); step 9 no longer expects the held wording.
+- Tests: `tests/v2-subject.test.mjs` and `tests/v2-check.test.mjs`.

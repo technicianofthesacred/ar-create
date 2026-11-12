@@ -254,3 +254,26 @@ dialog.subj-sheetdlg{width:min(560px,100%)}
  .subj .subj-strip{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}
  .subj-sheetdlg .subj-kinds{grid-template-columns:minmax(0,1fr)}
 }
+
+/* ===== capture sources: BEGIN. The shared list-and-button block (also drawn on Check) and the confirm panel. Every rule starts with .subj-cs- (the block is drawn on Check too). ===== */
+.subj-cs-block,.subj-cs-confirm{display:grid;gap:10px;min-width:0;margin:12px 0}
+.subj-cs-confirm{padding:14px;border-radius:10px;background:var(--c3-lift);border:1px solid var(--line)}
+.subj-cs-note,.subj-cs-done{font-size:var(--v2-t13);line-height:1.5;color:var(--dim);overflow-wrap:anywhere}
+.subj-cs-done{color:var(--ink)}
+.subj-cs-note a{text-decoration:underline}
+.subj-cs-list{list-style:none;margin:0;padding:0;display:grid;gap:0;min-width:0}
+.subj-cs-list>li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:8px 0;border-top:1px solid var(--line);min-width:0}
+.subj-cs-list>li:first-child{border-top:0}
+.subj-cs-list b{font:600 var(--v2-t13)/1.3 var(--ar-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subj-cs-list small{font-size:var(--v2-t12);color:var(--dim);text-align:right}
+.subj-cs-list .subj-cs-ok,.subj-cs-list .subj-cs-why{grid-column:1/-1;font-size:var(--v2-t12);line-height:1.4;overflow-wrap:anywhere}
+.subj-cs-list .subj-cs-ok{color:var(--ink)}
+.subj-cs-list .subj-cs-why{color:var(--dim)}
+.subj-cs-words{max-height:260px;overflow:auto;padding:10px 12px;border-radius:8px;background:var(--paper);border:1px solid var(--line);font-family:var(--v2-speech);font-size:var(--v2-t15);line-height:1.6;color:var(--ink);overflow-wrap:anywhere}
+.subj-cs-words p{margin:0 0 .6em}
+.subj-cs-words p:last-child{margin-bottom:0}
+.subj-cs-words b{font:600 var(--v2-t13)/1.3 var(--ar-ui);color:var(--dim)}
+.subj-cs-name{display:grid;gap:4px;font-size:var(--v2-t13);color:var(--dim)}
+.subj-cs-name input{min-height:36px;padding:0 10px;border-radius:6px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:var(--v2-t14)/1.5 var(--ar-ui);max-width:100%;min-width:0}
+.subj-cs-btns{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+/* ===== capture sources: END ===== */
