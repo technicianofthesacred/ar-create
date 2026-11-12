@@ -201,3 +201,28 @@ test('a carousel piece carries its own slide words, slide count, and when it was
   assert.deepEqual(got.map(f => [f.slides, f.updatedAt]), [[3, '2026-11-02T09:00:00Z'], [5, '2026-11-04T09:00:00Z']]);
  } finally {fs.rmSync(dir, {recursive: true, force: true});}
 });
+
+// A held check: the standing keeps a plain fact for want of a captured source, never the raw message.
+test('a check held for want of a captured source is a plain fact in the standing; other holds are not', async () => {
+ const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'standing-')), B = '0b5e3a3c-1f1e-4c7a-9f00-000000000001';
+ // Its writing place lists one piece in the output index, so the output owner is asked (and, in the first case, fails).
+ const P = '0b5e3a3c-1f1e-4c7a-9f00-000000000002', D = '0b5e3a3c-1f1e-4c7a-9f00-000000000003', sha = v => crypto.createHash('sha256').update(v).digest('hex');
+ fs.mkdirSync(path.join(dir, 'study-owned-photo-bindings')); fs.writeFileSync(path.join(dir, 'study-owned-photo-bindings', B + '.json'), JSON.stringify({bindingId: B, parentStudyId: 'invented', projectId: P, documentId: D}));
+ fs.mkdirSync(path.join(dir, 'articles', sha(P), sha(D)), {recursive: true}); fs.writeFileSync(path.join(dir, 'articles', sha(P), sha(D), 'article.json'), JSON.stringify({project: {document: {nativeOutputIndex: {records: [{outputId: 'o1'}]}}}}));
+ const owners = (outputs, modifiedAt, record) => createSubjectStanding({dataDir: dir, now: () => Date.parse('2026-11-11T12:00:00Z'),
+  drafts: {catalog: async () => ({collections: [{parentStudyId: 'invented', title: 'Invented', bindingId: B}], outputBindings: [{parentStudyId: 'invented', bindingId: B}], drafts: []}), read: async () => ({projection: [{words: 'Invented words.'}], expected: {v: 1}, history: [{modifiedAt}]})},
+  outputs: {read: outputs}, checks: {read: async () => record}, consentDesk: {read: async () => ({people: [], release: {}})},
+  library: {tree: async () => ({sources: []})}, simmer: {boards: {read: async () => ({groups: [], forming: {}})}},
+  instagram: {plans: async () => ({plans: []}), read: async () => null}, places: {read: async () => ({places: []})}});
+ const article = async record => (await owners(async () => ({outputs: [{id: 'o1', kind: 'article', placements: [], createdAt: '2026-11-01T00:00:00Z'}]}), '2026-11-10T00:00:00Z', record).one({parentStudyId: 'invented'}));
+ try {
+  const none = await article({status: 'held', issues: [], quote: {status: 'held', reason: 'No captured SRC available.'}, split: {status: 'held', reason: 'No captured SRC available.'}});
+  assert.equal(none.facts.check.noSource, true); assert.ok(!JSON.stringify(none.facts.check).includes('SRC'));
+  const step = none.forms[0].steps.find(x => x.id === 'check');
+  assert.equal(step.state, 'wait'); assert.equal(step.note, 'No source to check against yet'); assert.notEqual(none.next?.step, 'check');
+  const other = await article({status: 'held', issues: [], quote: {status: 'held', reason: 'Canonical words need recovery.'}});
+  assert.equal(other.facts.check.noSource, false); assert.equal(other.forms[0].steps.find(x => x.id === 'check').note, 'Check again');
+  const stale = await article({status: 'stale', issues: []});
+  assert.equal(stale.facts.check.noSource, false);
+ } finally {fs.rmSync(dir, {recursive: true, force: true});}
+});

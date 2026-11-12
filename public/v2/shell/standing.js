@@ -159,6 +159,8 @@ export function stepsFor(form, facts = {}) {
    else if (c.status === 'running') add('check', 'Create', 'Check', 'wait', 'Checking', {waitsFor: 'The check to finish'});
    else if (c.status === 'checked' && !c.issues) add('check', 'Create', 'Check', 'done', 'Checked');
    else if (c.issues) add('check', 'Create', 'Check', 'flag', plural(c.issues, 'thing') + ' to look at');
+   // Held for want of a captured source: checking again cannot help, so the step waits and is not the thing to do now.
+   else if (c.status === 'held' && c.noSource) add('check', 'Create', 'Check', 'wait', 'No source to check against yet', {waitsFor: 'A source to check against'});
    else add('check', 'Create', 'Check', 'flag', 'Check again');
   }
   if (kind === 'instagram') {
