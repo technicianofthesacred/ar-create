@@ -16,7 +16,6 @@ const read=file=>fs.readFileSync(path.join(repo,file),'utf8');
 
 // The screen files, in order. index.html lists every one now, so a screen piece never edits it.
 const SCREENS=['home','subject','slides','looks','research','write','read','check'];
-const WRITE_PARTS=['write-page','write-margin','write-versions'];// Write's other files: loaded before write.js, scripts only
 const ROUTES={home:'','subject':'subject/:id',slides:'slides/:id',looks:'looks',research:'research','research-group':'research/group/:id','research-topic':'research/topic/:id',write:'write/:id',read:'read/:id',check:'check/:id'};
 
 function scriptsOf(html){return [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1]);}
@@ -47,7 +46,7 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 
 test('index.html lists every screen file in order, after the shell, and every file it names exists',()=>{
  const html=read('public/v2/index.html'),scripts=scriptsOf(html),styles=stylesOf(html);
- assert.deepEqual(scripts,['/document-study/recovery-storage.js','shell/client.js','shell/parts.js','shell/capture.js','shell/shell.js',...SCREENS.flatMap(s=>s==='write'?[...WRITE_PARTS,s]:[s]).map(s=>`screens/${s}.js`)]);
+ assert.deepEqual(scripts,['/document-study/recovery-storage.js','shell/client.js','shell/parts.js','shell/capture.js','shell/shell.js',...SCREENS.map(s=>`screens/${s}.js`)]);
  assert.deepEqual(styles,['/document-study/c3-theme.css','shell/shell.css','shell/capture.css','/document-study/graphite-controls.css',...SCREENS.map(s=>`screens/${s}.css`)]);
  for(const file of [...scripts,...styles])assert.ok(fs.existsSync(file.startsWith('/')?path.join(repo,'public',file):path.join(v2dir,file)),file+' exists');
  assert.doesNotMatch(html,/<script>(?!<)/,'no inline script: the page runs under the app\'s strict script policy');
@@ -355,17 +354,17 @@ test('the client says who holds a record (423) and what a consent hold is, in pl
  await assert.rejects(answer(500,{error:'internal detail'}).call('w',{}),e=>e.kind==='failed'&&e.message==='The app could not answer. Nothing was changed.');
 });
 
-test('the app\'s own address opens version two, and every address of the existing workspace works as before',async t=>{
+test('the app\'s own address opens version three (the default since 12 November); version two keeps its own address, and every address of the existing workspace works as before',async t=>{
  const f=await server(t);
  const get=(route,method='GET')=>fetch(f.url+route,{method,redirect:'manual'});
- for(const [route,location] of [['/','/v2/index.html'],['/?reviewActor=agent:codex','/v2/index.html?reviewActor=agent:codex'],['/v2','/v2/index.html']]){
+ for(const [route,location] of [['/','/v3/index.html'],['/?reviewActor=agent:codex','/v3/index.html?reviewActor=agent:codex'],['/v2','/v2/index.html']]){
   const r=await get(route);assert.equal(r.status,302,route);assert.equal(r.headers.get('location'),location,route);
  }
  assert.equal((await get('/','HEAD')).status,302);
  const v2=await get('/v2/index.html');assert.equal(v2.status,200);assert.match(v2.headers.get('content-type'),/text\/html/);assert.match(await v2.text(),/screens\/research\.js/);
  assert.doesNotMatch(v2.headers.get('content-security-policy'),/unsafe-inline'; style/,'version two runs without inline scripts');
  assert.equal((await get('/v2/')).status,200);
- for(const file of ['/v2/shell/client.js','/v2/shell/parts.js','/v2/shell/shell.js','/v2/shell/shell.css',...SCREENS.flatMap(s=>[`/v2/screens/${s}.js`,`/v2/screens/${s}.css`]),...WRITE_PARTS.map(s=>`/v2/screens/${s}.js`)])assert.equal((await get(file)).status,200,file);
+ for(const file of ['/v2/shell/client.js','/v2/shell/parts.js','/v2/shell/shell.js','/v2/shell/shell.css',...SCREENS.flatMap(s=>[`/v2/screens/${s}.js`,`/v2/screens/${s}.css`])])assert.equal((await get(file)).status,200,file);
  for(const route of ['/document-study/index.html','/document-study/index.html?reviewActor=agent:claude-code','/document-study/index.html?instagram=plan-x','/document-study/index.html?reviewStory=s&reviewStage=11','/document-study/instagram-mirror.html','/transcript-check/index.html']){
   const r=await get(route);assert.equal(r.status,200,route);assert.match(r.headers.get('content-type'),/text\/html/,route);
  }
@@ -389,18 +388,18 @@ function workspace({url='http://local.test/document-study/index.html',home=false
  w.eval(read('public/document-study/version-two.js'));
  return {w,doc:w.document,calls,mounts};
 }
-test('the existing workspace: one quiet "Version two" link before the theme switch, back to the same subject',()=>{
+test('the existing workspace: one quiet "Version three" link before the theme switch, back to the same subject',()=>{
  const {doc,mounts,w}=workspace();
  const link=doc.querySelector('#c3-tabstrip>a.v2-front');
- assert.equal(link.textContent,'Version two');assert.equal(link.nextElementSibling,doc.querySelector('.ht-theme'));
- assert.equal(link.getAttribute('href'),'/v2/index.html#/subject/hk');
+ assert.equal(link.textContent,'Version three');assert.equal(link.nextElementSibling,doc.querySelector('.ht-theme'));
+ assert.equal(link.getAttribute('href'),'/v3/index.html#/subject/hk');
  // The strip is redrawn by its owner; the link comes back once, never twice.
  doc.getElementById('c3-tabstrip').innerHTML='<details class="ht-switch"></details><button class="ht-place ht-theme" data-ht-theme>T</button>';
  mounts.forEach(fn=>fn());mounts.forEach(fn=>fn());
  assert.equal(doc.querySelectorAll('a.v2-front').length,1);
  assert.equal(doc.querySelectorAll('#c3-tabstrip>*').length,3,'nothing else is added');
  assert.equal(w.document.querySelectorAll('a').length,1);
- const onHome=workspace({home:true});assert.equal(onHome.doc.querySelector('a.v2-front').getAttribute('href'),'/v2/index.html','from Home it opens Home');
+ const onHome=workspace({home:true});assert.equal(onHome.doc.querySelector('a.v2-front').getAttribute('href'),'/v3/index.html','from Home it opens Home');
 });
 test('the existing workspace opens the subject, section and piece named in its address, then forgets them',async()=>{
  const {w,calls}=workspace({url:'http://local.test/document-study/index.html?subject=hk&piece=o1&section=read&reviewActor=agent:codex'});

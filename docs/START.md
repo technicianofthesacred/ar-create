@@ -83,6 +83,7 @@ All paths are under the home's `data/`. Read them through the CLI, never directl
 Actor values: `human:adrian`, `agent:claude-code|codex|claude-design|hermes|grok|chatgpt`, `cron:<name>`, `import:<source>`, `release:<sha>`. They are honest labels on this Mac, not authentication. Clients: `ui`, `cli`, `mcp`, `http`, `file`.
 
 - **Browser**: the page's default author is `human:adrian`. An agent opens `http://127.0.0.1:8841/document-study/index.html?reviewActor=agent:<name>` so its actions are stamped as its own; an unlisted name blocks every request.
+- **Fronts**: the app's own address (`/`) opens version three, `public/v3/` at `/v3/index.html` (the default since 12 November 2026, in the approved look, running version two's screen files in its own frame until it has its own); version two, `public/v2/`, stays at `/v2/index.html`; the existing workspace is Advanced. All three take the same `?reviewActor=`.
 - **Lease**: `lease acquire --input '{"scope":{"kind":"project","id":"<parentStudyId>"},"reason":"..."}'`. Fifteen minutes, renewable. A live foreign lease answers 423 with the holder. Scope kinds: project, collection, draft, output, piece, source, share, concept, research, media, library.
 - **Journal**: every committed, rejected or conflicting write is one line. `history` reads it.
 - **Handoff**: `handoff --input '{"scope":{...},"to":"human:adrian","summary":"<=280 chars"}'` when you stop.

@@ -1,5 +1,6 @@
 /* Version two, from the existing workspace. Two small things, nothing else on this page changes:
-   1. One quiet link, "Version two", on the top line beside the theme switch (the place for app-wide links).
+   1. One quiet link, "Version three", on the top line beside the theme switch (the place for app-wide links). It leads
+      to the default front, version three (public/v3/); version two is one more click from there, by its "Version two".
    2. The smallest reading of the address, so version two's "Advanced" lands on the matching place here:
       ?subject=<project id>&section=<rail name, or read>&piece=<output id>. It presses the workspace's own owners
       (the subject board, the rail, the output overview) exactly as a click would, then takes the three keys out of
@@ -10,8 +11,8 @@
  const SECTIONS=['home','subjects','library','material','source','research','direction','write','read','check','media','arrange','audience','share','outputs'];
 
  // ---------- the link ----------
- // Version two names the address he left in ?v2from=<hash>. The workspace drops its query string once loaded, so it is
- // read now and kept for this tab. Only a plain version two path is accepted.
+ // Version two and version three name the address he left in ?v2from=<hash> (the two fronts share their routes). The
+ // workspace drops its query string once loaded, so it is read now and kept for this tab. Only a plain route is accepted.
  const KEEP='ar-create-v2-from';
  const way=(()=>{
   let from=null;try{from=new URLSearchParams(location.search).get('v2from');}catch{}
@@ -22,18 +23,18 @@
  })();
  function href(){
   const who0=window.arCreateUiActor;
-  if(way){const q0=who0?.explicit&&who0.actor?'?reviewActor='+encodeURIComponent(who0.actor):'';return '/v2/index.html'+q0+'#'+way;}
+  if(way){const q0=who0?.explicit&&who0.actor?'?reviewActor='+encodeURIComponent(who0.actor):'';return '/v3/index.html'+q0+'#'+way;}
   let hash='';
   try{const home=document.getElementById('project-library')?.open,p=typeof current==='function'?current():null;if(!home&&p?.id)hash='#/subject/'+encodeURIComponent(p.id);}catch{}
   const who=window.arCreateUiActor;const q=who?.explicit&&who.actor?'?reviewActor='+encodeURIComponent(who.actor):'';
-  return '/v2/index.html'+q+hash;
+  return '/v3/index.html'+q+hash;
  }
  let watched=null;const watcher=typeof MutationObserver==='function'?new MutationObserver(()=>queueMicrotask(ensure)):null;
  function ensure(){
   const strip=document.getElementById('c3-tabstrip');if(!strip)return;
   if(watcher&&watched!==strip){watcher.disconnect();watcher.observe(strip,{childList:true});watched=strip;}
   let link=strip.querySelector(':scope>a.v2-front');
-  if(!link){link=document.createElement('a');link.className='v2-front';link.textContent='Version two';link.title='Open version two';}
+  if(!link){link=document.createElement('a');link.className='v2-front';link.textContent='Version three';link.title='Open version three';}
   const theme=strip.querySelector(':scope>.ht-theme');
   if(theme){if(link.nextElementSibling!==theme)theme.before(link);}else if(link.parentElement!==strip)strip.append(link);
   const next=href();if(link.getAttribute('href')!==next)link.setAttribute('href',next);
@@ -41,7 +42,7 @@
  // Refresh the address just before it is followed, so it names the subject open at that moment.
  document.addEventListener('pointerdown',e=>{const a=e.target.closest?.('a.v2-front');if(a)a.setAttribute('href',href());},true);
  document.addEventListener('keydown',e=>{const a=e.target.closest?.('a.v2-front');if(a&&e.key==='Enter')a.setAttribute('href',href());},true);
- if(window.c3Shell?.register)window.c3Shell.register('Version two link',ensure,{order:200,ignore:'.v2-front'});else ensure();
+ if(window.c3Shell?.register)window.c3Shell.register('Version three link',ensure,{order:200,ignore:'.v2-front'});else ensure();
 
  // ---------- the address ----------
  const params=new URLSearchParams(location.search),subject=params.get('subject'),section=params.get('section'),piece=params.get('piece');
