@@ -287,3 +287,45 @@ body:has(.wr-w.wr-focus) .v3-band{display:none}
  .wr-w .wr-pphone .v2-ic{width:16px;height:16px}
 }
 @media (prefers-reduced-motion:reduce){.wr .wr-spin{animation:none}}
+/* ====================================================================================================================
+   Two versions of one paragraph, and words a closed tab kept on this device (design/2026-11-write #conflict, #recovered).
+   Both are set into the page as wells (the lifted surface), in place of the paragraph, with what differs marked by the wash
+   of words that come; the item that explains them stands in the margin beside them, and on a phone at the top of the page.
+   ==================================================================================================================== */
+.wr-w .wr-conflict{display:none;margin:0 0 28px;padding:0;border:0;border-radius:0;background:none;gap:8px}
+.wr-w .wr-conflict[hidden]{display:none}
+/* beside the paragraph, without making its row taller: the item hangs from the top of the paragraph's margin */
+.wr-w .wr-margin:has(>.wr-side){position:relative;align-self:stretch}
+.wr-w .wr-side{position:absolute;z-index:2;top:0;left:0;right:0;display:grid;gap:8px;min-width:0}
+.wr-w .wr-margin:has(>:not(.wr-side)) .wr-side{position:static}/* a suggestion shares this margin: one under the other */
+.wr-w .wr-two{display:grid;gap:10px;margin:0 -16px 18px;min-width:0}
+.wr-w .wr-v{display:grid;gap:6px;padding:12px 16px 14px;border-radius:8px;background:var(--c3-lift);min-width:0}
+.wr-w .wr-k{display:flex;align-items:center;gap:12px;min-height:32px;margin:0;font:400 var(--v2-t13)/1.45 var(--ar-ui);color:var(--dim)}
+.wr-w .wr-k span{flex:1;min-width:0;overflow-wrap:anywhere}
+.wr-w .wr-vt{margin:0;font:400 var(--v2-t18)/1.65 var(--v2-speech);color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.wr-w .wr-two.wr-h .wr-vt{font:700 var(--v2-t22)/1.3 var(--v2-speech)}
+.wr-w .wr-after{display:flex;padding:0 16px}
+.wr-w mark.wr-dif{background:color-mix(in srgb,var(--green) 22%,transparent);color:inherit;border-radius:2px}
+/* set into the page as a well (the Graphite layer above clears every paragraph's surface, so this one is said firmly) */
+@layer v2-controls{.wr-w .wr-ed.wr-rec{background:var(--c3-lift)!important;background-color:var(--c3-lift)!important;box-shadow:0 0 0 8px var(--c3-lift)!important;border-radius:1px!important}}
+.wr-w .wr-ba{display:grid;gap:10px}
+.wr-w .wr-ba>div{display:grid;gap:2px;min-width:0}
+.wr-w .wr-pr{margin:0;font:400 var(--v2-t15)/1.6 var(--v2-speech);color:var(--ink);overflow-wrap:anywhere}
+.wr-w .wr-pr i{color:var(--dim)}
+.wr-w .wr-took{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.wr-w .wr-took li{display:grid;gap:2px;min-width:0}
+.wr-w .wr-acts.wr-acts-in{margin:4px 0 0;padding:0;border:0}
+@layer v2-controls{
+ .wr-w button.wr-b.wr-q{background:transparent!important;color:var(--dim)!important}
+ .wr-w button.wr-b.wr-q:not(:disabled):hover{background:var(--v2-sec)!important;color:var(--ink)!important}
+ dialog.v2-sheet .wr-asides{list-style:none;padding:0;margin:6px 0 16px;display:grid;gap:8px}
+}
+dialog.v2-sheet .wr-asides .wr-item{display:grid;gap:8px;padding:12px 11px;border:1px solid var(--line);border-radius:8px;background:var(--c3-lift)}
+dialog.v2-sheet .wr-asides h2{font:600 var(--v2-t14)/1.4 var(--ar-ui);margin:0}
+dialog.v2-sheet .wr-asides .wr-by,dialog.v2-sheet .wr-label{font:400 var(--v2-t13)/1.45 var(--ar-ui);color:var(--dim);margin:0}
+dialog.v2-sheet .wr-asides .wr-pr{margin:0;font:400 var(--v2-t15)/1.6 var(--v2-speech);overflow-wrap:anywhere}
+@media (max-width:1100px){
+ .wr-w .wr-conflict:not([hidden]){display:grid}
+ .wr-w .wr-side{display:none}
+ .wr-w .wr-margin:not(:has(>:not(.wr-side))){display:none}
+}

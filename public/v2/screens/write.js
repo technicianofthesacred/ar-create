@@ -199,8 +199,39 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   const readDraft=()=>v2.call('study-draft.read',scope());
   const sameRevision=(a,b)=>JSON.stringify(a?.expected)===JSON.stringify(b?.expected);
 
-  // ---------- the unsaved words, kept on this device: his only ----------
-  const KEY=()=>'ar-v2-write:'+st.bindingId;
+  // ---------- the unsaved words, kept on this device: his only, one key for each open tab ----------
+  // Each tab writes only its own key (ar-v2-write:<binding>, or ar-v2-write:<binding>:<n> when another tab holds that one),
+  // held by a Web Lock for as long as the tab is open, so two tabs on one piece never write over each other's words. Words
+  // under a key whose lock is free were left by a tab that closed: this page takes them in once, only while it has no
+  // unsaved words of its own, and removes that key once they are on this page's own key. Without Web Locks it is one key, as before.
+  const LOCKS=root.navigator?.locks,held=new Map();let tabKey=null;
+  const BASE=()=>'ar-v2-write:'+st.bindingId,KEY=()=>tabKey||BASE();
+  const slotKey=k=>k===BASE()||k.startsWith(BASE()+':')&&/^\d+$/.test(k.slice(BASE().length+1));
+  const hold=name=>!LOCKS?Promise.resolve(true):new Promise(res=>{LOCKS.request('ar-v2-write-lock:'+name,{ifAvailable:true},lock=>{res(!!lock);return lock?new Promise(r=>held.set(name,r)):null;}).catch(()=>res(false));});
+  const letGo=name=>{const r=held.get(name);held.delete(name);r?.();};
+  async function claim(){if(!st.human||tabKey)return;for(let n=0;n<64&&!tabKey;n++){const k=n?BASE()+':'+n:BASE();if(await hold(k))tabKey=k;}tabKey||=BASE();}
+  /** Words a closed tab left under its own key, now held by this page: {key, saved}, or null. */
+  async function closedTab(){
+   if(!st.human||!LOCKS)return null;
+   let keys=[];try{for(let i=0;i<root.localStorage.length;i++){const k=root.localStorage.key(i);if(k&&k!==tabKey&&slotKey(k))keys.push(k);}}catch{return null;}
+   for(const k of keys.sort()){if(!held.has(k)&&!await hold(k))continue;const saved=unstash(k);if(saved)return {key:k,saved};letGo(k);}
+   return null;
+  }
+  /** Once his words from a closed tab are on this page's own key (or nothing of them is unsaved), their old key goes. */
+  function forget(k){if(!k||k===tabKey)return;try{if(!dirty()||root.localStorage.getItem(KEY()))root.localStorage.removeItem(k);}catch{/* kept */}letGo(k);}
+  /** A closed tab's words wait until this page has none unsaved, then come in the same way as after a reload. */
+  async function adoptNext(){
+   if(!LOCKS||gone||!st.human||st.adopting||dirty()||st.conflict||st.saving||st.making||!st.base)return;
+   st.adopting=true;
+   try{
+    const d=await closedTab();if(!d)return;
+    const read=await readDraft().catch(()=>null);
+    if(!read||gone||dirty()||st.conflict||st.saving){letGo(d.key);return;}
+    st.base=read;st.rows=rowsOf(read);st.baseWords=wordsMap(st.rows);
+    const {restored,newer}=restore(d.saved,read);paintText();stash();forget(d.key);
+    if(restored&&dirty()&&newer)noticeNewer(read);else if(restored&&dirty()){say('Unsaved words from a tab that has closed are back.','info');schedule(600);}
+   }finally{st.adopting=false;}
+  }
   /** Everything unsaved goes to the device under his key, with the saves whose answer has not come back (the operation
       and what it carried), so a reload in the middle of a save can tell his own committed save from a newer version. */
   function stash(){
@@ -212,10 +243,10 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
      sent:st.sent,base:[...st.baseWords]}));
    }catch{/* private window or blocked storage: the words are still on the page */}
   }
-  function unstash(){
+  function unstash(key=KEY()){
    if(!st.human)return null;
    try{
-    const s=JSON.parse(root.localStorage.getItem(KEY())||'null');
+    const s=JSON.parse(root.localStorage.getItem(key)||'null');
     if(!s||(s.v!==1&&s.v!==2)||!Array.isArray(s.edits)||!Array.isArray(s.added))return null;
     if(!Array.isArray(s.sent))s.sent=[];return s;
    }catch{return null;}
@@ -385,7 +416,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     const e=st.edits.get(r.id),was=base.has(r.id)?base.get(r.id):e?.orig;
     if(was===undefined){items.push(says('Yours',note('Nothing here yet.'))+says('Saved',note('A new paragraph in the saved version: ')+esc(r.words)));continue;}
     const changed=was!==r.words;
-    if(e)items.push(says('Yours',e.text.trim()?esc(e.text):note('You emptied this paragraph.'))+says('Saved',changed?esc(r.words):note('Not changed in the saved version.')));
+    if(e)items.push(says('Yours',e.text.trim()?esc(e.text):note('You emptied this paragraph.'))+says('Saved',changed?esc(r.words):note('Not changed in the saved version.'))+(changed&&e.text!==r.words?pairButtons(r.id):''));
     else if(changed)items.push(says('Yours',note('You have not changed this paragraph.'))+says('Saved',esc(r.words)));
    }
    for(const [rid,e] of st.edits){if(!fresh.has(rid))items.push(says('Yours',e.text.trim()?esc(e.text):note('You emptied this paragraph.'))+says('Saved',note('This paragraph is not in the saved version.')));}
@@ -395,19 +426,40 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const h=(c.fresh.history||[]).filter(x=>x.state==='committed').slice(-1)[0];
    const by=h&&h.actor&&!/unknown/.test(h.actor)?v2.actorName(h.actor)+(h.modifiedAt?' at '+clock(h.modifiedAt):''):'';
    box.innerHTML=`<h2>A newer version of this piece is saved${by?' by '+esc(by.replace(/^You/,'you')):''}</h2>
-    <p class="wr-dim">Your words are still here and are not saved. Choose which to keep. Nothing is mixed for you.</p>
+    <p class="wr-dim">Your words are still here and are not saved. Choose which to keep. Nothing is mixed for you.</p>${c.asked?'<p class="wr-dim" role="status">Where both changed a paragraph, choose Keep yours or Keep the saved one on it. Your other words go on top of the saved version.</p>':''}
     <ul class="wr-pairs">${lines||'<li><p class="wr-dim">You have no unsaved words. The saved version is the newer one.</p></li>'}</ul>
     <div class="wr-row-btns"><button type="button" class="pri" data-act="mine">Keep my words</button><button type="button" data-act="theirs">Use the saved version</button></div>`;
   }
+  /** Where he and the saved version both changed a paragraph: he chooses which to keep, on that pair. */
+  const pairButtons=rid=>{const v=st.conflict.choice.get(rid);return `<div class="wr-row-btns"><button type="button"${v==='mine'?' class="pri"':''} data-act="pair" data-v="mine" data-k="${esc(rid)}" aria-pressed="${v==='mine'}">Keep yours</button><button type="button"${v==='theirs'?' class="pri"':''} data-act="pair" data-v="theirs" data-k="${esc(rid)}" aria-pressed="${v==='theirs'}">Keep the saved one</button></div>`;};
   function noticeNewer(fresh){
-   st.conflict={fresh};st.problem='';paintConflict();paintSaved();
+   st.conflict={fresh,choice:new Map(),asideOps:new Map()};st.problem='';paintConflict();paintSaved();
+  }
+  /** His unsaved words he is not keeping go to the server (study-draft.set-aside) before they leave the page. False if they could not. */
+  async function setAside(list,c){
+   const paragraphs=list.filter(p=>String(p.words).trim());if(!paragraphs.length)return true;
+   const key=JSON.stringify(paragraphs);if(!c.asideOps.has(key))c.asideOps.set(key,uuid());
+   try{await v2.call('study-draft.set-aside',{...scope(),operationId:c.asideOps.get(key),reason:'conflict',expected:st.base?.expected,paragraphs});return true;}
+   catch(error){say('Your words could not be set aside on the app, so nothing was changed. They are still here. '+error.message,'bad');return false;}
   }
   async function useSaved(){
-   const fresh=st.conflict?.fresh||await readDraft();
+   const c=st.conflict,fresh=c?.fresh||await readDraft();
+   const now=new Map(rowsOf(fresh).map(r=>[r.id,r.words]));
+   const mineNow=[...[...st.edits].filter(([rid,e])=>now.get(rid)!==e.text).map(([rid,e])=>({id:rid,words:e.text})),...st.added.map(a=>({id:a.id,words:a.text}))];
+   if(c&&!await setAside(mineNow,c))return;
+   if(st.conflict!==c)return;
    st.edits.clear();st.added=[];st.conflict=null;adopt(fresh);paintConflict();stash();presence();paintSaved();
+   if(mineNow.some(p=>String(p.words).trim()))say('Your unsaved words are set aside on the app, so they are not lost.','info');
   }
   async function keepMine(){
    const c=st.conflict;if(!c)return;
+   // A paragraph both changed is never written over without his word on it: he chooses on each pair first.
+   const both=[...c.fresh?rowsOf(c.fresh):[]].filter(r=>{const e=st.edits.get(r.id),was=st.baseWords.has(r.id)?st.baseWords.get(r.id):e?.orig;return e&&was!==undefined&&was!==r.words&&e.text!==r.words;});
+   if(both.some(r=>!c.choice.has(r.id))){c.asked=true;paintConflict();say('Choose on each paragraph you both changed: Keep yours, or Keep the saved one.','warn');return;}
+   const theirs=both.filter(r=>c.choice.get(r.id)==='theirs');
+   if(!await setAside(theirs.map(r=>({id:r.id,words:st.edits.get(r.id).text})),c))return;
+   if(st.conflict!==c)return;
+   for(const r of theirs)st.edits.delete(r.id);
    // His edits go on top of the saved version. A paragraph the saved version no longer has comes back as a new one.
    const fresh=new Map(rowsOf(c.fresh).map(r=>[r.id,r]));let after=c.fresh?rowsOf(c.fresh).at(-1)?.id??null:null;
    for(const [rid,e] of [...st.edits]){
@@ -551,6 +603,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     if(st.again){st.again=false;if(dirty())schedule(300);}
     if(st.refreshWanted){st.refreshWanted=false;void refresh();}
    }
+   if(ok&&!dirty())setTimeout(adoptNext,0);
    if(ok&&st.starting)void startArticle();
    return ok;
   }
@@ -752,6 +805,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    if(wr==='ask'){v2.ui.sheet({title:'Ask',body:v2.ui.notBuilt('Asking about this piece from here.',{advanced:{subject:id,piece:st.piece||undefined,section:'write'}})});return;}
    if(act==='accept'||act==='reject'||act==='finish'||act==='leave')return void decide(act,b.dataset.id);
    if(act==='mark'){const p=st.props.find(x=>x.id===b.dataset.id);if(!p)return;const rd=reading(p);rd.marks[b.dataset.rid]=!rd.marks[b.dataset.rid];keepReading(p);paintNotes();page.querySelector(`[data-act="mark"][data-rid="${CSS.escape(b.dataset.rid)}"]`)?.focus({preventScroll:true});return;}
+   if(act==='pair'&&st.conflict){st.conflict.choice.set(b.dataset.k,b.dataset.v);paintConflict();return;}
    if(act==='mine')return void keepMine();
    if(act==='theirs')return void useSaved();
   }
@@ -780,7 +834,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   doc.addEventListener('visibilitychange',onHide);root.addEventListener('pagehide',onUnload);root.addEventListener('resize',onResize);
   ctx.on({kinds:['study-draft*','study-ai*']},onChange);
   ctx.on({},e=>{if(e.reset)onChange(e);});
-  presenceTimer=setInterval(()=>presence(true),60000);
+  presenceTimer=setInterval(()=>{presence(true);void adoptNext();},60000);// a tab that closed a moment ago may let go of its key late
 
   // ---------- opening ----------
   function plain(text,withLink=true){
@@ -794,8 +848,23 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     if(!st.bindingId){shell0('The words of this piece are not kept where Write can open them. They open in Advanced.');return;}
     const read=await readDraft();if(ctx.signal.aborted)return;
     st.base=read;st.rows=rowsOf(read);st.baseWords=wordsMap(st.rows);
-    const saved=unstash(),committed=(read.history||[]).filter(x=>x.state==='committed'),h=committed.filter(x=>x.modifiedAt).slice(-1)[0];
+    await claim();if(ctx.signal.aborted)return;
+    let saved=unstash(),from=null;if(!saved){const d=await closedTab();if(d)({key:from,saved}=d);}
+    const committed=(read.history||[]).filter(x=>x.state==='committed'),h=committed.filter(x=>x.modifiedAt).slice(-1)[0];
     if(h)st.savedAt=h.modifiedAt;
+    const {restored,newer}=restore(saved,read);
+    shell();stash();forget(from);
+    if(restored&&dirty()&&newer)noticeNewer(read);
+    else if(restored&&dirty()){say('Your unsaved words from earlier are back.','info');schedule(600);}
+    presence(true);loadProps();if(st.src)loadSources();
+    // Words are saved but the Article was never made (a reload or a closed tab between the two): make it now.
+    if(st.starting&&st.human&&!dirty()&&!st.conflict&&st.rows.some(r=>r.words.trim()))void startArticle();
+    void adoptNext();
+   }catch(error){if(ctx.signal.aborted)return;plain(error.message||'This piece could not be opened.');}
+  }
+  /** His words kept on the device, put back on the page: a save of his own the server holds is settled, the rest is unsaved. */
+  function restore(saved,read){
+    const committed=(read.history||[]).filter(x=>x.state==='committed');
     let newer=false,restored=false;
     if(saved){
      for(const [rid,text,orig] of saved.edits)st.edits.set(rid,{text:String(text),orig:String(orig??'')});
@@ -811,7 +880,11 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
       restored=true;
      }else{
       st.sent=saved.sent;// a late commit of these is still his own
-      for(const rid of [...st.edits.keys()]){const r=st.rows.find(x=>x.id===rid);if(!r||!r.safe||st.edits.get(rid).text===r.words)st.edits.delete(rid);}
+      // Words typed into a paragraph that is gone now (removed or joined elsewhere) or that now holds formatting this page
+      // keeps as it is come back as a new paragraph where it stood, never dropped.
+      const order=Array.isArray(saved.base)?saved.base.map(x=>x[0]):[],have=new Set(st.rows.map(x=>x.id));
+      const after=rid=>{const i=order.indexOf(rid);for(let j=i-1;j>=0;j--)if(have.has(order[j]))return order[j];return null;};
+      for(const rid of [...st.edits.keys()]){const r=st.rows.find(x=>x.id===rid),text=st.edits.get(rid).text;if(!r||!r.safe||text===r.words){st.edits.delete(rid);if((!r||!r.safe)&&String(text).trim()&&text!==r?.words)st.added.push({id:uuid(),afterId:r?r.id:after(rid),text:flat(text)});}}
       foldAdded();
       newer=!!saved.draft&&saved.draft!==read.expected?.workflow?.draft;
       if(newer&&Array.isArray(saved.base))st.baseWords=new Map(saved.base);
@@ -819,19 +892,14 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
      }
      for(const [rid,e] of st.edits){if(!e.orig)e.orig=st.rows.find(x=>x.id===rid)?.words??'';}
     }
-    shell();stash();
-    if(restored&&dirty()&&newer)noticeNewer(read);
-    else if(restored&&dirty()){say('Your unsaved words from earlier are back.','info');schedule(600);}
-    presence(true);loadProps();if(st.src)loadSources();
-    // Words are saved but the Article was never made (a reload or a closed tab between the two): make it now.
-    if(st.starting&&st.human&&!dirty()&&!st.conflict&&st.rows.some(r=>r.words.trim()))void startArticle();
-   }catch(error){if(ctx.signal.aborted)return;plain(error.message||'This piece could not be opened.');}
+    return {restored,newer};
   }
   function shell0(text){shell();$('[data-wr-text]').innerHTML=`<p class="wr-dim" role="status">${esc(text)}</p>`;$('.wr-todo')?.remove();}
   function leave(){
    gone=true;clearTimeout(timer);clearTimeout(startTimer);clearTimeout(propTimer);clearInterval(presenceTimer);
    doc.removeEventListener('visibilitychange',onHide);root.removeEventListener('pagehide',onUnload);root.removeEventListener('resize',onResize);
    if(st.human&&dirty()&&!st.conflict&&st.bindingId&&!st.stopped){try{void save({quiet:true,hold:null});}catch{/* kept on this device */}}
+   void settled().then(()=>{for(const k of [...held.keys()])letGo(k);});// his key stays his until the last save is answered
    if(presenceOk&&presenceSent==='true'){presenceSent='';v2.call('presence.post',{stage:'Write',scope:{kind:'draft',id:st.bindingId},dirty:false,sequence:++presenceSeq,session,leaving:true}).catch(()=>{});}
   }
   return {ready:ready(),leave,state:st};

@@ -62,6 +62,7 @@
     box.querySelectorAll('textarea.wr-dt').forEach(fit);
     if(live){const t=box.querySelector(`[data-rt="${CSS.escape(live.p)}"][data-rid="${CSS.escape(live.r)}"]`);if(t){t.focus({preventScroll:true});try{t.setSelectionRange(live.a,live.b);}catch{}}}
     if(loose)loose.innerHTML=looseHTML+(st.dropped?`<p class="wr-dim wr-stale">${esc(st.dropped===1?'A suggestion was set aside because the words changed after it was made.':st.dropped+' suggestions were set aside because the words changed after they were made.')}</p>`:'');
+    W.paintConflict?.();// two versions, or words kept on the device, stand in the margin too
    }
    function noteHTML(p,n,by){
     const ok=p.simple&&p.replacements.length||p.reads;
