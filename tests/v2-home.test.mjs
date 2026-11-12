@@ -49,6 +49,10 @@ test('nextOf: only a known next step is ever shown',()=>{
  assert.equal(nextOf({known:true,station:'published',forms:[],next:step('Check')}),'','published has none');
  assert.equal(nextOf({known:true,station:'resting',forms:[],next:step('Check')}),'','resting has none');
  assert.equal(nextOf(undefined),'');
+ const held={name:'Check',formName:'Article',step:'check',state:'wait',note:'No source to check against yet'};
+ assert.equal(nextOf({known:true,station:'create',forms:[{}],next:held}),'No source to check against yet','a check held for want of a source says why, not a bare Check');
+ assert.equal(nextOf({known:true,station:'create',forms:[{},{}],next:held}),'No source to check against yet · Article','the form is still named when there are two');
+ assert.equal(nextOf({known:true,station:'create',forms:[{}],next:{name:'Check',step:'check',state:'todo',note:'Not checked yet'}}),'Check','a piece simply not checked yet still reads Check');
 });
 
 /* ---------------- the page, against the real server ---------------- */
