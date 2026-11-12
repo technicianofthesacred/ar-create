@@ -744,7 +744,7 @@ async function scene(t,{kept=true,reviewed=false,list,actor=''}={}){
   '/api/sources/tree':()=>({status:200,body:{...tree,sources:[...tree.sources,...(S2.kept?[{id:TID,kind:'transcript',title:'Transcript of the shade talk',recordingId:job.id}]:[])]}}),
   ['/transcription/'+job.id+'/recover']:()=>({status:200,body:snap('r0')}),
   ['/transcription/'+job.id+'/speakers']:o=>{S2.said.push(['speakers',JSON.parse(o.body)]);return S2.refuse?{status:403,body:{error:'refused'}}:{status:200,body:snap('r1','Mara')};},
-  ['/transcription/'+job.id+'/review']:o=>{S2.said.push(['review',JSON.parse(o.body)]);if(S2.refuse)return {status:403,body:{error:'refused'}};S2.reviewed=true;return {status:200,body:snap('r2','Mara')};},
+  ['/transcription/'+job.id+'/review']:o=>{S2.said.push(['review',JSON.parse(o.body)]);if(S2.refuse)return {status:403,body:{error:'refused'}};if(S2.refuseReview){S2.refuseReview=false;return {status:400,body:{error:'Name every speaker and resolve unattributed segments before confirming review.'}};}S2.reviewed=true;return {status:200,body:snap('r2','Mara')};},
   ['/api/transcript-check/'+job.id]:{status:200,body:{expected:{jobId:job.id,markdownHash:'h1'}}},
   '/api/recordings/source':()=>{S2.kept=true;return {status:200,body:{source:{id:TID},jobId:job.id}};},
   '/api/study/material/attach':{status:200,body:{}},
@@ -855,4 +855,31 @@ test('the shared block lives in the subject screen for Check to read, and the sc
  assert.doesNotMatch(js+css,/\u2014/);assert.doesNotMatch(js,/\bfetch\s*\(/,'a command is never fetched');
  const own=css.slice(css.indexOf('capture sources: BEGIN'));assert.doesNotMatch(own,/#[0-9a-f]{3,8}\b|rgba?\(/i);
  for(const m of own.matchAll(/font(?:-size)?:[^;}]*/g))assert.doesNotMatch(m[0],/\d+px/,'only the six size tokens');
+});
+
+// ---------- Review of piece B: faults shown by test (marked todo until corrected, so the suite stays green) ----------
+// 1. The recordings list says only reviewStatus, never who reviewed. A transcript an assistant reviewed (the recording's
+// review action accepts any actor) must not read "Confirmed by you", and Adrian must still be offered Confirm.
+test('review of piece B: a transcript reviewed by an assistant does not read "Confirmed by you" and still offers Confirm',{timeout:300000,todo:'must-fix: csConfirmed falls back to job.reviewStatus, which does not say who reviewed'},async t=>{
+ const {open}=await scene(t,{kept:false,reviewed:true});
+ const {doc}=await open();
+ await until(()=>doc.querySelector('[data-subj-rec="use"]'));
+ await new Promise(r=>setTimeout(r,300));
+ assert.equal(doc.querySelector('[data-cs-confirmed]'),null,'the row says "Confirmed by you" for a review it cannot attribute');
+ assert.ok(doc.querySelector('[data-cs=open]'),'Confirm this transcript is gone, so Adrian cannot confirm it himself');
+});
+
+// 2. Names saved, review refused (an unattributed line): pressing Confirm again resends the names with the revision
+// from before they were saved, so every retry is refused as changed, with no way forward but closing the panel.
+test('review of piece B: after the names are saved and the review is refused, Confirm again does not resend stale names',{timeout:300000,todo:'should-fix: doConfirm keeps the old snapshot after a partial success'},async t=>{
+ const {S2,open}=await scene(t,{kept:true});
+ const {doc}=await open();
+ (await until(()=>doc.querySelector('[data-cs=open]'))).click();
+ const box=await until(()=>doc.querySelector('[data-cs-name]'));box.value='Mara';box.dispatchEvent(new doc.defaultView.Event('input',{bubbles:true}));
+ S2.refuseReview=true;doc.querySelector('[data-cs=confirm]').click();
+ await until(()=>S2.said.length===2);await until(()=>doc.querySelector('[data-cs=confirm]:not([disabled])'));
+ doc.querySelector('[data-cs=confirm]').click();
+ await until(()=>S2.said.length>=3);
+ const third=S2.said[2];
+ assert.ok(!(third[0]==='speakers'&&third[1].expected?.rev==='r0'),'the retry sent the names again at the revision from before they were saved');
 });
