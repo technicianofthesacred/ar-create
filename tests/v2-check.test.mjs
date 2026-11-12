@@ -392,7 +392,9 @@ test('a check held for want of a source lists what Check can read, and one butto
  assert.match(items[0].textContent,/Interview transcript/);assert.match(items[0].textContent,/Transcript/);assert.match(items[0].textContent,/Confirmed by you/);
  assert.match(items[1].textContent,/Studio note/);assert.match(items[1].textContent,/Not confirmed by you yet/,'what is not eligible says why, in the list\'s own words');
  assert.equal(doc.querySelectorAll('[data-cs=capture]').length,1,'one button');assert.equal(doc.querySelector('[data-cs=capture]').textContent,'Use it for Check');
- assert.ok(doc.querySelector('[data-cs=capture]').classList.contains('pri'),'it is the primary button');
+ assert.ok(!doc.querySelector('[data-cs=capture]').classList.contains('pri'),'it is a plain button: the card\'s own Check saved draft stays its one primary');
+ assert.equal(doc.querySelectorAll('[data-ck-run] button.pri').length,1,'one primary in the card');
+ assert.equal(doc.querySelector('[data-cs-block] .subj-cs-h h3').textContent,'Sources');
  assert.ok(calls.some(c=>c.path===LIST&&/bindingId=root1/.test(c.search)&&/parentStudyId=s1/.test(c.search)),'the list is asked for this subject\'s draft');
  const before=calls.filter(c=>c.method==='POST'&&c.path==='/api/study-draft/check').length;
  doc.querySelector('[data-cs=capture]').click();

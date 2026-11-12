@@ -832,7 +832,7 @@ into a passing one and the correction is two lines.
 
 Piece B is the smallest self-contained change, kept in marked blocks so the thread restyling these screens can carry it.
 
-- `public/v2/screens/subject.js` (blocks marked "capture sources"): the recording's row offers "Confirm this transcript" when the transcript is ready and not confirmed by him. It opens in place with the words (read only, in the speech face), one name box per unnamed speaker and a primary "Confirm"; Confirm calls the recording's own `speakers` then `review` actions through `.transcription.id.action` as the page's actor, and the row then says "Confirmed by you". The words and the speakers are read with the same command's `recover` action, which only returns the transcript's current snapshot (the registry has no plain read of it). Once the transcript is kept and confirmed, the list from `study-draft.capture-sources.list` is shown (title, kind, "Confirmed by you"; what is not eligible with the list's own reason) with one primary "Use it for Check" that sends exactly the eligible ones shown to `study-draft.capture-sources`; on success "Check can now read this". The list is read again after every confirm and capture, so either order works.
+- `public/v2/screens/subject.js` (blocks marked "capture sources"): the recording's row offers "Confirm this transcript" when the transcript is ready and not confirmed by him. It opens in place with the words (read only, in the speech face), one name box per unnamed speaker and a primary "Confirm"; Confirm calls the recording's own `speakers` then `review` actions through `.transcription.id.action` as the page's actor, and the row then says "Confirmed by you". The words and the speakers were read with the same command's `recover` action. That was wrong: `recover` takes the transcript's writer lock, can finish a half-done publication and, the first time, writes the mapping, so it is not a read (see the corrections below). Once the transcript is kept and confirmed, the list from `study-draft.capture-sources.list` is shown (title, kind, "Confirmed by you"; what is not eligible with the list's own reason) with one primary "Use it for Check" that sends exactly the eligible ones shown to `study-draft.capture-sources`; on success "Check can now read this". The list is read again after every confirm and capture, so either order works.
 - `public/v2/screens/check.js`: when the check is held only for want of a source, the same list and button are drawn below the sentence (through `v2.shared.subject.createCaptureSources`, read when the screen opens; without it Check does without). With nothing eligible it shows the reasons and a link back to the subject; a damaged record shows the list's sentence and no button. After a capture Check reads the draft and the receipt again and runs by itself.
 - An assistant's page has every control; pressing shows the refusal and nothing is faked.
 - `scripts/review-journey.mjs`: step 4 confirms the transcript and presses "Use it for Check"; step 8 asserts a real result (the held break is gone); step 9 no longer expects the held wording.
@@ -915,3 +915,29 @@ saved recording and a finished transcription job the way the journey walk does; 
     measured by me.
 
 Verdict: merge after corrections 1 and 2 (and 3 to 6 in the same pass; each is small and inside the marked blocks).
+
+## Corrections after the review of piece B
+
+Made on `claude/v2-capture-sources-b2`, in the same marked blocks.
+
+- **A read that only reads.** One small command, `GET /transcription/{id}/look` (registry name `.transcription.id.look`, any actor, no
+  lock, nothing created or rewritten), returns a transcript's words, speakers and review stamp (`reviewStatus`, `reviewedBy`,
+  `reviewedAt`, `coherent`). It is built from the Library's own read of the stamp, so a review counts only on the current bytes.
+  `tests/transcript-look.test.mjs` proves the transcript files are byte for byte unchanged after it, as every actor. Opening the
+  confirm panel and drawing the row call only this. The press of Confirm is what writes: it reads the recording's own `recover` once
+  (for a fresh revision, and because the first press may have to make the mapping), then `speakers` if a name is missing, then `review`.
+- **The words come from the stamp.** The row says "Confirmed by you" only when the stamp names a human actor on the current bytes.
+  Reviewed by an assistant, or reviewed with no stamp: "Reviewed, not confirmed by you yet", and "Confirm this transcript" is still
+  offered. The row and the list never disagree: the list is only drawn once the row says confirmed, and it is read again whenever the
+  stamp moves.
+- **An assistant's Confirm.** The server accepts it as an assistant's review (it is not refused; the owner has not decided that). The
+  page says "Reviewed by an assistant. Not confirmed by Adrian yet.", never "Confirmed by you", and offers no capture.
+- **After a failed press** the transcript is read again (one plain read), the panel stays open, a speaker already named loses its box, and
+  Confirm again sends only what is still missing at the revision on file. A line with no speaker is labelled "No speaker" and the panel
+  says it has to be settled in Advanced.
+- **Keyboard.** Escape closes the panel without saving. Focus goes to the words on open and back to "Confirm this transcript" on close.
+- "Back to the subject" is drawn only by Check, never on the subject page.
+- **Look.** The list has the sample's small "Sources" heading and count, rows with the kind's icon (title 14 weight 500, kind and state
+  12, padding 7 and 8, radius 8). The screen's buttons are already 14 and 36 tall everywhere, so the two new buttons follow the screen's
+  own, not the sample's 13 and 28. "Confirm", "Confirm this transcript" and "Use it for Check" are plain buttons, so the card's own
+  "Next" (and Check's "Check saved draft") stays the one primary. "Confirm this transcript" does not wrap at 390.

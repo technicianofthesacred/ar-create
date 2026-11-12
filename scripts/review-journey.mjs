@@ -344,6 +344,7 @@ async function walkOne(width, theme) {
           await wait(600);
           // Confirm the transcript (name the speaker, press Confirm), then "Use it for Check", all through the real buttons as human:adrian.
           const open = p.locator('[data-cs=open]');
+          await p.waitForSelector('[data-cs=open]', {timeout: 8000}).catch(() => {});
           if (!(await open.count())) breakOnce(step, '"Confirm this transcript" did not appear for a ready transcript.');
           else {
             await open.first().click();
