@@ -123,19 +123,75 @@ const saveWords=async(base,id,text)=>{
 const key=(w,el,k)=>el.dispatchEvent(new w.KeyboardEvent('keydown',{key:k,bubbles:true,cancelable:true}));
 const savedLine=doc=>doc.querySelector('.wr-bar [data-wr-saved]').textContent;
 
-test('while the Article is being made the line says so, and Enter and Backspace do nothing: no save goes out and no warning shows',{timeout:90000},async()=>{
+test('while the Article is being made the line says so, the box stays open to type in, and Enter waits for the Article: no warning shows',{timeout:90000},async()=>{
  const {base}=await theWorld(),id=await newSubject(base);
  const pg=await livePage(base,id,{slowCreate:1500});
  type(pg.w,pg.doc.querySelector('textarea.wr-ed'),'Words before the Article exists.');
  await until(()=>savedLine(pg.doc)==='Starting the Article',20000);
  const saves=()=>pg.calls.filter(c=>c.path==='/api/study-draft/save').length,before=saves();
  const box=pg.doc.querySelector('textarea.wr-ed');
- assert.equal(box.readOnly,true);
- key(pg.w,box,'Enter');key(pg.w,box,'Backspace');await settle(300);
- assert.equal(saves(),before,'nothing was saved by the keys');
+ assert.equal(box.readOnly,false,'keys are not dropped');
+ key(pg.w,box,'Enter');await settle(300);
+ assert.equal(saves(),before,'nothing is saved while the Article is made');
  await until(()=>/[?&]piece=/.test(pg.w.location.hash),30000);
  assert.deepEqual(pg.said,[],'no warning at any point');
  assert.equal((await articlesOf(base,id)).length,1);
+});
+
+// A steady typist: one letter every 15 ms, into whichever box has the cursor, as a browser does (a key goes to the focused
+// box and is dropped if that box is gone or read only).
+const typist=(pg)=>{
+ const {w,doc}=pg,rec={typed:'',dropped:0};
+ return {rec,press(ch){
+  const el=doc.activeElement;
+  if(!el||!el.matches?.('textarea.wr-ed')||el.readOnly||!el.isConnected){rec.dropped++;return;}
+  const at=el.selectionStart;el.value=el.value.slice(0,at)+ch+el.value.slice(at);el.setSelectionRange(at+1,at+1);
+  el.dispatchEvent(new w.Event('input',{bubbles:true}));rec.typed+=ch;
+ }};
+};
+
+test('typing steadily across the moment the Article is made loses no letter: the same box, the same cursor, every letter saved in the Article',{timeout:120000},async()=>{
+ const {base}=await theWorld(),id=await newSubject(base);
+ const pg=await livePage(base,id,{slowSave:300,slowCreate:600});
+ const box=pg.doc.querySelector('textarea.wr-ed'),t=typist(pg);
+ box.focus();
+ for(let i=0;i<5;i++){t.press('abcde'[i]);await settle(15);}
+ await settle(1900);// his first pause: the first save goes out
+ const letters='fghijklmnopqrstuvwxyz';let moved=false,during=null,after=null;
+ for(let i=0;i<240;i++){
+  t.press(letters[i%letters.length]);await settle(15);
+  if(!during&&savedLine(pg.doc)==='Starting the Article')during=pg.doc.activeElement;
+  if(!moved&&/[?&]piece=/.test(pg.w.location.hash)){moved=true;after=pg.doc.activeElement;}
+ }
+ assert.ok(moved,'the Article was made during the typing');
+ await until(()=>!/Not saved|Saving|Starting/.test(savedLine(pg.doc)),30000);
+ await settle(500);await until(()=>!/Not saved|Saving|Starting/.test(savedLine(pg.doc)),30000);
+ assert.equal(t.rec.dropped,0,'no key was dropped');
+ assert.ok(during&&after,'the typing passed through the making of the Article');
+ assert.equal(after,during,'the page was not rebuilt when the Article was made: the same box');
+ const now=pg.doc.activeElement;
+ assert.ok(now?.matches?.('textarea.wr-ed')&&now.selectionStart===now.value.length,'the cursor is still in the text, at the end');
+ const piece=decodeURIComponent(pg.w.location.hash.match(/piece=([^&]+)/)[1]);
+ assert.deepEqual(await pieceWords(base,id,piece),[t.rec.typed],'every letter is in the Article, in order');
+ assert.equal((await articlesOf(base,id)).length,1);
+ assert.ok(pg.doc.querySelector('.wr-tabs a[aria-current="page"]'),'the tabs now show the Article');
+});
+
+test('when another tab made the Article first, this tab opens it at once with no message',{timeout:90000},async()=>{
+ const {base}=await theWorld(),id=await newSubject(base);
+ const pg=await livePage(base,id,{slowSave:0,slowCreate:1200});
+ const box=pg.doc.querySelector('textarea.wr-ed');
+ type(pg.w,box,'Words from the first tab.');
+ await until(()=>pg.calls.some(c=>c.path==='/api/study-draft/save'&&c.status===200)&&savedLine(pg.doc)==='Starting the Article',20000);
+ // the other tab makes it while this one waits
+ const binding=(await getJSON(base,'/api/subject/standing?parentStudyId='+id)).facts.bindingId,sc={rootBindingId:binding,parentStudyId:id};
+ const native=await getJSON(base,`/api/study-draft/read?bindingId=${binding}&parentStudyId=${id}`),outs=await getJSON(base,`/api/study/outputs?rootBindingId=${binding}&parentStudyId=${id}`);
+ const r=await fetch(base+'/api/study/outputs/create',{method:'POST',headers:{'content-type':'application/json',Origin:base},body:JSON.stringify({...sc,operationId:crypto.randomUUID(),kind:'article',sourceBindingId:binding,expectedNative:native.expected,expectedOutput:outs.expectedOutput})});
+ assert.equal(r.status,200);
+ await until(()=>/[?&]piece=/.test(pg.w.location.hash),10000);
+ assert.deepEqual(pg.said,[],'no message');
+ assert.equal((await articlesOf(base,id)).length,1);
+ assert.equal(pg.calls.filter(c=>c.path==='/api/study/outputs/create').length<=1,true);
 });
 
 test('a refused create is said once, the words stay saved, and the retries are quiet; it succeeds when the server accepts',{timeout:90000},async()=>{
