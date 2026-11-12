@@ -172,7 +172,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
  function open(page,ctx,pre=null){
   const id=ctx.params.id,human=v2.isHuman();
   const st={standing:null,form:null,forms:[],bindingId:null,piece:null,missing:false,base:null,rows:[],edits:new Map(),added:[],
-   starting:false,creating:false,making:false,makingP:null,startSaid:false,saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],retryMs:8000,baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
+   starting:false,creating:false,making:false,startSaid:false,saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],retryMs:8000,baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
    src:root.matchMedia&&root.matchMedia('(min-width:1101px)').matches,focus:false,ops:new Set(),human};
   let timer=null,startTimer=null,propTimer=null,presenceTimer=null,presenceSeq=0,presenceOk=true,presenceSent='',gone=false;
   const session=uuid().slice(0,8);
@@ -476,16 +476,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     const joined=now.get(j.leftId)?.words||'',sep=joined.startsWith(j.leftText)&&joined.endsWith(j.rightText)&&joined.length>=j.leftText.length+j.rightText.length?joined.slice(j.leftText.length,joined.length-j.rightText.length):' ';
     later.push([j.leftId,cl+sep+cr]);
    }
-   for(const [rid,text] of info.edits||[]){
-    const e=st.edits.get(rid);
-    if(e){if(e.text===text)st.edits.delete(rid);}
-    else if(text!==''){
-     // He put the paragraph back to what it was before this save went out. The save has changed it on the server, so what he
-     // sees is now a change of its own (it is not "the same as saved"), and it must be saved too.
-     const was=st.rows.find(r=>r.id===rid)?.words;
-     if(was!==undefined&&was!==text)later.push([rid,was]);
-    }
-   }
+   for(const [rid,text] of info.edits||[]){if(st.edits.get(rid)?.text===text)st.edits.delete(rid);}
    const sentAdd=new Map(info.added||[]);
    st.added=st.added.filter(a=>!(sentAdd.has(a.id)&&sentAdd.get(a.id)===a.text));
    adopt(read);
@@ -573,7 +564,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    try{
     for(let i=0;i<8&&(dirty()||st.saving)&&!st.conflict&&!st.stopped;i++){clearTimeout(timer);if(st.saving)await settled();else await save({quiet:true,hold:null});}
     if(dirty()||st.conflict||st.stopped||gone){st.creating=false;return;}
-    st.making=true;let release;st.makingP=new Promise(r=>{release=r;});clearTimeout(timer);paintSaved();
+    st.making=true;clearTimeout(timer);paintSaved();
     try{
      const standing=await v2.call('subject.standing',{parentStudyId:id});
      const articleOf=s=>((s.forms||[]).find(f=>f.kind==='article'&&/^out:/.test(f.key||''))||{}).id||null;
@@ -615,7 +606,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
      if(!st.startSaid){st.startSaid=true;say('Your words are saved, but the Article could not be started.','bad');}
      if(error?.kind==='owner-only'){st.startStopped=true;return;}
      clearTimeout(startTimer);const wait=st.retryMs;st.retryMs=Math.min(60000,Math.round(st.retryMs*1.5));startTimer=setTimeout(()=>{void startArticle();},wait);
-    }finally{st.making=false;release();}
+    }finally{st.making=false;}
    }catch(error){st.creating=false;st.making=false;}
   }
   function schedule(ms=AUTOSAVE_MS){clearTimeout(timer);if(gone||st.stopped||st.conflict||!st.human)return;timer=setTimeout(()=>{void save({quiet:true});},ms);}

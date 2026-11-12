@@ -715,15 +715,26 @@ test('the Add a piece plus is never hidden at any width',()=>{
  assert.doesNotMatch(css,/Add a piece[^}]*\{[^}]*display:none/,'the plus stays at every width');
 });
 
-test('real server: typing a paragraph back to what it was before a save, while that save runs, is saved too and not forgotten',{timeout:120000},async()=>{
+test('real server: typing into a saved paragraph with a bold run and splitting it at once saves each word once, in order, bold kept',{timeout:120000},async()=>{
  const {base}=await theWorld(),sub=await subjectOf(base,'studio-after-rain');
- const a=await livePage(base,sub,{slowSave:2500});
- const box=longRows(a.doc)[0],original=box.value,idx=edsOf(a.doc).indexOf(original);
- type(a.w,box,original+' CHANGED');blur(a.w,box);await savedOnServer(a);// the server has the change; the answer is on its way
- type(a.w,box,original);// he takes his words back before the answer comes
- await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);await settle(3000);await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);
- const server=wordsOf(await draftOf(base,sub));
- assert.equal(server[idx],original,'the server holds the words as he put them back');
- assert.ok(!server.some(x=>x.includes('CHANGED')),'the change he took back is gone');
- assert.equal(edsOf(a.doc)[idx],original);
+ const adrian=pageClient(base),scope={bindingId:sub.binding,parentStudyId:sub.id};
+ const d0=await adrian.call('study-draft.read',scope),row=d0.projection.find(r=>r.safe!==false&&r.words.length>30);
+ const id=globalThis.crypto.randomUUID();
+ await adrian.call('study-draft.save',{...scope,expected:d0.expected,operations:[{kind:'insert',id,beforeId:row.id,raw:'Alpha **bold run** beta gamma, in a paragraph he saved earlier.'}]});
+ const a=await livePage(base,sub),target=a.doc.querySelector(`textarea[data-ed="${id}"]`);
+ assert.ok(target.value.startsWith('Alpha '),'the saved paragraph is on the page: '+target.value.slice(0,40));
+ const cut=target.value.indexOf('beta')-1,typed=target.value.slice(0,cut)+' XYZ'+target.value.slice(cut);
+ type(a.w,target,typed);const at=cut+4;target.setSelectionRange(at,at);press(a.w,target,'Enter');// before the autosave
+ await savedOnServer(a);await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);await settle(2500);await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);
+ const check=async d=>{
+  const rows=d.projection.filter(r=>r.safe!==false&&r.words),i=rows.findIndex(r=>r.id===id),both=rows[i].raw+' | '+rows[i+1].raw;
+  for(const w of ['Alpha','XYZ','beta','gamma'])assert.equal(both.split(w).length-1,1,w+' once: '+both);
+  assert.ok(both.indexOf('Alpha')<both.indexOf('XYZ')&&both.indexOf('XYZ')<both.indexOf('beta')&&both.indexOf('beta')<both.indexOf('gamma'),'in order: '+both);
+  assert.match(rows[i].raw,/\*\*bold run\*\*/,'the bold is kept: '+rows[i].raw);
+  return rows.map(r=>r.words);
+ };
+ const server=await check(await draftOf(base,sub));
+ assert.deepEqual(edsOf(a.doc),server,'the page shows what the server holds');
+ const b=await reload(a,base,sub);await agree(b,base,sub,2500);
+ assert.deepEqual(await check(await draftOf(base,sub)),server,'a reload shows the same');
 });
