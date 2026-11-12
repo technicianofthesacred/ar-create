@@ -355,8 +355,9 @@ export function createStudyDraftCopies({dataDir,originals,afterCopyFile,afterCom
   const b=binding(input),why=cannotTakeSources(b);if(why)fail(why);
   capture(b);
   const inputHash=digest(stable({bindingId:input.bindingId,parentStudyId:input.parentStudyId,expectedSourcesHash,sourceId,copiedHash})),cur=added(b);
-  if(!cur)fail('Check reads no added source here.');if(cur.error)fail(ADDED_BROKEN);
-  const outcome=()=>{const now=added(b);return {document:readOwned(b),stopped:[{sourceId,copiedHash}],sourcesHash:now?.hash??null};};
+  if(!cur)fail('Check reads no added source here.');if(cur.error)fail('Captured sources for Check changed. Nothing was stopped.');
+  // Answer truthfully: a replay after the source was used again says it is no longer stopped.
+  const outcome=()=>{const now=added(b);return {document:readOwned(b),stopped:now?.stopped?.some(x=>x.sourceId===sourceId&&x.copiedHash===copiedHash)?[{sourceId,copiedHash}]:[],sourcesHash:now?.hash??null};};
   const mine=cur.entries.filter(e=>e.operationId===input.operationId);
   if(mine.length){if(mine.some(e=>!Object.hasOwn(e,'action')||e.inputHash!==inputHash))fail('This operation ID already belongs to a different request.');return outcome();}
   if(input.operationId===b.operationId||input.operationId===b.prepareOperationId||allBindings().some(row=>row.operationId===input.operationId||row.prepareOperationId===input.operationId)||outputRegistrations().some(row=>row.operationId===input.operationId))fail('This operation ID already belongs to another draft operation.');

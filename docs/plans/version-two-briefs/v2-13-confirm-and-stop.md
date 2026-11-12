@@ -187,8 +187,8 @@ the next press for any other source.
 
 Recommendation: (b). The list marks a stopped source not eligible, so the bulk press never sends it. The server
 refuses a stopped source in `study-draft.capture-sources` (409, "You stopped using this for Check.") unless that
-item says `again:true` (items become `{sourceId, sourceHash, again?}`; `again` on a source that is not stopped is
-400). "Again" copies the current Library bytes, which must be confirmed by him like any capture, and appends an
+item says `again:true` (items become `{sourceId, sourceHash, again?}`; `again` on a source that is not stopped and was never captured is
+400; on a source already in use it behaves exactly like the same item without `again`: the same bytes settle as already used, changed Library bytes are captured as a new copy). "Again" copies the current Library bytes, which must be confirmed by him like any capture, and appends an
 ordinary capture entry. It needs one more row control, which Adrian has not approved: question 1. If he says no,
 the server rule stays and a stop is final for that source on this subject.
 
@@ -213,17 +213,17 @@ or the held step says what to do.
 | Unattributed request (no header, no app Origin) to review or source-review | 403: the gate refuses no actor; the services refuse an absent actor |
 | A page that omits the header but sends the app's Origin | read as Adrian by design (`actor.mjs` 8 to 16); piece 4 closes it for the existing workspace's own transcript calls; an assistant must open pages with `?reviewActor=` (CLAUDE.md) |
 | Chat relay with his words | neither command is in `CHAT_RELAYABLE`; 403 |
-| Body fields `actor`, `by`, `reviewedBy` | 400 on source-review (unknown key); ignored by transcript review, which stamps `provenance()` |
+| Body fields `actor`, `by`, `reviewedBy` | source-review: 403 for anyone not Adrian, 400 (unknown key) for him; ignored by transcript review, which stamps `provenance()` |
 | Corrections, speakers, transcript check, shared words | reset the review (Decision 3) |
 | Hand edits to transcript files | incoherent with `base.json`, read unreviewed; a writer with file access can forge anything, as today |
 | Library front matter `review_status: reviewed` (`library.mjs` 421) | a Library label only ("source-declaration"); not read by `reviewed()` or capture; noted below |
 | Translation review, research material review, output reviews | not material confirmation; not read by `reviewed()` or capture; unchanged |
 | Bring a stopped source back by the bulk press | not eligible in the list; server refuses without `again` |
 | A stale page's press | the stop changed `sourcesHash`; 409 |
-| Delete `added-sources.json` | Check reads the locked capture only: sources can be lost, never gained |
-| Remove the stop entry or forge one | broken chain or non-human stop: damaged, Check holds; re-chaining by hand passes (no secret, same as the locked record) |
+| Delete `added-sources.json` | Check reads the locked capture only: sources can be lost. Known limit: cutting only the newest entry off the file (for example a stop) is not detected and gives a stopped source back, because only the added record's newest entry is unanchored; it needs file access |
+| Remove the stop entry or forge one | a stop removed from the middle, or a forged or non-human stop: damaged, Check holds. Known limit: cutting the newest stop entry off the end is not detected, and the stopped source reads as used again. Re-chaining by hand also passes (no secret) |
 | Fork or structure test after a stop | seeded from the locked capture only; unchanged |
-| Replay Adrian's stop or capture operation as an assistant | 403 at the gate before any replay |
+| Replay Adrian's stop or capture operation as an assistant | 403 at the gate before any replay, except `first-flow.prepare`: an assistant repeating his prepare operation gets 200 and the current view, nothing is written and no stamp moves |
 | `again:true` as an assistant | 403 (capture is already his alone) |
 
 ## Decision 8: tests
@@ -656,3 +656,13 @@ Yes, once Must fix 1 is made; it touches only `first-flow.mjs` and its own test.
 both services, so piece 3's gate is a first look and the services stay the real check, as Must fix 1 of the design's
 review asked. `first-flow.source-review` must stay "any" in the registry because withdrawing is open; the service
 already separates the two.
+
+## Corrections after the code reviews of pieces 1 and 2
+
+- Piece 1, must fix: the "already on file" check in `first-flow.prepare` now applies only to non-human callers. Adrian's prepare puts his name on a review already on file, as before the change (test added for an assistant's old stamp and for no stamp).
+- Piece 1, should fix: tests added for a transcript check edit resetting a review, for an assistant replaying his prepare operation (200, nothing written, no stamp, a withdrawn review stays withdrawn), for the 400 on unknown keys to source-review, and for the stamp-keeping rule on a structure-test copy. Decision 7's replay and body-field rows reworded to match.
+- Piece 2: the test for cutting the newest stop entry off is renamed to say it is a known limit, and Decision 7 now says so in both rows.
+- Piece 2: a replay of an old stop operation after "again" answers `stopped:[]` (truthful), tested.
+- Piece 2: a stop on a damaged record says "Captured sources for Check changed. Nothing was stopped."
+- Piece 2: two test titles fixed (no-stop read and list; fork and structure-test stand-in), the stand-in case now tested.
+- Piece 2: Decision 6 now says "again" on a source already in use behaves like the same item without `again`.

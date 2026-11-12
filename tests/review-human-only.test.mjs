@@ -3,7 +3,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {randomUUID} from 'node:crypto';
 import {createStore} from '../runtime/store.mjs';import {createStudyBindings} from '../runtime/services/study-bindings.mjs';import {createLibrary} from '../runtime/services/library.mjs';import {createGuidance} from '../runtime/services/guidance.mjs';import {createRequestPreviews} from '../runtime/services/requests.mjs';import {createArtifactExecution} from '../runtime/services/artifact-execution.mjs';
 import {createFirstFlow} from '../runtime/services/first-flow.mjs';import {createTranscriptCorrections} from '../runtime/services/transcript-corrections.mjs';import {createWorkshopFixture} from '../runtime/recording-workshop-fixture.mjs';
-import {withActor} from '../runtime/services/actor.mjs';import {digest} from '../runtime/services/files.mjs';
+import {createTranscriptCheck} from '../runtime/services/transcript-check.mjs';import {withActor} from '../runtime/services/actor.mjs';import {digest} from '../runtime/services/files.mjs';
 
 const as=actor=>fn=>withActor({actor,client:'cli'},fn),adrian=as('human:adrian'),codex=as('agent:codex');
 const NOT_ADRIAN=['agent:codex','agent:claude-code','agent:claude-design','agent:hermes','agent:grok','agent:chatgpt','cron:nightly','import:notes'];
@@ -93,6 +93,44 @@ test('the study stand-in on a structure-test copy still works and changes no rea
  const copy=JSON.parse(fs.readFileSync(path.join(dataDir,'first-flow',digest(scope.projectId),'flow.json'),'utf8'));assert.equal(copy.studyReviews[source.id].role,'stand-in');assert.equal(copy.reviewedBy[source.id].by,'agent:codex','the stand-in review lands in the copy only');
 });
 
+// Adrian's own calls take exactly today's path: his prepare puts his name on a review already on file.
+test('Adrian preparing with a source whose review is on file under an assistant, or with no stamp, re-stamps it as his',async t=>{
+ const m=material(t);await m.attach([m.a.id,m.b.id]);await adrian(()=>m.review(m.a));await adrian(()=>m.review(m.b));
+ const f=m.read();f.reviewedBy[m.a.id]={by:'agent:codex',at:new Date().toISOString(),hash:m.a.hash};delete f.reviewedBy[m.b.id];fs.writeFileSync(m.flowFile,JSON.stringify(f,null,2));
+ assert.equal(m.read().reviewedBy[m.a.id].by,'agent:codex');assert.equal(m.read().reviewedBy[m.b.id],undefined);
+ await adrian(()=>m.prepare([m.a,m.b],[m.a,m.b]));
+ assert.equal(m.read().reviewedBy[m.a.id].by,'human:adrian','an assistant\'s old stamp becomes his');assert.equal(m.read().reviewedBy[m.b.id].by,'human:adrian','an unstamped review becomes his');
+});
+
+test('an assistant repeating Adrian\'s prepare operation gets 200, writes nothing and stamps nothing',async t=>{
+ const m=material(t);await m.attach([m.a.id]);await adrian(()=>m.review(m.a));
+ const op=randomUUID();await adrian(()=>m.prepare([m.a],[m.a],op));const before=tree(m.dataDir);
+ const again=await codex(()=>m.prepare([m.a],[m.a],op));assert.equal(again.research.status,'preview');
+ assert.deepEqual(tree(m.dataDir),before,'every file is byte identical');assert.equal(m.read().reviewedBy[m.a.id].by,'human:adrian');
+ await codex(()=>m.review(m.a,false));assert.equal(m.read().reviews[m.a.id],undefined);
+ await codex(()=>m.prepare([m.a],[m.a],op));assert.equal(m.read().reviews[m.a.id],undefined,'a replay does not bring a withdrawn review back');assert.equal(m.read().reviewedBy?.[m.a.id],undefined);
+});
+
+test('source-review refuses unknown keys such as by and reviewedBy with 400 for Adrian, and the flow is unchanged',async t=>{
+ const m=material(t);await m.attach([m.a.id]);const before=tree(m.dataDir);
+ for(const extra of [{by:'human:adrian'},{reviewedBy:{by:'human:adrian'}}])await assert.rejects(async()=>adrian(()=>m.flow.reviewSources({projectId:m.projectId,operationId:randomUUID(),sourceId:m.a.id,expectedHash:m.a.hash,reviewed:true,humanDecision:true,...extra})),e=>e.status===400);
+ assert.deepEqual(tree(m.dataDir),before);assert.equal(m.read().reviews[m.a.id],undefined);
+});
+
+test('the stamp-keeping rule: on a structure-test copy an assistant\'s stand-in prepare leaves Adrian\'s earlier stamp',async t=>{
+ const dataDir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'review-human-only-keep-'))),store=await createStore({dataDir});t.after(async()=>{await store.close();fs.rmSync(dataDir,{recursive:true,force:true});});
+ const bindingId=randomUUID(),parentStudyId='structure-test-'+randomUUID(),bindings=createStudyBindings({dataDir,store}),parent=await bindings.select({projectKey:parentStudyId,title:'Invented copy',operationId:randomUUID()});await bindings.select({projectKey:'owned-draft:'+bindingId,title:'Invented part',operationId:randomUUID()});
+ const scope={projectId:parent.projectId,documentId:parent.documentId,bindingId,parentStudyId},library=createLibrary({dataDir}),source=(await library.import({files:[{name:'Invented material.md',content:'The invented vessel combines clay and water.'}]})).receipts[0].source;
+ const referenceDir=path.join(dataDir,'references');fs.mkdirSync(referenceDir);const requests=createRequestPreviews({dataDir,store,library,guidance:createGuidance({dataDir,referenceDir})}),execution=createArtifactExecution({available:()=>true,execute:async()=>({response:{artifacts:{}}})});t.after(()=>execution.dispose());
+ const validateStudyScope=async()=>{const snapshot=await store.readProject({projectId:scope.projectId,documentId:scope.documentId});return {projectId:snapshot.project.id,documentId:snapshot.project.document.id,canStandInReview:true,sources:[{id:source.id,hash:source.hash}]};};
+ const flow=createFirstFlow({dataDir,store,library,requests,execution,validateStudyScope}),file=path.join(dataDir,'first-flow',digest(scope.projectId),'flow.json');
+ await codex(()=>flow.study.prepare(scope,{question:'What do the materials say?',sourceIds:[source.id],operationId:randomUUID()}));
+ // The copy's room now exists. Adrian's earlier stamp on the same bytes is written as his confirmation would leave it.
+ const f=JSON.parse(fs.readFileSync(file,'utf8'));f.reviewedBy[source.id]={by:'human:adrian',at:new Date().toISOString(),hash:source.hash};fs.writeFileSync(file,JSON.stringify(f,null,2));
+ await codex(()=>flow.study.prepare(scope,{question:'What do the materials say?',sourceIds:[source.id],operationId:randomUUID()}));
+ assert.equal(JSON.parse(fs.readFileSync(file,'utf8')).reviewedBy[source.id].by,'human:adrian','his stamp is kept, not replaced by the stand-in\'s');
+});
+
 // Transcripts: the recording workshop fixture, with the real correction service.
 async function transcript(t){
  const dir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'review-human-only-tr-'))),dataDir=path.join(dir,'data');t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
@@ -123,4 +161,13 @@ test('speaker names and segment corrections stay open to an assistant, and each 
  await confirm();assert.equal(x.state().status,'reviewed');
  const p=await codex(()=>x.corrections.propose(x.id,{expected:x.expected(),corrections:[{index:1,text:'An invented second line.'}],reason:'Invented fix'}));
  await adrian(()=>x.corrections.decide(x.id,p.id,{decision:'apply',expected:x.expected()}));assert.equal(x.state().status,'unreviewed','decide apply resets');
+});
+
+test('a transcript check edit after his confirmation resets the review',async t=>{
+ const x=await transcript(t);x.named();
+ await adrian(()=>x.corrections.review(x.id,{expected:x.expected(),confirmed:true}));assert.equal(x.state().status,'reviewed');
+ const check=createTranscriptCheck({dataDir:path.join(x.dir,'data'),corrections:x.corrections,available:()=>false,execute:async()=>{throw Error('No provider may run in this test.');}});
+ const seg=x.corrections.read(x.id).result.segments[0];
+ await withActor({actor:'human:adrian',client:'ui'},()=>check.edit(x.id,{indexes:[0],text:seg.text+' Again.',expected:x.expected()}));
+ assert.equal(x.state().status,'unreviewed');
 });

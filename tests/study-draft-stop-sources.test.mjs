@@ -61,12 +61,12 @@ test('stopping as Adrian appends one entry, nothing is rewritten, and the old en
  assert.equal(read.stopped.length,1);assert.deepEqual(Object.keys(read.stopped[0]).sort(),['actor','copiedHash','id','kind','operationId','sourceId','stoppedAt','title']);assert.equal(read.stopped[0].title,'Studio note');
 });
 
-test('a record with no stop entry reads and lists exactly as it did, with no new keys', async t=>{
+test('a record with no stop entry reads with the same keys as before; its list adds only capturedHash on used rows and no stop keys', async t=>{
  const f=await fixture(t);await f.capture([f.transcript,f.note]);
  const read=await f.drafts.read(f.scope);assert.deepEqual(Object.keys(read.addedSources).sort(),['hash','records']);
- for(const r of read.addedSources.records)assert.deepEqual(Object.keys(r).sort(),['actor','added','capturedAt','copiedHash','copiedPath','id','kind','length','libraryHash','operationId','review','role','sourceId','sourcePath','title','capturedAt'].filter((k,i,a)=>a.indexOf(k)===i).sort());
+ for(const r of read.addedSources.records)assert.deepEqual(Object.keys(r).sort(),['actor','added','capturedAt','copiedHash','copiedPath','id','kind','length','libraryHash','operationId','review','role','sourceId','sourcePath','title']);
  const listed=await f.list();assert.equal(Object.hasOwn(listed,'stopped'),false);
- for(const s of listed.sources){assert.equal(Object.hasOwn(s,'stopped'),false);assert.equal(Object.hasOwn(s,'stoppedAt'),false);}
+ for(const s of listed.sources){assert.equal(Object.hasOwn(s,'capturedHash'),s.captured===true&&!s.stopped,'capturedHash only on a used row');assert.equal(Object.hasOwn(s,'stopped'),false);assert.equal(Object.hasOwn(s,'stoppedAt'),false);}
  const bytes=fs.readFileSync(path.join(f.room,'added-sources.json'));await f.list();await f.drafts.read(f.scope);assert.deepEqual(fs.readFileSync(path.join(f.room,'added-sources.json')),bytes);
  assert.equal((await f.drafts.inspectRoots(f.scope))!==undefined,true);
 });
@@ -143,7 +143,7 @@ test('a stale expected hash, a wrong copy, a source never captured and no record
 
 test('a damaged record refuses a stop with 409 and writes nothing', async t=>{
  const f=await used(t);f.rewrite(doc=>{doc.entries[0].title='Changed outside the app';});const tree=f.tree();
- await assert.rejects(human(()=>f.drafts.stopSources({...f.scope,operationId:randomUUID(),expectedSourcesHash:digest('x'),sourceId:f.note,copiedHash:digest(NOTE)})),e=>e.status===409&&/changed; nothing was used/.test(e.message));
+ await assert.rejects(human(()=>f.drafts.stopSources({...f.scope,operationId:randomUUID(),expectedSourcesHash:digest('x'),sourceId:f.note,copiedHash:digest(NOTE)})),e=>e.status===409&&/Nothing was stopped\.$/.test(e.message)&&!/nothing was used/.test(e.message));
  assert.deepEqual(f.tree(),tree);
 });
 
@@ -167,10 +167,12 @@ test('bad input is 400 and writes nothing', async t=>{
  assert.deepEqual(f.tree(),tree);
 });
 
-test('a copy, a stand-in and a fork refuse a stop with 409', async t=>{
+test('a fork and a structure-test stand-in refuse a stop with 409', async t=>{
  const f=await used(t),read=await f.drafts.read(f.scope);
  const fork=await human(()=>f.drafts.fork({sourceBindingId:f.scope.bindingId,parentStudyId:f.scope.parentStudyId,outputId:randomUUID(),operationId:randomUUID(),expected:read.expected}));
  await assert.rejects(human(()=>f.drafts.stopSources({bindingId:fork.binding.id,parentStudyId:f.scope.parentStudyId,operationId:randomUUID(),expectedSourcesHash:digest('x'),sourceId:f.note,copiedHash:digest(NOTE)})),e=>e.status===409);
+ const stand=await agent(()=>f.drafts.cloneStructureTest({sourceBindingId:f.scope.bindingId,sourceParentStudyId:f.scope.parentStudyId,expected:read.expected,title:'Stand-in',operationId:randomUUID()}));
+ await assert.rejects(human(()=>f.drafts.stopSources({bindingId:stand.binding.id,parentStudyId:stand.binding.parentStudyId,operationId:randomUUID(),expectedSourcesHash:digest('x'),sourceId:f.note,copiedHash:digest(NOTE)})),e=>e.status===409);
 });
 
 test('bulk capture does not bring a stopped source back; only an explicit again does', async t=>{
@@ -233,9 +235,18 @@ test('the chain detects a tampered, dropped, forged or misdirected stop entry; e
  f=await used(t);await f.stop(f.note);f.rewrite(d=>{const e=d.entries.at(-1);e.copiedHash=digest('else');e.id='added:'+e.sourceId+':'+e.copiedHash.slice(0,12);f.rehash(d,d.entries.length-1);});await damaged(f);
 });
 
-test('cutting the newest entry off is not detected (file access can do it, as for the locked record); the source then reads as used again', async t=>{
+test('KNOWN LIMIT: cutting the newest stop entry off the file is not detected, and the stopped source then reads as used again (only the added record\'s newest entry is unanchored; needs file access)', async t=>{
  const f=await used(t);await f.stop(f.note);f.rewrite(d=>{d.entries.pop();});
  const read=await f.drafts.read(f.scope);assert.equal(read.addedSources.error,undefined);assert.equal(read.addedSources.records.length,2);
+});
+
+test('a replay of an old stop operation after the source was used again answers that it is not stopped', async t=>{
+ const f=await used(t);const op=randomUUID(),first=(await stoppedNow(f)).hash;await f.stop(f.note,{operationId:op,hash:first});
+ const hash=(await stoppedNow(f)).hash;
+ const back=await human(()=>f.drafts.captureSources({...f.scope,operationId:randomUUID(),expectedSourcesHash:hash,sources:[{...f.pin(f.note),again:true}]},{material:f.lib}));
+ assert.ok(back.document.addedSources.records.some(r=>r.sourceId===f.note),'used again');
+ const tree=f.tree(),replay=await f.stop(f.note,{operationId:op,hash:first});
+ assert.deepEqual(replay.stopped,[],'not stopped any more');assert.ok(replay.document.addedSources.records.some(r=>r.sourceId===f.note));assert.deepEqual(f.tree(),tree);
 });
 
 test('inspect names a stop operation', async t=>{
