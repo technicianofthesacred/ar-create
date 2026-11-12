@@ -22,6 +22,15 @@
 - Shell commands for him, if ever needed: one command per block, no comment lines, nothing to hand-edit.
 - He often dictates by voice, so his messages can be loosely worded. Quote his words exactly when recording a decision.
 
+## NOW: ship everything, then a fresh start (Adrian, 12 November)
+
+"Nothing is waiting for me, even though you say there is you need to ship everything so that we have the latest version up and going. From there we will start fresh and I'll start working on things."
+
+- **Do not tell him things are waiting for him.** Carry decisions yourself where a recommendation exists and he has said to follow it; raise only what truly cannot move without him.
+- **State of `main` on 12 November, 16:40 UTC:** stage 6 is merged (pull requests 243, 244); version three's frame is merged and opens by default with version two behind a link (245); version three's own Write in the approved look is merged (246). In flight in the Write director's thread: the fix for Write losing words on a conflict, in both versions, under review. That thread was told to merge it, then stop, leave `main` releasable, write the record, and send one line: "Main is ready to release".
+- **What shipping still needs:** (1) that last merge; (2) a green automatic check on the commit, or the release script's journaled override, since the check on 246 ended "cancelled"; (3) the release itself, `scripts/release.mjs` from a fresh worktree of `origin/main`, **which can only run on his Mac**. This session has no connection to his computer (no folders offered), so it cannot run it. He either starts a session on the Mac or connects the Mac to a cloud session.
+- **After the release:** close every remaining thread of this work, and leave one page that says where everything stands and how to begin.
+
 ## WHERE THIS STANDS, 12 November: the coordinator has stepped back
 
 **The direction, decided by Adrian on 12 November:** "Yes, everything needs to be the new. But there needs to be a way to access all the old so that when things are going I can pull from the old as well if I need to let's call it version two. Let me know how to get there."
