@@ -20,6 +20,7 @@ Everything below is merged into `claude/direction-d-build`. The four work-in-pro
 | Read and Check inside version two (stage 2) | In, reviewed twice, corrections made |
 | Capture inside version two (stage 3) | In, reviewed three times, corrections made |
 | What stands between him and starting (stage 4) | In, each piece reviewed, the dangerous ones twice; see "Stage 4" below |
+| The whole journey walked (stage 5) | In; one break left for Adrian to decide; see "Stage 5" below |
 
 Adrian has seen four pictures of Home and has been given a demo to click through and one page of pictures of every
 screen. He has not yet said yes to any screen. On 11 November he asked that every screen be checked against the sample he approved and, once it matches and
@@ -141,7 +142,9 @@ viewing the source beside a finding.
 
 **The one full check, 12 November, on the stage's branch**: `npm test` 4080 tests, 2 failures, both known (the photo
 inspect test; "installed home mode" on a cloud machine). The existing workspace's page tests: 610 tests, 3 failures,
-the three known on main. The sideways check on every version two screen, plain and with `--stress`: see the record.
+the three known on main. The sideways check on every version two screen at 390, 700, 1000 and 1440, plain and with `--stress`: nothing
+scrolls sideways. `npm run verify:package` passes. On a machine where the script cannot find its browser library,
+set `AR_CREATE_PLAYWRIGHT=/opt/node-tools/node_modules/playwright/index.mjs`.
 
 ## Stage 4, 12 November: what was done about the five, and what is still open
 
