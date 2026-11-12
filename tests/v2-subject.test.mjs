@@ -130,6 +130,12 @@ test('a recording says where it is: saved, transcript being made, ready, or not 
  assert.equal(S.recordingView({id:'j',state:'whatever'},{ready:true}),null);
  assert.deepEqual([...S.registeredJobs({sources:[{id:'t',kind:'transcript',recordingId:'j1'},{id:'x',kind:'transcript',transcriptState:{jobId:'j2'}},{id:'a',kind:'audio'}]})].sort(),['j1','j2']);
  assert.deepEqual(S.registeredJobs({__error:{}}),[]);
+ // The Library tree leaves a recording's transcript out; the subject's brief names it by its file, under Transcription/<job id>.
+ const J='2899b836-bee9-40a2-a2e1-7927688e8d0b';
+ assert.deepEqual([...S.registeredJobs({sources:[]},{materials:[{sourceId:'t',kind:'transcript',path:'/x/talk/Transcription/'+J+'/transcript.md'},{sourceId:'a',kind:'audio',path:'/x/talk.webm'}]})],[J]);
+ assert.deepEqual([...S.registeredJobs({sources:[]},{__error:{}})],[]);
+ const kept=S.materialFrom({tree:{sources:[]},brief:{materials:[{sourceId:'t',title:'Talk',kind:'transcript',hash:'h',path:'/x/talk/Transcription/'+J+'/transcript.md'}],sourceIds:['t']}});
+ assert.deepEqual([kept.items.length,kept.items[0].recordingId],[1,J],'a transcript the brief holds knows which recording it came from');
  assert.deepEqual(S.touched('sources.import'),['tree','brief','recordings'],'a capture re-reads the recordings');
  assert.deepEqual(S.touched('transcription.id.action'),['recordings']);
  assert.deepEqual(S.touched('research-topics.start'),['topics'],'a question started from the sheet shows without a reload');
@@ -372,15 +378,21 @@ test('the subject shows where a recording is, from the real recordings; its ways
   await until(()=>/requires the author/.test(doc.getElementById('v2-messages')?.textContent||''));
   assert.ok(doc.querySelector('[data-subj-rec="use"]'),'nothing changed, the button stays');
   // Adrian presses it: the proof is read once (a read that holds nothing afterwards), then sent with the job; the new source shows without a reload.
-  let sent=null;const tree=await (await fetch(base+'/api/sources/tree')).json();
-  w.stub['/api/recordings/source']=o=>{sent=JSON.parse(o.body);return {status:200,body:{source:{id:'11111111-aaaa-4aaa-8aaa-111111111111'},jobId:job.id}};};
-  w.stub['/api/sources/tree']=()=>({status:200,body:{...tree,sources:[...(tree.sources||[]),...(sent?[{id:'11111111-aaaa-4aaa-8aaa-111111111111',kind:'transcript',recordingId:job.id,title:'Transcript of the shade talk',hash:'h1',rel_path:'x/transcript.md'}]:[])]}});
+  // As the real app does it: the Library tree leaves a recording's transcript out (it sits under Transcription/<job id>), so
+  // the subject learns it was kept from what is attached to the subject (the brief), which names the file by its path.
+  let sent=null,attachedTo=null;const SID='11111111-aaaa-4aaa-8aaa-111111111111',brief0=await (await fetch(base+'/api/study/research/brief?bindingId='+facts.bindingId+'&parentStudyId='+id)).json();
+  w.stub['/api/recordings/source']=o=>{sent=JSON.parse(o.body);return {status:200,body:{source:{id:SID},jobId:job.id}};};
+  w.stub['/api/study/material/attach']=o=>{attachedTo=JSON.parse(o.body);return {status:200,body:{sourceIds:[...brief0.sourceIds,SID]}};};
+  w.stub['/api/study/research/brief']=()=>({status:200,body:{...brief0,sourceIds:[...brief0.sourceIds,...(attachedTo?[SID]:[])],materials:[...brief0.materials,...(attachedTo?[{sourceId:SID,title:'Transcript of the shade talk',kind:'transcript',hash:'h1',path:'/home/recordings/shade talk/Transcription/'+job.id+'/transcript.md',reviewed:false}]:[])]}});
   const before2=calls.length;doc.querySelector('[data-subj-rec="use"]').click();
   await until(()=>[...doc.querySelectorAll('.subj-have li')].some(l=>/Transcript of the shade talk/.test(l.textContent)));
   assert.deepEqual([sent.jobId,sent.expected],[job.id,{jobId:job.id,markdownHash:'h1'}]);assert.match(sent.operationId,/^[0-9a-f-]{36}$/);
+  assert.deepEqual([attachedTo.bindingId,attachedTo.parentStudyId,attachedTo.sourceIds],[facts.bindingId,id,[SID]],'kept as a source of this subject, as the workspace does');
   assert.equal(calls.slice(before2).indexOf('/api/transcript-check/'+job.id)<calls.slice(before2).indexOf('/api/recordings/source'),true,'read first, then use');
   assert.equal(doc.querySelector('[data-subj-rec="use"]'),null,'once it is a source the button is gone');
-  delete w.stub['/api/sources/tree'];
+  assert.match(doc.querySelector('.subj-have').textContent,/kept as a source/,'the recording says it is kept');
+  assert.equal([...doc.querySelectorAll('.subj-have li')].filter(l=>/Transcript of the shade talk/.test(l.textContent)).length,1,'one source, not two');
+  delete w.stub['/api/study/material/attach'];delete w.stub['/api/study/research/brief'];
   assert.deepEqual((await show('saved',false)).slice(2),['Saved. Transcription is not set up on this machine.','']);
   // A refusal reaches him in plain words and nothing is lost.
   await show('saved',true);
