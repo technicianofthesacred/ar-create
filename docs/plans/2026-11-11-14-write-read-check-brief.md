@@ -1,6 +1,6 @@
 # Plan 14: Write, Read and Check inside version two (the brief)
 
-**Status.** Prepared 11 November 2026 at Adrian's word: "fix the small ones, then start Write, Read and Check". **Started the same day**, once the small fixes were pushed: thread `session_017kitFe2b6MQFZwy3MNMGpN`, on top of their branch, so the two do not change the same files at once.
+**Status.** **Premise changed by Adrian on 12 November, in the director's thread:** the existing workspace "has never been used and not fully working"; the director is to "own the machinery and the look", design the look first, get his approval, then build the machinery to it. So the parts of this brief that say to keep the approved Write page and reuse its code no longer bind. The promises about his words still do. Earlier status: Prepared 11 November 2026 at Adrian's word: "fix the small ones, then start Write, Read and Check". **Started the same day**, once the small fixes were pushed: thread `session_017kitFe2b6MQFZwy3MNMGpN`, on top of their branch, so the two do not change the same files at once.
 
 ## Why
 
