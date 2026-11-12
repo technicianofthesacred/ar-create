@@ -16,6 +16,11 @@ async function http(t,{recording=false}={}){
  const call=async(route,body,actor='human:adrian')=>{const response=await fetch(base+route,{...(body===undefined?{headers:{'x-ar-actor':actor}}:{method:'POST',headers:{'content-type':'application/json','x-ar-actor':actor},body:JSON.stringify(body)})});let json=null;try{json=await response.json();}catch{}return {status:response.status,body:json};};
  return {dataDir,call,fixture};
 }
+// Assistants can no longer mark anything reviewed. A review one made before that change is made in a fixture by writing
+// the old stamp, so "reviewed by an assistant" stays tested.
+function stampTranscriptAs(h,actor,revision){const tf=path.join(h.fixture.output,'transcript.json'),bf=path.join(h.fixture.output,'.corrections','base.json'),doc=JSON.parse(fs.readFileSync(tf,'utf8'));doc.metadata.review={status:'reviewed',reviewedAt:new Date().toISOString(),inspectedRevision:revision,by:actor};fs.writeFileSync(tf,JSON.stringify(doc,null,2));const base=JSON.parse(fs.readFileSync(bf,'utf8'));base.json=fs.readFileSync(tf,'utf8');fs.writeFileSync(bf,JSON.stringify(base,null,2));}
+function noteFlow(n){return fs.readdirSync(path.join(n.h.dataDir,'first-flow')).map(d=>path.join(n.h.dataDir,'first-flow',d,'flow.json')).find(f=>fs.existsSync(f)&&JSON.parse(fs.readFileSync(f,'utf8')).projectId===n.projectId);}
+function stampNoteAs(n,actor){const file=noteFlow(n),flow=JSON.parse(fs.readFileSync(file,'utf8'));flow.reviews[n.source.id]=n.source.hash;flow.reviewedBy={...(flow.reviewedBy||{}),[n.source.id]:{by:actor,at:new Date().toISOString(),hash:n.source.hash}};fs.writeFileSync(file,JSON.stringify(flow));}
 async function service(t){
  const dataDir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'capture-review2-')));t.after(()=>fs.rmSync(dataDir,{recursive:true,force:true}));
  const drafts=createStudyDraftCopies({dataDir,originals:{catalog:()=>({drafts:[]}),readDraft:()=>{throw Object.assign(Error('No originals.'),{status:404});}}}),parentStudyId='subject-'+randomUUID();
@@ -69,8 +74,10 @@ test('an assistant cannot change a recording transcript after Adrian confirmed i
  let now=await row();assert.equal(now.eligible,false);assert.equal(now.reviewed,false);assert.notEqual(now.hash,shown.hash);
  const press=hash=>h.call('/api/study-draft/capture-sources',{...scope,operationId:randomUUID(),expectedSourcesHash:null,sources:[{sourceId:source.id,sourceHash:hash}]});
  assert.equal((await press(shown.hash)).status,400);assert.equal((await press(now.hash)).status,400);
- // Its own review, with his name typed into the body, is stamped as its own.
- assert.equal((await h.call('/transcription/'+jobId+'/review',{expected:(await snapNow()).expected,confirmed:true,by:'human:adrian',actor:'human:adrian',metadata:{review:{by:'human:adrian'}}},AGENT)).status,200);
+ // Its own review, with his name typed into the body, is refused; one it made before this change reads as its own.
+ assert.equal((await h.call('/transcription/'+jobId+'/review',{expected:(await snapNow()).expected,confirmed:true,by:'human:adrian',actor:'human:adrian',metadata:{review:{by:'human:adrian'}}},AGENT)).status,403);
+ now=await row();assert.equal(now.reviewed,false,'the refusal left the words unreviewed');
+ stampTranscriptAs(h,AGENT,(await snapNow()).expected.revision);
  now=await row();assert.equal(now.review.by,AGENT);assert.equal(now.eligible,false);assert.equal(now.role,'context');assert.equal((await press(now.hash)).status,409);
  // A speakers call that changes nothing still clears a review (here: Adrian's second one).
  assert.equal((await h.call('/transcription/'+jobId+'/review',{expected:(await snapNow()).expected,confirmed:true})).status,200);assert.equal((await row()).eligible,true);
@@ -93,16 +100,17 @@ async function note(t,content='An honest note about clay.\n'){
 // Confirmed: an assistant cannot put Adrian's name on a review of a note.
 test('an assistant cannot write the reviewer stamp on a note: extra fields are refused, a replay of his operation changes nothing (pinned)', async t=>{
  const n=await note(t);
- assert.equal((await n.review(AGENT,randomUUID(),{by:'human:adrian'})).status,400);assert.equal((await n.review(AGENT,randomUUID(),{reviewedBy:{by:'human:adrian'}})).status,400);
- assert.equal((await n.review(AGENT)).status,200);let row=await n.row();assert.equal(row.review.by,AGENT);assert.equal(row.eligible,false);
+ assert.equal((await n.review(AGENT,randomUUID(),{by:'human:adrian'})).status,403);assert.equal((await n.review(AGENT,randomUUID(),{reviewedBy:{by:'human:adrian'}})).status,403);
+ assert.equal((await n.review(AGENT)).status,403);assert.equal(JSON.parse(fs.readFileSync(noteFlow(n),'utf8')).reviews[n.source.id],undefined,'nothing was written');
+ stampNoteAs(n,AGENT);let row=await n.row();assert.equal(row.review.by,AGENT);assert.equal(row.eligible,false);
  const op=randomUUID();assert.equal((await n.review('human:adrian',op)).status,200);row=await n.row();assert.equal(row.review.by,'human:adrian');assert.equal(row.eligible,true);assert.equal(row.role,'context','a note is never the quote source');
- assert.equal((await n.review(AGENT,op)).status,200,'the replay answers');assert.equal((await n.row()).review.by,'human:adrian','and leaves his stamp');
+ assert.equal((await n.review(AGENT,op)).status,403,'an assistant repeating his operation is refused before the replay');assert.equal((await n.row()).review.by,'human:adrian','and leaves his stamp');
 });
 // Finding 3 (should fix). An assistant that reviews the same bytes after Adrian replaces his stamp with its own, so material
 // he confirmed reads "Not confirmed by you yet" and he must confirm it again. It cannot gain anything; it can take his away.
-test('an assistant reviewing the same bytes after Adrian does not remove his confirmation',async t=>{
+test('an assistant reviewing the same bytes after Adrian is refused and does not remove his confirmation',async t=>{
  const n=await note(t);assert.equal((await n.review('human:adrian')).status,200);assert.equal((await n.row()).eligible,true);
- assert.equal((await n.review(AGENT)).status,200);
+ assert.equal((await n.review(AGENT)).status,403);
  const row=await n.row();assert.equal(row.review.by,'human:adrian');assert.equal(row.eligible,true);
 });
 // Finding 2 (should fix). The material record's review now always carries by and at, null when nobody was recorded. The

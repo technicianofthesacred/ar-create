@@ -326,7 +326,10 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
    // draft now has a source, so the honest step is a first Check: "Not checked yet". Without a source it reads as it always did.
    const neverCompared = c?.value?.quote?.status === 'held' && Array.isArray(c.value.proof?.sources) && !c.value.proof.sources.some(x => x?.role === 'source');
    const sourceNow = [...(read?.context?.records || []), ...(read?.addedSources?.records || [])].some(r => r?.role === 'source' && !r.missing);
-   facts.check = c ? {status: c.value?.status === 'stale' && neverCompared && sourceNow ? null : c.value?.status || null, issues: (c.value?.issues || []).length, noSource: c.value?.status === 'held' && Array.isArray(c.value?.proof?.sources) && !c.value.proof.sources.some(x => x?.role === 'source')} : null;
+   // A receipt that reads stale while the draft read is present, its added record is whole and it has no source at all (for
+   // instance after Adrian stopped the last one) is held for want of a source. A damaged record keeps "Check again": the reason is the damage.
+   const noneLeft = !!read && !read.addedSources?.error && !sourceNow && c?.value?.status === 'stale';
+   facts.check = c ? (noneLeft ? {status: 'held', issues: 0, noSource: true} : {status: c.value?.status === 'stale' && neverCompared && sourceNow ? null : c.value?.status || null, issues: (c.value?.issues || []).length, noSource: c.value?.status === 'held' && Array.isArray(c.value?.proof?.sources) && !c.value.proof.sources.some(x => x?.role === 'source')}) : null;
    times.push(c?.value?.checkedAt, c?.value?.createdAt);
   } else if (subject.draft) {facts.words = null; facts.suggestions = null; facts.check = null;}
   else {facts.words = {paragraphs: 0, count: 0}; facts.suggestions = 0; facts.check = {status: null, issues: 0};}
