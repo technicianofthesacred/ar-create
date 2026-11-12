@@ -780,7 +780,7 @@
    const sheet=v2.ui.sheet({title:'What else will this be?',body});sheet.el.classList.add('subj-sheetdlg');
    sheet.body.addEventListener('click',async e=>{const b=e.target.closest('[data-subj-make]');if(!b||b.disabled)return;b.disabled=true;
     try{
-     if(b.dataset.subjMake==='article'&&!(st.standing.facts?.words?.paragraphs>0)){sheet.close();v2.go('write/:id',{id});return;}// no words yet: Write starts it
+     if(b.dataset.subjMake==='article'&&!(st.standing.facts?.words?.paragraphs>0)){sheet.close();v2.go('write/:id',{id},{start:'article'});return;}// no words yet: Write starts it
      const key=await make(b.dataset.subjMake);sheet.close();
      // Say "added" only when the command, asked again, shows it. A refusal threw above and says its own words.
      let shown=false;

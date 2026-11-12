@@ -172,7 +172,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
  function open(page,ctx,pre=null){
   const id=ctx.params.id,human=v2.isHuman();
   const st={standing:null,form:null,forms:[],bindingId:null,piece:null,missing:false,base:null,rows:[],edits:new Map(),added:[],
-   starting:false,creating:false,saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
+   starting:false,creating:false,making:false,startSaid:false,saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
    src:root.matchMedia&&root.matchMedia('(min-width:1101px)').matches,focus:false,ops:new Set(),human};
   let timer=null,propTimer=null,presenceTimer=null,presenceSeq=0,presenceOk=true,presenceSent='',gone=false;
   const session=uuid().slice(0,8);
@@ -189,7 +189,8 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    st.missing=!!ctx.query.piece&&!found.form;
    st.bindingId=found.bindingId;st.piece=found.piece;
    // A subject with no Article yet: the page is empty and his first saved words start the Article (see startArticle).
-   st.starting=!found.form&&!ctx.query.piece&&!!found.bindingId&&!found.story;
+   // A subject that has other forms (a Carousel) gets an Article only when he came by Add a form, Article (start=article).
+   st.starting=!found.form&&!ctx.query.piece&&!!found.bindingId&&!found.story&&(!found.forms.length||ctx.query.start==='article');
    ctx.setTitle(s.title||'Write');if(s.look)v2.brand(s.look);
    ctx.setAdvanced({subject:id,piece:st.piece||undefined,section:'write'});
    return true;
@@ -276,7 +277,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const label=r.kind==='heading'?'Heading':'Paragraph '+n;
    if(!r.safe)return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><p class="wr-lock" title="This passage has formatting that is kept as it is. Change it in Advanced.">${esc(r.text)}</p><div class="wr-drafts"></div></div><aside class="wr-margin"></aside></div>`;
    const cls=r.kind==='heading'?' wr-h':r.kind==='blockquote'?' wr-q':'';
-   return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><textarea class="wr-ed${cls}" rows="1" data-ed="${esc(r.id)}" aria-label="${esc(label)}" spellcheck="true"${st.human&&!st.creating?'':' readonly'}${r.fresh&&!r.text?' placeholder="Write here"':''}>${esc(r.text)}</textarea><div class="wr-drafts"></div></div><aside class="wr-margin"></aside></div>`;
+   return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><textarea class="wr-ed${cls}" rows="1" data-ed="${esc(r.id)}" aria-label="${esc(label)}" spellcheck="true"${st.human&&!st.making?'':' readonly'}${r.fresh&&!r.text?' placeholder="Write here"':''}>${esc(r.text)}</textarea><div class="wr-drafts"></div></div><aside class="wr-margin"></aside></div>`;
   }
   function paintText(){
    const box=$('[data-wr-text]');if(!box)return;
@@ -289,7 +290,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   }
   function fit(t){t.style.height='auto';t.style.height=(t.scrollHeight+1)+'px';}
   function paintSaved(){
-   const text=st.none?'':!st.human?'Read only':st.problem?st.problem:st.saving?'Saving':dirty()||st.conflict?(st.conflict?'Not saved: a newer version exists':'Not saved yet'):st.savedAt?savedLabel(st.savedAt):'Saved';
+   const text=st.none?'':!st.human?'Read only':st.making?'Starting the Article':st.problem?st.problem:st.saving?'Saving':dirty()||st.conflict?(st.conflict?'Not saved: a newer version exists':'Not saved yet'):st.savedAt?savedLabel(st.savedAt):'Saved';
    page.querySelectorAll('[data-wr-saved]').forEach(el=>{el.textContent=text;el.dataset.tone=st.problem||st.conflict?'bad':'';});
   }
   function paintSources(){
@@ -560,7 +561,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    try{
     for(let i=0;i<8&&(dirty()||st.saving)&&!st.conflict&&!st.stopped;i++){clearTimeout(timer);if(st.saving)await settled();else await save({quiet:true,hold:null});}
     if(dirty()||st.conflict||st.stopped||gone){st.creating=false;return;}
-    page.querySelectorAll('textarea.wr-ed').forEach(t=>{t.readOnly=true;});
+    st.making=true;clearTimeout(timer);paintSaved();page.querySelectorAll('textarea.wr-ed').forEach(t=>{t.readOnly=true;});
     const standing=await v2.call('subject.standing',{parentStudyId:id});
     const made=(standing.forms||[]).find(f=>f.kind==='article'&&/^out:/.test(f.key||''));
     let outId=made?made.id:null;
@@ -573,12 +574,13 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     }
     if(!outId)throw new v2.Error('The Article was made, but its address could not be found. Go back to the subject to open it.');
     if(gone)return;
-    st.creating=false;
+    st.creating=false;st.making=false;
     v2.go('write/:id',{id},{piece:outId});
    }catch(error){
-    st.creating=false;page.querySelectorAll('textarea.wr-ed').forEach(t=>{t.readOnly=!st.human;});
+    st.creating=false;st.making=false;page.querySelectorAll('textarea.wr-ed').forEach(t=>{t.readOnly=!st.human;});paintSaved();
     if(gone)return;
-    say('Your words are saved. The Article could not be started yet: '+(error?.message||'try again.'),'bad');
+    // Said once; the retries that follow are quiet.
+    if(!st.startSaid){st.startSaid=true;say('Your words are saved. The Article could not be started yet: '+(error?.message||'try again.'),'bad');}
     clearTimeout(timer);timer=setTimeout(()=>{void startArticle();},8000);
    }
   }
@@ -600,6 +602,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    t.scrollIntoView?.({block:'nearest'});
   }
   async function enter(t){
+   if(st.making)return;
    const rid=t.dataset.ed,at=t.selectionStart,atEnd=at>=t.value.length&&t.selectionEnd>=t.value.length;
    const a=st.added.find(x=>x.id===rid);
    if(atEnd){
@@ -619,6 +622,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   /** Backspace at the start of a paragraph joins it to the one before. A paragraph that was never saved is joined on the
       page; a saved one is saved first and joined in the same save. A paragraph he emptied is deleted. */
   async function join(t){
+   if(st.making)return;
    const rid=t.dataset.ed,list=order(),i=list.findIndex(x=>x.id===rid);if(i<1)return;
    const prev=list[i-1],cur=list[i];if(!prev.safe||!cur.safe)return;
    const curAdded=st.added.find(a=>a.id===rid),prevAdded=st.added.find(a=>a.id===prev.id);
@@ -734,7 +738,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   function onKey(e){
    const t=e.target;
    if(e.key==='Escape'&&st.focus){e.preventDefault();setFocus(false);return;}
-   if(!t.matches?.('textarea[data-ed]')||!st.human)return;
+   if(!t.matches?.('textarea[data-ed]')||!st.human||st.making)return;
    if(e.key==='Enter'&&!e.isComposing&&!e.ctrlKey&&!e.metaKey){e.preventDefault();void enter(t);}
    else if(e.key==='Backspace'&&!e.isComposing&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&t.selectionStart===0&&t.selectionEnd===0){e.preventDefault();void join(t);}
   }
@@ -794,6 +798,8 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     if(restored&&dirty()&&newer)noticeNewer(read);
     else if(restored&&dirty()){say('Your unsaved words from earlier are back.','info');schedule(600);}
     presence(true);loadProps();if(st.src)loadSources();
+    // Words are saved but the Article was never made (a reload or a closed tab between the two): make it now.
+    if(st.starting&&st.human&&!dirty()&&!st.conflict&&st.rows.some(r=>r.words.trim()))void startArticle();
    }catch(error){if(ctx.signal.aborted)return;plain(error.message||'This piece could not be opened.');}
   }
   function shell0(text){shell();$('[data-wr-text]').innerHTML=`<p class="wr-dim" role="status">${esc(text)}</p>`;$('.wr-todo')?.remove();}
