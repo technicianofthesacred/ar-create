@@ -666,3 +666,88 @@ already separates the two.
 - Piece 2: a stop on a damaged record says "Captured sources for Check changed. Nothing was stopped."
 - Piece 2: two test titles fixed (no-stop read and list; fork and structure-test stand-in), the stand-in case now tested.
 - Piece 2: Decision 6 now says "again" on a source already in use behaves like the same item without `again`.
+
+## Second review, as an assistant
+
+Reviewed 12 November 2026 on commit "Merge main into stage 7", in this worktree. No code was changed; this section is
+the only write. Run: the seven test groups asked for (152 pass, 0 fail) and `tests/subject-standing.test.mjs` (6
+pass). Attacks were four throwaway scripts outside the worktree. Each started the real server on a random port with
+invented data, as the HTTP tests do, sent raw requests (paths exactly as written, also by plain socket), and compared
+every file under the data folder, the journal included. All servers were closed; ports 8841, 8854 and 8863 were never
+used. Not done: the demo on 8863, a real browser on the existing workspace, and the screens under `public/v2`.
+
+Verdict: nothing got through. No caller that says it is an assistant, a schedule, an import or a release, and no
+caller that says nothing, ended with a review on file, with Adrian's name on a review, with a source captured, stopped
+or brought back. Everything an assistant could do before still works. The one way in is the known one: a caller that
+claims to be Adrian (see Notes 1).
+
+### Attacks and results
+
+Actors tried on every line unless said: `agent:claude-code`, `cron:nightly`, `import:notes`, `release:abcdef1`, and no
+actor header from a non-browser client.
+
+1. Transcript review, plain path: 403 for all five, the gate's sentence; nothing written.
+2. Transcript review, 30 odd spellings that fold to the review path (`x/../`, backslash in three places, `%2e%2e`, `%72eview`, `./`, `review/../review`, `x%2f..%2f`, `//transcription`, `/transcription//<id>`, `<id>//review`, upper-case id, `?x=1`, `?action=speakers`, `#x`, `%20`, `%00`, `%3Fx`, `%23`, `<id>%2Freview`, `speakers/..%2Freview`, `speakers/%2e%2e/review`, `/x/../transcription/`, `/%74ranscription/`, `review/.`, `review/%2e`, the absolute form `http://127.0.0.1:<port>/transcription/...`): 403 for all five actors, and every one carried the gate's sentence ("This decision is human-only"), so the gate alone stops them before routing.
+3. Spellings that do not fold to it (trailing slash, `REVIEW`, `Review`, `;x=1`, `%2572eview`, `review%2f`, `review\`, `/TRANSCRIPTION/`): 404 or 405 with an actor, 400 with none; never reach the review code.
+4. Tab or newline inside the path, by plain socket: 400 from the HTTP parser.
+5. Method tricks: `GET` with `X-HTTP-Method-Override: POST` or `X-Method-Override` is an ordinary read; `PUT`, `PATCH`, `DELETE` are 405; `?_method=POST` ignored.
+6. Generic action entry with `action:"review"` in the body, to `/transcription/<id>`, `/speakers`, `/save`, `/recover`, `/action`, `/{action}`: the body's `action` is ignored; none reviews.
+7. Chat relay (`said:{quote,via:"chat",at}`) on review, source-review and stop: 403; none of the three is relayable.
+8. Body fields `actor`, `by`, `reviewedBy`, `review`, `metadata.review` on review, speakers, segment and corrections: 403, ignored, or 400; the transcript read unreviewed after each.
+9. `markdown-propose` with `review_status: reviewed` or an added `reviewed_by` line: 409, front matter may not change.
+10. Odd actor strings (`Human:Adrian`, `HUMAN:ADRIAN`, `human:someone`, `human:`, `human:adrian,agent:codex`, two actor headers in either order, empty, `agent:unknown`, `cron:human:adrian`): 400, unknown actor.
+11. An assistant header together with the app's Origin, with `X-AR-Client: ui`, or with made-up headers naming Adrian: 403.
+12. No actor with a foreign Origin, `Origin: null`, another port, a Referer only, or `Sec-Fetch-Site: same-origin`: 403.
+13. CLI `call .transcription.id.review` and `call .transcription.id.action` (with `action:"review"`, with `id:"x/../<id>"`, with `action:"../<id>/review"`), as agent, cron and import: exit 5, 403.
+14. MCP `ar_create_call` for both names and the dotted id: refused with the gate's sentence. The registry lists `.transcription.id.review`, `study-draft.capture-sources`, `.stop`, `study-draft.set-aside` and `first-flow.material-triage` as human; `first-flow.source-review`, `first-flow.prepare` and `.transcription.id.action` as any; none has a relay.
+15. `first-flow.source-review` with `reviewed:true`: 403 from the service for the four named actors ("Confirming material is for Adrian to do; agent:claude-code may not. Nothing was changed."); with no actor 400 ("Writes need an X-AR-Actor header ..."). `flow.json` unchanged. Also by `%77`, a query string, the CLI and MCP: the same. `reviewed:"true"` and `reviewed:1`: 400.
+16. `first-flow.prepare` with an entry for an unreviewed note, duplicates, an added `humanDecision`, reviewed and unreviewed mixed in either order, and `prepar%65`: 403 "Nothing was prepared." for the four named actors; 400 with no actor. No request folder, flow unchanged.
+17. Replays: an assistant repeating Adrian's source-review operation is 403, also after the review was withdrawn; repeating his prepare operation is 200 with the current view, nothing written, and a withdrawn review stays withdrawn.
+18. Capture of his confirmed transcript, and of an unconfirmed note, as an assistant or with no actor: 403 at the gate; nothing written.
+19. Stop, plain and by ten spellings (`?x=1`, `//stop`, `sto%70`, `x/../stop`, backslash, absolute form, `%20`, `#x`), with the app's Origin added, by the CLI and MCP: 403. `stop/`, `Stop` and upper case: 404 or 405.
+20. Stopping by other means: an assistant editing the transcript in the Library after capture leaves the pinned copy in use; Check still read it.
+21. Bringing a stopped source back: `again:true` (and `again:"true"`), the bulk press without `again`, a replay of his capture operation, a replay of his stop operation, four spellings and the CLI: 403 for every actor and for none. The record held exactly two entries after all of it, his capture and his stop.
+22. The same bytes imported under a new id and attached by an assistant, and a note whose front matter says `review_status: reviewed`, `reviewed_by: human:adrian`, `role: source`: both list as not reviewed, not confirmed by him, role context, not eligible; an assistant's review and capture of them are 403; Adrian's own capture before confirming is 400. After he confirmed and captured the forged note it counted as context only and Check stayed held.
+23. Re-registering the recording as a source as an assistant: 403.
+24. As Adrian, a stale tab: a replay of the old capture operation answers `captured:[]`, `stopped:[id]`; the bulk press with the old hash is 409 "You stopped using this for Check."
+25. Races: his stop against a Check run (Check ends held); his `again` against an assistant's `again` (his wins, the other 403); his stop against his own stale bulk capture (stop wins, capture 409).
+26. Human-only commands that have no check inside their service, by encoded spellings (`material-triag%65`, `%6daterial-triage`, `set-asid%65`, `%73et-aside`, `recordings/sourc%65`, `capture-source%73`): 403 at the gate for an assistant and for no actor. This is the proof that the gate fix works by itself.
+
+### The three open points, settled
+
+- **Odd spellings.** Every spelling that reaches the review, stop or capture code is refused with the gate's own sentence, and the gate runs before routing, so the gate alone stops them. Attack 26 shows the same on commands with no service check. The service check stays as the second layer.
+- **Unattributed first-flow calls.** They get 400, "Writes need an X-AR-Actor header (for example agent:claude-code) and X-AR-Client (cli, mcp or http).", from the general write rule, before the service runs. Nothing is written and nothing is journalled. That is right in effect (refused, plain reason, nothing on file), but Decision 7's first row says 403 for source-review; see Should fix 2. Unattributed calls to review, capture and stop get 403 at the gate, as the design says.
+- **Do refused attempts write only journal lines.** Yes. Across every attack above, the only files that changed were the journal, and the Library files of the imports the assistant is allowed to make. A refusal by a service (source-review, prepare) writes one journal line, `rejected`, with the actor and the sentence. A refusal at the gate (review, capture, stop) and an unattributed 400 write nothing at all, not even a journal line; see Should fix 3.
+
+### Agreement after a stop
+
+After his stop: the list said `hasQuoteSource:false`, the row `stopped:true` and not eligible; the draft read had no record and one `stopped`; the earlier receipt read stale; the standing's fact was `{status:'held', noSource:true}`; Check run again held. After `again`: the list, the read and Check all had the source back and the old receipt read stale. An old record (no stop) read with `hash` and `records` only, no new key. The sentence "No source to check against yet" was not seen over HTTP because the invented subject had no Article; `tests/subject-standing.test.mjs` covers it.
+
+### What an assistant can still do (run over HTTP)
+
+Create a subject, import and attach material, select the project, read the capture list, read the draft, read the standing, run Check, name speakers, correct a segment, propose a correction and apply it with `decide` (each clears his review), `recover`, withdraw a material review, and prepare research when the material is already reviewed (his stamp stays). Nothing was lost.
+
+### The merge with main
+
+`runtime/commands.mjs` 224: `HUMAN_ONLY` holds both `POST /api/study-draft/capture-sources/stop` and `POST /api/study-draft/set-aside`. `runtime/services/study-draft-copies.mjs` (the returned object after `withDraftProvenance`) exposes `stopSources`, `setAside` and `listSetAside`. `tests/study-draft-set-aside.test.mjs` passes.
+
+### Must fix
+
+None.
+
+### Should fix
+
+1. **The CLI and MCP checks in the test prove nothing.** `tests/review-human-only-http.test.mjs` 39 calls the CLI with `--id` and `--action`, which the CLI refuses as a usage error (exit 2, "Unknown option --id"), and asserts only a non-zero exit; no request is sent. Line 7 imports `createTools` and never calls it, though line 38 says "the MCP tool". Correction: `h.cli(['call',name],{id,action:'review',expected,confirmed:true})` and assert `exitCode===5` and `result.status===403`; `await assert.rejects(createTools({url:h.base,actor:AGENT}).callTool('ar_create_call',{name,input:{id,action:'review',expected,confirmed:true}}),/human-only/)`. Add the same two for `study-draft.capture-sources.stop` in `tests/study-draft-stop-sources-http.test.mjs`. Both pass today when written this way (attacks 13, 14, 19).
+2. **Say and pin what an unattributed first-flow call gets.** `tests/review-human-only-http.test.mjs` 83 asserts "not 200". Correction: assert 400 and `/Writes need an X-AR-Actor header/`, and add the same for `/api/first-flow/prepare` with no actor (not tested at all). Correct Decision 7's first row: review, capture and stop are 403 at the gate; source-review and prepare are 400 from the write rule before the service.
+3. **A refusal at the gate leaves no trace.** `runtime/server.mjs` 801 to 802: the gate throws before `request.arActor` is set, so `afterRequest` has no actor and journals nothing. An assistant's attempt to confirm a transcript, capture, stop or bring back a source is invisible in history, while its refused source-review is recorded. Correction: set `request.arActor = actorContext` before the gate line, then assert one `rejected` line per attempt with kind `.transcription.id.review`. This reaches every human-only command and adds lines to the history Adrian can read, so put it to him first. It was so before this stage.
+4. **Compare the whole data folder, and count the journal.** `tests/review-human-only-http.test.mjs` 20 leaves `journal/` out; `tests/study-draft-stop-sources-http.test.mjs` 18 compares only the draft's own folder. Correction: compare every file under `dataDir` except the journal, and assert the journal's added lines exactly (count, `status:'rejected'`, `http:403`, the actor). Correct the comment on line 1 to what happens: gate refusals add no line, service refusals add one.
+5. **Pin which layer refuses.** For each odd spelling assert the gate's sentence (`/human-only; /`), not "one of two sentences", and add one test on commands with no service check (attack 26). Add the spellings the tests lack: double slashes, upper-case id, the absolute form, a query string, `#x`, `%20`, `%00`.
+6. **Decision 7 still has no rows for the odd spellings.** The design review's must-fix 1 asked for them. Add: folded spellings 403 at the gate; spellings that do not fold 404 or 405.
+
+### Notes
+
+1. **Known limit, proved: the actor is a label, not a login.** A non-browser client that sends the app's own Origin and no actor header, or `X-AR-Actor: human:adrian` (also padded with spaces), is read as Adrian (`runtime/services/actor.mjs` 8 to 16 and the Origin rule in `resolveRequestActor`). With it the probe marked a transcript reviewed, stamped `human:adrian`. The same caller could capture, stop and bring back. Nothing in this stage can close that; it stops an honest assistant, not one that lies.
+2. The recording workshop page (`/transcription/<id>/view`) still sends no actor, so an assistant driving it is read as Adrian. Its "Mark reviewed" fails for everyone (no `expected`, 409, pinned by the test).
+3. Found in passing, not from this stage: after a plain `first-flow.prepare` on a subject's project, `POST /api/study/material/attach` for that subject answers 409 "Research request belongs to another exact Study scope." for everyone, Adrian included (`runtime/services/first-flow.mjs` 222, the `attach` branch loads the current request). An assistant's ordinary prepare can cause it once one source is reviewed. Raise separately.
+4. Limits that remain from the earlier reviews: cutting the newest stop entry off the record with file access gives the source back unnoticed; the Library's "human review is recorded" label for a file that declares itself reviewed (it does not reach capture or Check, attack 22); an assistant's stand-in still marks material reviewed inside its own structure-test copy (covered by the builders' tests, not re-run over HTTP here).
+5. `runtime/server.mjs` 458 `gateSpellings` only adds spellings to refuse; no ordinary assistant call tried was refused by it.
