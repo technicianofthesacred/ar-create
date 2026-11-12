@@ -1,0 +1,189 @@
+# The wisdom bank: everything in one place
+
+Gathered on 12 November 2026 from every thread and paper on the wisdom bank, at Adrian's word: "The wisdom bank needs to consolidate all the information into one so that we can also close that up." This page is the one to start from. Nothing else needs to be read first. The older papers beside it are its sources and are listed at the end.
+
+Nothing of the bank is built into the app. Everything made so far is research, a concept, and mock-ups with invented content.
+
+## 1. What it is, in one minute
+
+You paste in a talk, a book or an article that matters to you. The bank distils it into **all** of its concepts, removing none. Each concept is held **once** across the whole bank and gathers, in their exact words, the passages from every work that speaks of it, with who said them and where.
+
+You read a concept at three depths: one full plain sentence that says what it is; about three plain paragraphs; then a full reading (what it is, what you do with it, how you embody it, ways to understand it more deeply, how it can be misunderstood, then the passages and the source). The short view exists only to pull you into the deep one.
+
+Everything sits together on one surface that you zoom, from the whole bank down to a sentence. Things open where they are. Subjects such as tea or Buddhist teaching are filters over the whole, never boxes. Your own voice goes in anywhere and stays visibly yours. From a line of concepts you make a piece, with every quote credited.
+
+It is, in your words, "my educational system", "a hybridized reading guide", "this massive infinitely growing textbook of beliefs, connections, resonances, and truth", curated by what you find relevant and not by an AI. It is one bank for every subject. It must hold hundreds of thousands of units. It lives inside AR Create's Research station.
+
+## 2. Where it stands, and the direction
+
+**You are not sold on any interface drawn so far.** "I have not been sold on your UI design yet. So I'm more looking at copying something out there and iterating it or making it better." So the starting point is an existing interface, improved, not one of the mock-ups.
+
+**The leading base is Apple's Embedding Atlas**, which you called "the closest fully developed thing. Built for large scale", with the condition that "it should be more interconnected". Sefaria and Nodus are sources of ideas. WorkFlowy is out.
+
+**What a study of Embedding Atlas found** (it was read from its published package and run with invented points; its documentation site could not be opened):
+
+- It gives a map of up to millions of points that pans and zooms. We can supply where each point sits, the names shown at each zoom level, our own layer drawn on top, what a tap shows, filters over any field, and search by words and by meaning. It is free to build on.
+- It does not give connections (only closeness), reading, a continuous zoom from a dot into text, or places that stay put when the bank is recomputed. Those are ours to build.
+- Our own straight, labelled connections were drawn on top of it successfully. The points themselves did not draw in the test machine, which lacks a graphics feature the package needs. **Whether it runs on your phone is not verified.**
+
+**How the pieces would combine** (a recommendation, not your words):
+
+1. Far and middle view: Embedding Atlas. Every concept from every work is one point on one map, placed by meaning, so tea and Buddhist teaching sit together where they share. Subjects are a filter or a colour. Names appear level by level as you zoom.
+2. Interconnection: our own layer. Choose a concept and its connections are drawn as straight labelled lines, only for what is chosen. The same connections are listed as plain rows beside the reading, as Sefaria does.
+3. Near view: a reading that opens in place over the map, at three depths, with passages and sources.
+4. From Nodus, the idea only: titles when far, more of the text as you come near.
+
+**The open decision.** With Embedding Atlas the bank is a map of dots, and reading opens on top of it. It is not one unbroken zoom from the whole bank into a sentence. If the unbroken zoom matters more than the ready-made map, it is the wrong base.
+
+**The next step that was proposed and not built:** one small trial page for your own phone, with the real Embedding Atlas map, a few thousand invented concepts marked Sample, names by zoom level, straight connections for a chosen concept, and a reading opening in place. It answers two things reading cannot: does it run on your phone, and does it feel interconnected enough.
+
+## 3. Your words
+
+These outrank everything else on this page. Where a paper disagrees with them, they stand.
+
+### The first ask, 11 November
+
+"If there's something that is very potent or thought provoking, whether it's somebody's book or work or ideas, I should be able to post that YouTube video in, and it would not only reference that person's YouTube, but it would also distill the YouTube. Take all of the concepts and the bits of information and put it together into some sort of wisdom bank. That portion can be deeper researched, it can be cross-linked, it can be mapped to other things ... it becomes this building block of the wisdom that you assimilate and learn to guide yourself and share with others in your work, in your creations."
+
+"My biggest risk is actually going back over the things: being able to access and understand the concepts that are exciting for me that I am working on. The interconnection and all this, if it's not something that I can see, visualize, navigate, understand, there's not anything that I can do with it."
+
+From the interview: you return "to find some way to use this information or use it for actually studying"; assimilating is "less about changing the words but more about demystifying the words. Keeping those original but helping me understand them through a set of variables ... my filter"; and "The goal is not to ever kill it ... it will be building and building and building."
+
+### The sixteen corrections, in the order you made them
+
+1. **Scale and zoom come first.** "Yes, this is in the direction, but think of this having hundreds of thousands of units of data. Not just a few. Maybe it will take a while to get there, but it needs to be scalable. And we need to design it with this in mind. That means the zooming and the navigation and the zooming out and zooming in and honing in on things are the first and foremost primary most important things." So the whole map and its depths are the main design work, not a later study. See [plan 12](../../plans/2026-11-11-12-wisdom-bank-zoom-brief.md).
+2. **A distillation has depths; it is not one line.** "The distillation is generally gonna be more than one sentence. These are gonna be multi-chapter concepts or larger concepts that should be not just one thing. There's a short summary that can be glanced at, but then that summary goes to something a bit more medium and then that goes to something even a bit bigger. So just as we can zoom on the massive concept map, we can zoom in and out of the level of the distillation." So wherever this page says a nugget has "one line" of distillation, read: a glance, then a medium reading, then a full one, and zooming applies to the distillation as it does to the map. Each depth is still labelled as a distillation, and the exact words stay beneath all of them.
+
+3. **Reading must feel calm, and separation must be felt.** "You're not using proper Separation or formatting so all the words blend in together even though you've changed fonts and all that, they're not working in a way that I can Really feel the separation and feel calm. I feel like I'm having to sort your words with my head rather than enjoy reading." So groups are set apart by space and by surface (a quote sits on its own inset surface; each line to a neighbour is one ruled row), never by typeface or label colour alone.
+
+4. **Do not spend width on frames, and make the kinds of line feel native.** "Now your UI significantly reduces the amount of text because of the multiple buffers and barriers is there a way to do this so we don't have to lose so much width. Also here the comes first and explains by in contrasts maybe could be something a little more refined. This feels still a bit added on." So separation must not cost reading width (quotes run edge to edge of their card), and the kinds of line (prepares, explains, contrasts, echoes) are grouped quietly with the map's own line mark, not bolted on as labels.
+5. **Works and concepts, both ways; huge maps that join.** "On the left side of this I'm not fully understanding what I actually do with all of these already whole concepts or things like that. I think it could use a bit more refinement around how these things interconnect and interact. Also, I see this map being significantly bigger, a huge map, connecting to other huge maps. Also one book may have a hundred concepts. It's important to be able to keep the book together in some sort of map as well so that we can refer to either. We're not just trying to create everything as just concepts, we're also trying to collect the concepts out of books and be able to browse in either direction." So he browses by work and by concept, and both are always available. A work keeps its own map, whole, as a region of the huge map, and maps join where works share a concept. A book of a hundred concepts needs depths inside its own map. At every concept it must be plain what he can do next.
+
+6. **The distilling must be written for him, not for a machine.** "Also these concepts that you are giving me are not r really understandable or assimilatable. They feel like they are written for AI. The number one thing is that they are valuable to me. That I don't have to process to understand what you're talking about. You have failed at this as well. The thing is this is a massive repository of many different things. So it's almost like a knowledge graph. You know, you have one book, you have all the concepts inside of the book. You can connect all those concepts together. Have one article, all the concepts, connect them. The ways to navigate and go through everything. Feels like it needs to be much larger of a interaction of all these conceptual maps as well." So every concept name, every depth of distillation and every reason on a line must be understood on first reading without knowing the source, in words a person would say aloud. This is a requirement on the distilling step itself, the most important one: a bank he has to decode is worthless to him. It needs its own test on real works before anything is built. And the bank is many maps interacting: each work is a map of all its concepts, the maps connect to each other, and moving through all of them is the main experience.
+
+7. **As long as understanding needs.** "Ideally these concepts are not just this one sentence, they're however long they need to be. I feel like you're consolidating them for space rather than the amount of words for a human to really understand it." So a distillation's length is set by what a person needs to understand it, never by the space on a card. The layout makes room for the words. A one-line glance is only a way in.
+
+8. **The medium view is found; the small view is not.** "That would be a great expansion, uh the details of what it is. That's the medium view, but we still need the small view. I like the idea of the expansion with something of that level as well though. But the one sentence small view is not not landing yet." So a plain distillation of about three paragraphs is the right medium view; the sample he approved is in `design/2026-11-wisdom-bank/HANDOFF.md`. The small view is still open: one compressed sentence does not land. He has been offered three styles for it.
+
+9. **The small view says what the teaching is.** Offered three styles for the small view, he chose the plain statement of the idea in one full sentence: "A is more what I'm looking for. However, the teaching of everything is perfect is very different of that it's saying that y you are the Buddha nature and everything is perfect. The using the statement as a lid is actually oh it can be misunderstood that would be a deeper explanation but the explanation of everything is perfect would be very different, if that makes sense." So the small view states the teaching itself, positively and plainly. It is never a warning about it. How it can be misunderstood is a deeper layer of the same concept or a connected concept. The order of depths: what it is, what it rests on, how it goes wrong.
+
+10. **The bank is his school and his reading guide; the short view is only a door.** "Yeah. For example, you are this Buddha nature, everything is perfect. But this is what you do with it. Here's how you are able to embody it. Here's the ways to deeper understand it. Here's how that statement could be misunderstood to avoid things. And also in addition, this idea, maybe I can hit a button and share voice insights and different things into this this way. My thoughts and experiences start to fuse into the depth of this. I think this is a big portion, not just collecting other people's things, but my learning process and growth through reflecting on these assimilating this is almost like a hybridized reading guide so I don't want to dumb things down so much and not have the larger information available either. This needs to be going deeper and deeper down the rabbit hole. This is also my educational system. It's like the future of school picking what information to download into my brain. So the highly consolidated thing only exists to pull me into a much deeper understanding that I will also read through this, which you have not represented yet." So every concept goes all the way down as a reading he will read through, in this order: what it is; what you do with it; how you embody it; ways to understand it more deeply; how it can be misunderstood; then the full passages and the source. Nothing is dumbed down and the larger material is always beneath. At every depth he can speak his own thoughts and experiences in; they are kept visibly his, dated, in place, and over time his learning is woven through the reading without blending into the source's words or the distillation. This is a large part of what the bank is, and the first version of this page did not hold it.
+
+11. **An education as well as a collection, curated by him.** "This is a education as well as a collection. In the process of educating myself, I'm using it to educate other people. This is a beautiful interactive education of building knowledge systems that are relevant to myself, consuming the content and downloading this into my brain and should be built as a new style of actually learning and education state of the art where instead of AI curating everything it's being curated by what I find relevant and holding it into this massive infinitely growing textbook of beliefs, connections, resonances, and truth, if that makes sense." So the bank is a way of learning, for himself and then for teaching others: curated by what he finds relevant, never by an AI's choice, and growing without end. The first mock-ups thread drew this as a "Read" screen (one concept all the way down, his voice under every section, a learning mark from "Met it" to "Can teach it", Try it, Say it back, Pass it on); see `design/2026-11-wisdom-bank/HANDOFF.md`, "Third pass", which also lists feature ideas not yet drawn.
+
+12. **Few places, voice anywhere, and not only philosophy.** "All six features matter, draw them in. Having places for voice notes all over make it a little more complicated. I should be able to add voice anywhere. It shouldn't just be inside of a read section but then there should be a place for all my notes and all that and then eventually I can send a AI to read all my notes and help me deeper understand some things that might be misconceptions based on a wealth of information to help further clarify my understandings and thought processes if that makes sense. These are to create Instagram posts workshops articles on the web research papers it might not just be spiritual teachings, it might be about neuroscience, it might be many different things. These are not just ph philosophical conversations. It could be about tea, how certain teas are made, what people what people believe about T. So it's not all conceptual. The organization, the streamlining, the sleek minimal look will highly functional look. The zooming in to uh the fine details and zooming out are also very, very important. I don't like that we have five different sections that we click on at the top. Ideallyally these are only one or two sections, maybe three, and in that section it's built in the way that you don't have to switch to another section to open these things up." So: at most three top places (the fourth pass of the mock-ups uses Map, Express, Yours), and nothing opens by switching section; a concept opens in place. One voice button that works anywhere, with a note kept on whatever he is looking at, one place that holds all his notes, and later an AI that reads his notes with him to find misconceptions. The bank is one bank for many subjects (spiritual teachings, neuroscience, tea), so a unit is not always an idea: the mock-ups now use the kinds Idea, Practice, Step, Belief. What comes out includes Instagram posts, workshops, web articles and research papers. Sleek, minimal, highly functional; zooming in to fine detail and out again stays central. This also answers the earlier open question "one bank or several": one.
+
+13. **The navigation so far is not good; books and collections come first.** "Expression should always be done on the place wherever I am. If there's a microphone it should not be as big there. I I'm smart enough to know where it is if it's floating. Your way to navigate through different things is not good, they should not be pills to navigate through different things. This is gonna be a massive database of so much And you still haven't integrated the book collections or anything like that. You haven't really addressed my concerns about how to see all the topics inside of the book or inside of the data. Also your suggestions for UI is majorly flawed." So: expressing happens in place, wherever he is, not in a section of its own; the microphone is small and floating. No pills for moving between things. Collections of books and other works are first-class. A book must show all its topics, and the data must show all it holds, in a way he can take in. He judges the interface suggested so far as flawed, so the next design starts again from how he moves through a massive bank, and does not inherit the earlier layout.
+
+14. **The drawn transit map did not work.** Said on seeing the huge map: "The way the concepts connect should probably be more straight lines. This looks like a subway map. These blue lines or green lines. It's hard for me to understand how to navigate through these and what they really are. How would you improve the interconnections majorly?" So the picture he had agreed to as an idea (topics as wandering coloured lines, concepts as stops) failed when drawn: he could not tell what a line was or how to travel it. Where this page describes the whole map as a transit map, read instead: a connection must show plainly what it is, where it leads and how to follow it; straight and labelled, not curved and colour-coded. How the connections are drawn is open again.
+
+15. **One surface: an infinite zoom with a strong structure everywhere.** His clearest statement of how he wants to move: "Express should be reachable from wherever I am, not its own place instead of having to click on kindness comes first or you are already whole or the awareness that you already have to open it up, don't you think? Instead of the having a open button we can make the things expand and contract inside of here. Also, we don't need two rows on the side for the nine concepts. How about just one wide? I also don't wanna have to have multiple nests for me to click through, everything should be on one and the expansion and contraction it should work more like mirror or a mind map generator but it or freeform it's like a infinite zoom than so many pages. However, I like the structure of how things are laid out, so think of like a infinite zoom but with a strong structure everywhere." ("mirror" is voice transcription, most likely Miro; "freeform" is likely Apple's Freeform. That reading is not his words.) So the bank is one surface. Everything, from the whole bank to a collection, a book, its parts, a topic, the depths of its distillation and the full reading, is reached by zooming and by expanding and contracting in place. No separate pages, no nests to click through, no Open button. Express is reachable from wherever he is. And the structure he likes stays: the parts of a work, the order of a reading, grouped lines. The structure is the layout, and zooming moves through it.
+
+16. **Not a list of categories: everything together, interconnected.** Typed to the coordinating thread with a screenshot of the mock-up's "Everything" screen, which listed four collections: "Even this everything research this is not how I want it. It's not a list. Everything is always connected and interconnected. Sure, T might be a side to Buddhist teachings, but Buddhist teachings are expressed through T. There's a spirituality in T. So the interconnections are always interconnected. I don't want categories and subcategories like this so much as my starting maybe as organizing or filtering, but the main thing should be all together. How would you recommend doing this??" ("T" is tea.) So subjects and collections are for organizing and filtering. They are never the top level and never containers. The main thing is everything together, with its interconnections. The coordinator's recommendation in reply, which is not his words: one field where a thing's place comes from what it shares; a subject is a light that brightens what touches it and dims the rest; the landmarks from far away are the big shared ideas; structure lives inside things and connection between them; a concept is a door across subjects; and place stays stable.
+
+### What you asked for after that
+
+- **11 November 2026, research before building.** "I need you to send out an agent that goes on to the internet to really research this sort of thing that I'm creating before I reinvent the wheel. I really need to understand how people are doing it. This is not a new concept concept. And I need to learn from what's out there before we start building. You can have a whole new thread for that using the proper model." A separate research thread, "Wisdom bank: how others have built this", was started the same day. It writes its report to `08-how-others-do-it.md` on branch `claude/wisdom-bank-prior-art` and publishes it as a page for his phone. Nothing further is designed or built until he has read it.
+
+- **11 November 2026, connecting graphs with AI, and copying an existing interface.** "Yeah, not just all of this, but also the way that people connect these hive minds or knowledge graphs together. Especially with AI, a lot of people are trying to do this sort of thing. I have not been sold on your UI design yet. So I'm more looking at copying something out there and iterating it or making it better." So none of the interfaces drawn so far, the one surface included, is the starting point. The starting point is an existing interface he chooses from what the research finds, then improved. The research thread was told to add how knowledge graphs are joined together and worked on by AI, and to lead its report with three to five real interfaces he can try, with a recommendation.
+
+- **12 November 2026, on the research report ([08](08-how-others-do-it.md), on branch `claude/wisdom-bank-prior-art`) and its screenshots.** "Work flowy Does not seem correct embedding atlas. Seems very interesting. Safari Faria has some aspects of what we are building. You can maybe check it for some things to see if there's anything needed. And then notice Seems kind of like what we're building, it's just someone else building something so you can scan it for insight. Between those three plus what you've already discovered, I think we have a pretty interesting setup. I guess the main thing is if the embedding atlas would work for what we're trying to do. The looks cool, but it should be more interconnected. I think this is the closest fully developed thing. Built for large scale. So let's see how some of these would combine, but also do a bit of research on the embedding atlas and if it could actually be integrated somehow." (Voice transcription; the home thread reads "Safari Faria" as Sefaria and "notice" as Nodus. That reading is not his words.) So: WorkFlowy is out. Embedding Atlas is the leading base, on condition that it can be made more interconnected. Sefaria and Nodus are sources of ideas. The answer on Embedding Atlas is in [09](09-embedding-atlas.md).
+
+## 4. What was made, and your verdict on each
+
+| Page | What it is | Your verdict |
+|---|---|---|
+| [Concept](https://claude.ai/artifact/Y7S5fSmw9tdy8mdaxYD56S) | The idea in words, from your interview | Superseded in places by the corrections above |
+| [First mock-ups](https://claude.ai/artifact/KyUE9ZY9bvArEynznJ5p1L), five passes | A work, a concept at three depths, the full reading, your voice, a notebook, a work on tea | You approved the plain voice, the three depths and the reading. You judged the navigation and the interface "majorly flawed" |
+| [The huge map](https://claude.ai/artifact/23ou4as7hxG7DzVB2W6ALz) | An invented bank of 20,000 concepts and 2,000 works to zoom through, measured | "This looks like a subway map ... It's hard for me to understand how to navigate through these and what they really are." Zooming held at size |
+| [One surface, first cut](https://claude.ai/artifact/GJE3u1woCZZtm7AfzL2fFg) | Everything together on one zoomable surface, 36 works, topics opening in place, subjects as lights | Not a starting point: "I have not been sold on your UI design yet" |
+| [Screenshots of five existing interfaces](https://claude.ai/artifact/UzR9mLbPLwQPD2t3fDWJAn) | WorkFlowy, Sefaria, Embedding Atlas, TheBrain, Nodus | Embedding Atlas "very interesting"; Sefaria "has some aspects"; Nodus "kind of like what we're building"; WorkFlowy "does not seem correct" |
+| [Maps others have built](https://claude.ai/artifact/EJBhUKWms2rnNZtJNgy5vt), [open source map projects](https://claude.ai/artifact/9vdehN6aXhL1ccaodHUAph), [products](https://claude.ai/artifact/NvGBsP5fr2j8NQijnJXs7Y), [open source and recent](https://claude.ai/artifact/1qrxKj3R4k3H6rDM1aPidV) | Surveys | For reference |
+
+The mock-up files are in `design/2026-11-wisdom-bank/` (`index.html`, `zoom/`, `one/`), each with a `HANDOFF.md` holding what was drawn, the measurements, and your reactions in your words.
+
+## 5. What others have already built
+
+Every report was made from search results and reviews, because the research machines could not open outside sites. Treat the details as leads to check, not as settled.
+
+**Is it already built?** No single thing covers it. Products that distil well (Recall, NotebookLM) keep summaries, not the exact words, inside their own walls. Products that keep exact highlights (Readwise, Snipd, Glasp) do not link ideas across sources. No open-source project keeps an exact quote with its speaker and moment as a checked unit, links it across sources, and lets you move through it.
+
+**The idea is old, and was built by hand at great cost.** Adler's Syntopicon gathered 102 "great ideas" across the Great Books with a staff of up to 72 over eight years. Nave's Topical Bible did the same for scripture.
+
+**The closest living system is Sefaria**: a free library with about 17,700 topics, a ranked list of source passages under each, plain rows of what connects to the passage you are reading, and "source sheets" where people build their own teaching from the texts. It is open.
+
+**Lessons worth keeping:**
+
+1. **Two grades of "the same".** SuttaCentral marks parallel teachings across Buddhist traditions as full or partial, and only full ones may be chained. Do not make "same concept" one yes or no.
+2. **The AI proposes, you confirm.** A tool called sift-kg removes obvious duplicates by rule, asks a model about the rest, and files each proposal as pending, approved or declined, with its reasoning. It keeps "this extends that" apart from "this is the same".
+3. **Exact quotes are guaranteed by code, not by asking.** The model returns a quote and ordinary code checks it appears word for word in the source. Models do invent quotes that read well.
+4. **A passage is stored as its exact words plus a little before and after**, a free web standard, so it can be found again after the source is corrected.
+5. **Each depth is written once and stored**, in the prototypes that zoom text (Pad, Rambler, Qlarify, TreeReader). None writes a plain sentence, then three paragraphs, then a full reading; that part is new.
+6. **At size, draw only what is near.** Pages built from ordinary elements lag around a thousand items; graphics-based ones reach tens of thousands and map tools reach millions.
+7. **What works in maps:** open on one thing and its neighbours; a few named kinds of line; a sentence on every line; marking the missing step. **What fails:** the whole graph as the front door; links drawn by software from word overlap.
+8. **Nobody draws connections between connections readably at size.** Data models exist for it; no usable picture was found.
+9. **The known trap is collecting without returning.** Capture feels easy and retrieval feels like homework. Each visit should produce something.
+
+**Reuse, do not rebuild:** the merge proposal pattern; the quote check; the standard for storing a quote; Fabric's "extract wisdom" prompts for distilling; the "LLM wiki" layout (sources never edited, pages kept by an agent beside them); one local database file for search by words and by meaning.
+
+**What nobody seems to have solved:** judging "the same concept" across traditions with a person confirming, at thousands; teaching text at three depths kept true to the passages; one surface that is huge, structured and stays where you left it; your own voice woven into the source material and kept visibly yours; from a line of concepts to an outline with every quote credited.
+
+## 6. What you already have
+
+- **AR Create's Library** stores every source once with a permanent identity and keeps YouTube captions with their timings. Its evidence card (exact quote, position, source) is the nearest thing to a nugget, with no speaker, distillation, response or links.
+- **The i64os shelf** is real: the documents say 189 notes, each at three depths (summary, analysis, full transcript), with verdicts and stacks. A note is a whole talk, not one idea, and notes do not link to each other. Its distilling retells on purpose, so it cannot supply exact words. Every transcript is kept as timed lines, so exact quotes and their moments can be cut from what is stored.
+- **The i64os Research Hunt** has the right shape (a claim with one vote per source, each with an exact quote, its place and a stance) and held no real contents when read.
+- **A warning already visible:** 337 captured items had sat unsorted since 1 August.
+
+## 7. What was learned from the mock-ups
+
+**Landed:** the plain spoken voice; three depths; the full reading in five parts; a work kept whole with all its topics visible; a concept as a door to other works; zooming as the main gesture.
+
+**Failed:** compressed, clever labels; text cut to fit a card; frames that cost reading width; pills and sections; anything opening over the top or on another page; wandering coloured lines; a list of categories as the way in; generated filler anywhere you are likely to read.
+
+**How the work went wrong:** one thread made pass after pass on the same page, each patching the last, long after it could rethink. Messages sent to a running thread arrived after it had published. Start from the problem in a fresh thread, with a complete brief, and do one piece at a time.
+
+## 8. What nobody has shown yet, and the order to do it in
+
+1. **Does Embedding Atlas run on your phone, and does it feel interconnected enough?** The trial page described in section 2. Small.
+2. **Can a real work be distilled this well?** Every page so far uses invented content. One real work you know, distilled section by section, quotes checked by code, three depths in plain words. This is the heart of the bank and has never been tried. It needs you to name the work.
+3. **Can an agent judge "the same concept" across works?** Built on the output of step 2, with full and partial grades and your yes or no.
+4. **How a bank arranges itself and stays put** as works are added.
+5. **Finding by meaning.** Every mock-up matched words only.
+6. **How it is stored**: what a concept is on disk, how a passage stays tied to its source, how connections are recorded. No note has been written.
+7. Then building, inside AR Create's Research station.
+
+## 9. Questions still open with you
+
+- Your lens: the few variables that make up your filter.
+- How books reach the bank: an ebook file, highlights, photographs of pages, an audiobook.
+- Friends' ideas: recordings or your memory, and asking once or each time before quoting them.
+- The name on the screen.
+- Whether the unbroken zoom matters more than a ready-made map (section 2).
+
+## 10. How it joins AR Create
+
+- It lives in the Research station. A pathway is the same thing as a research topic: a topic holds its sources and, later, concepts in an order you choose with your words between.
+- AR Create's Research keeps topics and groups of sources as they are and does not build a unit for one idea until this work says what it is.
+- The rules of AR Create hold here too: sources are stored once and never overwritten; your exact words are never changed; an agent proposes and you decide; every write names its author.
+- Since 12 November the app's new front is called version three, and version two is kept reachable. The bank belongs in version three's Research.
+
+## 11. The papers and threads behind this page
+
+All on branch `claude/ar-create-ui-ux-review-71qso6`, in `docs/research/wisdom-bank/`:
+
+| Paper | What it holds |
+|---|---|
+| `00-inventory.md`, `00b-i64os-inventory.md` | What AR Create and i64os already have |
+| `01-products-and-experience.md`, `02-open-source-and-recent.md` | Products and open-source projects |
+| `03-synthesis.md` | The first one-page answer |
+| `04-concept.md` | The concept from the interview, with the sixteen corrections at its top |
+| `05-map-precedents.md`, `06-github-precedents.md` | Maps others have built |
+| `07-where-it-stands.md` | The home thread's running record |
+| `08-how-others-do-it.md` | The widest research, nine problems, with interfaces to copy |
+| `09-embedding-atlas.md` | The study of Embedding Atlas as a base |
+| `screens/prior-art/` | Screenshots of the existing interfaces |
+
+The plans that briefed the work are `docs/plans/2026-11-11-09`, `-11`, `-12` and `-13`.
+
+Every thread that worked on the bank is finished and can be closed: the four first research threads, the i64os reading, the concept, the first mock-ups, the huge map, the one surface, the two map surveys, the home thread, "how others have built this", and the screenshots thread. To continue, start one fresh thread from this page.
