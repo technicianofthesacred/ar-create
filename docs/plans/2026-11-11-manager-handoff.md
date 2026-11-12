@@ -22,6 +22,29 @@
 - Shell commands for him, if ever needed: one command per block, no comment lines, nothing to hand-edit.
 - He often dictates by voice, so his messages can be loosely worded. Quote his words exactly when recording a decision.
 
+## WHERE THIS STANDS, 12 November: the coordinator has stepped back
+
+Asked "Which line runs the build from here?", with the stage line recommended, Adrian answered on 12 November: "Let's go with your recommendations". So:
+
+- **The stage line runs the build of version two** (its latest thread: `session_017kitFgTSNEnuDHnLeNWrEU`). It was told, and so was this thread's Write director (`session_017kitFe2b6MQFZwy3MNMGpN`), which carries on and now sequences its work with the stage line.
+- **This thread is the identifier again**: it finds problems and writes them up. It starts no app threads and relays nothing unless Adrian asks.
+- **Closed at his word:** pull request 233 (not merged; this branch is kept as the archive), and the finished threads (the first version two director, the small fixes, the author's walk, the old demo).
+- **The wisdom bank was left entirely alone**, threads and branches. His words: "the wisdom bank I am still working the details out."
+- **Eight finished branches are agreed for deletion but still exist**, because this machine is not allowed to delete branches. Adrian has the one command. To undo a deletion, recreate the branch at the commit beside it:
+
+| Branch | Last commit |
+|---|---|
+| `claude/direction-d-build` | `f71403053fc8` |
+| `claude/v2-wip-home` | `1654ee2aebb7` |
+| `claude/v2-wip-subject` | `f283657e0f3b` |
+| `claude/v2-wip-research` | `826b73da1c9a` |
+| `claude/v2-wip-advanced-link` | `4d551799cf5d` |
+| `claude/v2-small-fixes` | `b7d8c75fe273` |
+| `claude/v2-journey-walk` | `93664b5cb763` |
+| `claude/ar-create-screens` | `ca90948fceed` |
+
+- Kept on purpose: `claude/v2-write-read-check` (being built), `claude/ar-create-design-round` (the approved sample that `main`'s records point to), `claude/ar-create-walkable-demo` (one fix not on `main`: Carousel export finds Chrome on a machine that is not a Mac), this branch, and every wisdom bank branch.
+
 ## READ THIS FIRST: a second line of threads is building version two (found 12 November)
 
 While this thread ran its own director for Write, Read and Check, **another line of threads, not started or known by this coordinator, built and merged five stages into `main` on 12 November**: Write inside version two (pull request 237), Read and Check (238), Capture (239), "what stood between him and starting", which includes a first look with his real records and brought the small fixes onto `main` (240), and the whole journey walked (241). Their sessions are `session_017kitFfzJUE1gbqeZ61wUch`, `...Fhh2DRK4gddsDPh3rd`, `...Ff73FVZrWY5rao8Qrm`, `...Fgrt2TbvqUDySv3AvK`, `...FgTSNEnuDHnLeNWrEU`. The record on `main` (`docs/plans/2026-11-11-version-two.md`) lists them as stages 1 to 5, all in.
