@@ -543,33 +543,37 @@ test('real server: typing while a split or a join is being saved carries onto th
  const target=longRows(a.doc)[0],text=target.value,at=text.indexOf(' ',Math.floor(text.length/2));
  const L=text.slice(0,at),R=text.slice(at).trim();
  target.focus();target.setSelectionRange(at,at);press(a.w,target,'Enter');await savedOnServer(a);
- // he keeps typing at the caret while the split is saved
- type(a.w,target,L+' TYPED '+R);target.setSelectionRange(at+7,at+7);
- await until(()=>edsOf(a.doc).includes(L)||edsOf(a.doc).some(x=>x.includes('TYPED')),20000);
+ // the break is on the page at once and the caret is in the new paragraph: he keeps typing there while the split is saved
+ assert.ok(edsOf(a.doc).includes(L)&&edsOf(a.doc).includes(R),'both halves are on the page at once');
+ const nb=a.doc.activeElement;assert.equal(nb.value,R);assert.equal(nb.selectionStart,0,'the caret is at the start of the new paragraph');
+ type(a.w,nb,'TYPED '+R);nb.setSelectionRange(6,6);
  await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);await settle(2500);await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);
  let server=wordsOf(await draftOf(base,sub));
  assert.equal(server.filter(x=>x.includes('TYPED')).length,1,'typed once');
  assert.ok(server.includes(L),'the left half is as it was');assert.ok(server.includes('TYPED '+R),'what he typed at the caret goes with the new paragraph');
  assert.deepEqual(edsOf(a.doc),server);assert.equal(a.w.localStorage.getItem('ar-v2-write:'+sub.binding),null);
- // typing at the start of the left half while the next split is saved
+ // typing into the left half while the next split is saved
  const t2=longRows(a.doc).find(x=>x.value!==L&&x.value!=='TYPED '+R&&x.value.length>30);
  if(t2){
   const T=t2.value,cut=T.indexOf(' ',Math.floor(T.length/2));
   t2.focus();t2.setSelectionRange(cut,cut);press(a.w,t2,'Enter');await savedOnServer(a,2);
-  type(a.w,t2,'AA '+T);
+  const left=[...a.doc.querySelectorAll('textarea.wr-ed')].find(x=>x.value===T.slice(0,cut));assert.ok(left,'the left half is on the page at once');
+  type(a.w,left,'AA '+T.slice(0,cut));
   await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);await settle(2500);await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);
   server=wordsOf(await draftOf(base,sub));
   assert.ok(server.includes('AA '+T.slice(0,cut)),'typed before the split point stays in the left half');assert.ok(server.includes(T.slice(cut).trim()));
   assert.equal(server.filter(x=>x.includes('AA ')).length,1);assert.deepEqual(edsOf(a.doc),server);
  }
- // a join while he types in both halves
+ // a join while he types in the joined paragraph
  const rows=longRows(a.doc),left=rows[0],right=rows[1];
  const lw=left.value,rw=right.value;
  right.focus();right.setSelectionRange(0,0);press(a.w,right,'Backspace');await savedOnServer(a,3);
- type(a.w,left,lw+' LEFTMORE');type(a.w,right,rw+' RIGHTMORE');
+ assert.ok(edsOf(a.doc).includes(lw+' '+rw),'the joined paragraph is on the page at once');
+ const joined=a.doc.activeElement;assert.equal(joined.value,lw+' '+rw);
+ type(a.w,joined,lw+' '+rw+' LEFTMORE');
  await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);await settle(2500);await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);
  server=wordsOf(await draftOf(base,sub));
- assert.equal(server.filter(x=>x.includes('LEFTMORE')).length,1);assert.equal(server.filter(x=>x.includes('RIGHTMORE')).length,1);
+ assert.equal(server.filter(x=>x.includes('LEFTMORE')).length,1);
  assert.equal(server.filter(x=>x.includes(lw)).length,1,'the left words are not doubled');assert.equal(server.filter(x=>x.includes(rw)).length,1,'nor the right');
  assert.deepEqual(edsOf(a.doc),server);
 });
@@ -713,4 +717,96 @@ test('real server: after splitting the last paragraph the empty box is after it,
 test('the Add a piece plus is never hidden at any width',()=>{
  const css=read('public/v2/screens/write.css');
  assert.doesNotMatch(css,/Add a piece[^}]*\{[^}]*display:none/,'the plus stays at every width');
+});
+
+// ---- the third review: Enter and Backspace while a save is running ----
+/** What a person typing would expect: paragraphs, and a caret in one of them. A break at the caret swallows the spaces beside
+    it; Enter at the end moves to (or makes) an empty paragraph after; at the very start or in an empty paragraph it does
+    nothing; Backspace at the start joins the paragraph to the one before with one space, the caret at the join. */
+function person(paras,i=0,pos=0){
+ const m={paras:[...paras],i,pos,
+  type(ch){const p=m.paras[m.i];m.paras[m.i]=p.slice(0,m.pos)+ch+p.slice(m.pos);m.pos++;},
+  left(){if(m.pos>0)m.pos--;},
+  home(){m.pos=0;},
+  enter(){
+   const p=m.paras[m.i];if(!p.trim())return;
+   const head=p.slice(0,m.pos).replace(/\s+$/,''),tail=p.slice(m.pos).replace(/^\s+/,'');
+   if(!tail){if(m.i+1<m.paras.length&&!m.paras[m.i+1].trim()){m.i++;m.pos=0;return;}m.paras.splice(m.i+1,0,'');m.i++;m.pos=0;return;}
+   if(!head)return;
+   m.paras[m.i]=head;m.paras.splice(m.i+1,0,tail);m.i++;m.pos=0;
+  },
+  backspace(){
+   if(m.pos!==0||m.i<1)return;
+   const lt=m.paras[m.i-1].replace(/\s+$/,''),rt=m.paras[m.i].replace(/^\s+/,'');
+   m.paras.splice(m.i-1,2,lt&&rt?lt+' '+rt:lt||rt);m.i--;m.pos=lt.length;
+  },
+  words(){return m.paras.filter(x=>x.trim());}};
+ return m;
+}
+/** One key at a time into whichever box has the caret, as a browser does; the page must show what the person expects after every key. */
+function hands(pg,model){
+ const {w,doc}=pg,rec={dropped:0,wrong:[],enters:0,joins:0,during:{enters:0,joins:0}},trace=[];
+ const box=()=>{const el=doc.activeElement;return el&&el.matches?.('textarea.wr-ed')&&!el.readOnly&&el.isConnected?el:null;};
+ const saving=()=>/^Saving/.test(savedSaying(doc));
+ const check=what=>{
+  trace.push([what,saving(),JSON.stringify(model.paras.map(x=>x.slice(0,10))),JSON.stringify([...doc.querySelectorAll('textarea.wr-ed')].map(t=>t.value.slice(0,10))),pg.calls.filter(c=>c.path==='/api/study-draft/save').map(c=>c.status).join(',')].join(' | '));
+  const el=box(),shown=[...doc.querySelectorAll('textarea.wr-ed')].map(t=>t.value).filter(x=>x.trim());
+  if(JSON.stringify(shown)!==JSON.stringify(model.words())||!el||el.value!==model.paras[model.i]||el.selectionStart!==model.pos){
+  rec.wrong.push({what,trace:trace.slice(-25),shown,expected:model.words(),caret:el?[el.value,el.selectionStart]:null,at:[model.paras[model.i],model.pos]});}
+ };
+ const act={
+  letter(ch){const el=box();if(!el){rec.dropped++;return;}const at=el.selectionStart;el.value=el.value.slice(0,at)+ch+el.value.slice(at);el.setSelectionRange(at+1,at+1);el.dispatchEvent(new w.Event('input',{bubbles:true}));model.type(ch);},
+  left(){const el=box();if(!el){rec.dropped++;return;}el.setSelectionRange(Math.max(0,el.selectionStart-1),Math.max(0,el.selectionStart-1));model.left();},
+  home(){const el=box();if(!el){rec.dropped++;return;}el.setSelectionRange(0,0);model.home();},
+  enter(){const el=box();if(!el){rec.dropped++;return;}const before=model.paras.length,m0=saving();press(w,el,'Enter');model.enter();if(model.paras.length!==before){rec.enters++;if(m0)rec.during.enters++;}},
+  backspace(){const el=box();if(!el){rec.dropped++;return;}el.setSelectionRange(0,0);model.home();const before=model.paras.length,m0=saving();press(w,el,'Backspace');model.backspace();if(model.paras.length!==before){rec.joins++;if(m0)rec.during.joins++;}}
+ };
+ return {rec,act,check,saving};
+}
+/** A repeatable stream: mostly letters, some caret moves, Enters, and Backspaces at the start of a paragraph. */
+function script(n,seed=7){
+ let x=seed;const rnd=()=>{x=(x*1103515245+12345)&0x7fffffff;return x/0x7fffffff;},out=[],letters='abcdefghijklmnopqrstuvwxyz';
+ for(let k=0;k<n;k++){
+  const r=rnd();
+  if(r<.62)out.push(['letter',letters[Math.floor(rnd()*26)]]);
+  else if(r<.72)out.push(['left']);
+  else if(r<.80)out.push(['home']);
+  else if(r<.92)out.push(['enter']);
+  else out.push(['backspace']);
+ }
+ return out;
+}
+
+test('real server: a steady typist who presses Enter and joins paragraphs while saves are in flight: the page is always what he expects, and so are the saved paragraphs',{timeout:240000},async()=>{
+ const {base}=await theWorld(),sub=await subjectOf(base,'straw-over-the-rows');
+ const pg=await livePage(base,sub,{slowSave:700});
+ const start=longRows(pg.doc)[0],paras=edsOf(pg.doc),at=Math.floor(start.value.length/2);
+ start.focus();start.setSelectionRange(at,at);
+ const model=person(paras,paras.indexOf(start.value),at),hand=hands(pg,model);
+ for(const [what,arg] of script(360,11)){hand.act[what](arg);hand.check(what+' '+(arg||''));await settle(15);}
+ assert.ok(hand.rec.during.enters>=3,'Enter was pressed while a save was running: '+JSON.stringify(hand.rec.during));
+ assert.ok(hand.rec.during.joins>=1,'Backspace joined while a save was running: '+JSON.stringify(hand.rec.during));
+ assert.equal(hand.rec.dropped,0);
+ assert.deepEqual(hand.rec.wrong.slice(0,2),[],'after every key the page showed what a person typing it expects, with the caret where it belongs');
+ await until(()=>/^Saved/.test(savedSaying(pg.doc)),60000);await settle(2500);await until(()=>/^Saved/.test(savedSaying(pg.doc)),60000);
+ assert.deepEqual(wordsOf(await draftOf(base,sub)),model.words(),'the saved paragraphs are exactly what he typed');
+ assert.deepEqual(edsOf(pg.doc),model.words(),'and the page agrees');
+ assert.deepEqual(pg.calls.filter(c=>c.method==='POST'&&c.status>=400).map(c=>c.status),[],'no refused save');
+ assert.equal(pg.w.localStorage.getItem('ar-v2-write:'+sub.binding),null,'nothing is left waiting on the device');
+});
+
+test('real server: closing the tab while a save is running keeps the Enters and joins: the paragraphs come back as he left them',{timeout:120000},async()=>{
+ const {base}=await theWorld(),sub=await subjectOf(base,'ink-on-warm-paper');
+ const a=await livePage(base,sub,{slowSave:4000,lateSave:0});
+ const start=longRows(a.doc)[0],paras=edsOf(a.doc),at=Math.floor(start.value.length/2);
+ start.focus();start.setSelectionRange(at,at);
+ const model=person(paras,paras.indexOf(start.value),at),hand=hands(a,model);
+ const cmds=[['letter','x'],['enter'],['letter','y'],['letter','z'],['home'],['backspace'],['letter','q'],['left'],['left'],['enter'],['letter','w']];
+ for(const [what,arg] of cmds){hand.act[what](arg);hand.check(what);await settle(30);if(what==='letter'&&arg==='x')await savedOnServer(a);}
+ assert.deepEqual(hand.rec.wrong.slice(0,2),[]);
+ assert.ok(hand.rec.during.enters>=1&&hand.rec.during.joins>=1,JSON.stringify(hand.rec.during));
+ const b=await reload(a,base,sub);
+ assert.deepEqual(edsOf(b.doc),model.words(),'the page shows the paragraphs as he left them');
+ await agree(b,base,sub,2500);
+ assert.deepEqual(wordsOf(await draftOf(base,sub)),model.words(),'and the server holds them');
 });
