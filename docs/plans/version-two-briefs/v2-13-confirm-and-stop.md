@@ -452,3 +452,100 @@ What was confirmed as the design says:
    Recommendation: yes.
 4. Leave the Library's "human review is recorded" label for a file that declares itself reviewed to a later stage?
    Recommendation: yes.
+
+## Code review of piece 2 (stop, services)
+
+Reviewed 12 November 2026 on commit "Stop a captured source counting: services and standing", in this worktree.
+Nothing was changed except this section. Run: `node --test tests/study-draft-stop-sources.test.mjs
+tests/subject-standing.test.mjs tests/study-draft-capture-sources*.test.mjs` (76 pass), and the wider draft, Check,
+structure-test and standing files (300 pass, 0 fail). Probes were throwaway scripts outside the worktree, on invented
+data in a temporary folder. One of them loaded the previous commit's `study-draft-copies.mjs` against the same data.
+
+Verdict: the piece does what the design and its review ask, and the registry and HTTP piece can build on it as it
+stands. No must-fix items. Shown by running:
+
+- **Who may stop or bring back.** `humanOnly` is the first line of `stopSources` (`study-draft-copies.mjs` 350) and of
+  `captureSources` (273). Every attempt by `agent:*`, `cron:*`, `import:*` and with no actor got 403 and left every
+  file byte identical: a stop, a stop with junk input, a replay of Adrian's own stop operation ID, a bulk capture, and
+  `again:true`. A bulk press that names a stopped source is 409 "You stopped using this for Check." and writes nothing.
+  A replay of the old capture operation ID does not bring it back and now says `stopped`, which settles the review's
+  should-fix 5. Another Library item with the same bytes is a different source and leaves the stop in place. Two
+  service instances on one folder racing the same stop wrote one stop entry. The second instance settled as a double
+  press. Two racing `again` presses wrote one capture entry. The losing instance got 409 from the write's hash check,
+  and the second press settles within one instance.
+- **The chain.** A stop entry has `sequence`, `previousHash` and an `entryHash` over every other key, and the reader
+  checks its exact key set, a human actor, `stops` equal to the source's newest capture and no double stop (251).
+  Each kind of change was read as damaged: a tampered field, an entry dropped from the middle, a re-hashed assistant
+  stop, a stop pointing at an older capture, an extra key, a stop of a source never captured, and a repeated stop.
+- **Readers agree.** After a stop, the read's `records`, Check's evidence (`study-draft-checks.mjs` 27), the list's
+  `hasQuoteSource` and the standing's `sourceNow` all use the same set: the locked records plus the active added
+  records with role `source` and not missing. The earlier receipt read `stale`. Check run again held with "No captured
+  SRC available.", and the list marked the row stopped and not eligible.
+- **Standing.** `noneLeft` (`subject-standing.mjs` 331) is exactly the review's must-fix 2, no wider. It requires a
+  present draft read, no `addedSources.error`, no source record, and a `stale` receipt. In
+  `tests/subject-standing.test.mjs` exactly three assertions changed, the three the review named. The one at 229 was
+  strengthened (it now also checks `status` and `issues`). The damaged-record assertion ("Check again") is unchanged.
+  A new test pins the damaged record and the missing draft read. No test was weakened.
+- **Old records.** For a record with no stop entry, the draft read from this commit is byte for byte the previous
+  commit's read (`JSON.stringify` equal, same data folder). The list differs only by `capturedHash` on used rows,
+  which the design adds on purpose. Forks and structure tests made before and after a stop read and validate, with no
+  `addedSources`. An older release reads a record holding a stop as damaged, which is the safe direction (see the
+  review's note on rollback).
+- **His words.** A stop or an `again` only appends to `added-sources.json` and may copy one file into `capture/`. The
+  draft's projection was identical before and after a stop.
+- **Words.** There is no em dash in any changed file.
+
+### Must fix
+
+None.
+
+### Should fix
+
+1. **Cutting the stop off the end gives the source back, which the record could not do before.**
+   `tests/study-draft-stop-sources.test.mjs` 236 pins the cut, and its title says "as for the locked record". That
+   comparison is wrong: the locked record is pinned by `captureHash` in the binding. Only the added record's newest
+   entry is unanchored (`study-draft-copies.mjs` 246 to 257). Before this change, cutting the newest entry could only
+   lose a source or go back to an older confirmed copy. Now it silently restores a source Adrian stopped. A probe
+   confirmed it: the read went from one source to two, with no error. That breaks Decision 7's "sources can be lost,
+   never gained". It needs file access, and anyone with file access could already forge a capture by re-chaining
+   (no secret), so this makes an existing ability easier rather than adding a new one.
+   Correction now: rename the test to say what it shows, and correct Decision 7's rows for "Remove the stop entry"
+   and "Delete added-sources.json" to name this case.
+   What would close it: anchor the head outside the file. Either the reader requires every `stopSources` operation
+   stamped in the draft provenance ledger (already written for each stop, `study-draft-copies.mjs` 383) to appear in
+   the chain, or each write records the record's newest `entryHash` beside the binding. Either one makes a cut need
+   two coordinated edits. Neither defeats a forger with file access. It is not in this piece's scope, because the
+   design review chose to reword, but it is cheap and could go in piece 3 if Adrian wants it.
+2. **A replay of an old stop operation reports "stopped" after the source was used again.** `outcome()` in
+   `stopSources` (`study-draft-copies.mjs` 359, returned at 361) always returns `stopped:[{sourceId,copiedHash}]`. A
+   probe stopped the transcript, brought it back with `again`, and then repeated the first stop's operation ID. The
+   reply named it as stopped while `document.addedSources.records` held it as used. This is the mirror of the review's
+   should-fix 5, which was fixed for capture at 285. Correction: build the reply from `now.stopped`. Return
+   `stopped:[...]` only when `now.stopped` holds this `sourceId` and `copiedHash`, else `stopped:[]` (or a
+   `usedAgain:true`).
+3. **The damaged-record refusal for a stop says "nothing was used".** At 358, `fail(ADDED_BROKEN)` answers a stop
+   with "Captured sources for Check changed; nothing was used.", while capture adds " Nothing was added." (284).
+   Correction: `fail(ADDED_BROKEN+' Nothing was stopped.')`, and update the matching regex in the test at 144.
+4. **Two test titles claim more than they test.** At 64, "reads and lists exactly as it did, with no new keys"
+   compares key names only, and the list rows do gain `capturedHash`. Correction: compare the read with a fixed
+   expected value (or keep the probe's check against the previous commit), and retitle the list half "adds only
+   `capturedHash` on used rows". At 170, "a copy, a stand-in and a fork refuse a stop" tests only a fork. Correction:
+   add a structure-test copy, made with `cloneStructureTest` as at 250, expecting 409.
+5. **`again:true` on a source in use recaptures rather than settling when its bytes changed.** At 294 a live source
+   with `again` passes. With the same bytes it settles as already used, which the review's should-fix 6 asks for.
+   With changed Library bytes it captures the new copy, which is what an ordinary press would do. That is harmless
+   (Adrian only, confirmed bytes), but it differs from Decision 6's wording. Correction: say so in Decision 6, or
+   treat `again` on a live source exactly like the same item without `again`. The latter is already the behaviour, so
+   only the words change.
+
+### Notes
+
+- The stop's double press (366) settles with a new operation ID and writes no entry. The provenance ledger still
+  stamps that ID (383), and `inspect` then answers 404 for it. Harmless. Piece 3 should not expect a receipt for a
+  settled press.
+- `inputHash` is not checked by the reader for stops or for captures. It is used only to tell replays apart, as
+  before.
+- The MCP `study_draft_read` (`agents/mcp/server.mjs` 70) shows `addedSources.records` only, so assistants will not
+  see `stopped`. That is fine for this piece. Piece 3 may want to add it, read only.
+- For the registry piece: the service refusals come first, so the gate is a second layer, as the review's must-fix 1
+  asks. `stopSources` takes no `{material}` context, so the server only needs to compose it.
