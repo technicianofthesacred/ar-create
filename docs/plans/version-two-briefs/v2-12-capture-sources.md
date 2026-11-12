@@ -593,3 +593,121 @@ first, then "Use the transcript", then "Use it for Check", or re-read the hash b
 prove the order. With finding 2 in piece A, an assistant's page shows the "is for Adrian to do" line instead.
 The walk then types the speaker's name, confirms, and step 8 ends in a real result with no break and no visit
 to the existing workspace. This is option (b), and it is small enough to do now rather than later.
+
+## Code review of piece A
+
+Independent, adversarial review of branch `claude/v2-capture-sources-a` (the build commit "Capture sources, piece A"),
+12 November. Everything below was run, not only read: the service with a fake material authority, a real test server
+over HTTP, and `npm run demo` on port 8854 (invented data; 8841 was never touched). Demonstrating tests are in
+`tests/study-draft-capture-sources-review.test.mjs`. A test marked `todo` there states the corrected behaviour and
+fails today; it starts passing when the correction lands. Line numbers are from the build commit.
+
+**Verdict: merge after corrections.** The storage design is built as briefed and holds under attack: the locked
+record and binding file stay byte-identical, the added record fails closed, the command is refused to every assistant
+at the gate and in the service, and nothing else writes the record. The one must-fix is the hole the design review
+already named (its finding 2), which the build left open, and which this review measured end to end.
+
+### Must fix
+
+1. **An assistant can make Check pass on words it wrote; Adrian's one press is the only human step, and the list he
+   is shown cannot tell.** Files: `runtime/services/study-draft-copies.mjs` line 290 (`role:r.kind==='transcript'?
+   'source':'context'`) and line 326 (the same rule in the list); `runtime/services/first-flow.mjs` line 236
+   (`reviewSources`, open to any actor; `humanDecision:true` is a field the caller types);
+   `runtime/services/wordforge-sources.mjs` line 54 (front matter `kind: transcript` makes any Markdown file a
+   "transcript"). Proof: test "an assistant cannot make Check trust words it wrote" (todo), and the same chain run on
+   the demo: as `agent:codex`, `sources.import` a Markdown file with `kind: transcript` front matter and an invented
+   sentence (200, kind `transcript`); `study.material.attach` (200); `first-flow.select` (200);
+   `first-flow.source-review` with `humanDecision:true` (200). The list then shows it as `kind:'transcript',
+   reviewed:true, eligible:true, role:'source', review.by:'not recorded'`. Adrian presses once (200, captured as role
+   `source`, the primary), his draft quotes the sentence, and Check returns `checked`. Nothing in the chain is a
+   recording or a person. Correction, both parts, in piece A: (a) do the design review's finding 2: refuse a
+   non-human actor inside `reviewSources` and in the `review` action of `/transcription/{id}/review`
+   (`recordings.mjs` line 156; read from code, not run), and stamp `provenance()` on each review so `review.by` can
+   name him; (b) give role `source` only to a canonical recording transcript
+   (`r.review?.basis==='canonical-recording-review'`, which `first-flow.mjs` line 98 sets only when the transcript is
+   managed by its recording), never from the file's own `kind`; everything else is `context`. (b) alone stops an
+   invented file becoming the primary even before (a) lands. The `prepare` branch is already human-only
+   (`first-flow.mjs` lines 184 to 193), so the design review's mention of it needs no change.
+
+### Should fix
+
+2. **The quote straddle (the builder's `test.todo`).** Answer: yes, it is reachable today on old drafts. Test "the
+   straddle already passes on an old draft" (passes, pinned) opens a vault copy whose locked capture holds an SRC and
+   a CONTEXT; a quote made of the SRC's last words and the CONTEXT's first words reads `checked`. The guard
+   (`guards/mag-check-quotes.mjs` lines 37 to 40) joins every file into one word list and allows four skipped words
+   at the join. Piece A does not make it worse for old drafts (they cannot take a capture) but makes it ordinary on
+   new subjects, where a transcript plus a note is the usual set, and every non-primary file is matched whole
+   (headings and titles included, not cut to "## Full Transcript"). Serious enough to fix before piece B lets him
+   press; not a blocker for merging A, since it needs a writer to quote across two files and assistants cannot save
+   prose. Smallest fix that leaves every old draft's result unchanged, with no change to the guard or its pin: in
+   `perform()` (`study-draft-checks.mjs` lines 181 to 186), when the draft has no added records, call the guard
+   exactly as today. When it has, call it once with the locked files exactly as today (if the locked capture has a
+   `source`) and once per added file with that file alone as the SRC argument, and count a passage NOT FOUND only
+   when every run reports it (bracket and unsupported counts do not depend on the source; take them from any run).
+   Each added transcript is then also cut to its transcript part. The split guard keeps using the primary. Test:
+   "a quote straddling the join of two captured files does not pass" (todo).
+
+3. **Every draft read now carries the full text of every added source.** `readOwned` (`study-draft-copies.mjs`
+   line 255, `addedForRead` keeps `records` with `raw`) returns up to 4 MB on every `study-draft.read` and in the
+   reply to every Write save; `added()` (line 241) also reads and hashes every superseded copy on every read, and
+   the 4 MB cap (line 297) counts only the latest copy per source, so recaptures grow the per-read cost without
+   limit. Proof: test "a draft read does not carry the full text of added sources" (todo); on the demo the read
+   returns `raw`. The assistant listings strip it, but `ar_create_call study-draft.read` and the CLI's `draft read`
+   do not. Correction: keep `raw` out of the read shape (ids, titles, hashes, `copiedPath`) and let `evidence()`
+   read the copy from `copiedPath`, which it already does and re-hashes.
+
+4. **The list says a captured source is "not used" when Check still reads it.** `study-draft-copies.mjs` line 325
+   puts `setAside` before the captured case, so a source captured and then set aside reads "You set this aside, so
+   it is not used." while Decision 6 keeps it counting. Proof: test "the list does not say a captured source is
+   unused while Check still reads it" (todo): the same draft's Check passes on it and its proof names it. Piece B
+   would show this sentence. Correction: test `have` first; for a captured source say it is used for Check, and add
+   "set aside since" or "changed in the Library since" when that is true.
+
+5. **`parentContext` is not needed, and is a second way in that skips a check.**
+   `study-project-material-context.mjs` line 38. The builder's own HTTP test notes, and `runtime/server.mjs` line 285
+   shows, that New subject already makes the `owned-draft:<bindingId>` connection (through
+   `studyOwnedPhotoBindings.select`), so the existing `context({bindingId,parentStudyId})` serves a subject begun in
+   version two. It does not loosen which materials belong to which subject: on the demo, capturing material attached
+   to subject B into subject A's draft is 400 ("Selected parent material is missing, unreadable or unreviewed."), and
+   naming A's draft under B is 409 ("belongs to a different parent study"). It does skip the part connection and the
+   "rooms must remain distinct" test. Correction: call `context()` and remove `parentContext`, or keep it with a test
+   that it refuses wherever `context()` refuses.
+
+6. **No way back from a damaged added-sources file** (design review finding 9, still open). Check and capture both
+   refuse for good, and the list says the sources "need repair" with no repair to point to. Write still saves
+   (confirmed). Correction: name the manual step in this brief now; a human-only "start the captured sources again"
+   that moves the file aside under a dated name, later.
+
+### Notes
+
+7. **Confirmed refused to every assistant.** 403 at the gate and in the service for `agent:codex`,
+   `agent:claude-code`, `agent:chatgpt`, `cron:*` and an unattributed in-process call; over HTTP, with an `actor`
+   field added to the body, through the worktree CLI (`call study-draft.capture-sources`), and an assistant replaying
+   Adrian's operation ID with other sources: all 403, nothing written. MCP over STDIO is covered by the builder's
+   registry test (passes). The actor header is self-declared (`actor.mjs`), as for every human-only command.
+8. **Confirmed fail closed.** A truncated, emptied, directory, symlinked or re-attributed `added-sources.json` reads
+   as `{error}`, Check refuses 409, Write still saves (test, passes). With the file absent, Check falls back to the
+   locked capture, which can only lose sources, never gain them.
+9. **The chain has no secret.** A writer with file access who recomputes it, even with `actor:'agent:codex'`, is
+   read as genuine (test, passes). This is the locked manifest's strength too, as the brief says, but the builder's
+   forged-record test uses wrong hashes only, so it reads stronger than it is. Cheap extra: refuse an entry whose
+   `actor` is not in `HUMAN_ACTORS`.
+10. **423 cannot happen here.** `leases.check` lets Adrian override an assistant's lease (`leases.mjs` lines 66 to
+    70), and only Adrian may call the command; on the demo, a capture under an assistant's draft lease is 200. The
+    brief's "423" line is wrong; nothing to build.
+11. **The own-draft guard matches exact bytes only** (line 291); one changed character passes it. Acceptable once
+    finding 1 is fixed, since only Adrian could then make such a source eligible.
+12. **Idempotence, races and crashes hold.** Same operation and input: unchanged; different input: 409; two
+    presses at once (service and demo): one record; a crash between copy and record, retried with the same operation
+    ID: completed once; a leftover copy with other bytes: kept and refused. Activity recovery reads the capture
+    receipt (`committed` with `after.hash`), and a refused call settles its outbox entry.
+13. **Other changes: no behaviour change found for existing screens or agents.** `setAside:true` on
+    `first-flow.materialContext` changes that context's hash only for projects with a set-aside item; no consumer
+    pins it across calls (the assistant bridge re-selects eligible records, which never carry the field; the
+    workspace's moves reader and the footage scope ignore it). `has()` on relocation is read-only. The standing
+    change applies only to a stale receipt that never compared a source on a draft that now has one; an old draft
+    cannot reach it. The two assistant listings add `addedSources` (ids, titles, hashes) only when the file exists.
+    `docs/CAPABILITIES.md` is unchanged by `npm run build`, so it was generated.
+14. **Tests run.** The four test files the diff touches (59: 58 pass, 1 todo); 22 test files for the services it
+    changes (169 pass); seven more that use the assistant draft-read tools (59 pass); the review file (3 pass, 4
+    todo). Nothing failed, so nothing needed a rerun alone.
