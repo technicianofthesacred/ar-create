@@ -37,6 +37,14 @@ const ROUTES=[
  ['magazine.mark-published','/api/magazine/mark-published'],
 ];
 
+// Using material for Check writes no prose, so it is not a prose save; it is still Adrian's alone, at the gate.
+test('study-draft.capture-sources is refused to every agent before anything is read, and passes the gate for Adrian',async t=>{
+ const f=await setup(t),body={bindingId:randomUUID(),parentStudyId:'invented',operationId:randomUUID(),expectedSourcesHash:null,sources:[{sourceId:randomUUID(),sourceHash:'0'.repeat(64)}]};
+ assert.equal(PROSE_SAVES.includes('POST /api/study-draft/capture-sources'),false);
+ for(const actor of ['agent:claude-code','agent:codex','agent:chatgpt','agent:hermes','agent:grok','agent:claude-design','cron:nightly','import:notes']){const r=await f.call('/api/study-draft/capture-sources',body,f.as(actor));assert.equal(r.status,403,actor);}
+ const human=await f.call('/api/study-draft/capture-sources',body,f.as('human:adrian','ui'));assert.notEqual(human.status,403);
+});
+
 test('the prose-save list is exactly the routes tested here',()=>{
  assert.deepEqual([...PROSE_SAVES,'POST /api/magazine/mark-published'].sort(),ROUTES.map(([,route])=>'POST '+route).sort());
  assert.ok(MAGAZINE_HUMAN_ONLY.includes('POST /api/magazine/mark-published'));

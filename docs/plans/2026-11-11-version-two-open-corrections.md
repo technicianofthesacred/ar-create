@@ -90,7 +90,36 @@ into the draft's capture folder, records them in a separate append-only hash-pin
 untouched, so old records still validate) and merges it into `context.records`; the subject page calls it after
 "Use the transcript" and Check's held state offers it. Risks: it must never touch his words; consent holds on other
 people's speech; earlier forks and structure tests keep their old seeds; old check receipts turn stale. He was asked
-on 12 November and had not answered when this was written. **If he says yes, this is the next piece of work.**
+on 12 November and answered "Proceed". **This is stage 6, the next piece of work; see just below.**
+
+### Stage 6, approved 12 November, not started: Check can read a new subject's sources
+
+What done looks like: on the demo, `scripts/review-journey.mjs` walks New subject, Speak, Use the transcript, Write,
+Read and Check, and step 8 ends in a real check result with no break, at 1440 and 390, dark and light; the same
+journey works from the existing workspace's records; every old draft, check receipt, fork and structure test still
+reads and validates as before.
+
+- It is a new human-only command in the one registry, as proposed above. An assistant may not call it (403) and may
+  not get the same effect another way. It never changes his words. It leaves the locked capture record untouched.
+- Decide, and have a second model review before any screen work: where the appended sources are recorded and how
+  they are pinned; how a consent hold on another person's speech stops a source being captured; what happens to a
+  check receipt made before the capture (it should read as stale, not as passed); what a fork or structure test made
+  earlier shows; what happens when a captured source is later set aside or changed in the Library.
+- The screens: the subject page offers it after "Use the transcript" and Check's held state offers it. Keep the
+  screen change as small as the job allows, because **another thread is changing those files now**: the Write, Read
+  and Check look thread (session_017kitFe2b6MQFZwy3MNMGpN, branch `claude/v2-write-read-check`, plan
+  `docs/plans/2026-11-12-write-read-check-build.md` on that branch) holds `public/v2/screens/write.js`, `read.js`,
+  `check.js`, `slides.js`, their styles and `subject.js` where it opens a piece. Tell that thread before touching
+  `check.js` or `subject.js` and agree an order; build and merge the command, its tests and the standing change
+  first, which touch none of its files.
+- The standing: once sources are captured, "No source to check against yet" gives way to "Check" as before
+  (`runtime/standing-rule.mjs`, generated copy `public/v2/shell/standing.js`).
+- The walk then needs its step 8 break removed and step 8 asserting a real result.
+- This is a change to what Check trusts: review it twice, the second time by trying to make Check pass on words that
+  no captured source supports.
+- That thread also reported two faults in Write on main, which its plan replaces: in a conflict "Use the saved
+  version" discards his unsaved words and "Keep my words" writes his whole piece over the other version; two version
+  two tabs on one piece share one device key, so one tab's unsaved words can replace the other's.
 
 **Found by the walk and corrected (do not redo)**
 
