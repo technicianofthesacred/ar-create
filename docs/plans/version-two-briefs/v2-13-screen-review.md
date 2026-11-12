@@ -167,3 +167,58 @@ The exact words of every row state (no em dash):
 | after Stop | toast "Check no longer reads this." | |
 | answer lost (new) | toast "The answer did not come back. The list shows what is on file now." | the list shows what the server holds |
 | assistant's page, any press | the client's 403 sentence | the same control, shown |
+
+## Re-check of the corrections
+
+Re-checked 12 November 2026 on the commit "Sources list: corrections after review, and the walk opens Show all before
+looking on Home", by a different reviewer, by reading it and running it. No code was changed; this section is the only write.
+
+What was run:
+
+- `node --test tests/v2-subject.test.mjs tests/v2-check.test.mjs tests/v2-shell.test.mjs`: 104 pass, 0 fail.
+- The same two test files run against the screen files of the commit before the corrections (in a scratch copy, not in
+  this worktree): exactly the 7 new tests fail, the other 70 pass. So each new test catches the fault it names.
+- A fresh demo on 8867, `demo:fill`, the walk twice on that one demo, then a Playwright probe as the owner and as
+  `?reviewActor=agent:claude-code` on the walk's subjects, in version two at 1440. Ports 8841 and 8854 were never used; the
+  demo was stopped by its process ids and 8867 answered nothing afterwards.
+
+Each correction, seen in the browser:
+
+- Must fix 1: on the subject page, Stop, then "Use for Check again", then Stop again. After the first Stop the row says
+  "Not used for Check. You stopped it." with "Use for Check again" and the toast "Check no longer reads this."; after
+  again, "Used for Check", "Stop using for Check" and "Check can now read this"; after the second Stop the block no longer
+  says "Check can now read this", read at 0.3 and 2.8 seconds. In Check the same sequence ends at "Checks held. No source
+  to check against yet." with the Sources block and no "Check can now read this"; no check was run by itself after either
+  stop (no POST to the check), and one ran after "Use for Check again", as after any capture. Focus landed on the new
+  control each time and stayed there after the change stream's repaint.
+- Should fix 1: a stop made in a second tab reached the first tab's subject page in about a quarter of a second. With the
+  first tab on Check, the second tab's again turned it to "Mechanical checks complete", and its stop back to "Checks held"
+  with the stopped row, with no reload.
+- Should fix 2: a Stop whose request reached the server (200) but whose answer was cut in the page ends with the row
+  saying "Not used for Check. You stopped it." and one toast, "The answer did not come back. The list shows what is on file
+  now."; no "Nothing was changed", nothing left disabled. A "Use for Check again" cut before reaching the server says the
+  same sentence and the list still shows the stop, which is true.
+- Should fix 3 and 4: covered by the widened test (detached row found from the fields, unreadable row says its own words,
+  and four Stop controls for the four rows that name a copy). Not reproduced in the browser: the demo has no such rows.
+- Should fix 5: the assertion is back.
+- Should fix 6: covered by the new test; in the browser focus never moved anywhere odd.
+- An assistant's page: Stop answers 403, the toast says "Only Adrian can decide this. Claude can propose it, not do it."
+  once (once on the whole page), the list is unchanged and focus stays on "Stop using for Check".
+
+Tests: none weakened. Nothing was removed; the one changed count (2 to 4 Stop controls) follows the two rows added.
+
+The change stream refresh: it cannot loop. `refresh()` only reads the list, and reading writes nothing, so no change event
+follows it; five idle seconds after the last press showed no list reads at all. It does not repaint over a press in flight:
+the busy flag lives in the shared state and every repaint draws the controls disabled until the press ends, and the
+press keeps the list it started from. One small edge remains and is not a fault seen: `refresh()` has no ordering, so an
+older read answering last could briefly show an older list; his own press always causes a later change event and a later
+read, so the screen settles on the server's truth.
+
+The walk's step 9: run twice on the one demo (the second run on a demo already walked, so Home's group was past its cut).
+"Home did not show the new subject" did not appear in either run, at any width or theme. Both runs exit 0 with only the
+known "Not built yet" breaks at steps 6, 8 and 8b.
+
+Pictures for him (version two, deviceScaleFactor 2, cropped to the Sources block, 390 light and 1440 dark: the row in use,
+the stopped row, Check held after a stop) and a contact sheet were taken outside the repository.
+
+Can it ship: yes. Nothing must still be fixed.
