@@ -65,6 +65,33 @@ mounts in 18.4, 19.1 and 19.7 seconds on the Mac; it fails because the photo det
 box), first at the Screens stage A merge (PR 235). Likely its new keyboard aid, which walks computed styles of every
 focusable control, under jsdom. Version two was released with `--no-ci-check` naming this.
 
+## Stage 5, 12 November: the whole journey walked (in progress; the director keeps this section current)
+
+The walk is `scripts/review-journey.mjs` (brief: `version-two-briefs/v2-11-journey.md`): New subject, Capture Speak,
+Use the transcript, Write, Read, Check, back to the subject and Home, at 1440 and 390, dark and light, with the old
+screen photographed beside each step. Two real breaks stood between a recording and a checked piece.
+
+1. **An Article could not be started inside version two.** Add a form offered Article greyed out ("Write a few words
+   first") and Write said "This subject has no Article yet"; only Advanced's Write made one. Being built on branch
+   `claude/v2-start-article` (Write's empty page makes the Article on the first save).
+2. **A subject that began from New subject can never be checked, in either front. For Adrian to decide.** Check reads
+   only the sources captured into the draft when the draft is made (`context.records`, written once and locked:
+   `runtime/services/study-draft-copies.mjs` `finishCopy`; read by `study-draft-checks.mjs` near 26 and 181). Only a
+   draft opened from a vault original (`study-draft.open`), or made from another draft's sources
+   (`study-draft.create-collection` with `sourceBindingId`), has any. Attaching material (`study.material.attach`,
+   `first-flow.attach`, `recordings.source`) adds to the subject's material list and never reaches the draft, so
+   Check ends "Checks held: Capture the source transcript before checking." Tried on the demo as Adrian: held with a
+   real attached transcript note; "checked" for the hk original and for a collection given `sourceBindingId`.
+   Proposed, not built, because it changes what Check trusts: a human-only command (for example
+   `study-draft.capture-sources`: bindingId, parentStudyId, operationId, expected, sourceIds) that copies attached,
+   reviewed, not-set-aside materials into the draft's capture folder, records them in a separate append-only
+   hash-pinned file (the locked record untouched, so old records still validate) and merges it into
+   `context.records`; the subject page calls it after "Use the transcript" and Check's held state offers it. Risks:
+   it must never touch his words; consent holds on other people's speech; earlier forks and structure tests keep
+   their old seeds; old check receipts turn stale.
+   Meanwhile the standing no longer tells him to "Check again" when the hold is for want of a source (branch
+   `claude/v2-held-standing`).
+
 ## Stage 4, 12 November: what was done about the five, and what is still open
 
 Built on branch `claude/v2-before-starting`, every piece by one model and reviewed by another, the dangerous ones
