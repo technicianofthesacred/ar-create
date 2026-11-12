@@ -711,3 +711,119 @@ already named (its finding 2), which the build left open, and which this review 
 14. **Tests run.** The four test files the diff touches (59: 58 pass, 1 todo); 22 test files for the services it
     changes (169 pass); seven more that use the assistant draft-read tools (59 pass); the review file (3 pass, 4
     todo). Nothing failed, so nothing needed a rerun alone.
+
+## Second code review of piece A
+
+Second independent, adversarial review, of branch `claude/v2-capture-sources-a2` (piece A with the first review's
+corrections), 12 November. One goal: make Check say "checked" on words that no source a person confirmed supports,
+acting only as an assistant plus one honest press of the capture button by Adrian on whatever the list shows as
+eligible. Everything below was run unless it says "read from code": the services with a fake material authority, a
+real test server over HTTP, and `npm run demo` on port 8854 (invented data; 8841 was never touched). Demonstrating
+tests are in `tests/study-draft-capture-sources-review-2.test.mjs`; a test marked `todo` states the corrected
+behaviour and fails today. Line numbers are from the a2 branch.
+
+**Verdict: merge after corrections.** The goal was not reached as an assistant: the reviewer stamp, the role rule, the
+hash checks at the press, the stale receipts and the fail-closed record all held against every attempt listed under
+Notes. One fault in the new per-file quote check does make Check say "checked" on an invented quote, but it needs a
+particular draft, which an assistant cannot write. It is listed as must-fix because it turns a held result on main
+into a passing one and the correction is two lines.
+
+### Must fix
+
+1. **A quote-check run that dies on one captured file is read as "every quote found there", so Check passes.**
+   `runtime/services/study-draft-checks.mjs` lines 52 to 56 and 64 (`quoteRuns`). A passage counts as not found only
+   when every run printed a `NOT FOUND:` line for it, and nothing checks that a run finished. The pinned guard
+   recurses once per quoted word (`guards/mag-check-quotes.mjs`, `match`), so a single quoted passage of about 9,000
+   words that does match one file overflows the stack in that file's run: exit 1, a stack trace, no `NOT FOUND:`
+   lines. If that run is not the first, every other quote in the draft is counted as found. Proof: test "a guard run
+   that dies on one captured file does not turn every quote into found" (todo): two captured files, a 12,000 word
+   passage taken from the second, then an invented sentence; with one file captured Check reports both
+   (`needs-review`), after the second capture it returns `checked`, "2 of 2 quoted passages found". The guard alone:
+   exit 1 with `RangeError: Maximum call stack size exceeded` at 9,000 words, clean at 6,000. On main, and here when
+   the dead run is the first or only run, the result is `unsupported` and Check is held (test "the same dead run as
+   the first run is held", passes). Reach: it needs that long passage in the draft, and assistants cannot save prose,
+   so this is not reachable by an assistant plus one press; a person would have to paste or accept it. Correction, in
+   `quoteRuns` only: treat a run as valid only when its exit code is 0, 1 or 2 from the guard's own exit and its
+   output has the "N of M quoted passages found" line with the same M as the first run; otherwise return that run's
+   output and exit code unchanged (which reads `unsupported`, held), or throw so the record is `failed`. Never merge a
+   run that has no summary line.
+
+### Should fix
+
+2. **A review made before this change now reads with two new fields, which makes waiting assistant suggestions
+   stale.** `runtime/services/first-flow.mjs` lines 51 and 114: `reviewStamp` returns `{by:null, at:null}` when there
+   is no stamp, and a recording's `review` always gains `by` and `at`; `runtime/services/transcript-corrections.mjs`
+   line 144 adds `reviewedBy` (null for an old review) and `reviewedAt` to every reviewed transcript snapshot, which
+   line 114 copies whole into `review.transcript`. The assistant bridge pins the selected material records when a
+   suggestion is requested and compares them exactly at review and acceptance
+   (`runtime/services/study-mcp-bridge.mjs` lines 179 to 182, called from `contextFreshness` line 281; read from
+   code, not run end to end). So every suggestion that was requested with attached material before this release and
+   is still waiting would be refused as "Selected parent material revision or exact review changed". Proof of the
+   shape change: test "a review made before reviews were stamped reads with the same shape as before" (todo). The
+   first review's note 13 covered `setAside` only. Correction: add `by` and `at` (and `reviewedBy`, `reviewedAt`)
+   only when a stamp exists; an old record then reads byte for byte as on main, and `confirmedByHuman` already
+   treats a missing `by` as not confirmed.
+
+3. **An assistant can take Adrian's confirmation away.** `first-flow.mjs` lines 247 and 251 (`stampReview` on every
+   review, whoever calls) and `transcript-corrections.mjs` line 165. An assistant that reviews the same bytes after
+   him replaces his stamp with its own; the material then reads "Not confirmed by you yet" and the press is refused
+   until he confirms again. It gains nothing, and a captured copy is not affected, but it can keep undoing his step.
+   Proof: test "an assistant reviewing the same bytes after Adrian does not remove his confirmation" (todo); the
+   same on the demo and, for a recording, in the pinned recording test. Correction: when the bytes already carry a
+   person's stamp at this hash, a later review by anyone who is not a person leaves the stamp as it is (first-flow:
+   skip `stampReview`; transcript: keep `review.by` and `reviewedAt` when the revision is unchanged).
+
+4. **Words inside a comment in a captured note count as support.** `study-draft-checks.mjs` line 51: each captured
+   file is the guard's first argument in its own run. The guard removes Obsidian comments (`%% ... %%`) only from
+   its extra files, so on main a CONTEXT file's comments never support a quote, and here a captured note's do; the
+   note's headings and title count too, as the first review said. Proof: test "words inside a comment in a captured
+   note support a quote" (passes, pinned). He confirmed those bytes, so nothing unconfirmed gets in; it is a quiet
+   difference from how the same kind of file is read on an old draft. Correction: strip `%%` comments from a captured
+   `context` file before it is written to the check snapshot, or accept it and say so in Decision 3.
+
+### Notes
+
+5. **The reviewer stamp cannot be written by an assistant.** Tried over HTTP and on the demo: `by`, `actor`,
+   `reviewedBy` or `metadata.review.by` typed into the body of `first-flow.source-review` (400, unknown key) and of
+   `/transcription/{id}/review` (200, ignored, stamped as the assistant); a replay of Adrian's own review operation
+   by an assistant (answers, changes nothing, stamp stays his); `chat` relay with `said` on the capture command (403).
+   Read from code: `flow.json` gets `reviews` and `reviewedBy` only at `first-flow.mjs` lines 238, 247, 251 and 253,
+   always from `provenance()`; no import, merge, concept save or file command writes it; the study research path
+   stamps the caller, so an assistant stand-in is stamped as the assistant. Tests "an assistant cannot write the
+   reviewer stamp on a note" and "an assistant cannot change a recording transcript after Adrian confirmed it" (pass).
+6. **The stamp does not outlive the words.** After Adrian confirms a recording transcript, an assistant's segment
+   edit clears the review (the list shows not reviewed, a new hash), its `speakers` call clears it even when no name
+   changes, and its own review is stamped as its own; a press with the hash he was shown and with the new hash are
+   both refused. Every writer of a transcript goes through `apply` or `speakers`, which reset the review; the older
+   route in `magazine/jobs.mjs` writes a review with no `by`. For a note, changed bytes give a new hash, and both
+   `reviewed()` and the stamp are tied to the hash. A second import of the same file name makes a new Library item
+   and leaves the confirmed one as it was.
+7. **Role `source` cannot be earned by a file.** It needs `basis: canonical-recording-review`, which needs a
+   transcript in the recordings folder whose job file names that folder and whose JSON and Markdown match the last
+   published pair. Keeping a recording as a source is his alone (403 for an assistant, tested). A note he confirmed
+   is `context`; with only context files Check stays held ("No captured SRC available.", demo).
+8. **The press compares bytes.** `sourceHash` is compared with a fresh read (409 or 400 on any change between the
+   list and the press); the copy is taken from that same read; the list and the command use the same two functions
+   for eligibility and role, so the list never showed eligible for something captured with another role. The list
+   can say eligible where the press still refuses (the draft's own words, the 4 MB total): safe direction.
+9. **Receipts.** A held receipt reads stale after the first capture and a passing one reads stale after a second
+   capture (test, passes). Capturing a source again at bytes it had before makes an older receipt for those same
+   bytes read current again, which is correct. `study-draft.check` called again with an old operation ID returns
+   the stored record without the stale test; that is how main behaves, and the standing reads through `read`, which
+   does test. The standing passes `stale` and `held` through unchanged; only "held, never compared, source now
+   present" becomes "Not checked yet".
+10. **Old drafts are identical to main.** A draft opened from a vault original (locked SRC and CONTEXT, eight
+    paragraphs: found, not found, bracketed, cut, comment words, heading words, straddle) gives byte-identical quote
+    output, split output, issues, proof and read keys on this branch and on a copy of `origin/main`.
+11. **Draft read and Write save replies carry no added-source text** (demo: ids, titles, hashes, paths, lengths).
+12. **Trivially short and bracket-only quotes pass, as on main.** A one-word quote passes against any file that
+    holds the word, and a quote made only of bracketed phrases passes against any file with enough words (test,
+    pinned). This is the pinned guard, unchanged, and the receipt already says bracket intent is not verified.
+13. **The actor is a self-declared header for the whole app.** This command is no easier to spoof than the other
+    human-only commands: the same gate, plus a second check in the service that also refuses an absent actor. A
+    request with no actor header and an `Origin` header naming the app is read as Adrian for every command (demo:
+    capture and Write save both pass the gate that way).
+14. **Tests run.** The new review file (9: 6 pass, 3 todo). 64 test files that use the changed services, plus the
+    four the diff touches (653 tests: 645 pass, 3 skipped, 3 todo, 2 fail). The two failures were run alone and fail
+    the same way; neither touches this change: `native-language-edition.test.mjs` needs a headless renderer this
+    machine lacks, and `native-language-proposal-owner.test.mjs` fails identically on a copy of `origin/main` here.
