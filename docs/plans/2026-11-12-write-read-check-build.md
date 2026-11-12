@@ -349,3 +349,23 @@ Outputs carousels; retiring Advanced or version two; type outside the six sizes 
 - Which record holds "the order of his plan" for Start and "a part not written" for Check.
 - Whether his own typed words on a slide change what a Carousel promises him, and whether the later director will
   accept taking the studio over from V3-8 rather than whole.
+
+## Record, 12 November 2026
+
+| Piece | Built by | Reviewed by | State |
+|---|---|---|---|
+| The approved sample (`design/2026-11-write/`) | Opus, three passes | Adrian, by eye | Approved: "Okay, let's go". A fourth sheet of quote marks (A to D) waits for his choice; A, a dotted underline, is recommended |
+| V3-0 Advanced opens one exact piece | Sonnet | Opus | On main (#245) |
+| V3-a Version three's frame, default, borrowed screens, links each way | Opus | Sonnet | On main (#245) |
+| V3-b Version three's own Write in the approved look | Opus (built in place), Sonnet (moved into version three, Undo fix) | Opus, twice | On main (#246). Not tried in Safari, Firefox or on a real phone keyboard |
+| V3-1 Promises about his words and the three fixes in both fronts | | | Next. Until it lands, the newer-version choice in both fronts can discard or overwrite words |
+| V3-2 onward | | | Not started |
+
+Things a later director should know:
+
+- Adrian wants links and decisions, not running updates. His words: "Give me links don't tell me what to do" and "Don't just tell me all these things I need to know what it is I actually need to make a decision on".
+- "Ship all" (12 November) was taken to cover each reviewed piece of this plan as it is finished: a pull request to main, merged. The release to his installed app is run only on his Mac.
+- A tracked file whose path contains "before-" fails the package test. Name pictures accordingly.
+- The whole `npm test` on a cloud machine has one or two known failures: "real native HTTP photo inspect…" always, "installed home mode…" sometimes.
+- Undo in version three's Write keeps every taken-back copy on the device and never removes one, so "Copy all my words" grows over time. It needs a tidy-up rule.
+- Read and Check borrowed inside version three do not mention words kept on the device by version three's Write.
