@@ -45,7 +45,8 @@ const COVERAGE_URL=pathToFileURL(path.join(repo,'public/lib/decision-coverage.js
 
 const COMMANDS=[['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true],['look','GET','/api/look',true],
  ['subject.standing','GET','/api/subject/standing',true],['study.outputs','GET','/api/study/outputs',true],['study-draft.read','GET','/api/study-draft/read',true],['study-draft.save','POST','/api/study-draft/save',false],
- ['study-draft.check.get','GET','/api/study-draft/check',true],['study-draft.check.post','POST','/api/study-draft/check',false],['current-work.read','POST','/api/current-work/read',true],['study-ai.read','GET','/api/study-ai/read',true],['presence.post','POST','/api/presence',false],['consent.desk','GET','/api/consent/desk',true]]
+ ['study-draft.check.get','GET','/api/study-draft/check',true],['study-draft.check.post','POST','/api/study-draft/check',false],['current-work.read','POST','/api/current-work/read',true],['study-ai.read','GET','/api/study-ai/read',true],['presence.post','POST','/api/presence',false],['consent.desk','GET','/api/consent/desk',true],
+ ['study-draft.capture-sources.list','GET','/api/study-draft/capture-sources/list',true],['study-draft.capture-sources','POST','/api/study-draft/capture-sources',false]]
  .map(([name,method,route,readOnly])=>({name,method,route,readOnly,schema:{},actors:['any']}));
 
 /** Loads the page's scripts, then Check (and the stand-in for Write's helpers when they are missing). */
@@ -371,4 +372,84 @@ test('a refused consent.desk read says it could not be read, not that only Adria
  const ok=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/consent/desk':{claims:[],people:[{id:'x1',name:'Invented Person',appears:['One'],consent:{state:'not asked'}}],summary:{claims:0},release:{blockers:[]}}})});await ready(ok.doc);
  await until(()=>/Invented Person/.test(ok.doc.querySelector('[data-ck-truth]').textContent));
  assert.doesNotMatch(ok.doc.querySelector('[data-ck-truth]').textContent,/to give/);
+});
+
+// ---- capture sources: the held state offers the list and the one button (piece B) ----
+const HELD=receipt({status:'held',issues:[],quote:{status:'held',reason:'No captured SRC available.'},split:{status:'held',reason:'No captured SRC available.'}});
+const PASSED=receipt({status:'checked',issues:[],quote:{status:'checked',output:'1 of 1 quoted passages found in the transcript.\n'},split:{status:'checked'}});
+const LIST='/api/study-draft/capture-sources/list',CAPTURE='/api/study-draft/capture-sources';
+const src=(extra={})=>({id:'src-1',title:'Interview transcript',kind:'transcript',hash:'a'.repeat(64),eligible:true,confirmedByYou:true,reviewed:true,captured:false,...extra});
+const listOf=(sources,extra={})=>({bindingId:'root1',parentStudyId:'s1',canCapture:true,sourcesHash:null,hasQuoteSource:false,sources,...extra});
+
+test('a check held for want of a source lists what Check can read, and one button captures exactly those; Check then runs again by itself', async()=>{
+ let captured=false;
+ const answers=base({'/api/study-draft/check':(u,body)=>body?PASSED:HELD,[LIST]:()=>listOf([src(),src({id:'src-2',title:'Studio note',kind:'markdown',eligible:false,confirmedByYou:false,reason:'Not confirmed by you yet. Confirm this material yourself before using it for Check.'})]),[CAPTURE]:()=>{captured=true;return {captured:[{sourceId:'src-1'}],sourcesHash:'f'.repeat(64)};}});
+ const {doc,calls}=await page({hash:'#/check/s1?piece=o1',answers});await ready(doc);
+ await until(()=>doc.querySelector('[data-ck-run] [data-cs-block] [data-cs=capture]'));
+ assert.match(doc.querySelector('.ck-why').textContent,/Capture the source transcript before checking/);
+ const items=[...doc.querySelectorAll('[data-cs-block] li')];
+ assert.equal(items.length,2);
+ assert.match(items[0].textContent,/Interview transcript/);assert.match(items[0].textContent,/Transcript/);assert.match(items[0].textContent,/Confirmed by you/);
+ assert.match(items[1].textContent,/Studio note/);assert.match(items[1].textContent,/Not confirmed by you yet/,'what is not eligible says why, in the list\'s own words');
+ assert.equal(doc.querySelectorAll('[data-cs=capture]').length,1,'one button');assert.equal(doc.querySelector('[data-cs=capture]').textContent,'Use it for Check');
+ assert.ok(doc.querySelector('[data-cs=capture]').classList.contains('pri'),'it is the primary button');
+ assert.ok(calls.some(c=>c.path===LIST&&/bindingId=root1/.test(c.search)&&/parentStudyId=s1/.test(c.search)),'the list is asked for this subject\'s draft');
+ const before=calls.filter(c=>c.method==='POST'&&c.path==='/api/study-draft/check').length;
+ doc.querySelector('[data-cs=capture]').click();
+ await until(()=>captured);
+ const post=calls.find(c=>c.method==='POST'&&c.path===CAPTURE);
+ assert.deepEqual(plain(post.body.sources),[{sourceId:'src-1',sourceHash:'a'.repeat(64)}],'exactly the eligible ones shown');
+ assert.equal(post.body.expectedSourcesHash,null);assert.equal(post.body.bindingId,'root1');assert.equal(post.body.parentStudyId,'s1');assert.match(post.body.operationId,/^[0-9a-f-]{36}$/);
+ await until(()=>doc.querySelector('.ck-state[data-kind="ok"]'));
+ assert.equal(calls.filter(c=>c.method==='POST'&&c.path==='/api/study-draft/check').length,before+1,'Check ran again by itself, with no press on Check saved draft');
+ assert.match(doc.querySelector('.ck-state').textContent,/Mechanical checks complete/,'the real result, not held');
+ assert.equal(doc.querySelector('[data-cs-block]'),null,'the list leaves once Check has what it needs');
+ assert.match(doc.getElementById('v2-messages').textContent,/Check can now read this/);
+});
+
+test('with nothing eligible the held Check gives the list\'s reasons and a way back to the subject, and no button', async()=>{
+ const answers=base({'/api/study-draft/check':[200,HELD],[LIST]:listOf([src({eligible:false,confirmedByYou:false,reviewed:false,reason:'Not reviewed yet. Review it before using it for Check.'}),src({id:'src-2',title:'Studio note',kind:'markdown',eligible:false,captured:true,reason:'Already used for Check.'})])});
+ const {doc}=await page({hash:'#/check/s1?piece=o1',answers});await ready(doc);
+ await until(()=>doc.querySelector('[data-cs-block] li'));
+ assert.equal(doc.querySelector('[data-cs=capture]'),null);
+ assert.match(doc.querySelector('[data-cs-block]').textContent,/Not reviewed yet\. Review it before using it for Check\./);assert.match(doc.querySelector('[data-cs-block]').textContent,/Already used for Check\./);
+ assert.equal(doc.querySelector('[data-cs-block] a').getAttribute('href'),'#/subject/s1');assert.equal(doc.querySelector('[data-cs-block] a').textContent,'Back to the subject');
+ const none=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/study-draft/check':[200,HELD],[LIST]:listOf([])})});await ready(none.doc);
+ await until(()=>none.doc.querySelector('[data-cs-block]'));
+ assert.match(none.doc.querySelector('[data-cs-block]').textContent,/Nothing is attached to this subject yet/);assert.equal(none.doc.querySelector('[data-cs=capture]'),null);
+});
+
+test('a damaged record shows the list\'s sentence and no button', async()=>{
+ const sentence='The record of the sources added for Check is damaged, so nothing can be added until it is restored.';
+ const {doc}=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/study-draft/check':[200,HELD],[LIST]:listOf([],{canCapture:false,damaged:true,reason:sentence})})});await ready(doc);
+ await until(()=>doc.querySelector('[data-cs-sentence]'));
+ assert.equal(doc.querySelector('[data-cs-sentence]').textContent.trim(),sentence);assert.equal(doc.querySelector('[data-cs=capture]'),null);
+});
+
+test('only held-for-want-of-a-source checks offer it: no list is read for a check with no receipt, a finished one or a check held for another reason', async()=>{
+ for(const rec of [null,PASSED,receipt({status:'held',issues:[],quote:{status:'held',reason:'Some quotations use marks this check cannot read.'},split:{status:'checked'},proof:{expected:EXPECTED,draftHash:'d1',sources:[{role:'source',id:'x'}]}})]){
+  const {doc,calls}=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/study-draft/check':[200,rec],[LIST]:listOf([src()])})});await ready(doc);await settle(150);
+  assert.equal(doc.querySelector('[data-cs-block]'),null);assert.ok(!calls.some(c=>c.path===LIST),'the list is read only when it is shown');
+ }
+});
+
+test('on an assistant\'s page the list and button are there, and pressing shows the refusal; nothing is hidden or faked', async()=>{
+ const answers=base({'/api/study-draft/check':[200,HELD],[LIST]:listOf([src()]),[CAPTURE]:[403,{error:'Only a human can decide this.'}]});
+ const {doc,calls}=await page({hash:'#/check/s1?piece=o1',search:'?reviewActor=agent:codex',answers});await ready(doc);
+ await until(()=>doc.querySelector('[data-cs=capture]'));
+ doc.querySelector('[data-cs=capture]').click();
+ await until(()=>/Only Adrian can decide this/.test(doc.getElementById('v2-messages').textContent));
+ assert.match(doc.getElementById('v2-messages').textContent,/Codex can propose it, not do it/);
+ assert.ok(doc.querySelector('[data-cs=capture]'),'the button is still there');assert.equal(doc.querySelector('[data-cs-done]'),null,'it does not say Check can read anything');
+ assert.equal(calls.filter(c=>c.method==='POST'&&c.path==='/api/study-draft/check').length,0,'a refused capture does not run Check');
+});
+
+test('a stale capture is said once and the list is read again', async()=>{
+ let n=0;const answers=base({'/api/study-draft/check':[200,HELD],[LIST]:()=>{n++;return listOf([src()]);},[CAPTURE]:[409,{error:'stale'}]});
+ const {doc}=await page({hash:'#/check/s1?piece=o1',answers});await ready(doc);
+ await until(()=>doc.querySelector('[data-cs=capture]'));
+ doc.querySelector('[data-cs=capture]').click();
+ await until(()=>/changed since it was opened here/.test(doc.getElementById('v2-messages').textContent));
+ await until(()=>n>=2&&doc.querySelector('[data-cs=capture]'));
+ assert.equal(doc.getElementById('v2-messages').textContent.match(/changed since it was opened here/g).length,1,'said once');
 });
