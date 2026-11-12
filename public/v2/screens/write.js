@@ -172,7 +172,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
  function open(page,ctx,pre=null){
   const id=ctx.params.id,human=v2.isHuman();
   const st={standing:null,form:null,forms:[],bindingId:null,piece:null,missing:false,base:null,rows:[],edits:new Map(),added:[],
-   starting:false,creating:false,making:false,makingP:null,startSaid:false,saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],hidden:new Set(),undoNext:'',retryMs:8000,baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
+   starting:false,creating:false,making:false,makingP:null,startSaid:false,saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],retryMs:8000,baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
    src:root.matchMedia&&root.matchMedia('(min-width:1101px)').matches,focus:false,ops:new Set(),human};
   let timer=null,startTimer=null,propTimer=null,presenceTimer=null,presenceSeq=0,presenceOk=true,presenceSent='',gone=false;
   const session=uuid().slice(0,8);
@@ -208,8 +208,8 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    try{
     if(!dirty()){root.localStorage.removeItem(KEY());return;}
     root.localStorage.setItem(KEY(),JSON.stringify({v:2,at:Date.now(),draft:st.base?.expected?.workflow?.draft||'',
-     edits:[...st.edits].map(([k,v])=>[k,v.text,v.orig]),added:st.added.filter(a=>String(a.text).trim()||st.hidden.has(a.id)).map(a=>({id:a.id,afterId:a.afterId,text:a.text})),
-     hid:[...st.hidden],sent:st.sent,base:[...st.baseWords]}));
+     edits:[...st.edits].map(([k,v])=>[k,v.text,v.orig]),added:st.added.filter(a=>String(a.text).trim()).map(a=>({id:a.id,afterId:a.afterId,text:a.text})),
+     sent:st.sent,base:[...st.baseWords]}));
    }catch{/* private window or blocked storage: the words are still on the page */}
   }
   function unstash(){
@@ -231,42 +231,22 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   // ---------- the order on the page: his passages, with new paragraphs after the one they follow ----------
   function ensureTail(){
    if(!st.human)return;
-   const vr=st.rows.filter(r=>!st.hidden.has(r.id)),last=vr.length?vr[vr.length-1].id:null;
-   const va=st.added.filter(a=>!st.hidden.has(a.id)),tail=va[va.length-1];
-   if(!tail||String(tail.text).trim())st.added.push({id:uuid(),afterId:tail?tail.id:last,text:''});
+   const last=st.rows.length?st.rows[st.rows.length-1].id:null;
+   const tail=st.added[st.added.length-1];
+   if(!tail||String(tail.text).trim()){
+    const lastAdded=st.added.length?st.added[st.added.length-1]:null;
+    st.added.push({id:uuid(),afterId:lastAdded?lastAdded.id:last,text:''});
+   }
   }
   function order(){
    const out=[],ids=new Set(st.rows.map(r=>r.id)),kids=new Map();
    for(const a of st.added){const key=ids.has(a.afterId)||st.added.some(x=>x.id===a.afterId)?a.afterId:(st.rows.at(-1)?.id??null);if(!kids.has(key))kids.set(key,[]);kids.get(key).push(a);}
-   const addKids=key=>{for(const a of kids.get(key)||[]){if(!st.hidden.has(a.id))out.push({id:a.id,kind:'paragraph',level:0,text:a.text,safe:true,fresh:true});addKids(a.id);}};
+   const addKids=key=>{for(const a of kids.get(key)||[]){out.push({id:a.id,kind:'paragraph',level:0,text:a.text,safe:true,fresh:true});addKids(a.id);}};
    addKids(null);
-   for(const r of st.rows){if(!st.hidden.has(r.id))out.push({id:r.id,kind:r.kind,level:r.level,text:st.edits.get(r.id)?.text??r.words,safe:r.safe,fresh:false});addKids(r.id);}
+   for(const r of st.rows){out.push({id:r.id,kind:r.kind,level:r.level,text:st.edits.get(r.id)?.text??r.words,safe:r.safe,fresh:false});addKids(r.id);}
    return out;
   }
   function removeAdded(a){st.added=st.added.filter(x=>x!==a);for(const k of st.added)if(k.afterId===a.id)k.afterId=a.afterId;}
-  /** Whether a new paragraph is in a save whose answer has not come back: the server will then hold it. */
-  const inFlight=id=>st.sent.some(i=>(i.added||[]).some(([aid])=>aid===id));
-  /** A new paragraph he has taken away (joined into another, or emptied). One that is on its way to the server cannot just
-      be forgotten: it is hidden and emptied, and becomes a delete of the saved paragraph the moment the server returns it. */
-  function dropAdded(a){
-   if(!inFlight(a.id)){removeAdded(a);return;}
-   a.text='';st.hidden.add(a.id);for(const k of st.added)if(k!==a&&k.afterId===a.id)k.afterId=a.afterId;
-  }
-  /** The words of one paragraph (a new one or a saved one) set to this, as he would see them. */
-  function setText(id,text){
-   const a=st.added.find(x=>x.id===id);if(a){a.text=text;return;}
-   const row=st.rows.find(r=>r.id===id);if(!row)return;
-   if(text===row.words)st.edits.delete(id);else st.edits.set(id,{text,orig:st.edits.get(id)?.orig??row.words});
-  }
-  /** A new paragraph straight after this one, before anything that already follows it. */
-  function insertAfter(rid,fresh){
-   const first=st.added.findIndex(x=>x.afterId===rid);
-   if(first>=0)st.added.splice(first,0,fresh);
-   else{const a=st.added.find(x=>x.id===rid);st.added.splice(a?st.added.indexOf(a)+1:st.added.length,0,fresh);}
-   // What followed the paragraph now follows the new one (the empty box stays last, never between the two halves).
-   for(const k of st.added)if(k!==fresh&&k.afterId===rid)k.afterId=fresh.id;
-  }
-  const glue=(l,r)=>{const a=String(l).replace(/\s+$/,''),b=String(r).replace(/^\s+/,'');return a&&b?a+' '+b:a||b;};
 
   // ---------- drawing ----------
   function shell(){
@@ -424,7 +404,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   }
   async function useSaved(){
    const fresh=st.conflict?.fresh||await readDraft();
-   st.edits.clear();st.added=[];st.hidden.clear();st.conflict=null;adopt(fresh);paintConflict();stash();presence();paintSaved();
+   st.edits.clear();st.added=[];st.conflict=null;adopt(fresh);paintConflict();stash();presence();paintSaved();
   }
   async function keepMine(){
    const c=st.conflict;if(!c)return;
@@ -471,7 +451,6 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     else e.orig=r.words;
    }
    foldAdded();
-   for(const hid of [...st.hidden])if(!now.has(hid)&&!st.added.some(a=>a.id===hid))st.hidden.delete(hid);
    paintText();
   }
   /** Where a position in the old text lands in the new one, through the one change between them. */
@@ -544,7 +523,6 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const holdId=hold===undefined?(doc.activeElement?.dataset?.ed||null):hold;
    const ops=buildOps({rows:st.rows,edits:st.edits,added:st.added,hold:holdId}).concat(extra);
    if(!ops.length){st.problem='';paintSaved();stash();return false;}
-   const undoMsg=undoText||st.undoNext;st.undoNext='';
    // What goes in this save, in a plain record kept with his words until the answer is in (a reload cannot lose it).
    const textOf=id=>st.edits.has(id)?st.edits.get(id).text:(st.rows.find(r=>r.id===id)?.words??''),addedById=new Map(st.added.map(a=>[a.id,a]));
    const info={operationId:mine(uuid()),
@@ -560,7 +538,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     st.sent=st.sent.filter(x=>x!==info);
     const caret=settleSent(result,info);st.savedAt=new Date().toISOString();st.stopped=false;ok=true;
     stash();presence();loadProps();
-    const text=undoMsg||(ops.some(o=>o.kind==='delete')?'Paragraph deleted.':'');
+    const text=undoText||(ops.some(o=>o.kind==='delete')?'Paragraph deleted.':'');
     if(text&&(result.history||[]).some(h=>h.operationId===operationId&&h.canUndo))v2.ui.undo(text,()=>undoOp(operationId));
     if(focus)focusEditor(focus.id,caret[focus.id]??focus.at);
    }catch(error){
@@ -633,7 +611,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
      if(gone)return;
      if(dirty())schedule(300);
      // Said once, plainly. A refusal for good (403: only Adrian decides this, and the page is his) is not tried again; a hold
-     // (423) is tried again, quietly, a little less often each time.
+     // (423) or any other failure is tried again, quietly, a little less often each time.
      if(!st.startSaid){st.startSaid=true;say('Your words are saved, but the Article could not be started.','bad');}
      if(error?.kind==='owner-only'){st.startStopped=true;return;}
      clearTimeout(startTimer);const wait=st.retryMs;st.retryMs=Math.min(60000,Math.round(st.retryMs*1.5));startTimer=setTimeout(()=>{void startArticle();},wait);
@@ -657,56 +635,48 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const t=page.querySelector(`[data-ed="${CSS.escape(rid)}"]`);if(!t)return;t.focus();try{t.setSelectionRange(at,at);}catch{}
    t.scrollIntoView?.({block:'nearest'});
   }
-  /** Enter breaks the paragraph at his caret, on the page and at once, whatever the page is doing (a save running, the Article
-      being made): the words after the caret become a new paragraph that follows, the caret goes there, and his next letters
-      are typed into it. The paragraphs are saved from the page as they stand, so what he sees is what is saved. */
-  function enter(t){
-   if(!st.human)return;
-   const rid=t.dataset.ed,value=t.value,s0=t.selectionStart,e0=Math.max(t.selectionEnd,s0);
-   if(!value.trim())return;// a paragraph that is empty is not followed by another
-   const a=st.added.find(x=>x.id===rid),row=a?null:st.rows.find(r=>r.id===rid);
-   if(!a&&!(row&&row.safe))return;
-   const head=value.slice(0,s0).replace(/\s+$/,''),tail=value.slice(e0).replace(/^\s+/,'');
-   if(!tail){
-    const nextAdded=st.added.find(x=>x.afterId===rid&&!st.hidden.has(x.id));
+  async function enter(t){
+   if(st.making)return;// while the Article is being made Enter does nothing: not queued, not run later, the caret stays
+   const rid=t.dataset.ed,at=t.selectionStart,atEnd=at>=t.value.length&&t.selectionEnd>=t.value.length;
+   const a=st.added.find(x=>x.id===rid);
+   if(atEnd){
+    const nextAdded=st.added.find(x=>x.afterId===rid);
+    if(!t.value.trim())return;// a paragraph that is empty is not followed by another
     if(nextAdded&&!String(nextAdded.text).trim()){focusEditor(nextAdded.id,0);return;}
     const fresh={id:uuid(),afterId:rid,text:''};
-    insertAfter(rid,fresh);paintText();focusEditor(fresh.id,0);return;
+    st.added.splice(a?st.added.indexOf(a)+1:st.added.length,0,fresh);paintText();focusEditor(fresh.id,0);return;
    }
-   if(!head)return;// at the very start there is nothing to break off
-   clearTimeout(timer);
-   setText(rid,head);
-   const fresh={id:uuid(),afterId:rid,text:tail};insertAfter(rid,fresh);
-   if(row)st.undoNext='Split a paragraph.';
-   st.problem='';st.stopped=false;
-   paintText();focusEditor(fresh.id,0);paintSaved();stash();presence();
-   if(row)void save({quiet:true,hold:null});else schedule();
+   if(a){const head=t.value.slice(0,at),tail=t.value.slice(at);a.text=head;const fresh={id:uuid(),afterId:rid,text:tail};st.added.splice(st.added.indexOf(a)+1,0,fresh);paintText();stash();focusEditor(fresh.id,0);return;}
+   // In the middle of a saved paragraph: his words and the split go in one save, so nothing typed in between can be lost.
+   clearTimeout(timer);await settled();
+   const row=st.rows.find(r=>r.id===rid);if(!row||!row.safe)return;
+   const text=st.edits.get(rid)?.text??row.words,newId=uuid();
+   await save({hold:null,extra:[{kind:'split',id:rid,at:Math.min(at,text.length),newId}],undoText:'Split a paragraph.',focus:{id:newId,at:0}});
   }
-  /** Backspace at the start of a paragraph joins it to the one before, on the page and at once, with one space between the
-      words. The paragraph that was joined away is hidden and saved as a delete; a new paragraph is simply dropped. */
-  function join(t){
-   if(!st.human)return;
+  /** Backspace at the start of a paragraph joins it to the one before. A paragraph that was never saved is joined on the
+      page; a saved one is saved first and joined in the same save. A paragraph he emptied is deleted. */
+  async function join(t){
+   if(st.making)return;// likewise Backspace at the start of a paragraph
    const rid=t.dataset.ed,list=order(),i=list.findIndex(x=>x.id===rid);if(i<1)return;
    const prev=list[i-1],cur=list[i];if(!prev.safe||!cur.safe)return;
    const curAdded=st.added.find(a=>a.id===rid),prevAdded=st.added.find(a=>a.id===prev.id);
    clearTimeout(timer);
-   const finish=(focusId,at,saved)=>{
-    st.problem='';st.stopped=false;paintText();focusEditor(focusId,at);paintSaved();stash();presence();
-    if(saved)void save({quiet:true,hold:null});else schedule();
-   };
-   if(prevAdded&&!String(prevAdded.text).trim()){dropAdded(prevAdded);finish(rid,0,false);return;}
-   const l=prev.text,r=cur.text,at=String(l).replace(/\s+$/,'').length;
-   if(String(l).trim()&&String(r).trim())st.undoNext='Joined two paragraphs.';
-   setText(prev.id,glue(l,r));
+   if(prevAdded&&!String(prevAdded.text).trim()){removeAdded(prevAdded);paintText();focusEditor(rid,0);return;}
    if(curAdded){
-    for(const k of st.added)if(k!==curAdded&&k.afterId===rid)k.afterId=prev.id;
-    dropAdded(curAdded);
-   }else{
-    const row=st.rows.find(x=>x.id===rid);
-    for(const k of st.added)if(k.afterId===rid)k.afterId=prev.id;
-    st.edits.set(rid,{text:'',orig:st.edits.get(rid)?.orig??row.words});st.hidden.add(rid);
+    const at=prev.text.length;
+    if(prevAdded)prevAdded.text+=curAdded.text;
+    else{const r=st.rows.find(x=>x.id===prev.id),e=st.edits.get(prev.id),text=prev.text+curAdded.text;if(text===r.words)st.edits.delete(prev.id);else st.edits.set(prev.id,{text,orig:e?.orig??r.words});}
+    removeAdded(curAdded);paintText();stash();presence();schedule();focusEditor(prev.id,at);return;
    }
-   finish(prev.id,at,!curAdded||!prevAdded);
+   await settled();
+   if(prevAdded){if(!await save({hold:null})||st.conflict||st.problem)return;await settled();}
+   const left=st.rows.find(x=>x.id===prev.id),right=st.rows.find(x=>x.id===rid);if(!left||!right||!left.safe||!right.safe)return;
+   const at=(st.edits.get(left.id)?.text??left.words).length,rightText=st.edits.get(rid)?.text??right.words;
+   if(!String(rightText).trim()){
+    if(!st.edits.has(rid))st.edits.set(rid,{text:'',orig:right.words});else st.edits.get(rid).text='';
+    await save({hold:null,focus:{id:left.id,at}});return;
+   }
+   await save({hold:null,extra:[{kind:'join',leftId:left.id,rightId:rid}],undoText:'Joined two paragraphs.',focus:{id:left.id,at}});
   }
 
   // ---------- suggestions: his to take or turn down ----------
@@ -803,8 +773,8 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const t=e.target;
    if(e.key==='Escape'&&st.focus){e.preventDefault();setFocus(false);return;}
    if(!t.matches?.('textarea[data-ed]')||!st.human)return;
-   if(e.key==='Enter'&&!e.isComposing&&!e.ctrlKey&&!e.metaKey){e.preventDefault();enter(t);}
-   else if(e.key==='Backspace'&&!e.isComposing&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&t.selectionStart===0&&t.selectionEnd===0){e.preventDefault();join(t);}
+   if(e.key==='Enter'&&!e.isComposing&&!e.ctrlKey&&!e.metaKey){e.preventDefault();void enter(t);}
+   else if(e.key==='Backspace'&&!e.isComposing&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&t.selectionStart===0&&t.selectionEnd===0){e.preventDefault();void join(t);}
   }
   const onFocusOut=e=>{if(e.target.matches?.('textarea[data-ed]')&&dirty()&&!st.conflict){clearTimeout(timer);void save({quiet:true,hold:null});}};
   const onHide=()=>{if(doc.visibilityState==='hidden'&&dirty()&&!st.conflict){clearTimeout(timer);void save({quiet:true,hold:null});}};
@@ -838,9 +808,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     let newer=false,restored=false;
     if(saved){
      for(const [rid,text,orig] of saved.edits)st.edits.set(rid,{text:String(text),orig:String(orig??'')});
-     const hid=new Set(Array.isArray(saved.hid)?saved.hid.filter(x=>typeof x==='string'):[]);
-     for(const a of saved.added){if(a&&typeof a.id==='string'&&typeof a.text==='string'&&(a.text.trim()||hid.has(a.id)))st.added.push({id:a.id,afterId:a.afterId??null,text:flat(a.text)});}
-     for(const x of hid)st.hidden.add(x);
+     for(const a of saved.added){if(a&&typeof a.id==='string'&&typeof a.text==='string'&&a.text.trim())st.added.push({id:a.id,afterId:a.afterId??null,text:flat(a.text)});}
      for(const i of saved.sent)if(i&&typeof i.operationId==='string')st.ops.add(i.operationId);
      // A save that was on its way when the page closed. If the server holds it, it is his own save and not a newer version:
      // what it carried is settled, and what he typed after it was sent is carried on.
