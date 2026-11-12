@@ -66,6 +66,8 @@ stopped, and the fixture helper should not leave them. The photo inspect test is
 mounts in 18.4, 19.1 and 19.7 seconds on the Mac; it fails because the photo details panel never opens (no caption
 box), first at the Screens stage A merge (PR 235). Likely its new keyboard aid, which walks computed styles of every
 focusable control, under jsdom. Version two was released with `--no-ci-check` naming this.
+Both were confirmed and corrected on 12 November (the guess about the keyboard aid was right); the detail is under
+"Things to know before trusting a green run".
 
 ## Stage 5, 12 November: the whole journey walked
 
@@ -524,14 +526,26 @@ Adrian was sent pictures of the sheet beside the sample and of the subject page.
   discovery never replaces the fresh exact Carousel registry check at opening", and "advertised Outputs creation, each
   title/next action, own words, scope return and persistent reload use real owners".
 - One test fails only on a cloud machine: "installed home mode: config must name the real home…".
-- **The automatic check (`ci`) is red, and not because of version two.** "real native HTTP photo inspect and exact
-  persisted lookup do not write, and restart preserves identities" gives the workspace's page 30 seconds to boot in
-  jsdom. Measured 11 November: the boot takes about 38 seconds on a cloud machine on main and on this branch alike
-  (about 20 of them matching roughly 1 MB of stylesheets), and the same test failed on the Mac runner on a branch
-  that does not carry version two. The honest fix is a faster boot of the existing workspace, not a longer wait.
-  The package check then stops on `.scratch/magazine-fixtures/19f486e4-…/data/word-library/state.json`, a stale
-  scratch file sitting in the Mac runner's checkout; it has tripped every recent run on every branch. Delete that
-  folder on the runner. `scripts/release.mjs` reads the `ci` check of the commit it installs.
+- **The automatic check (`ci`): both causes found and corrected on 12 November, on branch `claude/kind-cerf-ucyv55`,
+  not yet on main.** Read `git log origin/main` before trusting this line.
+  - *The photo inspect test.* The true cause was the keyboard helper added to the existing workspace in pull request
+    235 (`keyboardAids` in `public/document-study/combined-navigation.js`). On every repaint it asked for the computed
+    style of every control and each of its ancestors. Under jsdom that is so slow that the page had no time left to
+    answer its own requests, and the Media step stayed at "Connecting this manuscript's photographs" until the test
+    gave up. The helper now looks at a box's size first and asks for the style only of a box of 2 pixels or less, and
+    it does nothing on a page that has no layout, where every size reads zero and nothing can be judged. In a real
+    browser it marks exactly the same controls as before: compared on all twelve steps of the demo at 1440 and 390
+    wide. The test is unchanged and passes in about 20 seconds.
+  - *The package check.* A run that is cancelled or times out never reaches its own cleanup, so a server a test
+    started lived on and kept its fixture folder in the checkout. `tests/helpers/magazine-fixture.mjs` now records
+    every fixture folder and every server a test starts (`ownChild`, `ownDir`) with a small watcher process that
+    stops the servers and removes the folders when the test process ends in any way, a kill included
+    (`tests/magazine-fixture-orphans.test.mjs` proves it). The `ci` job on the Mac now also begins by stopping any
+    node process left working inside the runner's checkout and removing `.scratch`, so the three servers left on
+    11 November are cleared by the next run without anyone touching the machine. That step has not yet been seen to
+    run on the Mac: watch the first run there.
+  - The 12 November thread that was meant to run on the Mac in fact ran on a cloud machine, so the release, the walk
+    with real records and the status refresh (items 1 to 3 of `2026-11-12-up-to-date-and-shipped.md`) are still to do.
 - Several tests fail only when many suites run at once and pass alone ("failed exact Direction load keeps a discovered
   Collection root held", "working HTML prepares exactly once…"). Run a failure alone before counting it.
 - `npm run demo:fill` and `npm run demo:instagram` ignore `AR_CREATE_PORT`. They fill port 8854 unless

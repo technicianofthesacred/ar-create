@@ -49,6 +49,22 @@ jobs:
     # about 14 minutes for the tests alone, so it gets 25: at 15 a passing run was cancelled while saving the cache.
     timeout-minutes: ${{ needs.pick-runner.outputs.runs_on == '"ubuntu-latest"' && 15 || 25 }}
     steps:
+      # A run that is cancelled or times out cannot clean up after itself. On the Mac, which keeps its checkout
+      # between runs, a test server left behind keeps writing fixture files into the checkout and the package check
+      # then fails on them. Nothing but a run of this job works in this folder, so any node process whose working
+      # folder is inside it before the run starts is such a leftover. Hosted runners start empty and skip this.
+      - name: Stop servers left by a cancelled run
+        if: ${{ runner.environment == 'self-hosted' }}
+        shell: bash
+        run: |
+          for pid in $(pgrep -x node || true); do
+            cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p')
+            case "$cwd" in
+              "$GITHUB_WORKSPACE"|"$GITHUB_WORKSPACE"/*) echo "Stopping leftover node process $pid in $cwd"; kill -9 "$pid" || true ;;
+            esac
+          done
+          rm -rf "$GITHUB_WORKSPACE/.scratch"
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4

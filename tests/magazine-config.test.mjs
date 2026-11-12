@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {spawn} from 'node:child_process';
-import {buildMagazineFixture, treeHashes} from './helpers/magazine-fixture.mjs';
+import {buildMagazineFixture, treeHashes, ownChild} from './helpers/magazine-fixture.mjs';
 
 const serve = path.resolve(import.meta.dirname, '../serve.mjs');
 const freePort = () => new Promise(resolve => { const s = net.createServer().listen(0, '127.0.0.1', () => { const {port} = s.address(); s.close(() => resolve(port)); }); });
@@ -18,7 +18,7 @@ async function start(t, magazineExtra = {}) {
   const staging = path.join(f.dir, 'staging');
   const config = path.join(f.dir, 'config.json');
   fs.writeFileSync(config, JSON.stringify({dataDir: data, port, allowScratchRoots: true, magazine: {vaultRoot: f.vault, filesRoot: f.files, drops: f.drops, exportStaging: staging, ...magazineExtra}}));
-  const child = spawn(process.execPath, [serve], {env: {PATH: process.env.PATH, HOME: process.env.HOME, TMPDIR: process.env.TMPDIR, AR_CREATE_CONFIG: config}, stdio: ['ignore', 'pipe', 'pipe']});
+  const child = ownChild(spawn(process.execPath, [serve], {env: {PATH: process.env.PATH, HOME: process.env.HOME, TMPDIR: process.env.TMPDIR, AR_CREATE_CONFIG: config}, stdio: ['ignore', 'pipe', 'pipe']}));
   let stderr = ''; child.stderr.on('data', d => { stderr += d; });
   // Wait for serve.mjs to exit before removing its data folder: a server still writing there made rmSync fail with ENOTEMPTY in CI and skip f.cleanup().
   t.after(async () => { if (child.exitCode === null && child.signalCode === null) { const exited = new Promise(resolve => child.once('exit', resolve)); child.kill(); await exited; } fs.rmSync(data, {recursive: true, force: true}); f.cleanup(); });
