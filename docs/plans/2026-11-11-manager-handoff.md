@@ -24,6 +24,12 @@
 
 ## NOW: ship everything, then a fresh start (Adrian, 12 November)
 
+**Main is ready to release (12 November, 17:29 UTC):** commit `fe70021`, pull request 249, "Write never discards or overwrites his words when two versions meet, in version two and version three". The Write director ran the whole check on that tree (4,270 tests, one known failure that only happens on a cloud machine), stopped building, and was closed. **The page a fresh thread starts from is on `main`: `docs/plans/2026-11-12-version-three-handoff.md`** (what version three has and lacks, the order for the rest, what was learned about the look, what to know before trusting Write). The automatic check is not green because it runs only on pull requests and is cancelled at fifteen minutes when the Mac's runner is busy; that page says what makes it green.
+
+Still running and not this thread's: the stage line (stage 7 building; stages 5 and 6 idle) and a task Adrian started from the desktop app, "Make AR Create useful start to finish on the Mac" (`session_017kitFgpD3571vHskdrcbtF`), which is running in the cloud although stage 5 asked for it to run on his machine. A cloud session cannot reach his installed app. The sure way to run on the Mac is Terminal: `cd` into the project and start `claude` there.
+
+**All that is left of this thread's work is the release on his Mac.** After it, nothing here is open.
+
 **The wisdom bank is consolidated and closed (12 November).** His words: "The wisdom bank needs to consolidate all the information into one so that we can also close that up." Everything is in one page, [`docs/research/wisdom-bank/WISDOM-BANK.md`](../research/wisdom-bank/WISDOM-BANK.md): his words, where it stands (Embedding Atlas as the leading base, on condition it is made more interconnected), what was made and his verdict, what others have built, what is unproven, and the order to continue in. All of its threads are closed, the home thread included. To continue, one fresh thread starts from that page. Its branches still exist and are all contained in this branch.
 
 **The Mac release:** this session cannot reach his computer. He was given two things to paste on the Mac: a line that starts a session in the project, and a prompt that cuts the release from `origin/main` and shows him the app. The prompt carries his own permission to use the release script's recorded override if the automatic check is not green for reasons that are not the app's.
