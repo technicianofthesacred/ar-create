@@ -56,8 +56,10 @@ Both carry an assistant's `?reviewActor=`. The theme is one choice for both fron
 
 **What a borrowed screen still does as version two does:** it keeps its own look (its piece bar, its page) inside the
 new band, and its device store (`ar-v2-write:` for Write), because it is version two's file. Version three's own Write
-brings its own (`ar-v3-write:`, and `ar-v3-write-story:` for a Magazine story; one key for each piece, not yet one for
-each tab). It never reads, writes, adopts or deletes version two's keys. Until Read and Check are redone here, their
+brings its own (`ar-v3-write:<binding>`, or `:<n>` when another tab holds that key, one for each open tab under a Web
+Lock; `ar-v3-write-story:` for a Magazine story). A closed tab's words are offered once, in place ("Put them back",
+"Leave them out"); two versions of one paragraph stand in its place until he keeps one or both; the version he does
+not keep goes to `study-draft.set-aside` (or `ar-v3-write-aside:<binding>` when the app does not answer). It never reads, writes, adopts or deletes version two's keys. Until Read and Check are redone here, their
 quiet line "You have unsaved words in Write on this device" looks only for version two's key, so it does not mention
 words kept by version three's Write.
 

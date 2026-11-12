@@ -65,23 +65,51 @@
     return el;
    }
 
-   // ---------- the unsaved words, kept on this device: his only ----------
-   const KEY=()=>'ar-v3-write:'+st.bindingId;
+   // ---------- the unsaved words, kept on this device: his only, one key for each open tab ----------
+   // Each tab writes only its own key: ar-v3-write:<binding>, or ar-v3-write:<binding>:<n> when another tab holds that one,
+   // held by a Web Lock for as long as the tab is open, so two tabs on one piece never write over each other's words. The
+   // record names the tab (kept for the tab's life in sessionStorage, so a reload of the same tab finds its own words and
+   // puts them back as before). Words under a key whose lock is free, written by another tab, were left by a tab that has
+   // closed: they are offered once, in place ("Put them back", "Leave them out"), while that key stays held by this page
+   // until he chooses. Where the browser has no Web Locks there is one key for each piece, as before.
+   const LOCKS=root.navigator?.locks,held=new Map();let tabKey=null;
+   const TAB=(()=>{try{let t=root.sessionStorage.getItem('ar-v3-write-tab');if(!t){t=uuid();root.sessionStorage.setItem('ar-v3-write-tab',t);}return t;}catch{return uuid();}})();
+   const BASE=()=>'ar-v3-write:'+st.bindingId,KEY=()=>tabKey||BASE();
+   const slotKey=k=>k===BASE()||k.startsWith(BASE()+':')&&/^\d+$/.test(k.slice(BASE().length+1));
+   const hold=name=>!LOCKS?Promise.resolve(true):new Promise(res=>{LOCKS.request('ar-v3-write-lock:'+name,{ifAvailable:true},lock=>{res(!!lock);return lock?new Promise(r=>held.set(name,r)):null;}).catch(()=>res(false));});
+   const letGo=name=>{const r=held.get(name);held.delete(name);r?.();};
+   const foreign=rec=>!!(LOCKS&&rec&&rec.tab&&rec.tab!==TAB);
+   /** This page's own key: the first free one whose words, if any, are this tab's (or from before there was one key per tab). */
+   async function claim(){
+    if(!st.human||tabKey)return;
+    for(let n=0;n<64&&!tabKey;n++){const k=n?BASE()+':'+n:BASE();if(!await hold(k))continue;if(foreign(unstash(k)))continue;/* held: another tab's words, offered below */tabKey=k;}
+    tabKey||=BASE();
+   }
+   /** Words a closed tab left under its own key, now held by this page: {key, saved}, or null. */
+   async function closedTab(){
+    if(!st.human||!LOCKS)return null;
+    let keys=[];try{for(let i=0;i<root.localStorage.length;i++){const k=root.localStorage.key(i);if(k&&k!==tabKey&&slotKey(k))keys.push(k);}}catch{return null;}
+    for(const k of keys.sort()){if(!held.has(k)&&!await hold(k))continue;const saved=unstash(k);if(saved)return {key:k,saved};letGo(k);}
+    return null;
+   }
+   /** Once a closed tab's words are on this page's own key, or set aside, or none of them is unsaved, their old key goes. */
+   function forget(k,{always=false}={}){if(!k||k===tabKey)return;try{if(always||!dirty()||root.localStorage.getItem(KEY()))root.localStorage.removeItem(k);}catch{/* kept */}letGo(k);}
+   function letAllGo(){for(const k of [...held.keys()])letGo(k);}
    /** Everything unsaved goes to the device under his key, with the saves whose answer has not come back (the operation
        and what it carried), so a reload in the middle of a save can tell his own committed save from a newer version. */
    function stash(){
     if(!st.human)return;// an assistant's page never keeps or restores words as if they were his
     try{
      if(!dirty()){root.localStorage.removeItem(KEY());return;}
-     root.localStorage.setItem(KEY(),JSON.stringify({v:2,at:Date.now(),draft:st.base?.expected?.workflow?.draft||'',
-      edits:[...st.edits].map(([k,v])=>[k,v.text,v.orig]),added:st.added.filter(a=>String(a.text).trim()).map(a=>({id:a.id,afterId:a.afterId,text:a.text})),
+     root.localStorage.setItem(KEY(),JSON.stringify({v:2,at:Date.now(),tab:TAB,draft:st.base?.expected?.workflow?.draft||'',
+      edits:[...st.edits].map(([k,v])=>[k,v.text,v.orig]),times:[...st.edits].filter(([,v])=>v.at).map(([k,v])=>[k,v.at]),added:st.added.filter(a=>String(a.text).trim()).map(a=>({id:a.id,afterId:a.afterId,text:a.text})),
       sent:st.sent,base:[...st.baseWords]}));
     }catch{/* private window or blocked storage: the words are still on the page */}
    }
-   function unstash(){
+   function unstash(key=KEY()){
     if(!st.human)return null;
     try{
-     const s=JSON.parse(root.localStorage.getItem(KEY())||'null');
+     const s=JSON.parse(root.localStorage.getItem(key)||'null');
      if(!s||(s.v!==1&&s.v!==2)||!Array.isArray(s.edits)||!Array.isArray(s.added))return null;
      if(!Array.isArray(s.sent))s.sent=[];return s;
     }catch{return null;}
@@ -109,6 +137,8 @@
 
    function rowHTML(r,n){
     const label=r.kind==='heading'?'Heading':'Paragraph '+n;
+    if(st.conflict?.pairs.has(r.id))return pairHTML(r,st.conflict.pairs.get(r.id),n);
+    if(st.recovered?.ids.has(r.id))return recHTML(r,st.recovered.items.find(x=>x.id===r.id).kept);
     if(!r.safe)return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><p class="wr-lock" title="This passage has formatting that is kept as it is. Change it in Advanced.">${esc(r.text)}</p><div class="wr-drafts"></div></div><aside class="wr-margin"></aside></div>`;
     const cls=r.kind==='heading'?' wr-h':r.kind==='blockquote'?' wr-q':'';
     if(st.plain)return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><textarea class="wr-ed${cls}" rows="1" data-ed="${esc(r.id)}" aria-label="${esc(label)}" spellcheck="true"${st.human?'':' readonly'}${r.fresh&&!r.text?' placeholder="Write here"':''}>${esc(r.text)}</textarea><div class="wr-drafts"></div></div><aside class="wr-margin"></aside></div>`;
@@ -122,9 +152,11 @@
     const keep=doc.activeElement?.dataset?.ed?{id:doc.activeElement.dataset.ed,a:doc.activeElement.selectionStart,b:doc.activeElement.selectionEnd}:null;
     ensureTail();let n=0;
     box.innerHTML=order().map(r=>rowHTML(r,r.kind==='heading'?0:++n)).join('');
+    // New paragraphs a closed tab kept, in place after the paragraph they followed, until he decides.
+    for(const a of st.recovered?.added||[]){const at=(a.afterId&&box.querySelector(`[data-row="${CSS.escape(a.afterId)}"]`))||[...box.querySelectorAll('[data-row]')].at(-1);const html=recHTML({id:'rec-'+uuid(),kind:'paragraph'},a.text);if(at)at.insertAdjacentHTML('afterend',html);else box.insertAdjacentHTML('beforeend',html);}
     box.querySelectorAll('[data-ed]').forEach(editable);
     box.querySelectorAll('textarea').forEach(fit);
-    paintNotes();paintKept();
+    paintNotes();paintKept();paintConflict();
     if(keep){const t=box.querySelector(`[data-ed="${CSS.escape(keep.id)}"]`);if(t){t.focus({preventScroll:true});try{t.setSelectionRange(keep.a,keep.b);}catch{}}}
    }
    function fit(t){if(t.tagName!=='TEXTAREA')return;t.style.height='auto';t.style.height=(t.scrollHeight+1)+'px';}
@@ -141,7 +173,8 @@
     if(st.fail&&!st.stopped&&!st.conflict)return {text:tried.length>1?'Still not saved, tried '+clock(tried.at(-1)):since?'Not saved since '+clock(since):'Not saved yet, the app is not answering',short:'Not saved',mark:'cloud',tone:'bad',retry:true};
     if(st.problem)return {text:st.problem,short:'Not saved',mark:'cloud',tone:'bad'};
     if(st.saving)return {text:'Saving',short:'Saving',mark:'spin'};
-    if(st.conflict)return {text:'Not saved: a newer version exists',short:'Two versions',mark:'warn',tone:'bad'};
+    if(st.conflict){const n=st.conflict.pairs.size;return {text:n===1?'One paragraph has two versions':n+' paragraphs have two versions',short:'Two versions',mark:'warn',tone:'bad'};}
+    if(st.recovered)return {text:'Words kept on this device',short:'Words kept here',mark:'warn',tone:'bad'};
     if(dirty())return {text:'Not saved yet',short:'Not saved',mark:'cloud'};
     if(st.back){const n=st.back.ids.size,said='Taken back '+(n===1?'1 paragraph':n+' paragraphs');return {text:said,short:'Taken back',mark:'undo',back:true};}
     const saved=st.savedAt?savedLabel(st.savedAt):'Saved';
@@ -186,6 +219,13 @@
     for(const r of order()){const t=String(r.text??'').trim();if(t)out.push(t);}
     const copies=st.human?[...earlierBack(),backCopy()].filter(Boolean):[],kept=copies.flatMap(c=>c.before.map(e=>String(e.words||'').trim()).filter(Boolean));
     if(kept.length)out.push('Taken back with Undo:',...kept);
+    // Every version he has not chosen yet, and every word set aside, here or on the app, so nothing of his is left behind.
+    const other=[...(st.conflict?.pairs.values()||[])].map(p=>String(p.theirs).trim()).filter(Boolean);
+    if(other.length)out.push('The other version, written elsewhere:',...other);
+    const rec=st.recovered?[...st.recovered.items.map(x=>x.kept),...st.recovered.added.map(a=>a.text)].map(t=>String(t).trim()).filter(Boolean):[];
+    if(rec.length)out.push('Kept on this device from a tab that closed:',...rec);
+    const aside=st.human?[...(st.asides||[]),...deviceAsides()].flatMap(e=>e.paragraphs.map(p=>String(p.words||'').trim())).filter(Boolean):[];
+    if(aside.length)out.push('Set aside:',...[...new Set(aside)]);
     return out.join('\n\n');
    }
    async function copyAll(){
@@ -370,48 +410,250 @@
     paintSaved();
    }
 
-   // ---------- the conflict: his words and the newer saved ones, side by side ----------
-   function paintConflict(){
-    const box=$('[data-wr-conflict]');if(!box)return;
-    const c=st.conflict;box.hidden=!c;if(!c){box.innerHTML='';return;}
-    // Both sides, paragraph by paragraph: what he has changed, and what the saved version changed that he has not seen.
-    const rows=rowsOf(c.fresh),fresh=new Map(rows.map(r=>[r.id,r])),base=st.baseWords,items=[];
-    const says=(label,body)=>`<p><b>${label}</b> ${body}</p>`,note=text=>`<i>${esc(text)}</i>`;
-    for(const r of rows){
-     const e=st.edits.get(r.id),was=base.has(r.id)?base.get(r.id):e?.orig;
-     if(was===undefined){items.push(says('Yours',note('Nothing here yet.'))+says('Saved',note('A new paragraph in the saved version: ')+esc(r.words)));continue;}
-     const changed=was!==r.words;
-     if(e)items.push(says('Yours',e.text.trim()?esc(e.text):note('You emptied this paragraph.'))+says('Saved',changed?esc(r.words):note('Not changed in the saved version.')));
-     else if(changed)items.push(says('Yours',note('You have not changed this paragraph.'))+says('Saved',esc(r.words)));
-    }
-    for(const [rid,e] of st.edits){if(!fresh.has(rid))items.push(says('Yours',e.text.trim()?esc(e.text):note('You emptied this paragraph.'))+says('Saved',note('This paragraph is not in the saved version.')));}
-    for(const [rid,was] of base){if(!fresh.has(rid)&&!st.edits.has(rid))items.push(says('Yours',esc(was))+says('Saved',note('This paragraph was removed in the saved version.')));}
-    for(const a of st.added.filter(a=>String(a.text).trim()))items.push(says('Yours',esc(a.text))+says('Saved',note('A new paragraph. It is not in the saved version.')));
-    const shown=items.slice(0,24),lines=shown.map(x=>`<li>${x}</li>`).join('')+(items.length>shown.length?`<li><p class="wr-dim">${esc('And '+(items.length-shown.length)+' more paragraphs differ.')}</p></li>`:'');
-    const h=(c.fresh.history||[]).filter(x=>x.state==='committed').slice(-1)[0];
-    const by=h&&h.actor&&!/unknown/.test(h.actor)?v2.actorName(h.actor)+(h.modifiedAt?' at '+clock(h.modifiedAt):''):'';
-    box.innerHTML=`<h2>A newer version of this piece is saved${by?' by '+esc(by.replace(/^You/,'you')):''}</h2>
-     <p class="wr-dim">Your words are still here and are not saved. Choose which to keep. Nothing is mixed for you.</p>
-     <ul class="wr-pairs">${lines||'<li><p class="wr-dim">You have no unsaved words. The saved version is the newer one.</p></li>'}</ul>
-     <div class="wr-row-btns"><button type="button" class="pri" data-act="mine">Keep my words</button><button type="button" data-act="theirs">Use the saved version</button></div>`;
+   // ---------- two versions of a paragraph: his unsaved words and a newer saved version, each kept until he chooses ----------
+   // A newer saved version is taken paragraph by paragraph against the words he started from (st.baseWords): a paragraph
+   // changed only elsewhere takes the saved words; one changed only here keeps his; one changed in both places shows both,
+   // in place, each named by where and when it was written, with what differs marked, and nothing of it is saved until he
+   // keeps one, or both one after the other. Nothing is mixed inside a paragraph. The version he does not keep is never
+   // dropped: a saved one stays in the draft's history (Earlier versions); his unsaved one goes to study-draft.set-aside
+   // first, or, when the app does not answer, stays on this device (Copy all my words includes it).
+   const ASIDE=()=>'ar-v3-write-aside:'+st.bindingId;
+   const deviceAsides=()=>{try{const v=JSON.parse(root.localStorage.getItem(ASIDE())||'[]');return Array.isArray(v)?v.filter(e=>e&&Array.isArray(e.paragraphs)):[];}catch{return [];}};
+   const keepDeviceAsides=list=>{try{if(list.length)root.localStorage.setItem(ASIDE(),JSON.stringify(list));else root.localStorage.removeItem(ASIDE());return true;}catch{return false;}};
+   /** His words he is not keeping on the page: to the app's set-aside store, or this device when the app does not answer.
+       Resolves 'server', 'device', 'none' (nothing to keep) or false (kept nowhere: the caller changes nothing). */
+   async function setAside(paragraphs,reason,operationId=uuid()){
+    const list=paragraphs.filter(p=>String(p.words||'').trim()).map(p=>({...(p.id?{id:String(p.id)}:{}),words:String(p.words)}));
+    if(!list.length)return 'none';
+    if(!st.human)return false;
+    try{await v2.call('study-draft.set-aside',{...scope(),operationId,reason,...(st.base?.expected?{expected:st.base.expected}:{}),paragraphs:list});void loadAsides();return 'server';}
+    catch{const all=deviceAsides();if(!all.some(e=>e.operationId===operationId))all.push({v:1,at:Date.now(),reason,operationId,expected:st.base?.expected||null,paragraphs:list});return keepDeviceAsides(all)?'device':false;}
    }
+   /** Words set aside on this device while the app did not answer go to the app as soon as it does, each once. */
+   async function sendAsides(){
+    if(!st.human||!st.bindingId)return;
+    for(const e of deviceAsides()){
+     try{await v2.call('study-draft.set-aside',{...scope(),operationId:e.operationId,reason:e.reason,...(e.expected?{expected:e.expected}:{}),paragraphs:e.paragraphs});keepDeviceAsides(deviceAsides().filter(x=>x.operationId!==e.operationId));}
+     catch{return;}// still kept here; tried again next time
+    }
+    void loadAsides();
+   }
+   async function loadAsides(){if(!st.bindingId)return;try{const r=await v2.call('study-draft.set-aside.list',scope());st.asides=Array.isArray(r?.items)?r.items:[];}catch{st.asides=st.asides||[];}}
+
+   /** The words of two versions with what differs marked: each word not in the other is marked in its own version. */
+   function marked(a,b){
+    const A=String(a).split(/(\s+)/),B=String(b).split(/(\s+)/),wa=A.filter((_,i)=>i%2===0),wb=B.filter((_,i)=>i%2===0);
+    const n=wa.length,m=wb.length;
+    if(n*m>250000)return [esc(a),esc(b)];
+    const L=Array.from({length:n+1},()=>new Uint32Array(m+1));
+    for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)L[i][j]=wa[i]===wb[j]?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
+    const ka=new Set(),kb=new Set();let i=0,j=0;
+    while(i<n&&j<m){if(wa[i]===wb[j]){ka.add(i);kb.add(j);i++;j++;}else if(L[i+1][j]>=L[i][j+1])i++;else j++;}
+    // A run of words not in the other is one mark, spaces between them included.
+    const draw=(parts,keep)=>{let out='',run='';const words=parts.length;
+     for(let k=0;k<words;k++){const x=parts[k];if(k%2===0){if(x!==''&&!keep.has(k/2)){run+=x;continue;}if(run){out+=`<mark class="wr-dif">${esc(run)}</mark>`;run='';}out+=esc(x);}
+      else{const next=parts[k+1];if(run&&next!==undefined&&next!==''&&!keep.has((k+1)/2))run+=x;else{if(run){out+=`<mark class="wr-dif">${esc(run)}</mark>`;run='';}out+=esc(x);}}}
+     if(run)out+=`<mark class="wr-dif">${esc(run)}</mark>`;return out;};
+    return [draw(A,ka),draw(B,kb)];
+   }
+   const wordsIn=t=>(String(t||'').match(/\S+/g)||[]).length;
+   /** "Adds 4 words. Takes away none of yours." between the saved words and his. */
+   function countLine(before,after){
+    const A=String(before||'').split(/\s+/).filter(Boolean),B=String(after||'').split(/\s+/).filter(Boolean),n=A.length,m=B.length;
+    let same=0;if(n*m<=250000){const L=Array.from({length:n+1},()=>new Uint32Array(m+1));for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)L[i][j]=A[i]===B[j]?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);same=L[0][0];}
+    const add=m-same,cut=n-same,w=k=>k===1?'1 word':k+' words';
+    if(!cut)return `Adds ${w(add)}. Takes away none of yours.`;
+    if(!add)return `Takes away ${w(cut)} of the saved words. Adds nothing.`;
+    return `Takes away ${w(cut)} of the saved words, adds ${w(add)}.`;
+   }
+   /** Who wrote the newer saved version, and when: the latest saved change not made on this page. */
+   function otherSave(read){const h=[...(read?.history||[])].filter(x=>x.state==='committed'&&!st.ops.has(x.operationId)).pop();return {actor:h?.actor||null,at:h?.modifiedAt||null};}
+   const elsewhere=by=>{const who=by?.actor&&!/^human:/.test(by.actor)&&!/unknown/.test(by.actor)?'Written by '+v2.actorName(by.actor):'Written elsewhere';return who+(by?.at?', '+clock(by.at):'');};
+   /** Each paragraph against a newer saved version: changed here only, there only, or in both places. */
+   function classify(fresh){
+    const rows=rowsOf(fresh),fm=new Map(rows.map(r=>[r.id,r])),base=st.baseWords,pairs=new Map(),mine=[],theirs=[];
+    for(const [rid,e] of st.edits){
+     const f=fm.get(rid),was=base.has(rid)?base.get(rid):e.orig;
+     if(!f){if(String(e.text).trim())mine.push(rid);continue;}// gone there: his words come back as a new paragraph
+     if(f.words===e.text)continue;
+     if(!f.safe){if(String(e.text).trim())mine.push(rid);continue;}// now kept as it is there: his words come back as a new paragraph after it
+     if(f.words===was)mine.push(rid);else pairs.set(rid,{id:rid,mine:e.text,theirs:f.words,was,at:e.at||Date.now(),kind:f.kind});
+    }
+    for(const r of rows)if(!st.edits.has(r.id)&&(!base.has(r.id)||base.get(r.id)!==r.words)&&String(r.words).trim()&&!st.added.some(a=>a.id===r.id))theirs.push({id:r.id,was:base.get(r.id)??null,now:r.words});
+    for(const [rid,was] of base)if(!fm.has(rid)&&!st.edits.has(rid)&&String(was).trim())theirs.push({id:rid,was,now:null});
+    for(const a of st.added)if(String(a.text).trim()&&!fm.has(a.id))mine.push(a.id);
+    return {pairs,mine,theirs};
+   }
+   /** A newer version is saved. Paragraphs changed in one place are taken as they are and said; those changed in both wait. */
    function noticeNewer(fresh){
-    st.conflict={fresh};st.problem='';paintConflict();paintSaved();
-   }
-   async function useSaved(){
-    const fresh=st.conflict?.fresh||await readDraft();
-    st.edits.clear();st.added=[];st.conflict=null;adopt(fresh);paintConflict();stash();presence();paintSaved();
-   }
-   async function keepMine(){
-    const c=st.conflict;if(!c)return;
-    // His edits go on top of the saved version. A paragraph the saved version no longer has comes back as a new one.
-    const fresh=new Map(rowsOf(c.fresh).map(r=>[r.id,r]));let after=c.fresh?rowsOf(c.fresh).at(-1)?.id??null:null;
-    for(const [rid,e] of [...st.edits]){
-     const f=fresh.get(rid);
-     if(!f||!f.safe){st.edits.delete(rid);if(String(e.text).trim())st.added.push({id:uuid(),afterId:after,text:e.text});}
-     else if(f.words===e.text)st.edits.delete(rid);else st.edits.set(rid,{text:e.text,orig:f.words});
+    const c=classify(fresh),by=otherSave(fresh);
+    st.problem='';
+    st.conflict=c.pairs.size?{fresh,pairs:c.pairs,by,decided:[]}:null;
+    adopt(fresh);// his words stay on the page against the new version; a paragraph gone there comes back as a new one
+    for(const p of c.pairs.values())st.baseWords.set(p.id,p.was);
+    if(c.mine.length||c.theirs.length||c.pairs.size){
+     const m=st.merged&&!st.merged.done?st.merged:{mine:[],theirs:[],decided:[]};
+     st.merged={mine:[...new Set([...m.mine,...c.mine])],theirs:[...m.theirs.filter(t=>!c.theirs.some(x=>x.id===t.id)),...c.theirs],decided:m.decided,by,open:m.open||false,done:false};
     }
-    st.base=c.fresh;st.rows=rowsOf(c.fresh);st.baseWords=wordsMap(st.rows);foldAdded();st.conflict=null;st.problem='';st.stopped=false;paintConflict();paintText();stash();await save({hold:null});
+    paintText();paintSaved();stash();
+    if(!st.conflict&&dirty())schedule(300);
+   }
+   /** He keeps one version of a paragraph changed in both places, or both one after the other. */
+   async function keepVersion(rid,v){
+    const c=st.conflict,p=c?.pairs.get(rid);if(!p||c.busy)return;
+    if(v==='theirs'){
+     c.busy=true;paintSaved();
+     const where=await setAside([{id:rid,words:p.mine}],'conflict',p.op||=uuid());
+     c.busy=false;
+     if(!where){say('Your words in this paragraph could not be kept anywhere safe, so nothing was changed. Copy all my words, then try again.','bad');paintSaved();return;}
+     if(st.conflict!==c||!c.pairs.has(rid))return;
+     st.edits.delete(rid);p.where=where;
+    }else if(v==='mine'){const e=st.edits.get(rid);if(e)e.orig=p.theirs;}
+    else st.edits.set(rid,{text:p.theirs.trimEnd()+' '+p.mine.trimStart(),orig:p.theirs,at:Date.now()});
+    st.baseWords.set(rid,p.theirs);
+    p.kept=v;c.pairs.delete(rid);c.decided.push(p);
+    if(st.merged)st.merged.decided=[...st.merged.decided,p];
+    if(!c.pairs.size)st.conflict=null;
+    paintText();paintSaved();stash();
+    if(!st.conflict&&dirty())schedule(300);
+    page.querySelector(`[data-row="${CSS.escape(rid)}"] [data-ed]`)?.focus({preventScroll:true});
+   }
+   /** From the list of paragraphs taken from elsewhere: put back the words he had there. The other version stays in history. */
+   function useEarlier(rid){
+    const t=st.merged?.theirs.find(x=>x.id===rid);if(!t||!st.human)return;
+    const r=st.rows.find(x=>x.id===rid);
+    if(r&&t.was!==null){if(r.safe)st.edits.set(rid,{text:t.was,orig:r.words,at:Date.now()});}
+    else if(!r&&t.was!==null){const at=st.rows.length?st.rows.at(-1).id:null;st.added.push({id:uuid(),afterId:at,text:t.was});}
+    else if(r&&t.was===null&&r.safe)st.edits.set(rid,{text:'',orig:r.words,at:Date.now()});
+    st.merged.theirs=st.merged.theirs.filter(x=>x.id!==rid);
+    paintText();paintSaved();stash();schedule(300);
+   }
+   // Kept for older callers: a page with no pair waiting has nothing to choose.
+   const useSaved=async()=>{for(const rid of [...(st.conflict?.pairs.keys()||[])])await keepVersion(rid,'theirs');};
+   const keepMine=async()=>{for(const rid of [...(st.conflict?.pairs.keys()||[])])await keepVersion(rid,'mine');};
+
+   // ---------- words a closed tab left on this device: shown in place, his to put back or leave out ----------
+   function headingBefore(rid){let h='';for(const r of st.rows){if(r.id===rid)break;if(r.kind==='heading'&&String(r.words).trim())h=String(r.words).trim();}return h;}
+   /** Offers a closed tab's words: only what differs from what is saved now. Nothing differs: the key simply goes. */
+   function offerRecovered(key,saved){
+    const now=new Map(st.rows.map(r=>[r.id,r])),base=new Map(Array.isArray(saved.base)?saved.base:[]),items=[],added=[];
+    const times=new Map(Array.isArray(saved.times)?saved.times:[]);
+    for(const [rid,text,orig] of saved.edits){const r=now.get(rid),t=String(text),at=times.get(rid);if(r&&r.words===t)continue;/* a paragraph that now holds formatting kept as it is: his words are offered as a new one after it */if(r&&!r.safe){if(t.trim())added.push({afterId:rid,text:flat(t)});continue;}if(!r&&!t.trim())continue;items.push({id:rid,kept:t,saved:r?r.words:null,was:base.has(rid)?base.get(rid):String(orig??''),at});}
+    for(const a of saved.added){if(!a||typeof a.text!=='string'||!a.text.trim())continue;const r=now.get(a.id);if(r&&r.words===a.text)continue;added.push({afterId:a.afterId??null,text:flat(a.text)});}
+    if(!items.length&&!added.length){forget(key,{always:true});return false;}
+    st.recovered={key,at:saved.at||null,items,added,ids:new Set(items.filter(x=>now.has(x.id)).map(x=>x.id)),op:uuid()};
+    return true;
+   }
+   async function decideRecovered(v){
+    const r=st.recovered;if(!r||!st.human||r.busy)return;
+    if(v==='left'){
+     r.busy=true;
+     const where=await setAside([...r.items.map(x=>({id:x.id,words:x.kept})),...r.added.map(a=>({words:a.text}))],'recovery',r.op);
+     r.busy=false;
+     if(!where){say('These words could not be kept anywhere safe, so they stay as they are on this device.','bad');return;}
+     if(st.recovered!==r)return;
+     st.recovered=null;forget(r.key,{always:true});st.recDone={v,where};
+    }else{
+     st.recovered=null;
+     const now=new Map(st.rows.map(x=>[x.id,x]));
+     for(const x of r.items){
+      const cur=now.get(x.id);
+      if(cur){st.edits.set(x.id,{text:x.kept,orig:cur.words,at:x.at||r.at||Date.now()});st.baseWords.set(x.id,x.was);}
+      else if(x.kept.trim())st.added.push({id:uuid(),afterId:st.rows.at(-1)?.id??null,text:x.kept});
+     }
+     for(const a of r.added)st.added.push({id:uuid(),afterId:now.has(a.afterId)?a.afterId:(st.rows.at(-1)?.id??null),text:a.text});
+     stash();forget(r.key);st.recDone={v};
+     noticeNewer(st.base);// what changed here since those words were written is taken paragraph by paragraph, as always
+    }
+    paintText();paintSaved();
+   }
+   /** A closed tab's words wait until this page has none unsaved and nothing else is asked, then are offered once. */
+   async function offerNext(){
+    if(!LOCKS||clk.gone||!st.human||st.offering||st.recovered||dirty()||st.conflict||st.saving||st.making||!st.base)return;
+    st.offering=true;
+    try{
+     for(let k=0;k<64;k++){
+      const d=await closedTab();if(!d||clk.gone)return;
+      if(dirty()||st.conflict||st.saving||st.recovered){letGo(d.key);return;}
+      const done=new Set((st.base.history||[]).filter(x=>x.state==='committed').map(x=>x.operationId));
+      // A save of that tab's that the app holds: its words are settled the way a reload settles them, then the rest is offered.
+      if((d.saved.sent||[]).some(i=>done.has(i?.operationId))){const read=await readDraft().catch(()=>null);if(!read||clk.gone||dirty()){letGo(d.key);return;}
+       for(const i of d.saved.sent)if(i&&typeof i.operationId==='string')st.ops.add(i.operationId);
+       const keep=st.edits;st.edits=new Map();for(const [rid,text,orig] of d.saved.edits)st.edits.set(rid,{text:String(text),orig:String(orig??'')});
+       const added=st.added;st.added=d.saved.added.filter(a=>a&&typeof a.text==='string').map(a=>({id:a.id,afterId:a.afterId??null,text:a.text}));
+       for(const info of d.saved.sent.filter(i=>done.has(i?.operationId))){noteSave(info);settleSent(read,info);}
+       d.saved.edits=[...st.edits].map(([rid,e])=>[rid,e.text,e.orig]);d.saved.added=st.added.filter(a=>String(a.text).trim());d.saved.sent=[];
+       st.edits=keep;st.added=added;adopt(read);
+      }
+      if(offerRecovered(d.key,d.saved)){paintText();paintSaved();return;}
+     }
+    }finally{st.offering=false;}
+   }
+
+   // ---------- what stands beside the page while two versions or kept words wait: one item, and on a phone at the top ----------
+   function sideHTML(){
+    const out=[];
+    const c=st.conflict;
+    if(c&&c.pairs.size){
+     const n=c.pairs.size,first=[...c.pairs.values()][0];
+     out.push(`<div class="wr-item wr-on" data-wr-side="conflict"><div class="wr-hd"><h2>${esc(n===1?'One paragraph, written in two places':n+' paragraphs, written in two places')}</h2></div>
+      <p class="wr-says">${esc((n===1?'You changed this paragraph here at '+clock(first.at)+', and it was also changed '+(c.by.at?'elsewhere at '+clock(c.by.at):'elsewhere')+'.':'You changed these paragraphs here, and they were also changed '+(c.by.at?'elsewhere at '+clock(c.by.at):'elsewhere')+'.')+' Both are in the page with what differs marked. Keep one, or both. The one you do not keep stays in Earlier versions.')}</p></div>`);
+    }
+    const r=st.recovered;
+    if(r){
+     const first=r.items[0],before=first?first.saved??'':'',after=first?first.kept:r.added[0].text,where=first&&first.saved!==null?headingBefore(first.id):'';
+     const [b,a]=marked(before,after),more=r.items.length+r.added.length-1;
+     const closed=r.at?'The app closed at '+clock(new Date(r.at).toISOString())+' before ':'The app closed before ';
+     out.push(`<div class="wr-item wr-on" data-wr-side="recovered"><div class="wr-hd"><h2>Words kept on this device</h2><p class="wr-by">${esc(closed+(more>0?'these changes were saved.':'this change'+(where?' in '+where:'')+' was saved.'))}<br>${esc(countLine(before,after)+(more>0?' And '+plural(more)+' more.':''))}</p></div>
+      <div class="wr-ba"><div><p class="wr-label">Saved</p><p class="wr-pr">${before?b:'<i>Nothing here yet.</i>'}</p></div><div><p class="wr-label">Kept on this device</p><p class="wr-pr">${a}</p></div></div>
+      <div class="wr-acts"><button type="button" class="wr-b wr-pri" data-act="rec" data-v="back">Put them back</button><button type="button" class="wr-b wr-q" data-act="rec" data-v="left">Leave them out</button></div></div>`);
+    }else if(st.recDone){
+     const d=st.recDone;
+     out.push(`<div class="wr-item" data-wr-side="recovered-done"><div class="wr-hd"><h2>Words kept on this device</h2></div><p class="wr-says">${esc(d.v==='back'?'Put back. They save with the rest of your words.':d.where==='server'?'Left out. They are kept in Earlier versions.':'Left out. They stay on this device, and Copy all my words includes them.')}</p><div class="wr-acts"><button type="button" class="wr-b wr-q" data-act="side-done" data-v="rec">Done</button></div></div>`);
+    }
+    const m=st.merged;
+    if(m&&!m.done&&!(c&&c.pairs.size)&&(m.mine.length||m.theirs.length||m.decided.length)){
+     const lines=[];
+     if(m.theirs.length)lines.push(plural(m.theirs.length)+' changed elsewhere '+(m.theirs.length===1?'was':'were')+' taken as '+(m.theirs.length===1?'it is':'they are')+'.');
+     if(m.mine.length)lines.push('Your words in '+plural(m.mine.length)+' changed only here '+(m.mine.length===1?'stay':'stay')+' as you wrote them.');
+     for(const p of m.decided)lines.push(p.kept==='both'?'You kept both versions of a paragraph, one after the other.':p.kept==='mine'?'You kept the version written here. The other is in Earlier versions.':p.where==='device'?'You kept the version written elsewhere. Yours stays on this device, and Copy all my words includes it.':'You kept the version written elsewhere. Yours is in Earlier versions.');
+     const list=m.open&&m.theirs.length?`<ul class="wr-took">${m.theirs.map(t=>`<li><p class="wr-label">${esc(t.now===null?'Removed elsewhere':'Changed elsewhere')}</p><p class="wr-pr">${esc(t.now??t.was)}</p>${t.was!==null&&t.now!==null||t.now===null?`<div class="wr-acts wr-acts-in"><button type="button" class="wr-b" data-act="earlier" data-k="${esc(t.id)}">${esc(t.now===null?'Put this paragraph back':'Use the words you had')}</button></div>`:''}</li>`).join('')}</ul>`:'';
+     out.push(`<div class="wr-item" data-wr-side="merged"><div class="wr-hd"><h2>${esc('A newer version was saved '+(m.by?.at?'elsewhere at '+clock(m.by.at):'elsewhere'))}</h2></div><p class="wr-says">${esc(lines.join(' '))}</p>${list}
+      <div class="wr-acts">${m.theirs.length?`<button type="button" class="wr-b" data-act="merged-see" aria-expanded="${!!m.open}">${m.open?'Hide them':'See them'}</button>`:''}<button type="button" class="wr-b wr-q" data-act="side-done" data-v="merged">Done</button></div></div>`);
+    }
+    return out.join('');
+   }
+   /** Draws the item beside the paragraph it is about (on a phone, at the top of the page) and the old top box no more. */
+   function paintConflict(){
+    const html=st.human?sideHTML():'';
+    const top=$('[data-wr-conflict]');if(top){if(top._wrHtml!==html){top.innerHTML=html;top._wrHtml=html;}top.hidden=!html;}
+    const box=$('[data-wr-text]');if(!box)return;
+    box.querySelectorAll('[data-wr-side-m]').forEach(n=>n.remove());
+    if(!html)return;
+    const anchor=st.conflict?.pairs.size?[...st.conflict.pairs.keys()][0]:st.recovered?.ids.size?[...st.recovered.ids][0]:st.recovered?st.recovered.added[0]?.afterId:null;
+    const row=(anchor&&box.querySelector(`[data-row="${CSS.escape(anchor)}"]`))||box.querySelector('[data-row]');
+    row?.querySelector('.wr-margin')?.insertAdjacentHTML('afterbegin',`<div class="wr-side" data-wr-side-m>${html}</div>`);
+   }
+   function sideAct(act,v,k){
+    if(act==='keep')return void keepVersion(k,v);
+    if(act==='rec')return void decideRecovered(v);
+    if(act==='earlier')return void useEarlier(k);
+    if(act==='merged-see'&&st.merged){st.merged.open=!st.merged.open;paintConflict();return;}
+    if(act==='side-done'){if(v==='rec')st.recDone=null;else if(st.merged)st.merged.done=true;paintConflict();}
+   }
+   /** A paragraph changed in both places, in place: both versions, each named, what differs marked, and the choice. */
+   function pairHTML(r,p,n){
+    const [t,m]=marked(p.theirs,p.mine),label=r.kind==='heading'?'heading':'paragraph '+n,h=r.kind==='heading'?' wr-h':'';
+    return `<div class="wr-row" data-row="${esc(r.id)}" data-pair><div class="wr-main"><div class="wr-two${h}" role="group" aria-label="${esc('Two versions of '+label)}">
+     <div class="wr-v"><p class="wr-k"><span>${esc(elsewhere(st.conflict.by))}</span><button type="button" class="wr-b" data-act="keep" data-v="theirs" data-k="${esc(r.id)}" aria-label="${esc('Keep the version '+elsewhere(st.conflict.by).replace(/^Written /,'written ').replace(/, .*$/,''))}">Keep this one</button></p><p class="wr-vt">${t}</p></div>
+     <div class="wr-v"><p class="wr-k"><span>${esc('Written here, '+clock(new Date(p.at).toISOString()))}</span><button type="button" class="wr-b" data-act="keep" data-v="mine" data-k="${esc(r.id)}" aria-label="Keep the version written here">Keep this one</button></p><p class="wr-vt">${m}</p></div>
+     <div class="wr-after"><button type="button" class="wr-b wr-q" data-act="keep" data-v="both" data-k="${esc(r.id)}">Keep both, one after the other</button></div>
+    </div></div><aside class="wr-margin"></aside></div>`;
+   }
+   /** Words a closed tab kept for a paragraph, in place and set into the page, until he puts them back or leaves them out. */
+   function recHTML(r,text){
+    const tag=r.kind==='heading'?'h2':'p',cls=r.kind==='heading'?' wr-h':'';
+    return `<div class="wr-row" data-row="${esc(r.id)}" data-rec><div class="wr-main"><${tag} class="wr-ed wr-rec${cls}" aria-label="Words kept on this device">${esc(text)}</${tag}></div><aside class="wr-margin"></aside></div>`;
    }
 
    // ---------- taking in a server version ----------
@@ -444,6 +686,8 @@
        st.added.push({id:uuid(),afterId:after,text:e.text});
       }
      }else if(r.words===e.text)st.edits.delete(rid);
+     // A paragraph that now holds formatting this page keeps as it is cannot take his words: they follow it as a new one.
+     else if(!r.safe){st.edits.delete(rid);if(String(e.text).trim())st.added.push({id:uuid(),afterId:rid,text:flat(e.text)});}
      else e.orig=r.words;
     }
     foldAdded();
@@ -553,6 +797,7 @@
      if(st.again){st.again=false;if(dirty())schedule(300);}
      if(st.refreshWanted){st.refreshWanted=false;void refresh();}
     }
+    if(ok&&!dirty())setTimeout(offerNext,0);
     if(ok&&st.starting)void startArticle();
     return ok;
    }
@@ -629,6 +874,7 @@
     if(row){if(value===row.words)st.edits.delete(rid);else st.edits.set(rid,{text:value,orig:st.edits.get(rid)?.orig??row.words});}
     else{const a=st.added.find(x=>x.id===rid);if(a)a.text=value;}
     if(st.back?.ids.has(rid))endBack();
+    {const e=st.edits.get(rid);if(e)e.at=Date.now();}
     st.problem='';st.stopped=false;paintSaved();stash();presence();schedule();
    }
    function focusEditor(rid,at){
@@ -708,6 +954,7 @@
     clearTimeout(clk.propTimer);clk.propTimer=setTimeout(refresh,250);
    }
 
-  return {textOf,offsetOf,pointAt,editable,status,paintFail,tryAgain,allWords,copyAll,loadKept,paintKept,undoLast,undoState,noteSave,paintAsk,noAsk,yesAsk,putBack,loadBack,endBack,takeBack,undoOp:takeBack,KEY,stash,unstash,ensureTail,order,removeAdded,rowHTML,paintText,fit,paintSaved,paintConflict,noticeNewer,useSaved,keepMine,wordsMap,foldAdded,adopt,carryAt,settleSent,takeOwn,say403,settled,save,run,startArticle,schedule,onInput,focusEditor,enter,join,refresh,onChange};
+  return {claim,closedTab,forget,letAllGo,TAB,foreign,setAside,sendAsides,loadAsides,deviceAsides,classify,keepVersion,useEarlier,offerRecovered,decideRecovered,offerNext,sideHTML,sideAct,pairHTML,recHTML,marked,countLine,
+   textOf,offsetOf,pointAt,editable,status,paintFail,tryAgain,allWords,copyAll,loadKept,paintKept,undoLast,undoState,noteSave,paintAsk,noAsk,yesAsk,putBack,loadBack,endBack,takeBack,undoOp:takeBack,KEY,stash,unstash,ensureTail,order,removeAdded,rowHTML,paintText,fit,paintSaved,paintConflict,noticeNewer,useSaved,keepMine,wordsMap,foldAdded,adopt,carryAt,settleSent,takeOwn,say403,settled,save,run,startArticle,schedule,onInput,focusEditor,enter,join,refresh,onChange};
  };
 })(window.v2);

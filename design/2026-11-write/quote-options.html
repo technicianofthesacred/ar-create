@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Marking a quote: options (mock-up)</title>
+<link rel="stylesheet" href="app.css">
+<style>
+/* A comparison page for Adrian, not a screen of the app. It uses app.css, so the prose, colours and controls are the
+   mock-up's own. Every option keeps rule 1: hover, focus and open change colour or background only, never size or place. */
+.qo{max-width:1000px;margin:0 auto;padding:28px 28px 80px}
+.qo-h{display:grid;gap:8px;margin-bottom:28px}
+.qo-h h1{font:600 14px/1.4 var(--ui)}
+.qo-h .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.opt{display:grid;gap:12px;margin-top:36px;padding-top:20px;border-top:1px solid var(--edge)}
+.opt-h{display:flex;gap:10px;align-items:baseline}
+.opt-h b{font:600 14px/1.4 var(--ui);color:var(--ink)}
+.opt-h .k{flex:none;display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:var(--r-c);background:var(--fill);font:600 13px/1 var(--ui);color:var(--ink)}
+.opt dl{display:grid;grid-template-columns:150px 1fr;gap:4px 14px;margin:0}
+.opt dt{font:400 13px/1.5 var(--ui);color:var(--dim)}
+.opt dd{margin:0;font:400 14px/1.5 var(--ui);color:var(--ink)}
+/* a piece of the page: paper, a hairline edge, the computer's 46 side margins and the 660 measure */
+.frame{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-s);padding:30px 46px 12px;color:var(--ink)}
+.frame .text p{position:relative}
+.cells{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.cell{display:grid;gap:6px;align-content:start;min-width:0}
+.cell>.label{padding-left:2px}
+.cell .frame{padding:16px 14px 0 44px}
+.cell .text{max-width:none}
+/* the quote marks, shared */
+.qt{--tint:color-mix(in srgb,var(--ink) 10%,transparent)}
+/* A: a dotted line under the quote, below the kept line, drawn as a background so it never moves anything */
+.qa{--qdot:color-mix(in srgb,var(--dim) 85%,transparent);cursor:pointer;padding-bottom:6px;border-radius:2px;
+ background-image:radial-gradient(circle,var(--qdot) .85px,transparent 1.25px);background-size:4px 3px;background-repeat:repeat-x;background-position:0 100%}
+.qa:hover,.qa.s-hover,.qa[aria-expanded="true"]{--qdot:var(--ink);background-color:var(--tint)}
+.qa:focus-visible,.qa.s-focus{--qdot:var(--ink);outline:2px solid var(--ink);outline-offset:1px}
+/* B and D: the quotation marks are the handle; each has a touch area wider than the glyph, which takes no room */
+.mk{position:relative;cursor:pointer}
+.mk::after{content:"";position:absolute;inset:-7px -12px}
+.mk:focus-visible{outline:none}
+.qb,.qd{border-radius:2px}
+.qb:has(.mk:hover),.qb.s-hover,.qb.s-open,.qd:has(.mk:hover),.qd.s-hover,.qd.s-open{background-color:var(--tint)}
+.qb:has(.mk:focus-visible),.qb.s-focus,.qd:has(.mk:focus-visible),.qd.s-focus{outline:2px solid var(--ink);outline-offset:1px}
+.qd .mk{color:var(--dim)}
+.qd:has(.mk:hover) .mk,.qd.s-hover .mk,.qd.s-open .mk,.qd:has(.mk:focus-visible) .mk,.qd.s-focus .mk{color:var(--ink)}
+/* C: a tick in the page's own margin, level with the line where the quote starts, outside the 660 measure */
+.tick{position:absolute;left:-40px;top:0;width:32px;height:32px;padding:0;border:0;border-radius:var(--r-c);background:none;cursor:pointer}
+.tick::before{content:"";position:absolute;left:19px;top:8px;width:2px;height:16px;border-radius:1px;background:color-mix(in srgb,var(--dim) 70%,transparent)}
+.tick:hover::before,.tick.s-hover::before,.tick[aria-expanded="true"]::before,.tick:focus-visible::before,.tick.s-focus::before{background:var(--ink)}
+.tick:focus-visible,.tick.s-focus{outline:2px solid var(--ink);outline-offset:-2px}
+.qc{border-radius:2px}
+.tick:hover+.qc,.tick.s-hover+.qc,.tick[aria-expanded="true"]+.qc,.tick:focus-visible+.qc,.tick.s-focus+.qc{background-color:var(--tint)}
+/* the ring now: app.css's own .qm; a forced hover for the sheet */
+.qm.s-hover{border-color:var(--ink);background:var(--ink)}
+/* the sheet: one picture, 950 wide at device scale 2 */
+.sheet .qo{max-width:none;width:950px;padding:22px 20px 30px}
+.sheet .opt{margin-top:22px;padding-top:14px;gap:10px}
+.sheet .opt dl{display:none}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.scaled{overflow:hidden}
+.scaled>.frame{width:752px;transform-origin:0 0}
+.sheet .cells{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sheet .cell .frame{padding:14px 12px 0 44px}
+.sheet .cell.both{gap:6px}
+@media (max-width:700px){
+ .qo{padding:18px 12px 60px}
+ .frame{padding:22px 18px 6px}
+ .cells{grid-template-columns:1fr}
+ .cell .frame{padding:14px 18px 0 18px}
+ .tick{left:-18px;width:18px}
+ .tick::before{left:8px}
+ .opt dl{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(function(){
+'use strict';
+const SHEET=/[?&]sheet/.test(location.search);
+const IC={play:'<path d="M8 5v14l11-7z"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>'};
+const icon=n=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
+const LINES={'03:40':'First you watch. Then you can help.','14:32':'Straw breathes. The net only takes the light away.'};
+
+/* the two quotes: one plain, one he also keeps exact */
+const Q=[{at:'03:40',inner:'First you watch,',kept:false},{at:'14:32',inner:'Straw breathes. The net only takes the light away.',kept:true}];
+const keptWrap=(q,s)=>q.kept?`<span class="kept">${s}</span>`:s;
+const label=q=>`Where she said this: the recording at ${q.at}`;
+
+/* each option draws a quote from its state: rest, hover, focus or open */
+const OPTS=[
+ {id:'ring',k:'Now',name:'The ring now',
+  how:'A small ring after the closing mark. Its round touch area is wider than the ring.',
+  find:'He sees the ring, so he knows something is there. It is the thing he said gets in the way of reading.',
+  kept:'Unchanged: a solid hairline.',
+  trade:'Easy to find, but it is a thing in the middle of his prose.',
+  q:(q,s)=>`“${keptWrap(q,q.inner)}”<button class="qm${s==='open'?' on':''}${s==='hover'?' s-hover':''}${s==='focus'?' is-focus':''}" data-q="${q.at}" aria-expanded="${s==='open'}" aria-label="${label(q)}" title="The recording at ${q.at}"></button>`},
+ {id:'a',k:'A',name:'A dotted line under the quote',
+  how:'A quiet dotted line runs under the whole quote, marks included. Clicking or tapping anywhere on the quote opens her line. A kept phrase keeps its solid line, which sits higher, so a quote he also keeps shows both: solid above, dotted below.',
+  find:'The dotted line reads as “there is more here”, as it does in books and on the web, and the pointer changes over it.',
+  kept:'Stays a solid hairline. Where they overlap, two lines are drawn, three pixels apart.',
+  trade:'The clearest to find and the biggest target, but it adds a line under words, and two lines where he keeps a quote.',
+  q:(q,s)=>`<span class="qt qa${s==='hover'?' s-hover':''}${s==='focus'?' s-focus':''}" role="button" tabindex="0" data-q="${q.at}" aria-expanded="${s==='open'}" aria-label="${label(q)}" title="The recording at ${q.at}">“${keptWrap(q,q.inner)}”</span>`},
+ {id:'b',k:'B',name:'The quotation marks open it',
+  how:'Nothing at rest: the quote looks like any quote. The two quotation marks are the handle, each with a touch area about 30 by 30 that takes no room. Over a mark, the pointer changes and the quote gets a faint grey ground.',
+  find:'Only by chance, or because someone tells him once. Nothing invites the first click.',
+  kept:'Unchanged: a solid hairline, the only line under any words.',
+  trade:'The page looks exactly like writing, but he cannot tell a quote with a source from one without.',
+  q:(q,s)=>mk('qb',q,s)},
+ {id:'c',k:'C',name:'A tick in the margin',
+  how:'A short upright tick sits in the page’s own margin, level with the line where the quote starts, outside the column of words. The tick is the handle (32 by 32 on a computer). Over it, the quote it belongs to gets a faint grey ground.',
+  find:'A tick in the margin is noticed but kept out of the reading, like a proofreader’s mark. Hovering it shows which words it means.',
+  kept:'Unchanged: a solid hairline. The tick marks quotes only, so the two never meet.',
+  trade:'Nothing in the words at all, but a tick names a line, not words, so two quotes on one line share it, and on a phone the margin is 18 wide.',
+  q:(q,s)=>`<button class="tick${s==='hover'?' s-hover':''}${s==='focus'?' s-focus':''}" data-q="${q.at}" aria-expanded="${s==='open'}" aria-label="${label(q)}" title="The recording at ${q.at}"></button><span class="qt qc">“${keptWrap(q,q.inner)}”</span>`},
+ {id:'d',k:'D',name:'Quiet quotation marks',
+  how:'A quote with a known source has its quotation marks in the quiet grey; the words stay as they are. The marks are the handle, as in B. Over a mark, the marks turn to the main tone and the quote gets a faint grey ground.',
+  find:'The grey marks look slightly different from other punctuation, enough to invite a hover; the pointer and the name then say what they do.',
+  kept:'Unchanged: a solid hairline, the only line under any words.',
+  trade:'Reads as plain typography and leaves the line to kept words, but the cue is faint, quietest in light.',
+  q:(q,s)=>mk('qd',q,s)}];
+function mk(cls,q,s){
+ const st=(s==='hover'?' s-hover':'')+(s==='focus'?' s-focus':'')+(s==='open'?' s-open':'');
+ const m=(ch,first)=>`<span class="mk" role="button" tabindex="${first?0:-1}" data-q="${q.at}" aria-expanded="${s==='open'}" aria-label="${label(q)}" title="The recording at ${q.at}">${ch}</span>`;
+ return `<span class="qt ${cls}${st}">${m('“',true)}${keptWrap(q,q.inner)}${m('”',false)}</span>`;}
+
+const excerpt=at=>`<div class="excerpt"><q>${LINES[at]}</q><span>Mrs. Oda, Kirihara garden walk, ${at}</span><button class="iconb" aria-label="Play from ${at}" title="Play from ${at}">${icon('play')}</button><button class="iconb" data-close="${at}" aria-label="Close" title="Close">${icon('x')}</button></div>`;
+
+/* the same paragraph in every option, and a short piece of it for the close-ups */
+function body(o,st,short){
+ const a=o.q(Q[0],st['03:40']||'rest'), b=o.q(Q[1],st['14:32']||'rest');
+ const p=short
+  ?`${a} she said. Later: ${b}`
+  :`I arrived at six, expecting to help. She handed me a cup instead and pointed at the bench. ${a} she said, and so I watched the light change under the screens, where <span class="kept">the rows sit in a green dusk</span>, for most of an hour. Only then did she tell me why she still uses straw. ${b}`;
+ return `<p>${p}</p>${Q.filter(q=>st[q.at]==='open').map(q=>excerpt(q.at)).join('')}`;}
+function frame(o,st,short,theme){
+ return `<div class="frame" data-opt="${o.id}" data-short="${short?1:''}" data-st='${JSON.stringify(st)}'${theme?` style="${TH[theme]}"`:''}><div class="text">${body(o,st,short)}</div></div>`;}
+
+/* both themes side by side on one sheet: read each theme's tokens from app.css itself */
+const VARS=['band','desk','paper','well','ink','dim','accent','line','edge','fill','fill2','solid','on-solid','go','go-bg','come-bg','wash','wash2'];
+const TH={};
+const html=document.documentElement;
+['light','dark'].forEach(t=>{html.dataset.theme=t;const cs=getComputedStyle(html);TH[t]=VARS.map(v=>`--${v}:${cs.getPropertyValue('--'+v).trim()}`).join(';');});
+const want=(location.search.match(/theme=(light|dark)/)||[])[1]||'dark';
+html.dataset.theme=want;
+
+function page(){
+ const intro=`<div class="qo-h"><h1>Marking a quote that has a known source: four ways, and the ring now</h1>
+ <p class="says">The same paragraph in each. It has two quotes. The second is also kept exact, as is “the rows sit in a green dusk”. Try each with the mouse, the Tab key and a finger. Under each, the second quote is shown at rest, under the mouse, with keyboard focus and open.</p>
+ <div class="row"><button class="ghost" data-theme="dark" aria-pressed="${html.dataset.theme==='dark'}">Dark</button><button class="ghost" data-theme="light" aria-pressed="${html.dataset.theme==='light'}">Light</button><a class="ghost" href="index.html#quote">The mock-up’s quote screen</a></div></div>`;
+ return `<main class="qo">${intro}${OPTS.map(o=>`<section class="opt" aria-labelledby="h-${o.id}"><div class="opt-h"><span class="k">${o.k}</span><b id="h-${o.id}">${o.name}</b></div>
+ <dl><dt>What it is</dt><dd>${o.how}</dd><dt>How he finds it</dt><dd>${o.find}</dd><dt>The kept-exact line</dt><dd>${o.kept}</dd><dt>The trade-off</dt><dd>${o.trade}</dd></dl>
+ ${frame(o,{},false)}
+ <div class="cells">${['rest','hover','focus','open'].map(s=>`<div class="cell"><p class="label">${{rest:'At rest',hover:'Mouse over',focus:'Keyboard focus',open:'Open: her exact line'}[s]}</p>${frame(o,{'14:32':s},true)}</div>`).join('')}</div></section>`).join('')}</main>`;}
+
+function sheet(){
+ return `<main class="qo"><div class="qo-h"><h1>Marking a quote with a known source. Each row: the paragraph at rest in dark and light at computer width (shown at 61%), then the second quote, which he also keeps exact, at real size: at rest, under the mouse, and open.</h1></div>${OPTS.map(o=>`<section class="opt"><div class="opt-h"><span class="k">${o.k}</span><b>${o.name}</b><span class="quiet">${o.trade}</span></div>
+ <div class="pair"><div class="scaled">${frame(o,{},false,'dark')}</div><div class="scaled">${frame(o,{},false,'light')}</div></div>
+ <div class="cells"><div class="cell both"><p class="label">At rest, dark and light</p>${frame(o,{},true,'dark')}${frame(o,{},true,'light')}</div><div class="cell"><p class="label">Mouse over</p>${frame(o,{'14:32':'hover'},true,'dark')}</div><div class="cell"><p class="label">Open: her exact line</p>${frame(o,{'14:32':'open'},true,'dark')}</div></div></section>`).join('')}</main>`;}
+
+/* place each margin tick level with the first line of its quote */
+function ticks(scope){
+ scope.querySelectorAll('.tick').forEach(t=>{const p=t.closest('p'),q=t.nextElementSibling;
+  const r=q.getClientRects()[0],pr=p.getBoundingClientRect(),sc=pr.height/p.offsetHeight||1;
+  t.style.top=((r.top-pr.top)/sc+(r.height/sc)/2-16)+'px';});}
+function scale(){document.querySelectorAll('.scaled').forEach(w=>{const f=w.firstElementChild,k=w.clientWidth/752;f.style.transform=`scale(${k})`;w.style.height=f.offsetHeight*k+'px';});}
+
+function draw(){
+ document.body.classList.toggle('sheet',SHEET);
+ document.getElementById('root').innerHTML=SHEET?sheet():page();
+ if(SHEET)scale();ticks(document);}
+
+/* open and close in place; focus returns to the handle that was used */
+function toggle(fr,at,close){
+ const st=JSON.parse(fr.dataset.st||'{}');st[at]=(close||st[at]==='open')?'rest':'open';
+ const o=OPTS.find(x=>x.id===fr.dataset.opt);fr.dataset.st=JSON.stringify(st);
+ fr.querySelector('.text').innerHTML=body(o,st,!!fr.dataset.short);ticks(fr);
+ const h=fr.querySelector(`[data-q="${at}"][tabindex="0"],button[data-q="${at}"],span.qa[data-q="${at}"]`);h&&h.focus({preventScroll:true});}
+document.addEventListener('click',e=>{
+ const th=e.target.closest('[data-theme]');if(th&&th.tagName==='BUTTON'){html.dataset.theme=th.dataset.theme;draw();return;}
+ const c=e.target.closest('[data-close]');if(c){toggle(c.closest('.frame'),c.dataset.close,true);return;}
+ const h=e.target.closest('[data-q]');if(h&&!SHEET)toggle(h.closest('.frame'),h.dataset.q);});
+document.addEventListener('keydown',e=>{const h=e.target.closest&&e.target.closest('span[data-q]');
+ if(h&&(e.key==='Enter'||e.key===' ')){e.preventDefault();toggle(h.closest('.frame'),h.dataset.q);}});
+window.addEventListener('resize',()=>{if(SHEET)scale();ticks(document);});
+draw();
+(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{if(SHEET)scale();ticks(document);document.body.dataset.ready='1';});
+})();
+</script>
+</body>
+</html>
