@@ -10,7 +10,7 @@
  'use strict';
  const {esc,icon}=v2.ui,root=window,doc=document;
  const OWN={side:'M4 5h16v14H4zM9 5v14',focus:'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',note:'M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7',link:'M10 14a4 4 0 0 0 5.700 0l3-3a4 4 0 0 0-5.700-5.700l-1 1M14 10a4 4 0 0 0-5.700 0l-3 3a4 4 0 0 0 5.700 5.700l1-1'};
- const own=name=>`<svg class="v2-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${OWN[name]}"/></svg>`;
+ const own=name=>OWN[name]?`<svg class="v2-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${OWN[name]}"/></svg>`:icon(name);// a name this screen does not draw comes from the shell
  const uuid=()=>root.V2Client.uuid();
  const clock=iso=>{try{return new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false});}catch{return '';}};
  /** How "Saved" reads, as the sample's does: the time today, and the day and time on any other day ("10 Nov, 13:52"). */
@@ -172,7 +172,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
  function open(page,ctx,pre=null){
   const id=ctx.params.id,human=v2.isHuman();
   const st={standing:null,form:null,forms:[],bindingId:null,piece:null,missing:false,base:null,rows:[],edits:new Map(),added:[],
-   saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
+   starting:false,creating:false,saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
    src:root.matchMedia&&root.matchMedia('(min-width:1101px)').matches,focus:false,ops:new Set(),human};
   let timer=null,propTimer=null,presenceTimer=null,presenceSeq=0,presenceOk=true,presenceSent='',gone=false;
   const session=uuid().slice(0,8);
@@ -188,6 +188,8 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const s=found.standing;st.standing=s;st.forms=found.forms;st.form=found.form;
    st.missing=!!ctx.query.piece&&!found.form;
    st.bindingId=found.bindingId;st.piece=found.piece;
+   // A subject with no Article yet: the page is empty and his first saved words start the Article (see startArticle).
+   st.starting=!found.form&&!ctx.query.piece&&!!found.bindingId&&!found.story;
    ctx.setTitle(s.title||'Write');if(s.look)v2.brand(s.look);
    ctx.setAdvanced({subject:id,piece:st.piece||undefined,section:'write'});
    return true;
@@ -261,6 +263,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
      <p class="wr-saved wr-saved-m" data-wr-saved role="status"></p>
      <h1 class="wr-title">${esc(st.form?.title||st.standing?.title||'')}</h1>
      ${st.human?'':`<p class="wr-ro" role="status">${esc('Opened as '+v2.actorName(v2.actor())+'. Only Adrian writes here. '+v2.actorName(v2.actor())+' can propose words, and Adrian decides.')}</p>`}
+     ${st.starting&&!st.human?'<p class="wr-dim" role="status">No Article has been started for this subject. Adrian starts it by writing the first words.</p>':''}
      <div class="wr-text" data-wr-text></div>
      <div class="wr-loose" data-wr-loose></div>
      <section class="wr-todo" aria-label="Still to write"><p class="wr-label">Still to write</p>${v2.ui.notBuilt('The list of parts still to write.',{advanced:{subject:id,piece:st.piece||undefined,section:'write'}})}</section>
@@ -273,7 +276,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const label=r.kind==='heading'?'Heading':'Paragraph '+n;
    if(!r.safe)return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><p class="wr-lock" title="This passage has formatting that is kept as it is. Change it in Advanced.">${esc(r.text)}</p><div class="wr-drafts"></div></div><aside class="wr-margin"></aside></div>`;
    const cls=r.kind==='heading'?' wr-h':r.kind==='blockquote'?' wr-q':'';
-   return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><textarea class="wr-ed${cls}" rows="1" data-ed="${esc(r.id)}" aria-label="${esc(label)}" spellcheck="true"${st.human?'':' readonly'}${r.fresh&&!r.text?' placeholder="Write here"':''}>${esc(r.text)}</textarea><div class="wr-drafts"></div></div><aside class="wr-margin"></aside></div>`;
+   return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><textarea class="wr-ed${cls}" rows="1" data-ed="${esc(r.id)}" aria-label="${esc(label)}" spellcheck="true"${st.human&&!st.creating?'':' readonly'}${r.fresh&&!r.text?' placeholder="Write here"':''}>${esc(r.text)}</textarea><div class="wr-drafts"></div></div><aside class="wr-margin"></aside></div>`;
   }
   function paintText(){
    const box=$('[data-wr-text]');if(!box)return;
@@ -544,7 +547,40 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     if(st.again){st.again=false;if(dirty())schedule(300);}
     if(st.refreshWanted){st.refreshWanted=false;void refresh();}
    }
+   if(ok&&st.starting)void startArticle();
    return ok;
+  }
+  /** His first saved words start the Article, as Add a form does in the existing workspace: study-draft.save has put the
+      words in the subject's draft, and study.outputs.create (from that draft, with the revisions just read) makes the
+      Article. Anything he types while the first save runs is saved first; the boxes are read only for the moment the Article
+      is being made, and the page then opens the piece. If it cannot be made, his words stay saved and it is tried again. */
+  async function startArticle(){
+   if(st.creating||gone||!st.starting||!st.human)return;
+   st.creating=true;
+   try{
+    for(let i=0;i<8&&(dirty()||st.saving)&&!st.conflict&&!st.stopped;i++){clearTimeout(timer);if(st.saving)await settled();else await save({quiet:true,hold:null});}
+    if(dirty()||st.conflict||st.stopped||gone){st.creating=false;return;}
+    page.querySelectorAll('textarea.wr-ed').forEach(t=>{t.readOnly=true;});
+    const standing=await v2.call('subject.standing',{parentStudyId:id});
+    const made=(standing.forms||[]).find(f=>f.kind==='article'&&/^out:/.test(f.key||''));
+    let outId=made?made.id:null;
+    if(!outId){
+     const sc={rootBindingId:st.bindingId,parentStudyId:id};
+     const [native,outs]=await Promise.all([readDraft(),v2.call('study.outputs',sc)]);
+     const r=await v2.call('study.outputs.create',{...sc,kind:'article',sourceBindingId:st.bindingId,expectedNative:native.expected,expectedOutput:outs.expectedOutput});
+     outId=r?.view?.output?.id||null;
+     if(!outId){const again=await v2.call('subject.standing',{parentStudyId:id});outId=(again.forms||[]).filter(f=>f.kind==='article'&&/^out:/.test(f.key||'')).map(f=>f.id)[0]||null;}
+    }
+    if(!outId)throw new v2.Error('The Article was made, but its address could not be found. Go back to the subject to open it.');
+    if(gone)return;
+    st.creating=false;
+    v2.go('write/:id',{id},{piece:outId});
+   }catch(error){
+    st.creating=false;page.querySelectorAll('textarea.wr-ed').forEach(t=>{t.readOnly=!st.human;});
+    if(gone)return;
+    say('Your words are saved. The Article could not be started yet: '+(error?.message||'try again.'),'bad');
+    clearTimeout(timer);timer=setTimeout(()=>{void startArticle();},8000);
+   }
   }
   function schedule(ms=AUTOSAVE_MS){clearTimeout(timer);if(gone||st.stopped||st.conflict||!st.human)return;timer=setTimeout(()=>{void save({quiet:true});},ms);}
 
@@ -725,7 +761,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    try{
     if(!await locate())return;
     if(st.missing){plain('This piece is not one of this subject’s Articles, or it does not exist. Go back to the subject to choose one.',false);return;}
-    if(!st.form){shell0('This subject has no Article yet, so there is nothing to write here.');return;}
+    if(!st.form&&!st.starting){shell0('This subject has no Article yet, so there is nothing to write here.');return;}
     if(!st.bindingId){shell0('The words of this piece are not kept where Write can open them. They open in Advanced.');return;}
     const read=await readDraft();if(ctx.signal.aborted)return;
     st.base=read;st.rows=rowsOf(read);st.baseWords=wordsMap(st.rows);

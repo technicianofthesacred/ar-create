@@ -222,23 +222,24 @@ for (const width of WIDTHS) for (const theme of THEMES) {
     const locked = await art.isDisabled();
     await sideways(step); await shoot(p, step, 'new', 'a');
     if (locked) {
-      step.breaks.push('Article cannot be added until there are words in Write, and Write says "no Article yet" until it is added. The way out is only in Advanced: the first words were typed there.');
-      await p.keyboard.press('Escape'); await wait(400);
-      const addr = await p.evaluate(o => window.v2.advanced(o), {subject: walk.subject, section: 'write'});
-      await q.setViewportSize({width, height});
-      await q.goto(BASE + addr, {waitUntil: 'load'}); await q.waitForTimeout(3500);
-      await theTheme(q).catch(() => {});
-      await q.locator('#manuscript').click({timeout: 8000});
-      await q.keyboard.type('The first cup was small and bitter, and I loved it.');
-      await q.waitForTimeout(5000);
-      await p.evaluate(h => { location.hash = h; }, '#/subject/' + walk.subject); await wait(1500);
-      await p.locator('[data-subj-add]:visible').first().click({timeout: 5000}); await wait(700);
-      if (await p.locator('[data-subj-make=article]').isDisabled()) throw new Error('Article stayed locked even after words were typed in Advanced');
+      step.breaks.push('Add a form offered Article greyed out for a new subject with a source, so the Article cannot be started without leaving version two.');
+      throw new Error('Article stayed locked for a subject with a source');
     }
-    await p.locator('[data-subj-make=article]').click();
-    await p.waitForFunction(() => /form=out/.test(location.hash), null, {timeout: 8000});
-    walk.piece = decodeURIComponent((await p.evaluate(() => location.hash)).match(/form=out(?:%3A|:)([^&]+)/i)?.[1] || '') || null;
-    await wait(1200);
+    // Article opens Write for the subject on an empty page; the first saved words start the Article.
+    await art.click();
+    await p.waitForFunction(() => /^#\/write\//.test(location.hash) && !/piece=/.test(location.hash), null, {timeout: 8000})
+      .catch(() => step.breaks.push('Add a form, Article did not open Write for the subject.'));
+    await p.locator('textarea[data-ed]').first().waitFor({timeout: 8000});
+    const here = p.locator('textarea[data-ed]').first();
+    if ((await here.getAttribute('placeholder')) !== 'Write here') step.breaks.push('The empty Write page did not show "Write here".');
+    await sideways(step); await shoot(p, step, 'new', 'b');
+    await here.click(); await p.keyboard.type('The first cup was small and bitter, and I loved it.');
+    await p.waitForFunction(() => /piece=/.test(location.hash), null, {timeout: 20000})
+      .catch(() => step.breaks.push('After the first words were saved the address did not carry the piece.'));
+    walk.piece = new URL('http://x/' + (await p.evaluate(() => location.hash)).slice(1)).searchParams.get('piece');
+    await wait(1500);
+    await shoot(p, step, 'new', 'c');
+    await p.evaluate(h => { location.hash = h; }, '#/subject/' + walk.subject); await wait(1500);
     const words = p.locator('[data-subj-step]:has-text("The words")');
     if (!(await words.count())) throw new Error('the Article\'s steps did not include The words');
     await words.first().click(); await wait(900);
