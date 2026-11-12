@@ -60,5 +60,5 @@ export function createStudyOwnedRelocation({dataDir,manifest}={}){
   for(const r of Object.values(e.roots))if(!sameFolder(stamp(r.after.path),r.after))fail();
   canonical(c.relocatedPath,false);if(digest(fs.readFileSync(c.relocatedPath))!==c.copiedHash)fail();return c.relocatedPath;
  }
- return {binding,capture};
+ return {binding,capture,has:id=>entries.has(id)};
 }

@@ -65,9 +65,9 @@ export function createTools({ url, actor, clientInfo = () => null, fetchImpl = f
       if (name === 'ar_create_call') return must(await client().call(args.name, args.input || {}));
       if (name === 'ar_create_events') return must(await client().call('events.since', { ...(args.since !== undefined ? { since: args.since } : {}), ...(args.bootId ? {bootId:args.bootId} : {}), ...(args.limit !== undefined ? {limit:args.limit} : {}), ...(args.scopeKind ? { kind: args.scopeKind } : {}), ...(args.scopeId ? { id: args.scopeId } : {}) }));
       if (name === 'study_draft_read') {
-        const { context, history, ...selected } = await draftRead(args);
+        const { context, history, addedSources, ...selected } = await draftRead(args);
         const sourceCatalog = selected.sourceCatalog || (context?.records || []).map(record => ({ id: record.id, role: record.role, title: String(record.sourcePath || record.id).split('/').at(-1), hash: record.copiedHash || null, missing: !!record.missing, origin: 'retained-owned-capture', canPrepare: !record.missing && ['source', 'context', 'research', 'brief', 'notes', 'map', 'plan'].includes(record.role), approval: 'Not implied by retention.' }));
-        return { ...selected, sourceCatalog, editor: await editor(args) };
+        return { ...selected, ...(addedSources ? { addedSources: (a=>a.error?{error:a.error}:{hash:a.hash,sources:(a.records||[]).map(({id,role,title,copiedHash,capturedAt})=>({id,role,title,hash:copiedHash,capturedAt}))})(addedSources) } : {}), sourceCatalog, editor: await editor(args) };
       }
       if (name === 'study_draft_prepare') { await draftRead(args); return must(await client().call('study-ai.prepare', scoped(args, {sourceIds:args.sourceIds,...(args.answerIds?{answerIds:args.answerIds}:{}),...(args.purpose?{purpose:args.purpose}:{}),...(args.openingRequestId?{openingRequestId:args.openingRequestId}:{}),...(args.selectedOptionId?{selectedOptionId:args.selectedOptionId}:{})}))); }
       if (name === 'study_draft_context') return must(await client().call('study-ai.context', scoped(args, { requestId: args.requestId })));

@@ -20,7 +20,8 @@ Everything below is merged into `claude/direction-d-build`. The four work-in-pro
 | Read and Check inside version two (stage 2) | In, reviewed twice, corrections made |
 | Capture inside version two (stage 3) | In, reviewed three times, corrections made |
 | What stands between him and starting (stage 4) | In, each piece reviewed, the dangerous ones twice; see "Stage 4" below |
-| The whole journey walked (stage 5) | In; one break left for Adrian to decide; see "Stage 5" below |
+| The whole journey walked (stage 5) | In; see "Stage 5" below |
+| Check can read a new subject's sources (stage 6) | In, the command reviewed three times and the screens twice; see "Stage 6" below |
 
 Adrian has seen four pictures of Home and has been given a demo to click through and one page of pictures of every
 screen. He has not yet said yes to any screen. On 11 November he asked that every screen be checked against the sample he approved and, once it matches and
@@ -90,6 +91,7 @@ into the draft's capture folder, records them in a separate append-only hash-pin
 untouched, so old records still validate) and merges it into `context.records`; the subject page calls it after
 "Use the transcript" and Check's held state offers it. Risks: it must never touch his words; consent holds on other
 people's speech; earlier forks and structure tests keep their old seeds; old check receipts turn stale. He was asked
+<<<<<<< HEAD
 on 12 November and answered "Proceed". **This is stage 6, the next piece of work; see just below.**
 
 ### Stage 6, approved 12 November, not started: Check can read a new subject's sources
@@ -120,6 +122,98 @@ reads and validates as before.
 - That thread also reported two faults in Write on main, which its plan replaces: in a conflict "Use the saved
   version" discards his unsaved words and "Keep my words" writes his whole piece over the other version; two version
   two tabs on one piece share one device key, so one tab's unsaved words can replace the other's.
+=======
+on 12 November and answered "Proceed". **Built as stage 6; see just below for what was built and how it differs.**
+
+### Stage 6, done 12 November: Check can read a new subject's sources
+
+Design, the three reviews of the command and the two of the screens: `version-two-briefs/v2-12-capture-sources.md`.
+The walk (`scripts/review-journey.mjs`) now confirms the transcript, presses "Use it for Check" and ends step 8 in a
+real check result at 1440 and 390, dark and light.
+
+**What is in**
+
+- `study-draft.capture-sources` (human only; an assistant gets 403) copies the sources named in the press into the
+  draft's own added-sources record. The locked capture record is untouched and only Check reads the added sources,
+  because the editorial plan reader refuses extra records on a new subject and Research would see the material twice.
+  `study-draft.capture-sources.list` (any actor) says what can be captured and, in plain words, why anything cannot.
+- Who confirmed a source is now recorded (`reviewedBy` on the flow file; `metadata.review.by` on a recording's
+  transcript). Only a source a person confirmed, on the same bytes, can be captured, and only a confirmed recording
+  transcript counts as the source for quotes; anything else is context. An assistant can still mark material reviewed
+  (no command was made human-only); it does not count for capture and does not replace his stamp.
+- A quote cannot be supported across the join of two captured files; a check run that does not finish reads held,
+  never checked; words inside `%%` comments in a captured file do not support a quote; a check made before a capture
+  reads stale.
+- `GET /transcription/{id}/look`: a read of a transcript's words, speakers and review stamp that takes no lock and
+  writes nothing.
+- The subject page: "Confirm this transcript" (the words, a name for each unnamed speaker, Confirm), then a "Sources"
+  list and "Use it for Check". Check's held state shows the same list and button and runs again after the press. The
+  row says "Confirmed by you" only for his own confirmation; an assistant's review reads "Reviewed, not confirmed by
+  you yet". The shared block is `v2.shared.subject`; Check does without it when missing.
+
+### Stage 7, approved 12 November, not started: confirming is his alone, and a captured source can be stopped
+
+Adrian was asked three things after stage 6 and answered on 12 November: yes, marking material reviewed becomes his
+alone; yes, he can stop a captured source counting; not yet, a note does not unlock Check (only a recording's
+transcript he confirmed is a source for quotes). The stage is the first two. Read
+`version-two-briefs/v2-12-capture-sources.md` first: its design and five reviews name every file.
+
+What done looks like: an assistant that tries to mark any material or transcript reviewed gets 403 with the plain
+reason, by every path; nothing an assistant could do before is lost except that; he can stop a captured source
+counting from the Sources list on the subject page and in Check, and Check then no longer reads it; every old draft,
+receipt, fork and structure test still reads and validates as before; the walk still ends in a real result.
+
+- **Confirming is his alone.** The paths that mark reviewed today, all open to any actor: `first-flow.source-review`,
+  both `sourceReviews` branches of `first-flow.prepare`, and `POST /transcription/{id}/review`. Make the act of
+  marking reviewed human-only in the one registry, like the other human-only decisions. Decide and have a second
+  model review before building: whether `first-flow.prepare` as a whole stays open to assistants with only its
+  `sourceReviews` part refused (an assistant preparing a subject must still work); whether un-reviewing and setting
+  aside stay open; whether `speakers` and segment edits stay open (they reset the review, so they cannot forge one);
+  what the existing workspace's screens and any assistant routine or scheduled job that marks reviewed today will
+  now show, so nothing fails silently. Reviews made before stage 6 carry no name and stay "not confirmed by you yet".
+- **Stop a captured source counting.** As the design proposed: a human-only command that appends a "no longer used"
+  entry to the same append-only, hash-pinned added-sources record (nothing is rewritten or deleted); Check and the
+  list skip a stopped source; a receipt made before reads stale; if no source for quotes is left, Check is held with
+  "No source to check against yet" again and the standing follows. Decide whether a stopped source can be used again
+  (a later capture of the same bytes) and say so on the row.
+- **The screens** (a visual change: before and after pictures for Adrian): in the Sources list a captured row gains
+  one quiet control, "Stop using for Check", on the subject page and in Check, through `v2.shared.subject`. An
+  assistant's page shows the control and the server's refusal. Keep it small and in the marked blocks: the version
+  three thread (below) will carry these screens into its look. Tell that thread before touching `check.js` or
+  `subject.js` and when it is on main.
+- Review the trust change twice, the second time as an assistant trying to get a source confirmed or to bring a
+  stopped source back.
+
+**Open after stage 6**
+
+- For Adrian to decide, not yet asked: whether drafts opened from a vault original should accept added sources;
+  Carousels checked from them.
+- A note-only subject still cannot unlock Check: only a recording's transcript is a source for quotes. Adrian said
+  "not yet" to changing this on 12 November.
+- Reviews made before this change carry no name, so they read "not confirmed by you yet" until he confirms again.
+- On old drafts a quote can still pass across the join of a source and a context file (unchanged from main; the fix
+  made here applies only when sources have been added).
+- A damaged added-sources record holds Check and says so; there is no repair.
+- On the demo's walk the draft has no quotes, so the real result reads "No supported quotes to check".
+- Small: after a successful Confirm keyboard focus is lost and an older error message can stay on screen; pressing
+  Confirm still calls the recording's `recover` once.
+- Not checked: a real recording through a real transcription engine; a real iOS or Android keyboard in the name box.
+
+**Told to this line by other threads on 12 November (not typed by Adrian; confirm with him before acting)**
+
+- The look he approved for Write, Read and Check is to become its own front, "version three", opening by default,
+  built by session_017kitFe2b6MQFZwy3MNMGpN on branch `claude/v2-write-read-check` (plan
+  `docs/plans/2026-11-12-write-read-check-build.md` there). Version two stays reachable and working, and its
+  addresses must keep working exactly as now because version three opens them where it has no screen yet. That thread
+  asked not to change `write.js` on main without telling it (it has split the file on its branch).
+- Two faults in Write on main, which that thread's plan corrects: in a conflict "Use the saved version" discards his
+  unsaved words and "Keep my words" writes his whole piece over the other version; two tabs on one piece share one
+  device key. He was told not to press either button until then.
+- Unowned: `docs/reviews/2026-11-10-use-and-interface-review.md` and `docs/reviews/2026-11-11-version-two-journey.md`
+  on branch `claude/ar-create-ui-ux-review-71qso6`; one subject with five source lists that disagree; Library and
+  "Ask or find" do nothing yet.
+- How he asked to be answered: decisions only, each answerable in a word, with a recommendation.
+>>>>>>> origin/main
 
 **Found by the walk and corrected (do not redo)**
 

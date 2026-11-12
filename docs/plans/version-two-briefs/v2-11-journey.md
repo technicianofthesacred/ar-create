@@ -16,11 +16,11 @@ The steps, each photographed:
 1. Home, as it opens.
 2. A new subject made from Home.
 3. Capture, Speak: a short recording saved to that subject (a fake microphone in the browser is fine).
-4. The subject page saying where the recording stands, then "Use the transcript" so it becomes a source.
+4. The subject page saying where the recording stands, then "Use the transcript" so it becomes a source, then "Confirm this transcript" (the speaker is named and the words confirmed) and "Use it for Check", each pressed through the real buttons as Adrian.
 5. The subject's steps leading to Write for its Article.
 6. Write: a few paragraphs typed, saved, a reload showing them still there.
 7. Read: the saved words.
-8. Check: "Check saved draft" pressed, what it says.
+8. Check: "Check saved draft" pressed. Because step 4 confirmed the transcript and used it for Check, this ends in a real result (not held); if it is held the walk records that as a break. Capturing from a held Check (the list and its one button) is photographed apart from the walk.
 9. Back on the subject and on Home: where the piece now stands.
 
 Walk it four times: 1440 wide and 390 wide, dark and light (the theme button, not the browser's setting). At 390
