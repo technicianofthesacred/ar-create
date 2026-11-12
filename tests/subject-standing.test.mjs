@@ -225,8 +225,9 @@ test('a check held for want of a captured source is a plain fact in the standing
   assert.equal(other.facts.check.noSource, false); assert.equal(other.forms[0].steps.find(x => x.id === 'check').note, 'Check again');
   const older = await article({status: 'held', issues: [], quote: {status: 'held', reason: 'No captured SRC available.'}});
   assert.equal(older.facts.check.noSource, false, 'an older record with no list of sources claims nothing');
+  // Changed from stage 6 on purpose (stage 7): a stale receipt on a draft read with no source and a whole added record is held for want of a source.
   const stale = await article({status: 'stale', issues: []});
-  assert.equal(stale.facts.check.noSource, false);
+  assert.equal(stale.facts.check.noSource, true); assert.equal(stale.facts.check.status, 'held'); assert.equal(stale.facts.check.issues, 0);
  } finally {fs.rmSync(dir, {recursive: true, force: true});}
 });
 
@@ -245,15 +246,16 @@ test('after a source is captured, a held no-source receipt reads Not checked yet
  const heldNever = {status: 'stale', issues: [], proof: {sources: []}, quote: {status: 'held', reason: 'No captured SRC available.'}};
  const note = async (record, extra) => { const got = await standing(record, extra).one({parentStudyId: 'invented'}); return {note: got.forms[0].steps.find(x => x.id === 'check').note, next: got.next, check: got.facts.check}; };
  try {
-  // Still no source in the draft: the stale receipt reads as it always did.
-  assert.equal((await note(heldNever, {})).note, 'Check again');
+  // Still no source in the draft (changed in stage 7): the stale receipt now says there is no source to check against.
+  assert.equal((await note(heldNever, {})).note, 'No source to check against yet');
   // A transcript has been captured (added sources): a first Check is the honest step.
   const afterCapture = await note(heldNever, {addedSources: {hash: 'h', records: [{id: 'added:s:1', role: 'source'}]}});
   assert.equal(afterCapture.note, 'Not checked yet'); assert.equal(afterCapture.next.step, 'check'); assert.equal(afterCapture.check.status, null); assert.equal(afterCapture.check.noSource, false);
   // The same through the locked capture.
   assert.equal((await note(heldNever, {context: {records: [{id: 'SRC', role: 'source'}]}})).note, 'Not checked yet');
   // Only a note was captured (role context): there is still nothing for Check to compare against.
-  assert.equal((await note(heldNever, {addedSources: {hash: 'h', records: [{id: 'added:n:1', role: 'context'}]}})).note, 'Check again');
+  // (changed in stage 7: a note alone is no source for quotes, so the receipt is held for want of one.)
+  assert.equal((await note(heldNever, {addedSources: {hash: 'h', records: [{id: 'added:n:1', role: 'context'}]}})).note, 'No source to check against yet');
   // A stale receipt that did compare a source still reads Check again, whatever the draft holds now.
   const compared = {status: 'stale', issues: [], proof: {sources: [{id: 's', role: 'source', hash: 'h'}]}, quote: {status: 'checked-pass'}};
   assert.equal((await note(compared, {addedSources: {hash: 'h', records: [{id: 'added:s:1', role: 'source'}]}})).note, 'Check again');
@@ -261,5 +263,31 @@ test('after a source is captured, a held no-source receipt reads Not checked yet
   assert.equal((await note(heldNever, {addedSources: {error: 'Captured sources for Check changed; nothing was used.'}})).note, 'Check again');
   // A held receipt that is still current keeps its plain fact.
   assert.equal((await note({status: 'held', issues: [], proof: {sources: []}, quote: {status: 'held'}}, {})).note, 'No source to check against yet');
+ } finally {fs.rmSync(dir, {recursive: true, force: true});}
+});
+
+// Stage 7: after Adrian stops the last source, the draft read keeps its whole added record with nothing left in it, and the
+// old receipt reads stale: the standing says there is no source. A damaged record or an unreadable draft does not.
+test('after the last source is stopped a stale receipt says No source to check against yet; a damaged record or no draft read does not', async () => {
+ const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'standing-')), B = '0b5e3a3c-1f1e-4c7a-9f00-000000000001';
+ const P = '0b5e3a3c-1f1e-4c7a-9f00-000000000002', D = '0b5e3a3c-1f1e-4c7a-9f00-000000000003', sha = v => crypto.createHash('sha256').update(v).digest('hex');
+ fs.mkdirSync(path.join(dir, 'study-owned-photo-bindings')); fs.writeFileSync(path.join(dir, 'study-owned-photo-bindings', B + '.json'), JSON.stringify({bindingId: B, parentStudyId: 'invented', projectId: P, documentId: D}));
+ fs.mkdirSync(path.join(dir, 'articles', sha(P), sha(D)), {recursive: true}); fs.writeFileSync(path.join(dir, 'articles', sha(P), sha(D), 'article.json'), JSON.stringify({project: {document: {nativeOutputIndex: {records: [{outputId: 'o1'}]}}}}));
+ const standing = (record, read) => createSubjectStanding({dataDir: dir, now: () => Date.parse('2026-11-11T12:00:00Z'),
+  drafts: {catalog: async () => ({collections: [{parentStudyId: 'invented', title: 'Invented', bindingId: B}], outputBindings: [{parentStudyId: 'invented', bindingId: B}], drafts: []}), read: async () => read},
+  outputs: {read: async () => ({outputs: [{id: 'o1', kind: 'article', placements: [], createdAt: '2026-11-01T00:00:00Z'}]})}, checks: {read: async () => record}, consentDesk: {read: async () => ({people: [], release: {}})},
+  library: {tree: async () => ({sources: []})}, simmer: {boards: {read: async () => ({groups: [], forming: {}})}},
+  instagram: {plans: async () => ({plans: []}), read: async () => null}, places: {read: async () => ({places: []})}});
+ const base = {projection: [{words: 'Invented words.'}], expected: {v: 1}, history: [{modifiedAt: '2026-11-10T00:00:00Z'}]};
+ const passed = {status: 'stale', issues: [], proof: {sources: [{id: 's', role: 'source', hash: 'h'}]}, quote: {status: 'checked-pass'}};
+ const step = async (record, read) => { const got = await standing(record, read).one({parentStudyId: 'invented'}); return {note: got.forms[0].steps.find(x => x.id === 'check').note, check: got.facts.check}; };
+ try {
+  const stopped = await step(passed, {...base, addedSources: {hash: 'h', records: [], stopped: [{sourceId: 's'}]}});
+  assert.equal(stopped.note, 'No source to check against yet'); assert.deepEqual(stopped.check, {status: 'held', issues: 0, noSource: true});
+  assert.equal((await step(passed, {...base, addedSources: {hash: 'h', records: [{id: 'n', role: 'context'}], stopped: [{sourceId: 's'}]}})).note, 'No source to check against yet');
+  assert.equal((await step(passed, {...base, addedSources: {error: 'Captured sources for Check changed; nothing was used.'}})).note, 'Check again');
+  assert.equal((await step(passed, null)).check.noSource, false);
+  assert.equal((await step(passed, {...base, addedSources: {hash: 'h', records: [{id: 'added:s:1', role: 'source'}]}})).note, 'Check again');
+  assert.equal((await step({...passed, status: 'checked'}, {...base, addedSources: {hash: 'h', records: [], stopped: [{sourceId: 's'}]}})).check.noSource, false);
  } finally {fs.rmSync(dir, {recursive: true, force: true});}
 });
