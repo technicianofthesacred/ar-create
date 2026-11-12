@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
+import {withActor} from '../runtime/services/actor.mjs';
 import {createFirstFlow} from '../runtime/services/first-flow.mjs';
 import {digest} from '../runtime/services/files.mjs';
 import {ruleLocation} from '../runtime/services/editorial-rules.mjs';
@@ -20,7 +21,8 @@ async function prepare(t,override){
  const assembledContext=body,capture={assembledContext,manifest:{projectId,contextHash:digest(assembledContext),sources:[{...source,body}]}};
  const flow=createFirstFlow({dataDir,store:{get:()=>({project:{id:projectId}})},library:{read:async()=>source},requests:{preview:async()=>capture},execution:{observe:()=>{},capabilities:()=>({available:false}),execute:()=>{throw Error('No provider may execute in this test.');}}});
  await flow.attach({projectId,sourceIds:[sourceId],operationId:randomUUID()});
- await flow.prepare({projectId,sourceIds:[sourceId],sourceReviews:[{sourceId,hash:source.hash}],question:'What can we learn about the invented workshop?',operationId:randomUUID()});
+ // Confirming the source is Adrian's alone, so this preparation is his.
+ await withActor({actor:'human:adrian',client:'ui'},()=>flow.prepare({projectId,sourceIds:[sourceId],sourceReviews:[{sourceId,hash:source.hash}],question:'What can we learn about the invented workshop?',operationId:randomUUID()}));
  const room=path.join(dataDir,'first-flow',digest(projectId)),state=JSON.parse(fs.readFileSync(path.join(room,'flow.json'))),record=JSON.parse(fs.readFileSync(path.join(room,'requests',state.currentRequestId+'.json'))),workspace=path.join(room,'requests',record.id);
  assert.equal(fs.readFileSync(source.path,'utf8'),body);
  assert.equal(record.status,'preview');assert.equal(record.sentAt,undefined);

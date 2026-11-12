@@ -46,8 +46,12 @@ test('the look leaves every file under the data folder byte for byte as it was (
 test('the stamp names who reviewed, on the current bytes: a human, an assistant, and nothing once the words change',async t=>{
  const human=await scene(t);await confirmAs(human,'human:adrian');
  const h=(await human.call(human.url)).body;assert.equal(h.reviewStatus,'reviewed');assert.equal(h.reviewedBy,'human:adrian');assert.deepEqual(h.speakers.map(x=>x.name),['Mara','Jon']);
- const agent=await scene(t);await confirmAs(agent,'agent:codex');
- const a=(await agent.call(agent.url)).body;assert.equal(a.reviewStatus,'reviewed');assert.equal(a.reviewedBy,'agent:codex','the server accepts an assistant\'s review and the look says so');
+ // An assistant can no longer confirm. A record it confirmed before that change is made by writing the old stamp,
+ // so the look still says who reviewed.
+ const agent=await scene(t);await confirmAs(agent,'human:adrian');
+ const stamped=path.join(agent.fixture.output,'transcript.json'),old=JSON.parse(fs.readFileSync(stamped,'utf8'));old.metadata.review.by='agent:codex';fs.writeFileSync(stamped,JSON.stringify(old,null,2));
+ const base=path.join(agent.fixture.output,'.corrections','base.json'),b=JSON.parse(fs.readFileSync(base,'utf8'));b.json=fs.readFileSync(stamped,'utf8');fs.writeFileSync(base,JSON.stringify(b,null,2));
+ const a=(await agent.call(agent.url)).body;assert.equal(a.reviewStatus,'reviewed');assert.equal(a.reviewedBy,'agent:codex','a record an assistant confirmed before this change still says so');
  // Changing the words by hand (outside the correction boundary) means the stamp is not on the current bytes.
  const file=path.join(human.fixture.output,'transcript.json'),edited=JSON.parse(fs.readFileSync(file,'utf8'));edited.segments[0].text='Changed by hand.';fs.writeFileSync(file,JSON.stringify(edited,null,2));
  const r=(await human.call(human.url)).body;assert.equal(r.reviewStatus,'unreviewed');assert.equal(r.reviewedBy,null);assert.equal(r.coherent,false);
