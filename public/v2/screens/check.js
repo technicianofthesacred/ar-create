@@ -122,7 +122,7 @@
     // The words did not change, but the captured sources did: read both again, then Check runs again by itself.
     after:async()=>{await Promise.all([loadDraft(),loadReceipt()]);if(aborted())return;void run();},
     // A stop is not a capture: Check does not run by itself. The saved check reads out of date, and the list says whether a source is left.
-    stopped:async()=>{await Promise.all([loadDraft(),loadReceipt()]);if(aborted())return;paintRun();paintWords();}});
+    stopped:async()=>{await Promise.all([loadDraft(),loadReceipt()]);if(aborted())return;paintRun();paintWords();},signal:ctx.signal});
   })();
   /** A held check that is held only for want of a source: the one case the list and button are for. */
   const noSourceHeld=c=>!!c&&c.status==='held'&&(c.quote?.reason==='No captured SRC available.'||(Array.isArray(c.proof?.sources)&&!c.proof.sources.some(x=>x?.role==='source')));
@@ -508,6 +508,8 @@
    soon();
   });
   ctx.on({},e=>{if(e?.reset)soon();});
+  // Another tab's stop or capture: read the list again (the old one stays on screen meanwhile), then draw.
+  ctx.on({kinds:['study-draft.capture-sources*']},()=>{void cs?.refresh();});
 
   // ---------- opening ----------
   function plain(text,{link=true,home=false}={}){

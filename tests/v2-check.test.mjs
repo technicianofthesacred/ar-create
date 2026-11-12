@@ -532,3 +532,26 @@ test('on an assistant\'s page Stop is shown; pressing it shows the server\'s ref
  assert.match(doc.querySelector('.ck-state').textContent,/Mechanical checks complete/);assert.equal(calls.filter(c=>c.method==='POST'&&c.path==='/api/study-draft/check').length,0);
  assert.equal(doc.activeElement.dataset.cs,'stop','focus stays on the control');
 });
+
+test('Use for Check again then Stop: "Check can now read this" is gone from Check after the stop', async()=>{
+ let phase='stopped';
+ const answers=base({'/api/study-draft/check':(u,body)=>body?PASSED:phase==='used'?PASSED:STALE,[LIST]:()=>listOf([phase==='used'?used():stoppedRow()],{sourcesHash:'e'.repeat(64),hasQuoteSource:phase==='used'}),[STOP]:()=>{phase='stopped';return {stopped:[{sourceId:'src-1',copiedHash:HASH}],sourcesHash:'f'.repeat(64)};},'/api/study-draft/capture-sources':()=>{phase='used';return {captured:[{sourceId:'src-1'}],sourcesHash:'e'.repeat(64)};}});
+ const {doc}=await page({hash:'#/check/s1?piece=o1',answers});await ready(doc);
+ const again=await until(()=>doc.querySelector('[data-ck-run] [data-cs=again]'));again.click();
+ await until(()=>phase==='used');await settle(100);await openDetails(doc);
+ await until(()=>doc.querySelector('details.ck-proof [data-cs-done]'));
+ const stop=await until(()=>doc.querySelector('[data-cs=stop]'));stop.click();
+ await until(()=>doc.querySelector('[data-cs=again]')&&/Checks held/.test(doc.querySelector('.ck-state')?.textContent||''));await settle(150);
+ assert.equal(doc.querySelector('[data-cs-done]'),null,'nothing says Check can read this after a stop');
+});
+
+test('another tab\'s stop reaches Check\'s list through the change stream', async()=>{
+ let stopped=false;
+ const answers=base({'/api/study-draft/check':[200,STALE],[LIST]:()=>listOf([stopped?stoppedRow():used()],{sourcesHash:'e'.repeat(64),hasQuoteSource:!stopped})});
+ const {doc,sources}=await page({hash:'#/check/s1?piece=o1',answers});await ready(doc);
+ await openDetails(doc);await until(()=>doc.querySelector('[data-cs=stop]'));
+ stopped=true;for(const s of sources)s.emit('change',{kind:'study-draft.capture-sources.stop',cursor:5,bootId:'b',scope:{kind:'draft',id:'root1'}});
+ await until(()=>doc.querySelector('[data-cs=again]'));
+ assert.match(doc.querySelector('[data-cs-src]').textContent,/Not used for Check\. You stopped it\./);
+ await until(()=>/No source to check against yet/.test(doc.querySelector('.ck-state')?.textContent||''));
+});

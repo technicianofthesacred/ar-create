@@ -136,3 +136,34 @@ Not a fault of this stage, not the standing change and not the merge with main. 
 
 Yes, once Must fix 1 is in and its two assertions added. The should-fix items are worth doing in the same pass; none
 writes anything wrong, and every press ends with the list showing what the server holds.
+
+## Corrections made
+
+All items above are corrected in `public/v2/screens/subject.js` and `public/v2/screens/check.js`, with tests in
+`tests/v2-subject.test.mjs` and `tests/v2-check.test.mjs`, and the walk fixed in `scripts/review-journey.mjs`.
+
+- Must fix 1: a successful Stop clears "Check can now read this" on the subject page and in Check (asserted in both test files).
+- Should fix 1: both screens read the list again on a `study-draft.capture-sources*` change from another tab.
+- Should fix 2: when the answer to a press never comes back, the screen reads the list again and says the new line below
+  instead of "Nothing was changed."
+- Should fix 3: "No longer attached" is recognised from the list's fields (`captured`, `capturedCurrent:false`,
+  `changedSinceCapture:false`), not from the server's sentence.
+- Should fix 4: a captured source that cannot be read says its own words, not "Changed in the Library since".
+- Should fix 5: the assistant's Confirm test asserts again that no Sources list is shown.
+- Should fix 6: focus never moves once the screen has closed or the page the press came from is gone, and only
+  looks inside that page.
+- Walk: step 9 opens every "Show all" on Home before looking for the new subject.
+
+The exact words of every row state (no em dash):
+
+| state | row says | control |
+| --- | --- | --- |
+| used | "Used for Check" | "Stop using for Check" |
+| used, set aside since | "Used for Check. Set aside in the Library since." | "Stop using for Check" |
+| used, changed since | "Used for Check. Changed in the Library since." | "Stop using for Check" |
+| used, no longer attached (new in this table) | "Used for Check. No longer attached to this subject." | "Stop using for Check" |
+| used, cannot be read (new) | "Used for Check. This material could not be read." | "Stop using for Check" |
+| stopped | "Not used for Check. You stopped it." | "Use for Check again" |
+| after Stop | toast "Check no longer reads this." | |
+| answer lost (new) | toast "The answer did not come back. The list shows what is on file now." | the list shows what the server holds |
+| assistant's page, any press | the client's 403 sentence | the same control, shown |

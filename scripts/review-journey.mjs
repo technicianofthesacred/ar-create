@@ -499,6 +499,19 @@ async function walkOne(width, theme) {
     await run('09', async step => {
       await backHome();
       // by clicks: Home, then this walk's own subject (by its unique name)
+      // Home shows the first 8 of a group: on a demo that was walked before, this walk's subject can sit behind "Show all".
+      // Home fills in a moment after it opens, so look for up to 15 seconds: open any "Show all" that appears until the row is there.
+      const rowOf = p.locator(`a.home-row-open:has-text("${mySubject}"), a.home-card-open:has-text("${mySubject}")`);
+      for (let t0 = Date.now(); Date.now() - t0 < 15000;) {
+        if (await rowOf.count()) break;
+        const more = p.locator('[data-show-all]:visible').first();
+        if (await more.count()) await more.click({timeout: 4000}).catch(() => {});
+        await wait(500);
+      }
+      if (!(await rowOf.count())) { // last resort: Home's own find box, which shows every match
+        const find = p.locator('[data-home-find]').first();
+        if (await find.count()) { await find.fill(mySubject).catch(() => {}); await wait(800); }
+      }
       const mine = p.locator(`a.home-row-open:has-text("${mySubject}"), a.home-card-open:has-text("${mySubject}")`).first();
       if (!(await mine.count())) { breakOnce(step, 'Home did not show the new subject among its subjects.'); throw new Error('this walk\'s subject was not on Home'); }
       await mine.scrollIntoViewIfNeeded().catch(() => {});

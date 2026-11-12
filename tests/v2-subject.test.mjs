@@ -837,6 +837,7 @@ test('an assistant\'s Confirm meets the server\'s refusal and shows its message:
  assert.equal(doc.querySelectorAll('[data-cs-confirm]').length,1,'the panel stays open so the words are not lost');
  assert.equal(doc.querySelector('[data-cs-confirmed]'),null);assert.doesNotMatch(doc.body.textContent,/Confirmed by you/);
  assert.equal(doc.querySelector('[data-cs=capture]'),null,'no capture is offered as possible');
+ assert.equal(doc.querySelector('[data-cs-block]'),null,'no list is offered while nothing is confirmed by him');
  // A transcript Adrian confirmed elsewhere: the assistant sees the list and its button, and its press is refused with nothing faked.
  S2.reviewed=true;S2.by='human:adrian';S2.refuseCapture=true;
  const second=await open();
@@ -896,12 +897,69 @@ test('Use for Check again sends that one source with again:true; the bulk Use it
 });
 
 test('the other states of a row in use say what changed since, and still offer the one control',{timeout:300000},async t=>{
- const {open}=await scene(t,{reviewed:true,list:()=>({canCapture:true,sourcesHash:'e'.repeat(64),hasQuoteSource:true,sources:[{...USED,setAside:true,reason:'Captured; set aside in the Library since.'},{...USED,id:SRC2,title:'Changed note',kind:'markdown',capturedCurrent:false,changedSinceCapture:true,reason:'Captured earlier; changed in the Library since, and not reviewed again.'},{...USED,id:'33333333-cccc-4ccc-8ccc-333333333333',title:'No hash note',capturedHash:undefined}]})});
+ const {open}=await scene(t,{reviewed:true,list:()=>({canCapture:true,sourcesHash:'e'.repeat(64),hasQuoteSource:true,sources:[{...USED,setAside:true,reason:'Captured; set aside in the Library since.'},{...USED,id:SRC2,title:'Changed note',kind:'markdown',capturedCurrent:false,changedSinceCapture:true,reason:'Captured earlier; changed in the Library since, and not reviewed again.'},{...USED,id:'33333333-cccc-4ccc-8ccc-333333333333',title:'No hash note',capturedHash:undefined},{...USED,id:'44444444-dddd-4ddd-8ddd-444444444444',title:'Detached note',capturedCurrent:false,changedSinceCapture:false,reason:'Reworded by the server.'},{...USED,id:'55555555-eeee-4eee-8eee-555555555555',title:'Unreadable note',capturedCurrent:false,changedSinceCapture:true,reason:'This material could not be read.'}]})});
  const {doc}=await open();
  await until(()=>doc.querySelector('[data-cs-block] li'));
  const items=[...doc.querySelectorAll('[data-cs-block] li')].map(li=>li.textContent);
  assert.match(items[0],/Used for Check\. Set aside in the Library since\./);assert.match(items[1],/Used for Check\. Changed in the Library since\./);
- assert.equal(doc.querySelectorAll('[data-cs=stop]').length,2,'a row with no copy to name has no control');
+ assert.match(items[3],/Used for Check\. No longer attached to this subject\./,'found from the list\'s fields, not from the server\'s sentence');
+ assert.match(items[4],/Used for Check\. This material could not be read\./);assert.doesNotMatch(items[4],/Changed in the Library/);
+ assert.equal(doc.querySelectorAll('[data-cs=stop]').length,4,'a row with no copy to name has no control');
+ assert.equal(doc.querySelectorAll('[data-cs-src="44444444-dddd-4ddd-8ddd-444444444444"] [data-cs=stop]').length,1,'a detached row can still be stopped');
+});
+
+test('Use for Check again then Stop: the "Check can now read this" line is gone after the stop',{timeout:300000},async t=>{
+ let phase='stopped';
+ const {S2,open}=await scene(t,{reviewed:true,list:()=>({canCapture:true,sourcesHash:'e'.repeat(64),hasQuoteSource:phase==='used',sources:[phase==='used'?USED:STOPPED]})});
+ S2.stopAnswer=()=>{phase='stopped';return {status:200,body:{stopped:[{sourceId:TID,copiedHash:HASH}],sourcesHash:'f'.repeat(64)}};};
+ const {doc}=await open();
+ const again=await until(()=>doc.querySelector('[data-cs=again]'));phase='used';again.click();
+ await until(()=>doc.querySelector('[data-cs=stop]'));await until(()=>doc.querySelector('[data-cs-done]'));
+ doc.querySelector('[data-cs=stop]').click();
+ await until(()=>doc.querySelector('[data-cs=again]'));await new Promise(r=>setTimeout(r,100));
+ assert.match(doc.querySelector('[data-cs-src]').textContent,/Not used for Check\. You stopped it\./);
+ assert.equal(doc.querySelector('[data-cs-done]'),null,'nothing says Check can read this after a stop');
+});
+
+test('a lost answer to Stop does not say nothing was changed: the list is read again and the screen says the answer was lost',{timeout:300000},async t=>{
+ let stopped=false;
+ const {S2,open}=await scene(t,{reviewed:true,list:()=>({canCapture:true,sourcesHash:'e'.repeat(64),hasQuoteSource:!stopped,sources:[stopped?STOPPED:USED]})});
+ S2.stopAnswer=()=>{stopped=true;return {status:500,body:{}};};
+ const {doc}=await open();
+ (await until(()=>doc.querySelector('[data-cs=stop]'))).click();
+ await until(()=>/The answer did not come back\. The list shows what is on file now\./.test(said(doc)));
+ assert.doesNotMatch(said(doc),/Nothing was changed/);
+ assert.match(doc.querySelector('[data-cs-src]').textContent,/Not used for Check\. You stopped it\./,'the server\'s truth is shown');
+ assert.equal(doc.querySelectorAll('[data-cs=again]').length,1);
+});
+
+test('another tab\'s stop reaches the list through the change stream, without a press',{timeout:300000},async t=>{
+ let stopped=false;
+ const {S2,open}=await scene(t,{reviewed:true,list:()=>({canCapture:true,sourcesHash:'e'.repeat(64),hasQuoteSource:!stopped,sources:[stopped?STOPPED:USED]})});
+ const {doc,sources}=await open();
+ await until(()=>doc.querySelector('[data-cs=stop]'));
+ const es=sources[0],lists=S2.lists;es.emit('hello',{bootId:'b',cursor:1});
+ stopped=true;es.emit('change',{cursor:2,bootId:'b',kind:'study-draft.capture-sources.stop',scope:{kind:'draft',id:'x'}});
+ await until(()=>doc.querySelector('[data-cs=again]'));
+ assert.ok(S2.lists>lists);assert.match(doc.querySelector('[data-cs-src]').textContent,/Not used for Check\. You stopped it\./);assert.equal(S2.stops.length,0,'nothing was pressed here');
+});
+
+test('focus is not moved once the screen has closed or the page the press came from is gone',{timeout:300000},async t=>{
+ const {S2,id,facts,open}=await scene(t,{reviewed:true,list:()=>({canCapture:true,sourcesHash:'e'.repeat(64),hasQuoteSource:true,sources:[USED]})});
+ const {w,doc}=await open();await until(()=>doc.querySelector('[data-cs=stop]'));
+ const make=w.v2.shared.subject.createCaptureSources;
+ for(const how of ['aborted','detached']){
+  const host=doc.createElement('div');host.setAttribute('data-ck','');doc.body.append(host);
+  const ac=new w.AbortController();let cs;
+  cs=make({scope:()=>({bindingId:facts.bindingId,parentStudyId:id}),paint:()=>{host.innerHTML=cs.block();},signal:ac.signal});
+  cs.load();await until(()=>host.querySelector('[data-cs=stop]'));
+  const before=S2.stops.length,other=doc.createElement('button');doc.body.append(other);other.focus();
+  host.querySelector('[data-cs=stop]').click();
+  cs.handle(host.querySelector('[data-cs=stop]'));
+  if(how==='aborted')ac.abort();else host.remove();
+  await until(()=>S2.stops.length>before);await new Promise(r=>setTimeout(r,200));
+  assert.equal(doc.activeElement,other,'focus stays where it was ('+how+')');other.remove();host.remove();
+ }
 });
 
 test('on an assistant\'s page Stop is shown; pressing it shows the server\'s plain refusal once and the list is unchanged',{timeout:300000},async t=>{
