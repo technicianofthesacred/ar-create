@@ -45,6 +45,19 @@ test('study-draft.capture-sources is refused to every agent before anything is r
  const human=await f.call('/api/study-draft/capture-sources',body,f.as('human:adrian','ui'));assert.notEqual(human.status,403);
 });
 
+// Stopping a source and confirming a transcript write no prose either; both are Adrian's alone at the gate.
+test('study-draft.capture-sources.stop and the transcript review route are refused to every agent at the gate and not prose saves',async t=>{
+ const f=await setup(t),stop={bindingId:randomUUID(),parentStudyId:'invented',operationId:randomUUID(),expectedSourcesHash:'0'.repeat(64),sourceId:randomUUID(),copiedHash:'0'.repeat(64)};
+ for(const route of ['POST /api/study-draft/capture-sources/stop','POST /transcription/{id}/review'])assert.equal(PROSE_SAVES.includes(route),false,route);
+ for(const actor of ['agent:claude-code','agent:codex','agent:chatgpt','agent:hermes','agent:grok','agent:claude-design','cron:nightly','import:notes']){
+  assert.equal((await f.call('/api/study-draft/capture-sources/stop',stop,f.as(actor))).status,403,actor);
+  assert.equal((await f.call('/transcription/'+randomUUID()+'/review',{confirmed:true},f.as(actor))).status,403,actor);
+ }
+ assert.notEqual((await f.call('/api/study-draft/capture-sources/stop',stop,f.as('human:adrian','ui'))).status,403);
+ // Every other transcript action stays open at the gate: it is not refused as a decision.
+ assert.notEqual((await f.call('/transcription/'+randomUUID()+'/speakers',{names:{}},f.as('agent:codex'))).status,403);
+});
+
 test('the prose-save list is exactly the routes tested here',()=>{
  assert.deepEqual([...PROSE_SAVES,'POST /api/magazine/mark-published'].sort(),ROUTES.map(([,route])=>'POST '+route).sort());
  assert.ok(MAGAZINE_HUMAN_ONLY.includes('POST /api/magazine/mark-published'));
