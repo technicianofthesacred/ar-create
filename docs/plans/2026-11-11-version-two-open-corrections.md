@@ -119,12 +119,45 @@ real check result at 1440 and 390, dark and light.
   row says "Confirmed by you" only for his own confirmation; an assistant's review reads "Reviewed, not confirmed by
   you yet". The shared block is `v2.shared.subject`; Check does without it when missing.
 
+### Stage 7, approved 12 November, not started: confirming is his alone, and a captured source can be stopped
+
+Adrian was asked three things after stage 6 and answered on 12 November: yes, marking material reviewed becomes his
+alone; yes, he can stop a captured source counting; not yet, a note does not unlock Check (only a recording's
+transcript he confirmed is a source for quotes). The stage is the first two. Read
+`version-two-briefs/v2-12-capture-sources.md` first: its design and five reviews name every file.
+
+What done looks like: an assistant that tries to mark any material or transcript reviewed gets 403 with the plain
+reason, by every path; nothing an assistant could do before is lost except that; he can stop a captured source
+counting from the Sources list on the subject page and in Check, and Check then no longer reads it; every old draft,
+receipt, fork and structure test still reads and validates as before; the walk still ends in a real result.
+
+- **Confirming is his alone.** The paths that mark reviewed today, all open to any actor: `first-flow.source-review`,
+  both `sourceReviews` branches of `first-flow.prepare`, and `POST /transcription/{id}/review`. Make the act of
+  marking reviewed human-only in the one registry, like the other human-only decisions. Decide and have a second
+  model review before building: whether `first-flow.prepare` as a whole stays open to assistants with only its
+  `sourceReviews` part refused (an assistant preparing a subject must still work); whether un-reviewing and setting
+  aside stay open; whether `speakers` and segment edits stay open (they reset the review, so they cannot forge one);
+  what the existing workspace's screens and any assistant routine or scheduled job that marks reviewed today will
+  now show, so nothing fails silently. Reviews made before stage 6 carry no name and stay "not confirmed by you yet".
+- **Stop a captured source counting.** As the design proposed: a human-only command that appends a "no longer used"
+  entry to the same append-only, hash-pinned added-sources record (nothing is rewritten or deleted); Check and the
+  list skip a stopped source; a receipt made before reads stale; if no source for quotes is left, Check is held with
+  "No source to check against yet" again and the standing follows. Decide whether a stopped source can be used again
+  (a later capture of the same bytes) and say so on the row.
+- **The screens** (a visual change: before and after pictures for Adrian): in the Sources list a captured row gains
+  one quiet control, "Stop using for Check", on the subject page and in Check, through `v2.shared.subject`. An
+  assistant's page shows the control and the server's refusal. Keep it small and in the marked blocks: the version
+  three thread (below) will carry these screens into its look. Tell that thread before touching `check.js` or
+  `subject.js` and when it is on main.
+- Review the trust change twice, the second time as an assistant trying to get a source confirmed or to bring a
+  stopped source back.
+
 **Open after stage 6**
 
-- For Adrian to decide: whether marking material reviewed should be his alone (today an assistant's review simply does
-  not count for Check); whether he should be able to stop a captured source counting (proposed: an appended "no longer
-  used" entry); whether drafts opened from a vault original should accept added sources; Carousels checked from them.
-- A note-only subject still cannot unlock Check: only a recording's transcript is a source for quotes.
+- For Adrian to decide, not yet asked: whether drafts opened from a vault original should accept added sources;
+  Carousels checked from them.
+- A note-only subject still cannot unlock Check: only a recording's transcript is a source for quotes. Adrian said
+  "not yet" to changing this on 12 November.
 - Reviews made before this change carry no name, so they read "not confirmed by you yet" until he confirms again.
 - On old drafts a quote can still pass across the join of a source and a context file (unchanged from main; the fix
   made here applies only when sources have been added).
