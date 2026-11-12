@@ -91,6 +91,21 @@ export function createRecordings({ dataDir, library, transcriptionRuntime = null
       return {state:'unavailable',transcriptReady:false,reviewStatus:'unreviewed',reason:'Saved transcript location is unavailable. Reconnect the recording or recover its saved files before use.'};
     }
   }
+  /** One transcript's words, speakers and review stamp, read only: no writer lock, nothing created, recovered or rewritten
+      (unlike the recording's own read and recover). The stamp counts only on the current bytes, as the Library reads it. */
+  function lookAt(id){
+    if(typeof id!=='string'||!/^[a-f0-9-]{36}$/.test(id))throw new StateError('Unknown recording.',404);
+    const jobFile=path.join(dir,'.transcription-jobs',id+'.json');regular(jobFile);
+    const job=readJson(jobFile,null);
+    if(!job||job.id!==id||job.state!=='done'||!job.transcriptReady||typeof job.output!=='string')throw new StateError('Transcript is not ready.',404);
+    const output=resolveInside(dir,path.relative(dir,job.output),{directory:true}),file=path.join(output,'transcript.json');regular(file);
+    const result=JSON.parse(fs.readFileSync(file,'utf8'));
+    const managed=corrections.sourceSnapshot({rootId:'recordings',rel_path:path.relative(dir,path.join(output,'transcript.md')),path:path.join(output,'transcript.md')});
+    const reviewed=managed.managed===true&&managed.coherent===true&&managed.reviewStatus==='reviewed';
+    return {jobId:id,coherent:managed.managed===true&&managed.coherent===true,reviewStatus:reviewed?'reviewed':'unreviewed',reviewedBy:reviewed&&typeof managed.reviewedBy==='string'?managed.reviewedBy:null,reviewedAt:reviewed?managed.reviewedAt||null:null,
+      speakers:(Array.isArray(result.speakers)?result.speakers:[]).map(s=>({id:s.id,name:typeof s.name==='string'&&s.name.trim()?s.name.trim():null})),
+      segments:(Array.isArray(result.segments)?result.segments:[]).map(g=>({speaker:g.speaker??null,text:String(g.text??'')}))};
+  }
   return {
     // Magazine intake (magazine-vault/intake.mjs): transcribe one filed recording in this isolated
     // runner. Its RAW stays here until magazine-vault files it into the real Inbox under the lock.
@@ -114,6 +129,7 @@ export function createRecordings({ dataDir, library, transcriptionRuntime = null
     },
 
     sourceSnapshot:source=>corrections.sourceSnapshot(source),
+    look:lookAt,
     async readTranscriptSource(sourceId){const {source}=await library.blob(sourceId);const managed=corrections.sourceSnapshot(source);if(!managed.managed)throw new StateError('Choose this recording’s canonical transcript.',400);const snapshot=corrections.read(managed.jobId);return {...snapshot,sourceId};},
     async proposeTranscriptSource({sourceId,expected,corrections:changes,reason}){const selected=await this.readTranscriptSource(sourceId);return {...corrections.propose(selected.jobId,{expected,corrections:changes,reason}),sourceId};},
     async retain(source) {
@@ -144,7 +160,7 @@ export function createRecordings({ dataDir, library, transcriptionRuntime = null
     },
     async route(req, res, url) {
       if (!url.pathname.startsWith('/transcription/')) return false;
-      const guarded=url.pathname.match(/^\/transcription\/([a-f0-9-]{36})(?:\/(view|segment|speakers|review|save|snapshot|external-inspect|markdown-propose|recover|recovery|corrections|corrections\/[a-f0-9-]{36}(?:\/decision)?|transcript\.(?:md|json|txt)))?$/);
+      const guarded=url.pathname.match(/^\/transcription\/([a-f0-9-]{36})(?:\/(view|look|segment|speakers|review|save|snapshot|external-inspect|markdown-propose|recover|recovery|corrections|corrections\/[a-f0-9-]{36}(?:\/decision)?|transcript\.(?:md|json|txt)))?$/);
       if(guarded){
         const id=guarded[1],action=guarded[2]||'';
         try{
@@ -164,6 +180,7 @@ export function createRecordings({ dataDir, library, transcriptionRuntime = null
           }
           if(req.method==='GET'){
             if(action==='recovery'){send(res,200,corrections.recoveryInfo(id));return true;}
+            if(action==='look'){send(res,200,lookAt(id));return true;}
             const readOnly=action==='snapshot'&&url.searchParams.get('readOnly')==='1';
             if(action==='snapshot'&&([...url.searchParams.keys()].some(key=>key!=='readOnly')||url.searchParams.getAll('readOnly').length>1||url.searchParams.has('readOnly')&&!readOnly))throw new StateError('Choose the existing snapshot or its read-only inspection.',400);
             if(readOnly)regular(path.join(dir,'.transcription-jobs',id+'.json'));

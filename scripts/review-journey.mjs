@@ -105,14 +105,15 @@ const STEPS = [
   ['05', 'steps-to-write', 'The subject\'s steps lead to Write for its Article'],
   ['06', 'write', 'Write: paragraphs typed, saved, reloaded'],
   ['07', 'read', 'Read: the saved words'],
-  ['08', 'check', 'Check: Check saved draft pressed on this walk\'s piece'],
+  ['08', 'check', 'Check: Check saved draft pressed on this walk\'s piece, a real result'],
   ['08b', 'check-finished-piece', 'Check on a different piece: the demo subject "The green gate"'],
   ['09', 'standing', 'Back on the subject and on Home: where the piece stands']
 ];
 // The old screen that does the same job (its own section names). Step 9 goes by the bar's Advanced instead.
 const OLD_SECTION = {'01': 'home', '02': undefined, '03': 'source', '04': 'source', '05': 'outputs', '06': 'write', '07': 'read', '08': 'check', '08b': 'check'};
 const HOLD = 'No source to check against yet';
-const HELD_BREAK = 'A subject begun from New subject has no source captured into its draft, so Check is held ("Capture the source transcript before checking") even with a real transcript; the piece cannot get past Check without leaving version two.';
+// Step 4 confirms the transcript and presses "Use it for Check", so step 8 must end in a real result. Said only if it does not.
+const HELD_NOW = 'Check was held ("Capture the source transcript before checking") although the transcript was confirmed and "Use it for Check" was pressed in step 4.';
 
 const result = {base: BASE, made: new Date().toISOString(), transcript: DATA ? 'a finished transcription job put in the demo\'s own data folder, then "Use the transcript" pressed for real' : 'NOT done: the demo\'s data folder could not be found', tallerThanCap: [], walks: [], breaks: [], faults: [], notes: []};
 const kb = f => Math.round(fs.statSync(f).size / 1024);
@@ -341,6 +342,28 @@ async function walkOne(width, theme) {
           }
           clearInterval(poll);
           await wait(600);
+          // Confirm the transcript (name the speaker, press Confirm), then "Use it for Check", all through the real buttons as human:adrian.
+          const open = p.locator('[data-cs=open]');
+          await p.waitForSelector('[data-cs=open]', {timeout: 8000}).catch(() => {});
+          if (!(await open.count())) breakOnce(step, '"Confirm this transcript" did not appear for a ready transcript.');
+          else {
+            await open.first().click();
+            await p.waitForSelector('[data-cs-confirm] [data-cs-words]', {timeout: 10000}).catch(() => breakOnce(step, 'The transcript words did not open in place.'));
+            await wait(400);
+            const box = p.locator('[data-cs-name]');
+            if (await box.count()) await box.first().fill('Journey speaker');
+            await sideways(step); await shoot(p, step, 'new', 'b');
+            await p.locator('[data-cs=confirm]').click({timeout: 5000});
+            await p.waitForFunction(() => !!document.querySelector('[data-cs-confirmed]'), null, {timeout: 15000}).catch(() => breakOnce(step, 'The row did not say "Confirmed by you" after Confirm.'));
+            await p.waitForSelector('[data-cs=capture]', {timeout: 15000}).catch(() => breakOnce(step, '"Use it for Check" did not appear for a kept, confirmed transcript.'));
+            await wait(500);
+            await sideways(step); await shoot(p, step, 'new', 'c');
+            if (await p.locator('[data-cs=capture]').count()) {
+              await p.locator('[data-cs=capture]').click({timeout: 5000});
+              await p.waitForFunction(() => /Check can now read this/.test(document.body.innerText), null, {timeout: 15000}).catch(() => breakOnce(step, 'The subject did not say "Check can now read this" after "Use it for Check".'));
+              await wait(600);
+            }
+          }
         }
       }
       step.address = p.url(); await said(step); await newShot(step); await old(step);
@@ -427,7 +450,8 @@ async function walkOne(width, theme) {
       const heldNow = kind === 'held' || /Capture the source transcript before checking|Checks held/.test(await p.innerText('main').catch(() => ''));
       step.checkKind = kind;
       if (finished && !heldNow && kind !== 'ok' && kind !== 'review') breakOnce(step, `The check ended as "${kind || 'unknown'}", not as a finished result.`);
-      if (heldNow && expectReal) breakOnce(step, HELD_BREAK);
+      if (heldNow && expectReal) breakOnce(step, HELD_NOW);
+      if (expectReal && !heldNow && kind !== 'ok' && kind !== 'review') breakOnce(step, `Step 8 did not end in a real check result (it ended as "${kind || 'unknown'}").`);
       if (heldNow && !expectReal) breakOnce(step, 'Check on the finished demo piece was held rather than giving a result.');
       return kind;
     }
@@ -480,8 +504,8 @@ async function walkOne(width, theme) {
       const sub = await p.evaluate(() => ({text: document.querySelector('main')?.innerText || '', where: document.querySelector('.subj-where')?.textContent || '', check: [...document.querySelectorAll('[data-subj-step]')].filter(e => /Check/.test(e.textContent)).map(e => e.textContent.replace(/\s+/g, ' ').trim())}));
       const subjCheck = plain(sub.check.join(' | ')), subjText = plain(sub.text);
       await sideways(step); await sawNotBuilt(step); await shoot(p, step, 'new', 'b');
-      if (!sub.check.some(t => t.includes(HOLD)) && !subjText.includes(HOLD)) breakOnce(step, `The subject's Check step did not say "${HOLD}" (it said: ${subjCheck.slice(0, 120) || 'nothing'}).`);
-      if (!/Create/.test(sub.where)) breakOnce(step, `The subject's station was "${plain(sub.where) || 'not shown'}", not Create, for a check held for want of a source.`);
+      // Step 8 ended in a real result, so the subject no longer says it has no source to check against.
+      if (sub.check.some(t => t.includes(HOLD)) || subjText.includes(HOLD)) breakOnce(step, `The subject's Check step still said "${HOLD}" after the transcript was used for Check and the check ran.`);
 
       // The way into Advanced and back, by the bar: the bar's Advanced in this tab, the old picture of the subject, then
       // the old workspace's own "Version two" link.
@@ -517,8 +541,7 @@ async function walkOne(width, theme) {
       if (!rowText) breakOnce(step, 'Home did not show the new subject among its subjects.');
       else {
         const said2 = rowText.replace(mySubject, '').trim().slice(0, 140);
-        if (!rowText.includes(HOLD)) breakOnce(step, `Home's row for the subject did not say "${HOLD}" (the row reads: "${said2}", the station and the next step only).`);
-        if (!/Create/.test(rowText)) breakOnce(step, `Home's row for the subject did not name the station Create (the row reads: "${said2}").`);
+        if (rowText.includes(HOLD)) breakOnce(step, `Home's row for the subject still said "${HOLD}" after the check ran (the row reads: "${said2}").`);
       }
       step.address = p.url();
       step.says = 'SUBJECT CHECK STEP: ' + subjCheck + ' ## STATION: ' + plain(sub.where) + ' ## HOME ROW: ' + rowText;

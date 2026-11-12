@@ -177,7 +177,7 @@ export const CUSTOM_COMMANDS = [
   ['GET', '/api/carousel/exports/{id}/render/{index}', ['rootBindingId?', 'parentStudyId?', 'selectedOutputId?']], ['GET', '/api/carousel/exports/{id}/file/{name}', ['rootBindingId?', 'parentStudyId?', 'selectedOutputId?']],
   ['GET', '/api/exports/{id}/file', ['rootBindingId?', 'parentStudyId?', 'selectedOutputId?']], ['GET', '/api/ingestion/raw', ['id', 'file']], ['GET', '/api/study-originals/audio', ['id']], ['GET', '/api/sources/blob', ['id', 'original?']],
   ['POST', '/api/media', ['image bytes (image/jpeg|png|webp)']],
-  ['GET', '/transcription/{id}/view'], ['POST', '/transcription/{id}/{action}'],
+  ['GET', '/transcription/{id}/view'], ['GET', '/transcription/{id}/look'], ['POST', '/transcription/{id}/{action}'],
   ...NEEDS_YOU_COMMANDS,
   ...WORDS_COMMANDS,
   ...LOOKS_COMMANDS,
