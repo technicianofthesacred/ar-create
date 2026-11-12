@@ -24,6 +24,10 @@
 
 ## NOW: ship everything, then a fresh start (Adrian, 12 November)
 
+**The wisdom bank is consolidated and closed (12 November).** His words: "The wisdom bank needs to consolidate all the information into one so that we can also close that up." Everything is in one page, [`docs/research/wisdom-bank/WISDOM-BANK.md`](../research/wisdom-bank/WISDOM-BANK.md): his words, where it stands (Embedding Atlas as the leading base, on condition it is made more interconnected), what was made and his verdict, what others have built, what is unproven, and the order to continue in. All of its threads are closed, the home thread included. To continue, one fresh thread starts from that page. Its branches still exist and are all contained in this branch.
+
+**The Mac release:** this session cannot reach his computer. He was given two things to paste on the Mac: a line that starts a session in the project, and a prompt that cuts the release from `origin/main` and shows him the app. The prompt carries his own permission to use the release script's recorded override if the automatic check is not green for reasons that are not the app's.
+
 "Nothing is waiting for me, even though you say there is you need to ship everything so that we have the latest version up and going. From there we will start fresh and I'll start working on things."
 
 - **Do not tell him things are waiting for him.** Carry decisions yourself where a recommendation exists and he has said to follow it; raise only what truly cannot move without him.
@@ -48,7 +52,7 @@ Asked "Which line runs the build from here?", with the stage line recommended, A
 - **The stage line runs the build of version two** (its latest thread: `session_017kitFgTSNEnuDHnLeNWrEU`). It was told, and so was this thread's Write director (`session_017kitFe2b6MQFZwy3MNMGpN`), which carries on and now sequences its work with the stage line.
 - **This thread is the identifier again**: it finds problems and writes them up. It starts no app threads and relays nothing unless Adrian asks.
 - **Closed at his word:** pull request 233 (not merged; this branch is kept as the archive), and the finished threads (the first version two director, the small fixes, the author's walk, the old demo).
-- **The wisdom bank was left entirely alone**, threads and branches. His words: "the wisdom bank I am still working the details out."
+- The wisdom bank was at first left alone, then consolidated and closed at his word later the same day (see the top of this file).
 - **Eight finished branches are agreed for deletion but still exist**, because this machine is not allowed to delete branches. Adrian has the one command. To undo a deletion, recreate the branch at the commit beside it:
 
 | Branch | Last commit |
