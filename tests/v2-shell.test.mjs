@@ -16,6 +16,7 @@ const read=file=>fs.readFileSync(path.join(repo,file),'utf8');
 
 // The screen files, in order. index.html lists every one now, so a screen piece never edits it.
 const SCREENS=['home','subject','slides','looks','research','write','read','check'];
+const WRITE_PARTS=['write-page','write-margin','write-versions'];// Write's other files: loaded before write.js, scripts only
 const ROUTES={home:'','subject':'subject/:id',slides:'slides/:id',looks:'looks',research:'research','research-group':'research/group/:id','research-topic':'research/topic/:id',write:'write/:id',read:'read/:id',check:'check/:id'};
 
 function scriptsOf(html){return [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1]);}
@@ -46,7 +47,7 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 
 test('index.html lists every screen file in order, after the shell, and every file it names exists',()=>{
  const html=read('public/v2/index.html'),scripts=scriptsOf(html),styles=stylesOf(html);
- assert.deepEqual(scripts,['/document-study/recovery-storage.js','shell/client.js','shell/parts.js','shell/capture.js','shell/shell.js',...SCREENS.map(s=>`screens/${s}.js`)]);
+ assert.deepEqual(scripts,['/document-study/recovery-storage.js','shell/client.js','shell/parts.js','shell/capture.js','shell/shell.js',...SCREENS.flatMap(s=>s==='write'?[...WRITE_PARTS,s]:[s]).map(s=>`screens/${s}.js`)]);
  assert.deepEqual(styles,['/document-study/c3-theme.css','shell/shell.css','shell/capture.css','/document-study/graphite-controls.css',...SCREENS.map(s=>`screens/${s}.css`)]);
  for(const file of [...scripts,...styles])assert.ok(fs.existsSync(file.startsWith('/')?path.join(repo,'public',file):path.join(v2dir,file)),file+' exists');
  assert.doesNotMatch(html,/<script>(?!<)/,'no inline script: the page runs under the app\'s strict script policy');
@@ -364,7 +365,7 @@ test('the app\'s own address opens version two, and every address of the existin
  const v2=await get('/v2/index.html');assert.equal(v2.status,200);assert.match(v2.headers.get('content-type'),/text\/html/);assert.match(await v2.text(),/screens\/research\.js/);
  assert.doesNotMatch(v2.headers.get('content-security-policy'),/unsafe-inline'; style/,'version two runs without inline scripts');
  assert.equal((await get('/v2/')).status,200);
- for(const file of ['/v2/shell/client.js','/v2/shell/parts.js','/v2/shell/shell.js','/v2/shell/shell.css',...SCREENS.flatMap(s=>[`/v2/screens/${s}.js`,`/v2/screens/${s}.css`])])assert.equal((await get(file)).status,200,file);
+ for(const file of ['/v2/shell/client.js','/v2/shell/parts.js','/v2/shell/shell.js','/v2/shell/shell.css',...SCREENS.flatMap(s=>[`/v2/screens/${s}.js`,`/v2/screens/${s}.css`]),...WRITE_PARTS.map(s=>`/v2/screens/${s}.js`)])assert.equal((await get(file)).status,200,file);
  for(const route of ['/document-study/index.html','/document-study/index.html?reviewActor=agent:claude-code','/document-study/index.html?instagram=plan-x','/document-study/index.html?reviewStory=s&reviewStage=11','/document-study/instagram-mirror.html','/transcript-check/index.html']){
   const r=await get(route);assert.equal(r.status,200,route);assert.match(r.headers.get('content-type'),/text\/html/,route);
  }
