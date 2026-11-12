@@ -24,6 +24,8 @@
 
 ## WHERE THIS STANDS, 12 November: the coordinator has stepped back
 
+**Corrected the same day by Adrian's words:** "I think the version two is good, but it's the old outdated version.. Which I'm trying to move away from and move on to the new one." Read (not yet confirmed by him) as: the version two the stage threads built carries the old look, and "the new one" is the design he approved with the Write director (`design/2026-11-write/` on `claude/v2-write-read-check`, sample at claude.ai/artifact/7YEpQwzBggob13CTrFUtVF). So the approved design is the authority on how Write, Read and Check look and behave; the stage line's machinery is kept where sound. The stage 6 thread (`session_017kitFhPkQUgzXjiJe9mK5K`, building Check screens) and the Write director were both told, to stop two threads changing `check.js` in two looks. Open with Adrian: whether the new look should spread to the other screens (Home, the subject page, Research) or stay with Write, Read and Check.
+
 Asked "Which line runs the build from here?", with the stage line recommended, Adrian answered on 12 November: "Let's go with your recommendations". So:
 
 - **The stage line runs the build of version two** (its latest thread: `session_017kitFgTSNEnuDHnLeNWrEU`). It was told, and so was this thread's Write director (`session_017kitFe2b6MQFZwy3MNMGpN`), which carries on and now sequences its work with the stage line.
