@@ -229,3 +229,37 @@ test('a check held for want of a captured source is a plain fact in the standing
   assert.equal(stale.facts.check.noSource, false);
  } finally {fs.rmSync(dir, {recursive: true, force: true});}
 });
+
+// A receipt that never compared anything (held, no source) reads stale once the draft gains a source. With a source now
+// in the draft the step is a first Check ("Not checked yet"); without one it reads as it always did.
+test('after a source is captured, a held no-source receipt reads Not checked yet; a stale receipt that compared sources still reads Check again', async () => {
+ const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'standing-')), B = '0b5e3a3c-1f1e-4c7a-9f00-000000000001';
+ const P = '0b5e3a3c-1f1e-4c7a-9f00-000000000002', D = '0b5e3a3c-1f1e-4c7a-9f00-000000000003', sha = v => crypto.createHash('sha256').update(v).digest('hex');
+ fs.mkdirSync(path.join(dir, 'study-owned-photo-bindings')); fs.writeFileSync(path.join(dir, 'study-owned-photo-bindings', B + '.json'), JSON.stringify({bindingId: B, parentStudyId: 'invented', projectId: P, documentId: D}));
+ fs.mkdirSync(path.join(dir, 'articles', sha(P), sha(D)), {recursive: true}); fs.writeFileSync(path.join(dir, 'articles', sha(P), sha(D), 'article.json'), JSON.stringify({project: {document: {nativeOutputIndex: {records: [{outputId: 'o1'}]}}}}));
+ const standing = (record, extra) => createSubjectStanding({dataDir: dir, now: () => Date.parse('2026-11-11T12:00:00Z'),
+  drafts: {catalog: async () => ({collections: [{parentStudyId: 'invented', title: 'Invented', bindingId: B}], outputBindings: [{parentStudyId: 'invented', bindingId: B}], drafts: []}), read: async () => ({projection: [{words: 'Invented words.'}], expected: {v: 1}, history: [{modifiedAt: '2026-11-10T00:00:00Z'}], ...extra})},
+  outputs: {read: async () => ({outputs: [{id: 'o1', kind: 'article', placements: [], createdAt: '2026-11-01T00:00:00Z'}]})}, checks: {read: async () => record}, consentDesk: {read: async () => ({people: [], release: {}})},
+  library: {tree: async () => ({sources: []})}, simmer: {boards: {read: async () => ({groups: [], forming: {}})}},
+  instagram: {plans: async () => ({plans: []}), read: async () => null}, places: {read: async () => ({places: []})}});
+ const heldNever = {status: 'stale', issues: [], proof: {sources: []}, quote: {status: 'held', reason: 'No captured SRC available.'}};
+ const note = async (record, extra) => { const got = await standing(record, extra).one({parentStudyId: 'invented'}); return {note: got.forms[0].steps.find(x => x.id === 'check').note, next: got.next, check: got.facts.check}; };
+ try {
+  // Still no source in the draft: the stale receipt reads as it always did.
+  assert.equal((await note(heldNever, {})).note, 'Check again');
+  // A transcript has been captured (added sources): a first Check is the honest step.
+  const afterCapture = await note(heldNever, {addedSources: {hash: 'h', records: [{id: 'added:s:1', role: 'source'}]}});
+  assert.equal(afterCapture.note, 'Not checked yet'); assert.equal(afterCapture.next.step, 'check'); assert.equal(afterCapture.check.status, null); assert.equal(afterCapture.check.noSource, false);
+  // The same through the locked capture.
+  assert.equal((await note(heldNever, {context: {records: [{id: 'SRC', role: 'source'}]}})).note, 'Not checked yet');
+  // Only a note was captured (role context): there is still nothing for Check to compare against.
+  assert.equal((await note(heldNever, {addedSources: {hash: 'h', records: [{id: 'added:n:1', role: 'context'}]}})).note, 'Check again');
+  // A stale receipt that did compare a source still reads Check again, whatever the draft holds now.
+  const compared = {status: 'stale', issues: [], proof: {sources: [{id: 's', role: 'source', hash: 'h'}]}, quote: {status: 'checked-pass'}};
+  assert.equal((await note(compared, {addedSources: {hash: 'h', records: [{id: 'added:s:1', role: 'source'}]}})).note, 'Check again');
+  // A broken added record means nothing was used.
+  assert.equal((await note(heldNever, {addedSources: {error: 'Captured sources for Check changed; nothing was used.'}})).note, 'Check again');
+  // A held receipt that is still current keeps its plain fact.
+  assert.equal((await note({status: 'held', issues: [], proof: {sources: []}, quote: {status: 'held'}}, {})).note, 'No source to check against yet');
+ } finally {fs.rmSync(dir, {recursive: true, force: true});}
+});

@@ -23,7 +23,8 @@ async function evidence(drafts,args,known) {
   // known: the draft the caller has just read for this same binding (subject standing), so a long draft is not read twice.
   const draft = known || await drafts.read({bindingId:args.bindingId,parentStudyId:args.parentStudyId});
   if (draft.binding?.id !== args.bindingId || draft.binding?.parentStudyId !== args.parentStudyId || typeof draft.raw !== 'string') throw fail('Draft does not belong to this study.');
-  const records = (draft.context?.records || []).filter(r => ['source','context'].includes(r.role) && !r.missing);
+  if (draft.addedSources?.error) throw fail(draft.addedSources.error);
+  const records = [...(draft.context?.records || []), ...(draft.addedSources?.records || [])].filter(r => ['source','context'].includes(r.role) && !r.missing);
   const sources = [];
   for (const r of records) {
     if (!r.copiedPath || !r.copiedHash) throw fail('Captured source lacks owned-copy evidence.');

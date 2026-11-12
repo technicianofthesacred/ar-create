@@ -22,13 +22,28 @@ export function createStudyProjectMaterialContext({dataDir,firstFlow,drafts}){
   }
   fail('Native material ancestry exceeds its bounded owner chain.');
  }
- return {async context(binding,{sourceIds}={}){
-  if(!UUID.test(binding?.bindingId||'')||typeof binding.parentStudyId!=='string'||!binding.parentStudyId)fail('Explicit study part binding required.',400);
-  const parent=owned(binding.parentStudyId),resolved=await materialPart(binding),part=resolved.record;if(parent.projectId===part.projectId)fail('Parent material and owned manuscript part rooms must remain distinct.');
+ async function parentCapture(parent){
   const capture=await firstFlow.materialContext({projectId:parent.projectId}),{hash,...payload}=capture;
   if(capture.schema!=='ar-create.first-flow-material-context.v1'||capture.projectId!==parent.projectId||capture.documentId!==parent.documentId||hash!==digest(stable(payload))||!Array.isArray(capture.records))fail('Parent material authority identity or hash changed.');
+  return capture;
+ }
+ function select(capture,sourceIds,keepBody=false){
   if(sourceIds!==undefined&&(!Array.isArray(sourceIds)||new Set(sourceIds).size!==sourceIds.length||sourceIds.some(id=>!UUID.test(id))))fail('Select explicit parent Library source IDs.',400);
-  const records=sourceIds===undefined?capture.records.map(({raw,...record})=>record):sourceIds.map(id=>{const record=capture.records.find(r=>r.id===id);if(!record?.eligible||record.review?.state!=='reviewed'||typeof record.raw!=='string')fail('Selected parent material is missing, unreadable or unreviewed.',400);return structuredClone(record);});
+  return sourceIds===undefined?capture.records.map(({raw,...record})=>keepBody&&typeof raw==='string'?{...record,raw}:record):sourceIds.map(id=>{const record=capture.records.find(r=>r.id===id);if(!record?.eligible||record.review?.state!=='reviewed'||typeof record.raw!=='string')fail('Selected parent material is missing, unreadable or unreviewed.',400);return structuredClone(record);});
+ }
+ return {/** The subject's own attached material with no part connection. A subject begun in version two (New subject)
+  * has only the parent connection. Same parent connection, same eligible-and-reviewed test and same refusals as
+  * context(); nothing is attached, reviewed or connected as a side effect. The caller has already checked that its
+  * draft belongs to this parent. */
+ async parentContext({parentStudyId}={},{sourceIds,withBody=false}={}){
+  if(typeof parentStudyId!=='string'||!parentStudyId)fail('Explicit study binding required.',400);
+  const parent=owned(parentStudyId),capture=await parentCapture(parent),records=select(capture,sourceIds,withBody);
+  const out={schema:'ar-create.study-project-material-context.v1',role:PROJECT_MATERIAL_ROLE,binding:{parentStudyId},parent:{projectId:parent.projectId,documentId:parent.documentId},records};return {...out,hash:digest(stable(out))};
+ },
+ async context(binding,{sourceIds}={}){
+  if(!UUID.test(binding?.bindingId||'')||typeof binding.parentStudyId!=='string'||!binding.parentStudyId)fail('Explicit study part binding required.',400);
+  const parent=owned(binding.parentStudyId),resolved=await materialPart(binding),part=resolved.record;if(parent.projectId===part.projectId)fail('Parent material and owned manuscript part rooms must remain distinct.');
+  const capture=await parentCapture(parent),records=select(capture,sourceIds);
   const out={schema:'ar-create.study-project-material-context.v1',role:PROJECT_MATERIAL_ROLE,binding:structuredClone(binding),parent:{projectId:parent.projectId,documentId:parent.documentId},part:{projectId:part.projectId,documentId:part.documentId},...(resolved.inheritance?{materialOwner:resolved.inheritance}:{}),records};return {...out,hash:digest(stable(out))};
  }};
 }
