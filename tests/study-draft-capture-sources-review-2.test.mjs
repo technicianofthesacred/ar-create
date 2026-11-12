@@ -35,7 +35,7 @@ const long=n=>Array.from({length:n},(_,i)=>'w'+i).join(' ');
 // not found only when every run printed it. A run that dies part way (the guard recurses once per quoted word, so a very
 // long passage that does match one file overflows the stack there: exit 1, no NOT FOUND lines) is read as "found
 // everything". On main one dead run is "unsupported" and Check is held. Here an invented quote passes.
-test('a guard run that dies on one captured file does not turn every quote into found',{todo:'fails open today: Check says checked'},async t=>{
+test('a guard run that dies on one captured file does not turn every quote into found',async t=>{
  const s=await service(t),words=long(12000);
  const a=s.add('Interview','transcript','## Full Transcript\n\nSpeaker: The clay remembers every hand.\n'),b=s.add('Long note','markdown',words+'\n');
  await s.capture([a]);await s.write('"'+words+'"');await s.write(INVENTED);
@@ -100,7 +100,7 @@ test('an assistant cannot write the reviewer stamp on a note: extra fields are r
 });
 // Finding 3 (should fix). An assistant that reviews the same bytes after Adrian replaces his stamp with its own, so material
 // he confirmed reads "Not confirmed by you yet" and he must confirm it again. It cannot gain anything; it can take his away.
-test('an assistant reviewing the same bytes after Adrian does not remove his confirmation',{todo:'an assistant review overwrites his stamp today'},async t=>{
+test('an assistant reviewing the same bytes after Adrian does not remove his confirmation',async t=>{
  const n=await note(t);assert.equal((await n.review('human:adrian')).status,200);assert.equal((await n.row()).eligible,true);
  assert.equal((await n.review(AGENT)).status,200);
  const row=await n.row();assert.equal(row.review.by,'human:adrian');assert.equal(row.eligible,true);
@@ -109,7 +109,7 @@ test('an assistant reviewing the same bytes after Adrian does not remove his con
 // assistant bridge pins the whole record when a suggestion is requested and compares it at acceptance
 // (study-mcp-bridge.mjs materialFreshness), so a suggestion waiting when this release lands reads stale. A review made
 // before stamps existed must read with the shape it had.
-test('a review made before reviews were stamped reads with the same shape as before',{todo:'by:null and at:null are added today'},async t=>{
+test('a review made before reviews were stamped reads with the same shape as before',async t=>{
  const n=await note(t);assert.equal((await n.review('human:adrian')).status,200);
  const flowFile=fs.readdirSync(path.join(n.h.dataDir,'first-flow')).map(d=>path.join(n.h.dataDir,'first-flow',d,'flow.json')).find(f=>fs.existsSync(f)&&JSON.parse(fs.readFileSync(f,'utf8')).projectId===n.projectId);
  const flow=JSON.parse(fs.readFileSync(flowFile,'utf8'));delete flow.reviewedBy;fs.writeFileSync(flowFile,JSON.stringify(flow,null,2));
@@ -130,10 +130,10 @@ test('a receipt made before a capture, or before a second capture, reads stale (
 // Notes, pinned so they are not read as stronger than they are.
 // (a) A captured context file is the guard's only file in its own run, so words inside an Obsidian comment (%% %%) in a note
 // count as support. On main a CONTEXT file's comments are removed before matching. He confirmed those bytes, so this is his choice.
-test('words inside a comment in a captured note support a quote (note: differs from how main reads a CONTEXT file)', async t=>{
+test('words inside a comment in a captured note do not support a quote, as for a context file on main', async t=>{
  const s=await service(t),a=s.add('Interview','transcript','## Full Transcript\n\nSpeaker: The clay remembers every hand.\n'),b=s.add('Note','markdown','Plain line.\n\n%% the potter never said the glaze sings at night %%\n');
  await s.capture([a,b]);await s.write('"the glaze sings at night"');
- assert.equal((await s.check()).status,'checked');
+ assert.notEqual((await s.check()).status,'checked');
 });
 // (b) The pinned guard, unchanged from main: a quote made only of [bracketed] phrases matches any file that has enough words.
 test('a quote made only of bracketed phrases passes against any captured file (note: the pinned guard, same on main)', async t=>{

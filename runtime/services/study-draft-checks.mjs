@@ -39,6 +39,9 @@ async function guard(name,args) {
   try { const r = await execute(process.execPath,[path.join(guards,name),...args],{timeout:30000,maxBuffer:1024*1024}); return {exitCode:0,output:r.stdout+r.stderr}; }
   catch(error) { if (typeof error.code !== 'number') throw error; return {exitCode:error.code,output:(error.stdout||'')+(error.stderr||'')}; }
 }
+// A captured file is the guard's first file in its own run, and the guard keeps %% comments there. Words in a comment are not
+// words anyone said, so they are blanked in the check copy, as the guard already does for a context file on an old draft.
+const uncommented=raw=>raw.replace(/%%[\s\S]*?%%/g,' ');
 /** The pinned quote guard joins every file it is given into one word list, so a quote could start in one file and end in the
  * next. Files captured for Check are therefore each tried alone. A draft with no captured files calls the guard exactly as it
  * always did. With them: the locked files go in together as before (if the locked capture has a source; otherwise each alone),
@@ -50,6 +53,12 @@ async function quoteRuns(dev,primary,sourceFiles) {
   const locked=sourceFiles.filter(s=>!s.added),lockedPrimary=locked.find(s=>s.role==='source');
   const argSets=[...(lockedPrimary?[[lockedPrimary,...locked.filter(s=>s!==lockedPrimary)]]:locked.map(s=>[s])),...added.map(s=>[s])];
   const runs=[];for(const set of argSets)runs.push(await guard('mag-check-quotes.mjs',[dev,set[0].path,...set.slice(1).map(s=>s.path)]));
+  // Fail closed: a run counts only if it finished with the guard's own summary and the same number of passages as the first run.
+  // A run that died (no summary, other exit code) holds the check, so its missing NOT FOUND lines are never read as "found".
+  const summaryOf=run=>/^(\d+) of (\d+) quoted passages found/m.exec(run.output);
+  const firstTotal=summaryOf(runs[0])?.[2];
+  const dead=runs.find(run=>![0,1,2].includes(run.exitCode)||!summaryOf(run)||summaryOf(run)[2]!==firstTotal);
+  if(dead)return {exitCode:2,output:'QUOTE COVERAGE: status=unsupported; visible-spans=0; checked-chunks=0; unsupported=1; invalid-brackets=0.\nUNSUPPORTED: The quote check did not finish on every captured file, so quoted passages were not verified.'};
   const missing=run=>run.output.split('\n').filter(l=>l.startsWith('NOT FOUND:'));
   const counts=new Map();for(const l of missing(runs[0]))counts.set(l,(counts.get(l)||0)+1);
   for(const run of runs.slice(1)){const here=new Map();for(const l of missing(run))here.set(l,(here.get(l)||0)+1);for(const [l,n] of counts)counts.set(l,Math.min(n,here.get(l)||0));}
@@ -162,7 +171,7 @@ export function createStudyDraftChecks({dataDir,drafts,outputs}) {
     await save(file,record);await save(path.join(bucket,'current.json'),record);
     try{
       const snap=path.join(bucket,args.operationId);await fs.mkdir(snap,{recursive:true});await fs.writeFile(path.join(snap,'draft.md'),before.raw,{flag:'wx'});
-      const sourceFiles=[];for(const [i,source]of before.sources.entries()){const file=path.join(snap,'source-'+i+'.md');await fs.writeFile(file,source.raw,{flag:'wx'});sourceFiles.push({...source,path:file});}
+      const sourceFiles=[];for(const [i,source]of before.sources.entries()){const file=path.join(snap,'source-'+i+'.md');await fs.writeFile(file,source.added?uncommented(source.raw):source.raw,{flag:'wx'});sourceFiles.push({...source,path:file});}
       const primary=sourceFiles.find(s=>s.role==='source'),integrity=before.proof.missing||before.proof.externalEdit;
       record.integrity={status:integrity?'held':'checked',reason:integrity?'Resolve the canonical words file before checking.':'Canonical saved words and output agree.'};
       record.photos={status:before.issues.some(i=>i.type==='photo')?'held':'checked',reason:'Required template slots and current used Library asset hashes only; composition and image meaning are not verified.'};
@@ -201,7 +210,7 @@ export function createStudyDraftChecks({dataDir,drafts,outputs}) {
     try {
       const snap=path.join(bucket,args.operationId);await fs.mkdir(snap,{recursive:true});
       const dev=path.join(snap,'draft.md');await fs.writeFile(dev,before.draft.raw,{flag:'wx'});
-      const sourceFiles=[];for(const [i,s] of before.sources.entries()){const p=path.join(snap,`source-${i}.md`);await fs.writeFile(p,s.raw,{flag:'wx'});sourceFiles.push({role:s.role,path:p,...(s.added?{added:true}:{})});}
+      const sourceFiles=[];for(const [i,s] of before.sources.entries()){const p=path.join(snap,`source-${i}.md`);await fs.writeFile(p,s.added?uncommented(s.raw):s.raw,{flag:'wx'});sourceFiles.push({role:s.role,path:p,...(s.added?{added:true}:{})});}
       const primary=sourceFiles.find(s=>s.role==='source');
       if(!primary){record.quote={status:'held',reason:'No captured SRC available.'};record.split={status:'held',reason:'No captured SRC available.'};record.issues=[];record.status='held';}
       else {
