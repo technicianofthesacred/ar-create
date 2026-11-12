@@ -24,6 +24,24 @@ may never claim one route or one id: the frame refuses the second. Routes are ha
 (`#/subject/<id>`, `#/write/<id>?piece=<output id>`...), so a link drawn by a borrowed screen lands on whichever screen
 answers that route here, inside this frame.
 
+**Screens version three has built.** Write (`write/:id`, `#/write/<subject>?piece=<output id>`) is version three's own:
+`screens/write.js`, `write-page.js`, `write-margin.js`, `write-versions.js` and `write.css`, listed in `index.html` in
+place of version two's `write.js` and `write.css`. It is a copy of version two's Write with the approved look (one
+`plaintext-only` element per paragraph, the page as a sheet in Lora, the hairline under kept phrases, Focus, the
+failed-save panel, the phone bar); the saving machinery is copied on purpose (plan, "Shared or copied"). It keeps the
+shared name `v2.shared.write` that Read and Check, still version two's files, use for their piece bar and for finding
+the piece: the bar is drawn by version three's Write, in its look, with the subject's name taken from the page title
+the frame holds when Read and Check do not pass it, so all three tabs share one bar. Read and Check's own pages take
+their `wr-` styles from `screens/write.css` (version two's `write.css` is no longer loaded here); their redo is a later
+piece. Version two's files are not changed.
+
+**Undo and Put back in Write.** The bar's Undo takes back only the latest saved change, and only when the app says it can be
+undone. It never saves first and never reaches past that change: with unsaved words, a save running, or the app not
+answering, it is off in its place and its name and title say why (typing is the browser's own Ctrl or Cmd Z). A change that
+carried more than one paragraph is asked about first. What Undo takes back is captured first; the bar's status place then
+offers Put back, which writes those exact words again through the ordinary save (a moved-on version becomes the newer-version
+choice). The words are kept on the device under `ar-v3-write-back:<draft>`. A page opened as an agent has no Undo.
+
 **Styles.** The page loads the app's tokens, version two's `shell.css`, `capture.css` and every version two screen's
 styles (the borrowed screens need them), Graphite, then `frame.css` last. Every rule in `frame.css` starts with a
 `.v3-` class, and the band and the phone bar sit outside `#v2-app`, where version two's frame rules are scoped, so
@@ -38,6 +56,9 @@ Both carry an assistant's `?reviewActor=`. The theme is one choice for both fron
 
 **What a borrowed screen still does as version two does:** it keeps its own look (its piece bar, its page) inside the
 new band, and its device store (`ar-v2-write:` for Write), because it is version two's file. Version three's own Write
-brings its own (`ar-v3-write:`).
+brings its own (`ar-v3-write:`, and `ar-v3-write-story:` for a Magazine story; one key for each piece, not yet one for
+each tab). It never reads, writes, adopts or deletes version two's keys. Until Read and Check are redone here, their
+quiet line "You have unsaved words in Write on this device" looks only for version two's key, so it does not mention
+words kept by version three's Write.
 
-Tests: `tests/v3-shell.test.mjs`. Nothing scrolls sideways: `node scripts/review-sideways.mjs --v3` (or `--only=v3`).
+Tests: `tests/v3-shell.test.mjs`, `tests/v3-write.test.mjs`, `tests/v3-write-start.test.mjs`, and in a real browser `tests/v3-write-editing.browser.mjs`. Nothing scrolls sideways: `node scripts/review-sideways.mjs --v3` (or `--only=v3`).
