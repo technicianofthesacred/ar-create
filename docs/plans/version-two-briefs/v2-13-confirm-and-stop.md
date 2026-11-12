@@ -210,7 +210,10 @@ or the held step says what to do.
 
 | way | result |
 | --- | --- |
-| Unattributed request (no header, no app Origin) to review or source-review | 403: the gate refuses no actor; the services refuse an absent actor |
+| Unattributed request (no header, no app Origin) to review, capture or stop | 403 at the gate, before routing |
+| Unattributed request to source-review or prepare | 400 from the general write rule ("Writes need an X-AR-Actor header ..."), before the service runs; nothing written, nothing journalled |
+| Odd spellings that fold to a human-only path (dot segments, backslash, percent-encoded letters, double slashes, upper-case id, the absolute form, a query string, `#x`, `%20`, `%00`) | 403 at the gate, with the gate's own sentence ("human-only"), for an assistant and for no actor; the gate alone stops them, the service check is a second layer |
+| Spellings that do not fold to a human-only path (trailing slash, upper-case route words, `;x=1`, double-encoded letters) | 404 or 405; never reach the review, capture or stop code |
 | A page that omits the header but sends the app's Origin | read as Adrian by design (`actor.mjs` 8 to 16); piece 4 closes it for the existing workspace's own transcript calls; an assistant must open pages with `?reviewActor=` (CLAUDE.md) |
 | Chat relay with his words | neither command is in `CHAT_RELAYABLE`; 403 |
 | Body fields `actor`, `by`, `reviewedBy` | source-review: 403 for anyone not Adrian, 400 (unknown key) for him; ignored by transcript review, which stamps `provenance()` |
@@ -751,3 +754,17 @@ None.
 3. Found in passing, not from this stage: after a plain `first-flow.prepare` on a subject's project, `POST /api/study/material/attach` for that subject answers 409 "Research request belongs to another exact Study scope." for everyone, Adrian included (`runtime/services/first-flow.mjs` 222, the `attach` branch loads the current request). An assistant's ordinary prepare can cause it once one source is reviewed. Raise separately.
 4. Limits that remain from the earlier reviews: cutting the newest stop entry off the record with file access gives the source back unnoticed; the Library's "human review is recorded" label for a file that declares itself reviewed (it does not reach capture or Check, attack 22); an assistant's stand-in still marks material reviewed inside its own structure-test copy (covered by the builders' tests, not re-run over HTTP here).
 5. `runtime/server.mjs` 458 `gateSpellings` only adds spellings to refuse; no ordinary assistant call tried was refused by it.
+
+## Corrections after the second review
+
+Tests and this document only; no runtime code changed. Should fix 3 (journalling refusals at the gate) is not made: it
+adds lines to the history Adrian reads, so it waits for his decision.
+
+- The CLI and MCP checks now really send the request and assert 403 (CLI exit 5, MCP refusal with "human-only"), for
+  the transcript review names and for the stop route.
+- Unattributed source-review and prepare are pinned at 400 with the write-rule message; Decision 7's rows now say so.
+- Every file under the data folder except the journal is compared, and the journal's added lines are counted exactly
+  (none for a gate refusal; one `rejected` line with http 403 and the actor for each service refusal).
+- Each odd spelling must carry the gate's own sentence; the missing spellings were added, and one test covers
+  human-only commands that have no service check.
+- Decision 7 has rows for spellings that fold (403 at the gate) and spellings that do not (404 or 405).
