@@ -158,19 +158,18 @@
   'product-listing':{name:'Product listing',to:'the shop',what:'A thing, with its story',needs:'nothing to start'},
   newsletter:{name:'Newsletter',to:'email',what:'A letter to readers',needs:'',unbuilt:true},
   'shared-notes':{name:'Shared notes',to:'people you choose',what:'What you learned, plainly',needs:'',unbuilt:true},
-  article:{name:'Article',to:'the magazine',what:'A long read in your words',needs:'a source, or some words'},
+  article:{name:'Article',to:'the magazine',what:'A long read in your words',needs:'your first words'},
   carousel:{name:'Carousel',to:'Instagram',what:'Slides, one line each',needs:'a recording or a note; photographs help'},
  });
  /** The kinds Add a form shows, each with whether it can be made now and, if not, why. The facts are the command's own
      (`facts.words`, `facts.material`, `facts.bindingId`). A kind the app cannot make yet is listed and says so. */
  function addable(facts={}){
-  const m=facts.material,w=facts.words;
+  const m=facts.material;
   return Object.entries(KINDS).map(([kind,k])=>{
    let ready=true,why='';
    if(k.unbuilt){return {kind,name:k.name,to:k.to,what:k.what,needs:k.needs,ready:false,unbuilt:true,why:'Not built yet.'};}
-   // An Article starts in Write: with words already saved it is made at once, and with a source and no words yet it opens Write
-   // on an empty page and the first saved words start it. With neither there is nothing to write from.
-   if(kind==='article'&&!(w?.paragraphs>0)){const has=((m?.total||0)+(m?.recordings||0)+(m?.notes||0)+(m?.links||0)+(m?.photos||0))>0;if(!has){ready=false;why=w&&m?'Add a source first.':'Not known yet.';}}
+   // An Article starts in Write, for any subject with a draft: with words already saved it is made at once, and with none Write
+   // opens on an empty page and his first saved words start it. He can write before he has a source.
    if(kind==='carousel'&&!((m?.recordings||0)+(m?.notes||0))){ready=false;why=m?'Add a recording or a note first.':'Not known yet.';}
    if(kind!=='carousel'&&!facts.bindingId){ready=false;why='This subject has no saved writing yet.';}
    return {kind,name:k.name,to:k.to,what:k.what,needs:k.needs,ready,unbuilt:false,why};
@@ -780,7 +779,7 @@
    const sheet=v2.ui.sheet({title:'What else will this be?',body});sheet.el.classList.add('subj-sheetdlg');
    sheet.body.addEventListener('click',async e=>{const b=e.target.closest('[data-subj-make]');if(!b||b.disabled)return;b.disabled=true;
     try{
-     if(b.dataset.subjMake==='article'&&!(st.standing.facts?.words?.paragraphs>0)){sheet.close();v2.go('write/:id',{id});return;}// no words yet: Write starts it
+     if(b.dataset.subjMake==='article'&&!(st.standing.facts?.words?.paragraphs>0)){sheet.close();v2.go('write/:id',{id},{start:'article'});return;}// no words yet: Write starts it
      const key=await make(b.dataset.subjMake);sheet.close();
      // Say "added" only when the command, asked again, shows it. A refusal threw above and says its own words.
      let shown=false;

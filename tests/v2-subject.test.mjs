@@ -101,10 +101,10 @@ test('which tool reads a change touches',()=>{
 
 test('Add a form offers only what the app can make, from the command\'s own facts, each saying what it needs and why not yet',()=>{
  const none=S.addable({bindingId:'b',material:{total:0,recordings:0,notes:0},words:{paragraphs:0}});
- assert.deepEqual(none.map(k=>[k.kind,k.ready,k.why]),[['post',true,''],['story',false,'Not built yet.'],['video',false,'Not built yet.'],['product-listing',true,''],['newsletter',false,'Not built yet.'],['shared-notes',false,'Not built yet.'],['article',false,'Add a source first.'],['carousel',false,'Add a recording or a note first.']]);
+ assert.deepEqual(none.map(k=>[k.kind,k.ready,k.why]),[['post',true,''],['story',false,'Not built yet.'],['video',false,'Not built yet.'],['product-listing',true,''],['newsletter',false,'Not built yet.'],['shared-notes',false,'Not built yet.'],['article',true,''],['carousel',false,'Add a recording or a note first.']]);
  assert.ok(S.addable({bindingId:'b',material:{notes:1,recordings:0},words:{paragraphs:2}}).filter(k=>!k.unbuilt).every(k=>k.ready&&k.needs));
  assert.ok(S.addable({bindingId:null,material:{notes:1},words:{paragraphs:1}}).filter(k=>k.kind!=='carousel'&&!k.unbuilt).every(k=>!k.ready));
- assert.equal(S.addable({bindingId:'b'}).find(k=>k.kind==='article').why,'Not known yet.');
+ assert.equal(S.addable({bindingId:'b'}).find(k=>k.kind==='article').ready,true,'an Article needs only a draft to write in');
 });
 
 test('material is sorted from what the records hold: folder, research sources, plans',()=>{
@@ -681,12 +681,12 @@ test('a Magazine story\'s page: a direction is chosen in the Magazine and not sh
  }
 });
 
-test('Add a form: Article is offered with a source and no words yet (Write starts it), and still waits when there is nothing to write from',()=>{
+test('Add a form: Article is offered to any subject with a draft, with or without a source or words (Write starts it)',()=>{
  const art=facts=>S.addable(facts).find(k=>k.kind==='article');
  const fromSource=art({bindingId:'b',material:{total:1,recordings:0,notes:1,links:0,photos:0},words:{paragraphs:0}});
  assert.equal(fromSource.ready,true);assert.equal(fromSource.why,'');
  const bare=art({bindingId:'b',material:{total:0,recordings:0,notes:0,links:0,photos:0},words:{paragraphs:0}});
- assert.equal(bare.ready,false);assert.equal(bare.why,'Add a source first.');
+ assert.equal(bare.ready,true);assert.equal(bare.why,'','he can write before he has a source');
  assert.equal(art({bindingId:'b',material:{total:0},words:{paragraphs:3}}).ready,true,'words already saved: ready as before');
  assert.equal(art({bindingId:null,material:{total:2},words:{paragraphs:0}}).ready,false,'no draft to write in');
 });
