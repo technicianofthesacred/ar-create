@@ -567,7 +567,7 @@ export function createRouteMap(services) {
       '/api/ingestion/retry': { POST: input => ingestion.retry(input.id) },
       '/api/transcript-tools/connect': {POST:input=>transcriptTools.connect(input,url.origin)},
       '/api/recordings': { GET: () => recordings.list() },
-      '/api/capabilities': { GET: async () => ({ library: 'file-backed', webExtraction: { configured: true, backend: extraction ? 'WordForge Firecrawl' : 'i64os Readability', local: ingestion.capabilities.article }, youtube: ingestion.capabilities.youtube, transcription: (await recordings.list()).capability, guidance: 'shared-own-files', sharedArticles: {enabled:sharedArticles}, ...await describe() }) },
+      '/api/capabilities': { GET: async () => url.searchParams.get('only') === 'commands' ? describe({only: 'commands'}) : ({ library: 'file-backed', webExtraction: { configured: true, backend: extraction ? 'WordForge Firecrawl' : 'i64os Readability', local: ingestion.capabilities.article }, youtube: ingestion.capabilities.youtube, transcription: (await recordings.list()).capability, guidance: 'shared-own-files', sharedArticles: {enabled:sharedArticles}, ...await describe() }) },
     };
     // The magazine's commands (runtime/commands/magazine.mjs), when the server passes them.
     if (services.magazineRoutes) Object.assign(routes, services.magazineRoutes({ url }));

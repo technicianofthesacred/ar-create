@@ -138,7 +138,7 @@
  </nav>
  <nav class="v2-desk" data-v2-desk aria-label="On your desk" hidden></nav>
  <span class="v2-grow"></span>
- <button type="button" class="v2-ghost v2-wide" data-v2-ask aria-label="Ask or find" title="Ask or find: opens Research">${icon('search')}<kbd>⌘K</kbd></button>
+ <button type="button" class="v2-ghost v2-wide" data-v2-ask aria-label="Find" title="Find a subject, or words in the Library">${icon('search')}<kbd>⌘K</kbd></button>
  <a class="v2-ghost v2-wide v2-needs" data-v2-needs href="#/" hidden><i aria-hidden="true"></i><span>Needs you · <b data-v2-needs-count>0</b></span></a>
  <button type="button" class="v2-ghost v2-wide" data-v2-capture>${icon('plus')}Capture</button>
  <button type="button" class="v2-ghost v2-icon-btn" data-v2-theme aria-label="Switch theme">${icon('sun')}</button>
@@ -175,11 +175,15 @@
   return (places?.places||[]).filter(p=>p.pinnedAt&&!p.archived).sort((a,b)=>(a.order??1e9)-(b.order??1e9)||String(a.pinnedAt).localeCompare(String(b.pinnedAt))).slice(0,5)
    .map(p=>({id:p.parentStudyId,title:names.get(p.parentStudyId)||p.parentStudyId}));
  }
- async function refreshDesk(){const token=++deskToken;try{const items=await (deskSource||defaultDesk)();if(token!==deskToken)return;desk=Array.isArray(items)?items.filter(i=>i&&typeof i.id==='string').slice(0,5):[];}catch{if(token===deskToken)desk=[];}paintDesk();}
+ /** One read at a time: a request that comes while one is running waits for it and then reads once more, so a burst of
+     changes is never a burst of reads. */
+ function oneAtATime(fn){let running=null,again=false;const run=()=>{if(running){again=true;return running;}running=(async()=>{try{await fn();}finally{running=null;}if(again){again=false;await run();}})();return running;};return run;}
+ const readDesk=async()=>{const token=++deskToken;try{const items=await (deskSource||defaultDesk)();if(token!==deskToken)return;desk=Array.isArray(items)?items.filter(i=>i&&typeof i.id==='string').slice(0,5):[];}catch{if(token===deskToken)desk=[];}paintDesk();};
+ const refreshDesk=oneAtATime(readDesk);
  function paintDesk(){
   const nav=doc.querySelector('[data-v2-desk]');if(!nav)return;nav.hidden=!desk.length;
   const current=active?.screen.route.startsWith('subject/')?active.ctx.params.id:null;
-  nav.innerHTML=desk.map(d=>`<a class="v2-desk-chip" href="${esc(href('subject/:id',{id:d.id}))}" title="${esc(d.title)}"${d.id===current?' aria-current="page"':''}>${d.cover?`<img src="${esc(d.cover)}" alt="">`:'<i aria-hidden="true"></i>'}<span>${esc(d.short||d.title)}</span></a>`).join('')
+  nav.innerHTML=desk.map(d=>`<a class="v2-desk-chip${d.cover?'':' nopic'}" href="${esc(href('subject/:id',{id:d.id}))}" title="${esc(d.title)}"${d.id===current?' aria-current="page"':''}>${d.cover?`<img src="${esc(d.cover)}" alt="">`:''}<span>${esc(d.short||d.title)}</span></a>`).join('')
    +'<button type="button" class="v2-ghost v2-desk-more" data-v2-desk-more hidden></button>';
   fitDesk();
  }
@@ -192,7 +196,7 @@
   chips.forEach(c=>{c.hidden=false;});more.hidden=true;
   if(root.getComputedStyle(nav).display==='none')return;
   // A chip may shrink to DESK_MIN, or to its whole name when that is shorter.
-  for(const c of chips){const name=c.querySelector('span');c.style.minWidth=Math.min(DESK_MIN,(name?.scrollWidth||0)+46)+'px';}
+  for(const c of chips){const name=c.querySelector('span');c.style.minWidth=Math.min(DESK_MIN,(name?.scrollWidth||0)+(c.querySelector('img')?46:30))+'px';}
   const over=()=>nav.scrollWidth>nav.clientWidth+1;
   if(!over())return;
   more.hidden=false;
@@ -211,46 +215,90 @@
 
  // ---------- Needs you: the count ----------
  let needs=0;
- async function refreshNeeds(){try{const r=await client.call('needs-you',{status:'open'});needs=Number(r?.counts?.open??r?.asks?.length??0)||0;}catch{needs=0;}
+ const refreshNeeds=oneAtATime(readNeeds);
+ async function readNeeds(){try{const r=await client.call('needs-you',{status:'open'});needs=Number(r?.counts?.open??r?.asks?.length??0)||0;}catch{needs=0;}
   const a=doc.querySelector('[data-v2-needs]');if(a){a.hidden=!needs;a.querySelector('[data-v2-needs-count]').textContent=String(needs);a.setAttribute('aria-label',`Needs you: ${needs}`);}
   const badge=doc.querySelector('[data-v2-needs-badge]');if(badge){badge.hidden=!needs;badge.textContent=String(needs);}
   const phone=doc.querySelector('[data-v2-needs-phone]');phone?.setAttribute('aria-label',needs?`Needs you: ${needs}`:'Needs you');}
 
- // ---------- Capture: the sample's sheet with four tiles ----------
- // A recording, Photographs and A note or a link have no capture back end in version two, so each opens the place where
- // material is added in the existing workspace (Advanced). A question goes to Research. Nothing is saved here.
- function captureSheet(){
-  const inSubject=!!active?.screen.route.startsWith('subject/')&&active.ctx.params.id,subject=inSubject?active.ctx.params.id:null;
-  const where=advanced({...(subject?{subject}:{}),section:'material'});
-  // Capture is not built inside version two, so the sheet says so and opens the existing place for new material.
-  const to='Adding material is not built in this version yet. These open Material in Advanced. A question goes to Research.';
-  const tile=(cls,ic,label,href,attr='')=>`<a class="${cls}" href="${esc(href)}"${attr}>${icon(ic)}${label}</a>`;
-  const body=`<p class="v2-cap-to">${to}</p><div class="v2-cap4">${tile('rec','plus','A recording',where)}${tile('','photo','Photographs',where)}${tile('','pen','A note or a link',where)}${tile('','ask','Ask a question','#/research',' data-v2-cap-ask')}</div>`;
-  const sh=P.sheet({title:'Capture',body,close:false});
-  sh.el.addEventListener('click',e=>{if(e.target.closest('.v2-cap4 a'))sh.close();});
+ // ---------- Find: subjects by name and the words in the Library, from the top bar ----------
+ // It finds, it does not answer: subjects come from subjects.standing (matched on their names, as Home's find does), and
+ // Library items from concept.sources.search, the command behind the CLI's "library search" (exact words only).
+ let findSheet=null;
+ const plain=text=>String(text??'').normalize('NFKC').trim().toLocaleLowerCase();
+ /** A snippet starting at a whole word, with no stray quote, dash or stop at either end. */
+ const snippet=(r,n=150)=>{
+  let t=String(r?.quote||'');const c=String(r?.context||''),i=c.indexOf(t);
+  if(i>0&&/[\p{L}\p{N}]/u.test(c[i-1]))t=t.replace(/^\S*\s*/,'');
+  t=t.replace(/\s+/g,' ').replace(/^[\s"'\u201c\u201d\u2018\u2019.,;:\-\u2013)\]]+/,'').replace(/[\s,;:\-\u2013(\[]+$/,'');
+  return t.length>n?t.slice(0,n-1).trimEnd()+'\u2026':t;};
+ function openFind(){
+  if(findSheet?.el?.isConnected){findSheet.el.querySelector('[name=q]')?.focus();return findSheet;}
+  const body=doc.createElement('div');
+  body.innerHTML=`<form class="v2-find" role="search"><div class="v2-find-box">${icon('search')}<input name="q" type="search" autocomplete="off" maxlength="256" aria-label="Find a subject, or words in the Library" placeholder="A subject, or words in the Library"><button class="pri" type="submit">Find</button></div><p class="v2-find-note">Finds subjects by their names and the exact words in your Library. It cannot answer questions yet.</p><div class="v2-find-out" data-v2-find-out aria-live="polite"></div></form>`;
+  const sheet=P.sheet({title:'Find',body,onClose:()=>{findSheet=null;}});sheet.el.dataset.v2Find='';findSheet=sheet;
+  const form=body.querySelector('form'),out=body.querySelector('[data-v2-find-out]'),input=form.elements.q;let run=0,subjects=null;
+  body.addEventListener('click',e=>{if(e.target.closest('a'))sheet.close();});
+  form.addEventListener('submit',async e=>{
+   e.preventDefault();const query=input.value.trim();if(!query)return;const mine=++run;
+   out.innerHTML='<p class="v2-find-meta">Looking\u2026</p>';
+   const [subjectsRead,wordsRead]=await Promise.allSettled([
+    subjects?Promise.resolve(subjects):client.call('subjects.standing',{}).then(r=>subjects=(r?.subjects||[]).filter(x=>x&&typeof x.id==='string'&&x.id&&!x.archived)),
+    client.call('concept.sources.search',{query})]);
+   if(mine!==run||!out.isConnected)return;
+   const want=plain(query),named=subjectsRead.status==='fulfilled'?subjectsRead.value.filter(x=>plain(x.title||'').includes(want)).slice(0,8):[];
+   const seen=new Set(),items=wordsRead.status==='fulfilled'?(wordsRead.value?.results||[]).filter(r=>r&&r.sourceId&&!seen.has(r.sourceId)&&seen.add(r.sourceId)).slice(0,8):[];
+   const parts=[];
+   if(named.length)parts.push(`<section><h3>Subjects</h3><ul data-v2-find-subject>${named.map(x=>`<li><a href="${esc(href('subject/:id',{id:x.id}))}">${esc(String(x.title||'').trim()||'Untitled subject')}</a></li>`).join('')}</ul></section>`);
+   if(items.length)parts.push(`<section><h3>In the Library</h3><ul data-v2-find-item>${items.map(r=>`<li><a href="${esc(advanced({section:'library'}))}"><b>${esc(r.title||'Untitled')}</b>${snippet(r)?`<small>${esc(snippet(r))}</small>`:''}</a></li>`).join('')}</ul><p class="v2-find-meta">Opens the Library in Advanced.${wordsRead.value?.truncated?' More of the Library was not looked through.':''}</p></section>`);
+   if(wordsRead.status==='rejected')parts.push(`<p class="v2-find-meta" data-tone="bad">The app could not search the Library. ${esc(wordsRead.reason?.message||'')}</p>`);
+   if(subjectsRead.status==='rejected')parts.push(`<p class="v2-find-meta" data-tone="bad">The app could not read your subjects. ${esc(subjectsRead.reason?.message||'')}</p>`);
+   if(!named.length&&!items.length&&wordsRead.status==='fulfilled'&&subjectsRead.status==='fulfilled')parts.push(`<p class="v2-find-meta">Nothing found for "${esc(query)}".</p>`);
+   out.innerHTML=parts.join('');
+  });
+  input.focus();
+  return sheet;
+ }
+
+ // ---------- Capture: the sheet with four ways in (public/v2/shell/capture.js) ----------
+ // The subject is the one open on subject, write, read and check; elsewhere there is none.
+ const capture=root.V2Capture.create({
+  call:(name,input,options)=>client.call(name,input,options),isHuman:()=>client.isHuman(),
+  advanced,href,expect:record=>({expectedRevision:record?.revision??0,...(typeof record?.hash==='string'?{expectedHash:record.hash}:{})}),
+ });
+ function openCapture(options={}){return capture.open(options);}
+ function captureHere(){
+  const route=active?.screen.route||'',id=active?.ctx.params.id;
+  const here=['subject/','write/','read/','check/'].some(start=>route.startsWith(start))&&typeof id==='string'&&id;
+  return openCapture({subject:here?{id,name:active.ctx.title||''}:null});
  }
 
  // ---------- start ----------
+ let startedAt=0;
  function start(){
-  if(started)return;started=true;
+  if(started)return;started=true;startedAt=Date.now();
   const host=doc.getElementById('v2-app')||doc.body;host.innerHTML=frameMarkup();
   applyTheme();
   host.addEventListener('click',e=>{
    if(e.target.closest('[data-v2-theme]'))return toggleTheme();
-   if(e.target.closest('[data-v2-capture]'))return captureSheet();
-   if(e.target.closest('[data-v2-ask]'))return go('research');
+   if(e.target.closest('[data-v2-capture]'))return captureHere();
+   if(e.target.closest('[data-v2-ask]'))return openFind();
    if(e.target.closest('[data-v2-desk-more]'))return deskSheet();
    if(e.target.closest('[data-v2-skip]')){e.preventDefault();main()?.focus();}
   });
   root.addEventListener('hashchange',()=>route());
+  // The key the bar shows opens Find, unless another sheet is already in front.
+  doc.addEventListener('keydown',e=>{if(e.key?.toLowerCase()!=='k'||!(e.metaKey||e.ctrlKey)||e.altKey||e.shiftKey)return;if(doc.querySelector('dialog[open]:not([data-v2-find])'))return;e.preventDefault();openFind();});
   // Fit the desk again when the bar changes width (a window resized, fonts arrived).
   let fitting=0;const refit=()=>{root.cancelAnimationFrame?.(fitting);fitting=root.requestAnimationFrame?root.requestAnimationFrame(fitDesk):setTimeout(fitDesk,0);};
   // The spacer changes width whenever anything else in the bar does (the Needs you count appears, a font arrives).
   if(typeof ResizeObserver==='function'){const ro=new ResizeObserver(refit);ro.observe(doc.querySelector('[data-v2-top]'));ro.observe(doc.querySelector('.v2-grow'));}else root.addEventListener('resize',refit);
   doc.fonts?.ready?.then(refit);
-  live.on({kinds:['needs-you*']},()=>refreshNeeds());
-  live.on({kinds:['subject-places*','study-draft*','concept*']},()=>refreshDesk());
-  live.on({},e=>{if(e.reset){refreshNeeds();refreshDesk();}});
+  // A reset reaches every listener, so the named ones leave it to the one below.
+  live.on({kinds:['needs-you*']},e=>{if(!e?.reset)refreshNeeds();});
+  live.on({kinds:['subject-places*','study-draft*','concept*']},e=>{if(!e?.reset)refreshDesk();});
+  // A reset asks for everything again; the one that comes with the stream's first hello is the reading just made.
+  live.on({},e=>{if(e.reset&&Date.now()-startedAt>3000){refreshNeeds();refreshDesk();}});
   if(!client.actor())P.say('This page was opened with an assistant name the app does not know, so nothing can be read or changed. Open it again with a listed name.',{tone:'bad'});
   refreshNeeds();refreshDesk();route();
  }
@@ -266,7 +314,7 @@
   expect:record=>({expectedRevision:record?.revision??0,...(typeof record?.hash==='string'?{expectedHash:record.hash}:{})}),
   actor:()=>client.actor(),isHuman:()=>client.isHuman(),actorName:C.actorName,Error:C.V2Error,
   // the other front and the frame
-  advanced,brand:id=>applyBrand(id),theme:()=>doc.documentElement.dataset.theme,
+  capture:options=>openCapture(options),find:()=>openFind(),advanced,brand:id=>applyBrand(id),theme:()=>doc.documentElement.dataset.theme,
   desk:Object.freeze({refresh:refreshDesk,use:source=>{deskSource=typeof source==='function'?source:null;return refreshDesk();},list:()=>desk.map(d=>({...d}))}),
   needs:Object.freeze({refresh:refreshNeeds,count:()=>needs}),
   // Helpers a screen offers the others: v2.shared.<screen id> = {...}. The only part of v2 a screen may write to.

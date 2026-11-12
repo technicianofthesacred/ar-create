@@ -14,17 +14,19 @@
 // is never "Nothing yet"; a Carousel-only subject reaches Write, Read and Check from its post text step.
 //
 // facts = {
-//   id, title, bindingId?, projectId?, archived?, folder?, look?, changedAt? (ISO), asks? (open questions),
+//   id, title, bindingId?, projectId?, magazine? ({storyId, pieceId}: the words are a Magazine story's own), archived?, folder?, look?, changedAt? (ISO), asks? (open questions),
 //   published? (true|false; left out when no record says, and then no step claims either),
 //   material:   {total, recordings, notes, links, photos}
 //   transcript: {open (words to confirm), checked (a word check or a plan exists)}
-//   research:   {step: attach|review|research|running|directions|picked|needs-attention|null, unreviewed, topics}
+//   research:   {step: attach|review|research|running|directions|picked|filed|needs-attention|null, unreviewed, topics}
+//               (filed: a Magazine story's research file is on record; nothing says it was read or used)
 //   dish:       {named, text, at, dishes (possible dishes on the board), direction (his direction is written)}
 //   words:      {paragraphs, count}          (no saved writing place: {paragraphs:0, count:0})
 //   suggestions: number of suggestions on the words waiting for his decision
 //   check:      {status: null (never run)|running|checked|..., issues}
 //   consent:    {people:[{name,state,request}], released, overridden, ready, held}
-//   pieces:     [{key, id, kind: article|post|product-listing|carousel|instagram, title, status?, placements, slides,
+//   pieces:     [{key, id, kind: article|post|product-listing|carousel|instagram, title, status?, placements, slides, words? (a
+//                 Carousel's own slide words), createdAt?, updatedAt?,
 //                 plan?: {format, stories, chosen, chosenTitle, frames, caption, ready, look}}]
 // }
 
@@ -112,18 +114,22 @@ export function stepsFor(form, facts = {}) {
  if (!materialKnown || m.total) {
   const r = facts.research || {}, topics = r.topics ? ' · ' + plural(r.topics, 'research topic') + ' on this material' : '';
   if (r.step === 'picked') add('facts', 'Research', 'The facts', 'done', 'Read and used');
-  else if (r.step === 'directions') add('facts', 'Research', 'The facts', 'flag', 'Findings to read');
+  // A result came back: it is called findings only when they are known to be there (`findings`, a count), and when none
+  // are, it says what is there. `why` lets a screen that reads the brief itself say the same, whichever it learns.
+  else if (r.step === 'directions' && r.findings === 0) add('facts', 'Research', 'The facts', 'wait', 'The question is asked, waiting for findings', {waitsFor: 'Findings', why: 'research-result'});
+  else if (r.step === 'directions') add('facts', 'Research', 'The facts', 'flag', r.findings > 0 ? 'Findings to read' : 'Research came back', {why: 'research-result'});
   else if (r.step === 'running') add('facts', 'Research', 'The facts', 'wait', 'Being looked into', {waitsFor: 'The research to finish'});
   else if (r.step === 'needs-attention') add('facts', 'Research', 'The facts', 'flag', 'Needs a look');
+  else if (r.step === 'filed') add('facts', 'Research', 'The facts', 'done', 'A research file is on record');
   else if (r.step === 'review') add('facts', 'Research', 'The facts', 'todo', (r.unreviewed ? plural(r.unreviewed, 'source') + ' not looked at yet' : 'Sources not looked at yet') + topics);
   else if (r.step === 'research') add('facts', 'Research', 'The facts', 'todo', 'Ready to look into' + topics);
   else add('facts', 'Research', 'The facts', 'todo', 'Not looked into yet' + topics);
  }
  // ---- Simmer: done only when the board holds the dish he named (the sentence he sent, or the dish he named in a chat).
  const d = facts.dish || {};
- if (d.named) add('dish', 'Simmer', 'Name the dish', 'done', d.at && day(d.at) ? 'Named on the board, ' + day(d.at) : 'Named on the board');
+ if (d.named) add('dish', 'Simmer', 'Name the dish', 'done', (facts.magazine ? 'Named in Simmer' : 'Named on the board') + (d.at && day(d.at) ? ', ' + day(d.at) : ''));
  else if (materialKnown && !m.total) add('dish', 'Simmer', 'Name the dish', 'wait', 'When there is something to look at', {waits: ['have'], waitsFor: 'Material to be added'});
- else add('dish', 'Simmer', 'Name the dish', 'todo', d.dishes ? plural(d.dishes, 'possible dish', 'possible dishes') : d.direction ? 'Your direction is written; the dish is not named yet' : 'Not named yet');
+ else add('dish', 'Simmer', 'Name the dish', 'todo', d.dishes ? plural(d.dishes, 'possible dish', 'possible dishes') : d.direction ? (facts.magazine ? 'A direction is chosen in the Magazine; the dish is not named yet' : 'Your direction is written; the dish is not named yet') : 'Not named yet');
  // ---- A subject with no form yet: choosing one is the next thing to make, once there is something to make it from.
  if (!form) {
   if (!known(facts.pieces)) add('form', 'Create', 'Choose a form', 'unknown', 'Not known');
@@ -135,9 +141,12 @@ export function stepsFor(form, facts = {}) {
   if (TEXT.has(kind) || kind === 'slides') {
    const wordsName = kind === 'post' ? 'The lines' : kind === 'slides' ? 'The words on the slides' : 'The words';
    if (kind === 'slides') {const n = p.slides || 0; add('slides', 'Create', 'The slides', n ? 'done' : 'todo', n ? plural(n, 'slide') : 'Not laid out yet');}
+   // A Carousel counts the words on its own slides; the article's count is not its words. With no count in its records, none is shown.
+   const ownCount = kind === 'slides' ? (Number.isFinite(p.words) ? p.words : null) : w.count;
    if (waiting) add('words', 'Create', wordsName, 'flag', plural(waiting, 'suggestion') + ' waiting');
-   else if (!w.paragraphs) add('words', 'Create', wordsName, 'todo', 'Not started');
-   else add('words', 'Create', wordsName, 'done', plural(w.count, 'word'));
+   else if (kind === 'slides' && !ownCount) add('words', 'Create', wordsName, 'todo', 'Nothing written on the slides yet');
+   else if (!w.paragraphs && kind !== 'slides') add('words', 'Create', wordsName, 'todo', 'Not started');
+   else add('words', 'Create', wordsName, 'done', plural(ownCount, 'word'));
    if (kind !== 'slides') {
     const photosName = kind === 'article' ? 'Photographs in the article' : kind === 'post' ? 'The picture' : 'Photographs';
     if (p.placements) add('photos', 'Create', photosName, 'done', plural(p.placements, 'placed', 'placed'));
@@ -150,6 +159,9 @@ export function stepsFor(form, facts = {}) {
    else if (c.status === 'running') add('check', 'Create', 'Check', 'wait', 'Checking', {waitsFor: 'The check to finish'});
    else if (c.status === 'checked' && !c.issues) add('check', 'Create', 'Check', 'done', 'Checked');
    else if (c.issues) add('check', 'Create', 'Check', 'flag', plural(c.issues, 'thing') + ' to look at');
+   // Held for want of a captured source: checking again cannot help, so the step is drawn as waiting, yet it still leads
+   // (nothing will arrive on its own), so the station stays at Create.
+   else if (c.status === 'held' && c.noSource) add('check', 'Create', 'Check', 'wait', 'No source to check against yet', {stuck: true});
    else add('check', 'Create', 'Check', 'flag', 'Check again');
   }
   if (kind === 'instagram') {
@@ -205,24 +217,33 @@ export function ringOf(steps) {const done = steps.filter(s => s.state === 'done'
     any of the others); null otherwise, or when none is left. The last step, whether the piece is out, does not
     block: nothing comes after it. */
 export function leadOf(steps) {
- const lead = steps.find(s => s.state === 'flag') || steps.find(s => s.state === 'next') || steps.find(s => s.state === 'wait') || null;
+ const lead = steps.find(s => s.state === 'flag' || s.stuck) || steps.find(s => s.state === 'next') || steps.find(s => s.state === 'wait') || null;
  const firstUnknown = steps.findIndex(s => s.state === 'unknown' && s.unknownWhy !== 'published');
  if (firstUnknown < 0) return lead;
- const flag = steps.find(s => s.state === 'flag');
+ const flag = steps.find(s => s.state === 'flag' || s.stuck);
  return flag && steps.indexOf(flag) < firstUnknown ? flag : null;
 }
 
-const nextOf = (step, form) => step ? {form: form?.key || null, formName: form ? form.name : null, step: step.id, name: step.name, group: step.group, state: step.state, note: step.note, section: step.section, ...(step.waitsFor ? {waitsFor: step.waitsFor} : {})} : null;
-const formView = (form, steps) => {const r = ringOf(steps), lead = leadOf(steps); return {key: form.key, kind: form.kind, name: form.name, to: form.to, title: form.title, alike: form.alike, id: form.piece?.id || null, ...r, finished: r.done === r.total, next: nextOf(lead, form), steps};};
+/** The lead of a list of steps. A Magazine story whose Check cannot be counted from its records still has a true next
+    step once its words are done: open Check (its state stays Not known). */
+function leadFor(steps, facts = {}) {
+ const lead = leadOf(steps);
+ if (lead || !facts.magazine) return lead;
+ const check = steps.find(s => s.id === 'check'), words = steps.find(s => s.id === 'words');
+ return check?.state === 'unknown' && words?.state === 'done' ? check : null;
+}
+
+const nextOf = (step, form) => step ? {form: form?.key || null, formName: form ? form.name : null, step: step.id, name: step.name, group: step.group, state: step.state, note: step.state === 'unknown' ? 'Not known, open it to see' : step.note, section: step.section, ...(step.waitsFor ? {waitsFor: step.waitsFor} : {})} : null;
+const formView = (form, steps, facts) => {const r = ringOf(steps), lead = leadFor(steps, facts); return {key: form.key, kind: form.kind, name: form.name, to: form.to, title: form.title, alike: form.alike, id: form.piece?.id || null, slides: form.piece?.slides ?? null, words: form.piece?.words ?? null, createdAt: form.piece?.createdAt || null, updatedAt: form.piece?.updatedAt || null, ...r, finished: r.done === r.total, next: nextOf(lead, form), steps};};
 
 /** Where one subject stands, from its facts: {id, title, station, stationName, ring, next, forms, steps, reached, ...}.
     `steps` are the subject's own steps when it has no form yet (each form's steps begin with the subject's own). */
 export function standingOf(facts = {}, {now = Date.now()} = {}) {
- const forms = formsOf(facts).map(f => formView(f, stepsFor(f, facts)));
+ const forms = formsOf(facts).map(f => formView(f, stepsFor(f, facts), facts));
  const own = forms.length ? null : stepsFor(null, facts);
  const lead = forms.find(f => !f.finished) || null;
  const leadSteps = lead ? lead.steps : own || [];
- const leadStep = forms.length ? (lead ? leadOf(lead.steps) : null) : leadOf(own);
+ const leadStep = forms.length ? (lead ? leadFor(lead.steps, facts) : null) : leadFor(own, facts);
  const next = forms.length ? (lead ? lead.next : null) : nextOf(leadStep, null);
  const ring = forms.length ? forms.reduce((n, f) => n + f.ring, 0) / forms.length : ringOf(own).ring;
  // The station: published when that is recorded; resting when archived, paused or long untouched (`resting` says
@@ -234,7 +255,9 @@ export function standingOf(facts = {}, {now = Date.now()} = {}) {
  if (facts.published === true) station = 'published';
  else if (resting) station = 'resting';
  else if (!leadSteps.length || leadSteps.every(s => s.state === 'done')) station = 'share';
- else station = STATION_OF_GROUP[(leadStep || leadSteps.find(s => s.state !== 'done')).group];
+ // A Magazine story with no step that may lead (one not known comes first) stands where its last step done is, never at the
+ // group of a step refused as the lead. Every other subject keeps the first step not done.
+ else station = STATION_OF_GROUP[(leadStep || (facts.magazine ? [...leadSteps].reverse().find(s => s.state === 'done') : null) || leadSteps.find(s => s.state !== 'done') || leadSteps[0]).group];
  const all = [...(own || []), ...forms.flatMap(f => f.steps)];
  return {schema: 'ar-create.subject-standing.v1', rule: VERSION, id: facts.id, title: facts.title || facts.id, station, stationName: STATION_NAME[station],
   ring: Math.round(ring * 1000) / 1000, next, known: !!next, resting: station === 'resting' ? resting : null,

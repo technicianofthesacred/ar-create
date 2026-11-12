@@ -35,7 +35,7 @@ async function until(check,what,ms=8000){const end=Date.now()+ms;for(;;){const v
 function unit(){
  const html=read('public/v2/index.html'),dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:'http://local.test/v2/index.html',runScripts:'outside-only'});
  const w=dom.window;windows.push(w);w.fetch=async()=>({ok:true,status:200,text:async()=>'{}'});w.EventSource=class{addEventListener(){}close(){}};
- for(const f of ['shell/client.js','shell/parts.js','shell/shell.js','screens/home.js'])w.eval(fs.readFileSync(path.join(v2dir,f),'utf8'));
+ for(const f of ['shell/client.js','shell/parts.js','shell/capture.js','shell/shell.js','screens/home.js'])w.eval(fs.readFileSync(path.join(v2dir,f),'utf8'));
  return w;
 }
 test('nextOf: only a known next step is ever shown',()=>{
@@ -49,6 +49,10 @@ test('nextOf: only a known next step is ever shown',()=>{
  assert.equal(nextOf({known:true,station:'published',forms:[],next:step('Check')}),'','published has none');
  assert.equal(nextOf({known:true,station:'resting',forms:[],next:step('Check')}),'','resting has none');
  assert.equal(nextOf(undefined),'');
+ const held={name:'Check',formName:'Article',step:'check',state:'wait',note:'No source to check against yet'};
+ assert.equal(nextOf({known:true,station:'create',forms:[{}],next:held}),'No source to check against yet','a check held for want of a source says why, not a bare Check');
+ assert.equal(nextOf({known:true,station:'create',forms:[{},{}],next:held}),'No source to check against yet · Article','the form is still named when there are two');
+ assert.equal(nextOf({known:true,station:'create',forms:[{}],next:{name:'Check',step:'check',state:'todo',note:'Not checked yet'}}),'Check','a piece simply not checked yet still reads Check');
 });
 
 /* ---------------- the page, against the real server ---------------- */
@@ -335,4 +339,98 @@ test('Home as an assistant says why the answers are greyed, in a visible line; c
   assert.ok(c.querySelector('[data-row-menu]')&&c.querySelector('[data-pin]'),'the menu sits beside the pin, as in rows');
  }
  assert.doesNotMatch(read('public/v2/screens/home.js'),/Drawn in the \$\{esc\(id\)\}/,'the dot says the look\'s name, not its id');
+});
+
+/* ---------------- what is waiting to be filed ---------------- */
+test('Home lists what a capture left in the Library with no subject, and files it with the subject through the attach command',async t=>{
+ const f=await server(t);await world(f);
+ // Two captures left in the Library root (the sheet's "to file later") and one already filed by the sheet's own attach.
+ const put=async name=>(await f.agent('/api/sources/import',{rootId:'library',folder:'',files:[{name,content:'Invented words for '+name}]})).receipts[0].source;
+ const first=await put('Invented lantern thought 2026-11-11 09.00.00.md'),second=await put('Invented kiln thought 2026-11-11 09.05.00.md'),filed=await put('Invented already filed 2026-11-11 08.00.00.md');
+ const standing=await f.agent('/api/subject/standing?parentStudyId=inv-cups');
+ await f.agent('/api/study/material/attach',{bindingId:standing.facts.bindingId,parentStudyId:'inv-cups',sourceIds:[filed.id]});
+ const calls=[];
+ const {w,doc}=await page({base:f.url,fetchImpl:logged(f.url,calls)});
+ await until(()=>doc.querySelector('.home-groups .home-row'),'the list');
+ const block=await until(()=>doc.querySelector('[data-home-file]:not([hidden])'),'the block of captures to file');
+ const names=[...block.querySelectorAll('[data-source]')].map(li=>li.querySelector('.home-file-name').textContent);
+ assert.deepEqual(names.sort(),['Invented kiln thought 2026-11-11 09.05.00.md','Invented lantern thought 2026-11-11 09.00.00.md'],'only what no subject has, never the one already attached');
+ assert.ok(block.querySelector('a[href*="section=library"]'),'a link to it in Advanced');
+ assert.doesNotMatch(block.textContent,/inbox|capture|—/i,'worded for what the records say: things in the Library, not with a subject');
+ assert.match(block.textContent,/2 things in the Library, not with a subject yet/);
+ assert.ok(calls.includes('/api/sources/tree')&&calls.includes('/api/library/source-projects'),'read with the Library tree and the sources each project uses');
+ // File one: choose a subject; the sheet attaches it and the line goes.
+ click(w,block.querySelector(`[data-file-in="${first.id}"]`));
+ const sheet=await until(()=>doc.querySelector('dialog.v2-sheet [name=subject]'),'the choice of subject');
+ const options=[...sheet.options].map(o=>o.textContent);
+ assert.ok(options.some(o=>/Invented river/.test(o))&&!options.some(o=>/Invented old plan/.test(o)),'live subjects only, no archived one');
+ sheet.value='inv-river';sheet.form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+ await until(()=>!doc.querySelector(`[data-file-in="${first.id}"]`),'the capture to leave the list');
+ const usedBy=(await f.agent('/api/library/source-projects')).projects.filter(p=>p.sourceIds.includes(first.id));
+ assert.equal(usedBy.length,1,'it is now with exactly one subject');
+ assert.ok(doc.querySelector(`[data-file-in="${second.id}"]`),'the other is still waiting');
+});
+test('Home shows nothing to file when nothing is waiting, and the block keeps to the look',async t=>{
+ const f=await server(t);await world(f);
+ const {doc}=await page({base:f.url,fetchImpl:pageFetch(f.url)});
+ await until(()=>doc.querySelector('.home-groups .home-row'),'the list');
+ await new Promise(r=>setTimeout(r,300));
+ assert.equal(doc.querySelector('[data-home-file]:not([hidden])'),null,'a quiet page: the block is only there when there is something to file');
+});
+
+test('Home leaves off what a plan uses, finds the next line again after filing, and reads the Library again only when it may have changed',async t=>{
+ const f=await server(t);await world(f);
+ const put=async name=>(await f.agent('/api/sources/import',{rootId:'library',folder:'',files:[{name,content:'Invented words for '+name}]})).receipts[0].source;
+ const a=await put('Invented plan photo.md'),b=await put('Invented loose one.md'),c=await put('Invented loose two.md');
+ const calls=[],inner=pageFetch(f.url);
+ const fetchImpl=async(u,o)=>{const path=new URL(String(u),f.url).pathname;calls.push(path);
+  if(path==='/api/instagram/plans')return {ok:true,status:200,text:async()=>JSON.stringify({plans:[{id:'plan-1',subject:'inv-river'}]})};
+  if(path==='/api/instagram/plan')return {ok:true,status:200,text:async()=>JSON.stringify({id:'plan-1',material:{transcripts:[],photos:[{id:'P1',sourceId:a.id}]}})};
+  return inner(u,o);};
+ const {w,doc,sources}=await page({base:f.url,fetchImpl});
+ const block=await until(()=>doc.querySelector('[data-home-file]:not([hidden])'),'the block');
+ assert.deepEqual([...block.querySelectorAll('[data-source]')].map(li=>li.dataset.source).sort(),[b.id,c.id].sort(),'what a plan uses is not offered');
+ // Filing the first moves focus to the next line.
+ click(w,block.querySelector(`[data-file-in="${block.querySelector('[data-source]').dataset.source}"]`));
+ const sheet=await until(()=>doc.querySelector('dialog.v2-sheet [name=subject]'),'the choice');
+ sheet.value='inv-river';sheet.form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+ await until(()=>doc.querySelectorAll('[data-file-in]').length===1,'one line left');
+ await until(()=>doc.activeElement===doc.querySelector('[data-file-in]'),'focus on the next line');
+ // An unrelated change does not read the tree again; a change to sources does.
+ await new Promise(r=>setTimeout(r,700));
+ const trees=()=>calls.filter(p=>p==='/api/sources/tree').length,before=trees();
+ const es=sources.at(-1);es.emit('hello',{bootId:'b1',cursor:1});
+ es.emit('change',{cursor:2,bootId:'b1',kind:'subject-places.saved',scope:{kind:'subject',id:'inv-river'}});
+ await new Promise(r=>setTimeout(r,900));
+ assert.equal(trees(),before,'a change that cannot alter the Library does not read it');
+ es.emit('change',{cursor:3,bootId:'b1',kind:'sources.import',scope:{kind:'library',id:'x'}});
+ await until(()=>trees()>before,'the Library read again');
+});
+
+/* ---------------- Magazine stories on Home ---------------- */
+test('Home lists the Magazine stories with a true station and next step; one can be put on the desk, and nothing is made in the Magazine',{timeout:300000},async t=>{
+ const {addMagazineToSyntheticHome}=await import('../scripts/demo-magazine.mjs'),{treeHashes}=await import('./helpers/magazine-fixture.mjs');
+ const fixture=syntheticHome();t.after(()=>fs.rmSync(fixture.dir,{recursive:true,force:true}));
+ const magazine=await addMagazineToSyntheticHome(fixture),config=JSON.parse(fs.readFileSync(fixture.config,'utf8'));
+ const s=await createServer({dataDir:config.dataDir,publicDir:path.join(repo,'public'),studyOriginalRoots:config.studyOriginalRoots,researchEnabled:false,packageView:{syntheticFixtures:true}});
+ await new Promise(r=>s.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>{s.closeAllConnections?.();s.close(r);}));
+ const url='http://127.0.0.1:'+s.address().port,before=JSON.stringify(treeHashes(magazine.vault));
+ const {w,doc}=await page({base:url,fetchImpl:pageFetch(url)});
+ await until(()=>doc.querySelectorAll('.home-groups .home-row').length>=3,'the stories');
+ const standing=(await (await fetch(url+'/api/subjects/standing',{headers:{'X-AR-Actor':'agent:codex','X-AR-Client':'http'}})).json()).subjects,stories=standing.filter(x=>x.origin?.kind==='magazine');
+ assert.equal(stories.length,3);
+ for(const story of stories){
+  const row=doc.querySelector(`.home-row[data-id="${story.id}"]`);assert.ok(row,'a row for '+story.title);
+  assert.ok(story.next&&story.known,story.title+' has a true next step');
+  assert.equal(row.querySelector('.home-next').textContent.trim(),nextText(story));assert.ok(nextText(story));
+  assert.equal(row.querySelector('.home-st').textContent.trim(),story.stationName);
+  assert.equal(row.querySelector('.home-row-open').getAttribute('href'),'#/subject/'+story.id);
+ }
+ // Put one on the desk: it is saved as its place, and the Magazine's files are untouched.
+ const kiln=stories.find(x=>x.title==='Where the Ash Settles');
+ click(w,doc.querySelector(`.home-row[data-id="${kiln.id}"] [data-pin]`));
+ await until(()=>doc.querySelector(`.home-card[data-id="${kiln.id}"]`),'the story on the desk');
+ const places=(await (await fetch(url+'/api/subject-places?parentStudyId='+kiln.id,{headers:{'X-AR-Actor':'agent:codex','X-AR-Client':'http'}})).json()).places;
+ assert.ok(places[0].pinnedAt);
+ assert.equal(JSON.stringify(treeHashes(magazine.vault)),before,'nothing was made or changed in the Magazine');
 });

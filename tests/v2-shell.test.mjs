@@ -15,8 +15,8 @@ const repo=path.resolve(import.meta.dirname,'..'),v2dir=path.join(repo,'public/v
 const read=file=>fs.readFileSync(path.join(repo,file),'utf8');
 
 // The screen files, in order. index.html lists every one now, so a screen piece never edits it.
-const SCREENS=['home','subject','slides','looks','research'];
-const ROUTES={home:'','subject':'subject/:id',slides:'slides/:id',looks:'looks',research:'research','research-group':'research/group/:id','research-topic':'research/topic/:id'};
+const SCREENS=['home','subject','slides','looks','research','write','read','check'];
+const ROUTES={home:'','subject':'subject/:id',slides:'slides/:id',looks:'looks',research:'research','research-group':'research/group/:id','research-topic':'research/topic/:id',write:'write/:id',read:'read/:id',check:'check/:id'};
 
 function scriptsOf(html){return [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1]);}
 function stylesOf(html){return [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(m=>m[1]);}
@@ -29,7 +29,7 @@ async function page({url='http://local.test/v2/index.html',answers={},storage={}
  // A stand-in for the browser's EventSource, to send the page changes as the server's stream would.
  w.EventSource=class{constructor(u){this.url=u;this.l={};sources.push(this);}addEventListener(t,f){(this.l[t]||=[]).push(f);}close(){this.closed=true;}emit(t,data){for(const f of this.l[t]||[])f({data:JSON.stringify(data)});}};
  for(const [k,v] of Object.entries(storage))w.localStorage.setItem(k,v);
- const commands=[['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true],['look','GET','/api/look',true],['subject-places.save','POST','/api/subject-places/save',false],['needs-you.answer','POST','/api/needs-you/answer',false]]
+ const commands=[['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true],['look','GET','/api/look',true],['subject-places.save','POST','/api/subject-places/save',false],['needs-you.answer','POST','/api/needs-you/answer',false],['subjects.standing','GET','/api/subjects/standing',true],['concept.sources.search','POST','/api/concept/sources/search',true]]
   .map(([name,method,route,readOnly])=>({name,method,route,readOnly,schema:{},actors:['any']}));
  w.fetch=async(input,options={})=>{const u=new URL(String(input),w.location.href);calls.push({path:u.pathname+u.search,options});
   const answer=u.pathname==='/api/capabilities'?{commands}:answers[u.pathname]??{};const [status,body]=Array.isArray(answer)?answer:[200,answer];
@@ -46,8 +46,8 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 
 test('index.html lists every screen file in order, after the shell, and every file it names exists',()=>{
  const html=read('public/v2/index.html'),scripts=scriptsOf(html),styles=stylesOf(html);
- assert.deepEqual(scripts,['/document-study/recovery-storage.js','shell/client.js','shell/parts.js','shell/shell.js',...SCREENS.map(s=>`screens/${s}.js`)]);
- assert.deepEqual(styles,['/document-study/c3-theme.css','shell/shell.css','/document-study/graphite-controls.css',...SCREENS.map(s=>`screens/${s}.css`)]);
+ assert.deepEqual(scripts,['/document-study/recovery-storage.js','shell/client.js','shell/parts.js','shell/capture.js','shell/shell.js',...SCREENS.map(s=>`screens/${s}.js`)]);
+ assert.deepEqual(styles,['/document-study/c3-theme.css','shell/shell.css','shell/capture.css','/document-study/graphite-controls.css',...SCREENS.map(s=>`screens/${s}.css`)]);
  for(const file of [...scripts,...styles])assert.ok(fs.existsSync(file.startsWith('/')?path.join(repo,'public',file):path.join(v2dir,file)),file+' exists');
  assert.doesNotMatch(html,/<script>(?!<)/,'no inline script: the page runs under the app\'s strict script policy');
  assert.ok(fs.existsSync(path.join(v2dir,'README.md')),'the one page later workers read');
@@ -126,23 +126,84 @@ test('the theme follows the system until he chooses, and a choice is kept',async
  assert.equal(JSON.parse(sys.localStorage.getItem('ar-create-v2-theme')).theme,'light','the choice is kept');
 });
 
-test('Capture is the sample sheet with four tiles; search goes to Research',async()=>{
+test('Capture is the sample sheet with four tiles, each opening in place; search goes to Research',async()=>{
  const {w,doc}=await page({url:'http://local.test/v2/index.html#/subject/p1'});
+ assert.equal(typeof w.v2.capture,'function','v2.capture(options) is how every screen opens the sheet');
  doc.querySelector('[data-v2-capture]').click();
- const sheet=doc.querySelector('dialog.v2-sheet');assert.ok(sheet);
+ const sheet=doc.querySelector('dialog.v2-capture');assert.ok(sheet);
  assert.equal(sheet.querySelector('h2').textContent,'Capture');
  assert.equal(sheet.querySelector('[data-v2-close]'),null,'the sample sheet has no close button');
- assert.deepEqual([...sheet.querySelectorAll('.v2-cap4 a')].map(a=>a.textContent),['A recording','Photographs','A note or a link','Ask a question']);
- assert.match(sheet.querySelector('.v2-cap4 a').getAttribute('href'),/^\/document-study\/index\.html\?subject=p1&section=material$/);
- assert.equal(sheet.querySelector('[data-v2-cap-ask]').getAttribute('href'),'#/research');
- assert.match(sheet.querySelector('.v2-cap-to').textContent,/^Adding material is not built in this version yet\. These open Material in Advanced\./,'it says plainly what it does and does not do');
- assert.doesNotMatch(sheet.textContent,/Goes to /,'it does not claim a subject Advanced does not keep');
- assert.ok(![...sheet.querySelectorAll('.v2-cap4 path')].some(x=>/^M12 3a3 3 0 0 0-3 3v5/.test(x.getAttribute('d')||'')),'no microphone where nothing listens');
- sheet.querySelector('[data-v2-cap-ask]').click();assert.equal(doc.querySelector('dialog.v2-sheet'),null,'choosing a tile closes the sheet');
+ assert.deepEqual([...sheet.querySelectorAll('.v2-cap4 button')].map(a=>a.textContent),['Speak','Photograph','Write a thought','Ask a question']);
+ assert.equal(sheet.querySelector('.v2-cap4 a'),null,'the tiles do not navigate away');
+ assert.match(sheet.querySelector('.v2-cap-to').textContent,/A question goes to Research\.$/);
+ assert.doesNotMatch(sheet.textContent,/Not built yet|inbox|will wait for you here/);
+ sheet.querySelector('[data-view="question"]').click();
+ assert.ok(sheet.querySelector('input[data-cap-text]'),'Ask a question opens its line in the same sheet');
+ assert.equal(w.location.hash,'#/subject/p1','nothing navigated');
+ sheet.querySelector('[data-cap="back"]').click();assert.equal(sheet.querySelectorAll('.v2-cap4 button').length,4,'a way back to the four tiles');
+ sheet.querySelector('[data-view="thought"]').click();sheet.querySelector('[data-cap="back"]').click();sheet.querySelector('[data-view="thought"]').click();
+ sheet.querySelector('[data-cap="back"]').click();
+ sheet.dispatchEvent(new w.Event('cancel',{cancelable:true}));assert.equal(doc.querySelector('dialog.v2-capture'),null,'Escape closes a sheet with nothing unsaved');
+ assert.equal(doc.activeElement,doc.querySelector('[data-v2-capture]'),'focus returns to the Capture button');
  w.location.hash='#/';w.dispatchEvent(new w.HashChangeEvent('hashchange'));await settle();
  doc.querySelector('[data-v2-ask]').click();
- assert.equal(w.location.hash,'#/research');
- assert.equal(doc.querySelector('dialog.v2-sheet'),null,'search opens no dialog');
+ assert.equal(w.location.hash,'#/','Find does not leave the page');
+ assert.ok(doc.querySelector('dialog.v2-sheet [name=q]'),'Find opens its own box');
+});
+
+test('Find in the top bar finds subjects by name and Library items by their words, and opens them',async()=>{
+ const {w,doc,calls}=await page({answers:{
+  '/api/subjects/standing':{subjects:[{id:'p1',title:'Invented garden of patience',archived:false},{id:'p2',title:'Invented cups',archived:false},{id:'p9',title:'Invented old garden plan',archived:true}]},
+  '/api/concept/sources/search':{query:'garden',results:[{sourceId:'src-1',title:'Invented voice note from a garden',quote:'The garden is quiet at dawn.',start:3}],scanned:4,skipped:[],truncated:false},
+ }});
+ doc.querySelector('[data-v2-ask]').click();
+ const sheet=doc.querySelector('dialog.v2-sheet'),form=sheet.querySelector('form');
+ assert.equal(sheet.querySelector('h2').textContent,'Find');assert.match(sheet.textContent,/cannot answer questions/i);
+ const q=sheet.querySelector('[name=q]');q.value='garden';form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await settle(60);
+ const subjects=[...sheet.querySelectorAll('[data-v2-find-subject] a')].map(a=>[a.getAttribute('href'),a.textContent]);
+ assert.deepEqual(subjects,[['#/subject/p1','Invented garden of patience']],'by name, never an archived subject, never one that does not match');
+ const items=[...sheet.querySelectorAll('[data-v2-find-item] a')];
+ assert.equal(items.length,1);assert.match(items[0].textContent,/Invented voice note from a garden/);
+ assert.match(items[0].getAttribute('href'),/^\/document-study\/index\.html\?section=library/,'a Library item opens the Library in Advanced');
+ assert.match(sheet.textContent,/The garden is quiet at dawn\./);
+ const search=calls.find(c=>c.path==='/api/concept/sources/search');assert.deepEqual(JSON.parse(search.options.body),{query:'garden'},'the existing search command, the same as the CLI\'s library search');
+ // Choosing a subject closes the box and goes there.
+ sheet.querySelector('[data-v2-find-subject] a').click();assert.equal(doc.querySelector('dialog.v2-sheet'),null);
+ // The key shown in the bar opens it.
+ doc.dispatchEvent(new w.KeyboardEvent('keydown',{key:'k',ctrlKey:true,bubbles:true}));assert.ok(doc.querySelector('dialog.v2-sheet [name=q]'),'Ctrl or Cmd with K opens Find');
+});
+
+test('Find says plainly when nothing matches, and when the search is refused',async()=>{
+ const {w,doc}=await page({answers:{'/api/subjects/standing':{subjects:[]},'/api/concept/sources/search':[400,{error:'Supply an explicit nonempty literal query.'}]}});
+ doc.querySelector('[data-v2-ask]').click();const sheet=doc.querySelector('dialog.v2-sheet');
+ sheet.querySelector('[name=q]').value='zzz';sheet.querySelector('form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await settle(60);
+ assert.match(sheet.textContent,/Nothing found for "zzz"|could not search the Library/i);
+});
+
+test('the shell reads its desk and Needs you once on load, and a reset that is the first read is not a second one',async()=>{
+ const {doc,calls,sources}=await page({url:'http://local.test/v2/index.html#/looks',answers:{'/api/needs-you':{counts:{open:1},asks:[]},'/api/subject-places':{places:[{parentStudyId:'p1',pinnedAt:'2026-11-01T00:00:00Z',archived:false,order:0}]},'/api/study-draft/catalog':{collections:[{parentStudyId:'p1',title:'Invented garden'}]}}});
+ const es=sources.at(-1);es.emit('hello',{reset:true,bootId:'b1',cursor:1});es.emit('reset',{bootId:'b1',cursor:1});await settle(80);
+ const count=route=>calls.filter(c=>c.path.split('?')[0]===route).length;
+ assert.equal(count('/api/needs-you'),1);assert.equal(count('/api/subject-places'),1);assert.equal(count('/api/study-draft/catalog'),1);
+ assert.equal(doc.querySelector('[data-v2-needs-count]').textContent,'1');
+});
+
+test('a desk chip with no photograph is a plain chip, with no empty box; with one it shows the picture',async()=>{
+ const {w,doc}=await page();
+ await w.v2.desk.use(async()=>[{id:'a',title:'Invented plain'},{id:'b',title:'Invented pictured',cover:'/api/study/photos/preview?x=1'}]);
+ const [plain,pictured]=[...doc.querySelectorAll('.v2-desk-chip')];
+ assert.equal(plain.querySelector('i,img'),null,'no empty box');assert.ok(plain.classList.contains('nopic'));
+ assert.ok(pictured.querySelector('img'));assert.ok(!pictured.classList.contains('nopic'));
+});
+
+test('light-theme grey stays the app\'s own #5e6257: the sample\'s #686c61 reads below 4.5 to 1 on the tinted surfaces',()=>{
+ const shell=read('public/v2/shell/shell.css'),theme=read('public/document-study/c3-theme.css');
+ assert.doesNotMatch(shell,/--dim\s*:/,'the shell does not set its own grey: the surfaces that tint (Looks, hover rows) are in other files');
+ const m=theme.match(/:root,:root\[data-theme="light"\]\{[^}]*--dim:(#[0-9a-f]{6})/i);assert.ok(m);
+ const lum=h=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.03928?v/12.92:((v+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2];};
+ const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
+ for(const surface of ['#fffefb','#efede6','#e9e8e2','#e9e4d7'])assert.ok(ratio(m[1],surface)>=4.5,'the app grey on '+surface);
+ assert.ok(ratio('#686c61','#e9e4d7')<4.5&&ratio('#686c61','#e9e8e2')<4.5,'the sample\'s grey fails on the tints, which is why it is not used');
 });
 
 test('screens hear changes from the live stream: by record, by command name, and a reset',async()=>{
@@ -271,8 +332,23 @@ test('the client against the server: a read, a write with its revision, a 409 re
  await assert.rejects(adrian.call('no.such.command',{}),e=>e.kind==='refused'&&/no command/.test(e.message));
 });
 
+test('presence.post is sent as it is, with no operationId, so the server accepts it (and tells an assistant "Adrian has unsaved words")',async t=>{
+ const f=await server(t),adrian=pageClient(f.url);
+ const posted=await adrian.call('presence.post',{stage:'Write',scope:{kind:'draft',id:'invented-draft'},dirty:true,sequence:1,session:'abc12345'});
+ assert.equal(posted.presence.dirty,true,'the server took it');
+ const seen=await adrian.call('presence.get',{kind:'draft',id:'invented-draft'});
+ assert.deepEqual(seen.presence.map(p=>[p.actor,p.dirty,p.stage]),[['human:adrian',true,'Write']],'an assistant reading presence sees Adrian has unsaved words open');
+ const left=await adrian.call('presence.post',{stage:'Write',scope:{kind:'draft',id:'invented-draft'},dirty:false,sequence:2,session:'abc12345',leaving:true});
+ assert.equal(left.left,true);
+ // Every other write still gets its operation id.
+ const sent=[];const C=clientModule(),c=C.createClient({base:'http://x.test',storage:null,fetchImpl:async(u,o)=>{sent.push([u,o.body?JSON.parse(o.body):null]);return {ok:true,status:200,text:async()=>u.includes('capabilities')?JSON.stringify({commands:[{name:'a.write',method:'POST',route:'/api/a',readOnly:false,schema:{}},{name:'presence.post',method:'POST',route:'/api/presence',readOnly:false,schema:{}}]}):'{}'};}});
+ await c.call('a.write',{x:1});await c.call('presence.post',{dirty:false});
+ assert.match(sent.find(([u])=>u.endsWith('/api/a'))[1].operationId,/^[0-9a-f-]{36}$/);
+ assert.equal('operationId' in sent.find(([u])=>u.endsWith('/api/presence'))[1],false);
+});
+
 test('the client says who holds a record (423) and what a consent hold is, in plain words',async()=>{
- const C=clientModule(),answer=(status,body)=>C.createClient({search:'',storage:null,fetchImpl:async u=>({ok:u.endsWith('/api/capabilities'),status:u.endsWith('/api/capabilities')?200:status,text:async()=>JSON.stringify(u.endsWith('/api/capabilities')?{commands:[{name:'w',method:'POST',route:'/api/w',readOnly:false,schema:{}}]}:body)})});
+ const C=clientModule(),answer=(status,body)=>C.createClient({search:'',storage:null,fetchImpl:async u=>({ok:u.includes('/api/capabilities'),status:u.includes('/api/capabilities')?200:status,text:async()=>JSON.stringify(u.includes('/api/capabilities')?{commands:[{name:'w',method:'POST',route:'/api/w',readOnly:false,schema:{}}]}:body)})});
  await assert.rejects(answer(423,{error:'locked',holder:{actor:'agent:claude-code',expiresAt:'2026-11-11T10:00:00Z'}}).call('w',{}),e=>e.kind==='held'&&/^Claude is working on this until .+\. Wait, or ask them to let it go\.$/.test(e.message)&&e.holder.actor==='agent:claude-code');
  await assert.rejects(answer(423,{error:'Held until the people in it have said yes.',code:'consent-hold',hold:{unanswered:['x']}}).call('w',{}),e=>e.kind==='consent'&&e.message==='Held until the people in it have said yes.'&&!!e.hold);
  await assert.rejects(answer(500,{error:'internal detail'}).call('w',{}),e=>e.kind==='failed'&&e.message==='The app could not answer. Nothing was changed.');
@@ -362,4 +438,16 @@ test('the desk keeps to one row: what does not fit is taken out (nothing hidden 
  assert.deepEqual(shown(),['#/subject/s3'],'with room for one, it is the subject open now');assert.equal(nav.querySelector('[data-v2-desk-more]').textContent,'+4');
  room=2000;await w.v2.desk.refresh();
  assert.equal(shown().length,5);assert.equal(nav.querySelector('[data-v2-desk-more]').hidden,true,'no "+n" when all fit');
+});
+
+test('Find shows each Library snippet from a whole word, without a stray quote or dash at either end',async()=>{
+ const {w,doc}=await page({answers:{'/api/subjects/standing':{subjects:[]},'/api/concept/sources/search':{results:[
+  {sourceId:'a',title:'Invented one',quote:'rden is quiet at dawn. The leaf is ready.',context:'The garden is quiet at dawn. The leaf is ready.',start:6},
+  {sourceId:'b',title:'Invented two',quote:'"teapot for guests". Speaker: slowly -',context:'About "teapot for guests". Speaker: slowly - ',start:7},
+ ]}}});
+ doc.querySelector('[data-v2-ask]').click();const sheet=doc.querySelector('dialog.v2-sheet');
+ sheet.querySelector('[name=q]').value='ot';sheet.querySelector('form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await settle(60);
+ const small=[...sheet.querySelectorAll('[data-v2-find-item] small')].map(s=>s.textContent);
+ assert.equal(small[0],'is quiet at dawn. The leaf is ready.','the cut word is dropped');
+ assert.equal(small[1],'teapot for guests". Speaker: slowly','a stray quote and dash are trimmed at the ends');
 });

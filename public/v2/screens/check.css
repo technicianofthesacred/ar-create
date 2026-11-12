@@ -1,0 +1,84 @@
+/* Version two: Check. Every rule starts with .ck. The page is Write's own (class "v2-page wr ck"), so Write's rules for the bar
+   and the page frame apply; these add the two columns, the words as a read-only page, and the findings. Sizes are the
+   shell's six, except the page's own words and title, which keep the approved Write page (the same face, measure and line
+   as Write's). */
+.ck .ck-work{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,420px);grid-template-areas:"words side";align-items:start;background:var(--paper);min-height:calc(100dvh - var(--v2-top) - var(--bar))}
+.ck .ck-paper{grid-area:words;min-width:0}
+.ck .ck-side{grid-area:side;position:sticky;top:calc(var(--v2-top) + var(--bar));max-height:calc(100dvh - var(--v2-top) - var(--bar));overflow:auto;padding:22px 24px 60px 24px;background:var(--bg);border-left:1px solid var(--line);display:grid;gap:26px;align-content:start;min-width:0}
+.ck .ck-sec{display:grid;gap:12px;align-content:start;min-width:0}
+.ck .ck-sec h2{font:600 var(--v2-t15)/1.3 var(--ar-ui)}
+.ck .ck-label{font-size:var(--v2-t12);color:var(--dim)}
+.ck .ck-dim{font-size:var(--v2-t13);line-height:1.5;color:var(--dim);overflow-wrap:anywhere}
+.ck .ck-dim a{text-decoration:underline}
+.ck .ck-bad{font-size:var(--v2-t14);line-height:1.45;color:var(--c3-bad);overflow-wrap:anywhere}
+.ck .ck-note{font-size:var(--v2-t13);line-height:1.5;color:var(--c3-ink2);padding:8px 12px;border-left:2px solid var(--c3-warn);overflow-wrap:anywhere}
+.ck .ck-why{font-size:var(--v2-t14);line-height:1.5;color:var(--c3-ink2);overflow-wrap:anywhere}
+.ck .ck-ro{font-size:var(--v2-t13);color:var(--dim);margin:-12px 0 20px;overflow-wrap:anywhere}
+.ck .ck-none{padding:44px var(--v2-gutter);display:grid;gap:14px;max-width:560px}
+.ck .ck-none p{font-size:var(--v2-t15);overflow-wrap:anywhere}
+.ck .ck-bar{max-width:100%}
+
+/* the state of the check */
+.ck .ck-state{display:grid;gap:2px;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--c3-line2);border-radius:10px;background:var(--paper);min-width:0}
+.ck .ck-state strong{font:600 var(--v2-t15)/1.35 var(--ar-ui);overflow-wrap:anywhere}
+.ck .ck-state span{font-size:var(--v2-t13);line-height:1.5;color:var(--dim);overflow-wrap:anywhere}
+.ck .ck-state[data-kind="ok"]{border-left-color:var(--c3-good)}
+.ck .ck-state[data-kind="review"],.ck .ck-state[data-kind="old"],.ck .ck-state[data-kind="held"]{border-left-color:var(--c3-warn)}
+.ck .ck-state[data-kind="bad"]{border-left-color:var(--c3-bad)}
+.ck .ck-btns{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ck .ck-results{display:grid;gap:0;margin:0}
+.ck .ck-results>div{display:grid;gap:2px;padding:10px 0;border-top:1px solid var(--line)}
+.ck .ck-results dt{font-size:var(--v2-t12);font-weight:600;color:var(--dim)}
+.ck .ck-results dd{margin:0;font-size:var(--v2-t14);line-height:1.45;overflow-wrap:anywhere}
+.ck .ck-results small{display:block;font-size:var(--v2-t12);line-height:1.5;color:var(--dim);margin-top:2px}
+
+/* findings */
+.ck .ck-finds,.ck .ck-decs{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.ck .ck-find,.ck .ck-dec{display:grid;gap:8px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);min-width:0}
+.ck .ck-find p,.ck .ck-dec p{font-size:var(--v2-t14);line-height:1.5;overflow-wrap:anywhere}
+.ck .ck-find p.ck-dim,.ck .ck-dec p.ck-dim{font-size:var(--v2-t13);color:var(--dim)}
+.ck .ck-find-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px}
+.ck .ck-find-h strong{font:600 var(--v2-t14)/1.35 var(--ar-ui);overflow-wrap:anywhere;min-width:0}
+.ck .ck-find blockquote,.ck .ck-dec blockquote{margin:0;padding:2px 0 2px 12px;border-left:2px solid var(--c3-line2);font-size:var(--v2-t14);line-height:1.5;color:var(--c3-ink2);overflow-wrap:anywhere}
+.ck .ck-pill{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:11px;border:1px solid var(--c3-line2);font:600 var(--v2-t12)/1 var(--ar-ui);color:var(--c3-ink2);max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:break-word;line-height:1.3;padding-top:3px;padding-bottom:3px}
+.ck .ck-pill[data-warn="true"]{border-color:var(--c3-warn)}
+.ck .ck-dec-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px}
+.ck .ck-src{min-width:0}
+.ck .ck-proof{font-size:var(--v2-t13);line-height:1.5;color:var(--c3-ink2)}
+.ck .ck-proof summary{cursor:pointer;font-weight:600;padding:4px 0}
+.ck .ck-proof p{margin:6px 0;overflow-wrap:anywhere}
+.ck .ck-proof h3{font:600 var(--v2-t13)/1.4 var(--ar-ui);margin:10px 0 2px}
+.ck .ck-proof pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font:400 var(--v2-t12)/1.5 var(--ar-ui);color:var(--c3-ink2)}
+.ck .ck-sub{display:grid;gap:10px;min-width:0}
+.ck .ck-sub h3{font:600 var(--v2-t14)/1.35 var(--ar-ui)}
+.ck .ck-find[data-old="true"]{border-style:dashed}
+
+/* the saved words, as the approved page sets them, with nothing to edit */
+.ck .ck-sheet{padding:56px 28px 120px;display:grid;grid-template-columns:minmax(0,700px);justify-content:center;align-content:start;min-width:0}
+.ck .ck-sheet>*{min-width:0}
+.ck .ck-title{font:600 var(--v2-t18)/1.3 var(--ar-ui);margin:0 0 24px;overflow-wrap:anywhere}
+.ck .ck-text{display:grid;min-width:0}
+.ck .ck-p,.ck .ck-h,.ck .ck-q{margin:0 0 22px;color:var(--ink);font:400 var(--v2-t18)/1.58 var(--ar-ui);overflow-wrap:anywhere;white-space:pre-wrap;position:relative;scroll-margin-top:calc(var(--v2-top) + var(--bar) + 24px)}
+.ck .ck-h{font-weight:700;margin-top:10px}
+.ck .ck-q{color:var(--c3-ink2);font-style:italic}
+.ck .ck-p:focus-visible,.ck .ck-h:focus-visible,.ck .ck-q:focus-visible{outline:2px solid var(--v2-br);outline-offset:6px;border-radius:4px}
+/* a paragraph the check pointed at has a short bar in the margin; the one he pressed is lifted */
+.ck [data-flag="true"]::before{content:'';position:absolute;left:-14px;top:2px;bottom:2px;width:2px;background:var(--c3-warn)}
+.ck [data-hit="true"]{background:var(--c3-lift);box-shadow:-10px 0 0 var(--c3-lift),10px 0 0 var(--c3-lift);border-radius:2px}
+.ck .ck-mark{background:color-mix(in srgb,var(--c3-warn) 30%,transparent);color:inherit;border-radius:3px;padding:0 1px}
+
+/* focus: not offered here; phones put the findings first */
+@media (max-width:1280px){
+ .ck .ck-work{grid-template-columns:minmax(0,1fr) 340px}
+}
+@media (max-width:1100px){
+ .ck .ck-work{grid-template-columns:minmax(0,1fr);grid-template-areas:"side" "words";min-height:0}
+ .ck .ck-side{position:static;max-height:none;overflow:visible;border-left:0;border-bottom:1px solid var(--line);padding:20px 28px 28px}
+ .ck .ck-sheet{padding:32px 28px 120px}
+ .ck [data-flag="true"]::before{left:-12px}
+}
+@media (max-width:850px){
+ .ck .ck-side{padding:18px max(18px,env(safe-area-inset-left,0px)) 24px}
+ .ck .ck-sheet{padding:24px max(18px,env(safe-area-inset-left,0px)) 130px}
+ .ck [data-flag="true"]::before{left:-10px}
+}

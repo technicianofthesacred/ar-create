@@ -11,10 +11,154 @@
  const sig=x=>{const s=JSON.stringify(x)||'';let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36);};
  const q=o=>new URLSearchParams(o).toString();
 
+ /* ---------- an older Outputs carousel, read only ---------- */
+ /* His real Carousels are entries in an article's outputs (study.outputs), not Instagram plans. This opens one in the
+    studio's own layout: the slide large, the strip, the way between them. Nothing here writes; changing the Carousel is
+    done in Advanced, one clear link away. The slides are drawn by the workspace's own renderer (its IG templates). */
+ const LOGO='/ig-assets/teajia-wordmark.png',BLOB=/^\/api\/sources\/blob\?id=[^&]+$/;
+ const FONTS=[['Caudex',400,'/assets/fonts/Caudex-Regular.ttf','truetype'],['Source Serif 4','400 600','/assets/fonts/ab68f14ec71c3016.woff2','woff2'],['Instrument Sans','400 500','/assets/fonts/5963fe8e750eca5b.woff2','woff2'],['EB Garamond',400,'/ig-assets/eb-garamond-400-normal.ttf','truetype'],['EB Garamond',500,'/ig-assets/eb-garamond-500-normal.ttf','truetype'],['Shippori Mincho',700,'/ig-assets/shippori-mincho-700-normal.ttf','truetype'],['Shippori Mincho',800,'/ig-assets/shippori-mincho-800-normal.ttf','truetype'],['Noto Serif TC',900,'/ig-assets/noto-serif-tc-900-normal.ttf','truetype']];
+ const FONT_CSS=FONTS.map(([f,w,u,k])=>'@font-face{font-family:"'+f+'";font-style:normal;font-weight:'+w+';src:url('+u+') format("'+k+'")}').join('');
+ let rendererWait=null;
+ const haveRenderer=()=>typeof IG!=='undefined'&&IG&&typeof IG.render==='function'&&IG.T;
+ /* The workspace's own renderer is three plain scripts that must load in this order (the layouts, the catalogue, the templates). */
+ const RENDERER=['/document-study/donor/layouts.js','/document-study/donor/catalog-browser.js','/document-study/donor/ig-templates.browser.js'];
+ function loadRenderer(){
+  if(haveRenderer())return Promise.resolve(true);
+  rendererWait=rendererWait||(async()=>{
+   for(const src of RENDERER){
+    const ok=await new Promise(done=>{const s=document.createElement('script');s.src=src;s.onload=()=>done(true);s.onerror=()=>done(false);document.head.append(s);});
+    if(!ok){rendererWait=null;return false;}
+   }
+   return haveRenderer();
+  })();
+  return rendererWait;
+ }
+ /** One slide as a page for a frame. Photographs of his own library are kept; any other picture address is dropped. */
+ function slideDoc(slide,title){
+  const head='<!doctype html><html><head><meta charset="utf-8"><meta name="color-scheme" content="light dark"><style>'+FONT_CSS+'html,body{margin:0}</style></head><body>';
+  if(!haveRenderer()||!Object.prototype.hasOwnProperty.call(IG.T,slide.template))
+   return head+'<div style="display:grid;place-items:center;align-content:center;gap:40px;height:1350px;padding:110px;box-sizing:border-box;font:48px/1.35 Georgia,serif;text-align:center;overflow-wrap:anywhere"><p style="margin:0">This original template is unavailable.</p><p style="margin:0;font-size:40px;white-space:pre-wrap">'+esc(slide.text||'')+'</p></div></body></html>';
+  const photos=(Array.isArray(slide.photos)?slide.photos:[]).map(p=>({src:BLOB.test(String(p?.src||''))?p.src:'',x:Number.isFinite(+p?.x)?+p.x:50,y:Number.isFinite(+p?.y)?+p.y:50}));
+  const one={text:String(slide.text||''),role:typeof slide.role==='string'?slide.role:'inner',credit:String(slide.credit||''),label:typeof slide.label==='string'?slide.label:title,photos,pillar:slide.pillar,typography:slide.typography};
+  return head+IG.render(slide.template,one,{logo:LOGO})+'</body></html>';
+ }
+ const tplName=t=>haveRenderer()&&IG.T[t]?.name?IG.T[t].name:(t?'a layout not available here':'none');
+ const ownerLine=o=>!o?'Where the words are kept is not known.':o.kind==='carousel-words'?'The words are kept in this Carousel itself.':o.kind==='native'?'The words are the Article\'s own, kept in Write.':'The words are kept elsewhere.';
+
+ async function mountOutput(el,ctx,root){
+  const subjectId=String(ctx.query?.subject||''),pieceId=ctx.params.id;
+  let sel=0,gone=false,watch=null,reloadTimer=null,stand=null,out=null,slides=[],docs=[],owner=null,drawn=false;
+  ctx.signal.addEventListener('abort',()=>{gone=true;watch?.disconnect();clearTimeout(reloadTimer);});
+  const subjectHref=()=>subjectId?v2.href('subject/:id',{id:subjectId},stand?.forms?.some(f=>f.key==='out:'+pieceId)?{form:'out:'+pieceId}:{}):'#/';
+  const advanced=()=>v2.advanced({subject:subjectId,piece:pieceId,section:'arrange'});
+  const noWay=(title,lines)=>{
+   lines=[].concat(lines);
+   root.innerHTML='<div class="sl-empty" data-sl-empty="output"><header><h1>'+esc(title)+'</h1></header>'+lines.map(l=>'<p>'+esc(l)+'</p>').join('')
+    +'<p class="sl-empty-go">'+(subjectId&&stand?'<a class="v2-out" href="'+esc(subjectHref())+'">Back to '+esc(stand.title||'the subject')+'</a>':'<a class="v2-out" href="#/">Back to Home</a>')+'</p></div>';
+   ctx.setTitle('Slides');
+  };
+  if(!subjectId)return noWay('This Carousel cannot be opened from here','The address does not say which subject it belongs to. Open it from the subject\'s page.');
+  async function read(){
+   stand=await v2.call('subject.standing',{parentStudyId:subjectId});
+   const bindingId=stand?.facts?.bindingId;
+   if(!bindingId){out=null;return;}
+   const view=await v2.call('study.outputs',{rootBindingId:bindingId,parentStudyId:subjectId,selectedOutputId:pieceId});
+   out=(view.outputs||[]).find(o=>o.id===pieceId)||null;
+   owner=(view.outputBindings||[]).find(b=>b.outputId===pieceId)?.wordOwner||null;
+  }
+  try{await read();}
+  catch(e){return noWay('The Carousel could not be read',[e.message||'Try again in a moment.']);}
+  if(gone)return;
+  if(!out)return noWay('This Carousel was not found',['Nothing on '+(stand?.title||'this subject')+' has this address. It may have been removed, or the address may be wrong.']);
+  if(out.kind!=='carousel')return noWay('This piece is not a Carousel',['It is an '+(out.kind==='article'?'Article':out.kind)+', so there are no slides to show. Open it from the subject\'s page.']);
+  const title=()=>String(out.title||stand?.title||'Carousel');
+  await loadRenderer();if(gone)return;
+  const build=()=>{slides=Array.isArray(out.slides)?out.slides:[];docs=slides.map(s=>slideDoc(s,title()));if(sel>=slides.length)sel=Math.max(0,slides.length-1);};
+  build();
+  ctx.setTitle(title());ctx.setAdvanced({subject:subjectId,piece:pieceId,section:'arrange'});
+  if(stand?.look)v2.brand(stand.look);
+  const cw=()=>window.innerWidth<851?54:63;
+  const FRM=(i,w,label)=>'<span class="sl-fr" style="--cw:'+w+'px;--s:'+(w/W).toFixed(5)+'"><iframe sandbox="allow-same-origin" title="'+esc(label)+'" data-slide="'+i+'" tabindex="-1"></iframe></span>';
+  const field=(label,text)=>'<div class="sl-f"><span class="sl-label">'+esc(label)+'</span><p class="sl-field">'+esc(text)+'</p></div>';
+  function headHTML(){
+   const n=slides.length,back=subjectHref(),name=stand?.title||'The subject';
+   return '<div class="sl-bar"><a class="sl-back" href="'+esc(back)+'" aria-label="Back to '+esc(name)+'">'+ic('back')+'<span>'+esc(name)+'</span></a><h1 class="sl-t">'+esc(title())+'</h1><span class="sl-n">Carousel · '+n+' slide'+(n===1?'':'s')+' · read only</span><span class="sl-sp"></span>'
+    +'<a class="sl-done" href="'+esc(advanced())+'">Open in Advanced</a></div>';
+  }
+  function stripHTML(){return slides.map((s,i)=>'<div class="sl-thumb" role="button" tabindex="0" data-n="'+i+'" aria-label="Slide '+(i+1)+'" aria-current="'+(i===sel)+'">'+FRM(i,cw(),'Slide '+(i+1))+'<span class="sl-tl">'+(i+1)+'</span></div>').join('');}
+  function stageHTML(){
+   return '<p class="sl-rochip" role="note"><b>Read only.</b> Changing it is done in Advanced.</p><div class="sl-big sl-swipe" style="aspect-ratio:'+W+'/'+H+'"><iframe sandbox="allow-same-origin" class="sl-first" data-slide="big" title="Slide, large" tabindex="-1"></iframe></div>'
+    +'<div class="sl-cap"><span class="sl-capt" data-cap aria-live="polite"></span><span class="sl-sp"></span>'
+    +'<button type="button" class="v2-ghost v2-icon-btn" data-sl="prev" aria-label="Previous slide">'+ic('back')+'</button><button type="button" class="v2-ghost v2-icon-btn" data-sl="next" aria-label="Next slide">'+ic('right')+'</button></div>';
+  }
+  function panelHTML(){
+   const s=slides[sel]||{},pl=Array.isArray(out.placements)?out.placements.length:0,ph=Array.isArray(s.photos)?s.photos.filter(p=>p&&p.src).length:0;
+   return '<div class="sl-pbody" data-ro>'
+    +'<p class="sl-label">Slide '+(sel+1)+' of '+slides.length+'</p>'
+    +(String(s.text||'').trim()?field('The words',s.text):'<p class="sl-dim">This slide carries no words.</p>')
+    +(s.label?field('Small label',s.label):'')+(s.credit?field('Who said it',s.credit):'')
+    +'<p class="sl-dim">'+esc(ROLE[s.role]||'Inner')+' slide · layout '+esc(tplName(s.template))+' · '+(ph?ph+' photograph'+(ph===1?'':'s'):'no photographs')+'</p>'
+    +(out.caption?field('Caption',out.caption):'')
+    +'<p class="sl-label">About this Carousel</p><p class="sl-dim">'+esc(ownerLine(owner))+(pl?' '+pl+' placement'+(pl===1?'':'s')+' of the Article\'s paragraphs.':'')+'</p>'
+    +'<div class="sl-ro" role="note"><p><b>This is a read only view.</b> Changing this Carousel, its words, layouts and photographs, is done in Advanced. Use Open in Advanced at the top; it lands on this Carousel.</p><div class="sl-row"><a class="v2-out" href="'+esc(subjectHref())+'">Back to '+esc(stand?.title||'the subject')+'</a></div></div></div>';
+  }
+  function fit(){
+   const big=root.querySelector('.sl-big');if(!big)return;
+   const set=()=>big.style.setProperty('--k',String(big.clientWidth/W));set();
+   watch?.disconnect();if(window.ResizeObserver){watch=new ResizeObserver(set);watch.observe(big);}
+  }
+  function draw(){
+   root.innerHTML='<div class="sl-head" data-region="head"></div><div class="sl-work"><div class="sl-strip" data-region="strip" aria-label="Slides, in order"></div><div class="sl-stage" data-region="stage"></div><div class="sl-panel" data-region="panel"></div></div>';
+   root.querySelector('[data-region="head"]').innerHTML=headHTML();
+   if(!slides.length){root.querySelector('[data-region="stage"]').innerHTML='<p class="sl-dim">This Carousel has no slides yet.</p>';root.querySelector('[data-region="panel"]').innerHTML=panelHTML().replace(/<p class="sl-label">Slide[^]*?<\/p>/,'');return;}
+   root.querySelector('[data-region="strip"]').innerHTML=stripHTML();
+   root.querySelector('[data-region="stage"]').innerHTML=stageHTML();
+   for(const f of root.querySelectorAll('.sl-strip iframe'))f.srcdoc=docs[+f.dataset.slide];
+   fit();show(sel,false);
+  }
+  function show(i,focusThumb){
+   if(!slides.length)return;
+   sel=Math.max(0,Math.min(slides.length-1,i));
+   const big=root.querySelector('iframe[data-slide="big"]');if(big)big.srcdoc=docs[sel];
+   const s=slides[sel],cap=root.querySelector('[data-cap]');
+   if(cap)cap.innerHTML='<b>'+(sel+1)+' · '+esc(ROLE[s.role]||'Inner')+'</b> · layout '+esc(tplName(s.template))+'<small>Slide '+(sel+1)+' of '+slides.length+'</small>';
+   const prev=root.querySelector('[data-sl="prev"]'),next=root.querySelector('[data-sl="next"]');
+   if(prev)prev.disabled=sel===0;if(next)next.disabled=sel===slides.length-1;
+   for(const t of root.querySelectorAll('.sl-thumb')){const on=+t.dataset.n===sel;t.setAttribute('aria-current',String(on));if(on&&focusThumb!==false)try{t.scrollIntoView({block:'nearest',inline:'nearest'});}catch{}}
+   root.querySelector('[data-region="panel"]').innerHTML=panelHTML();
+  }
+  const move=d=>{const to=Math.max(0,Math.min(slides.length-1,sel+d));if(to!==sel)show(to);};
+  root.addEventListener('click',e=>{
+   const th=e.target.closest('.sl-thumb');if(th)return show(+th.dataset.n);
+   const b=e.target.closest('[data-sl]');if(!b||b.disabled)return;
+   if(b.dataset.sl==='prev')move(-1);else if(b.dataset.sl==='next')move(1);
+  });
+  root.addEventListener('keydown',e=>{
+   const th=e.target.closest?.('.sl-thumb');
+   if(th&&(e.key==='Enter'||e.key===' ')){e.preventDefault();show(+th.dataset.n);}
+  });
+  /* Arrow keys, Home and End move between slides from anywhere on the screen except a field or a link. */
+  document.addEventListener('keydown',e=>{
+   if(!root.isConnected||e.defaultPrevented||e.altKey||e.ctrlKey||e.metaKey||e.shiftKey)return;
+   const t=e.target;if(t&&t.closest&&t.closest('input,textarea,select,[contenteditable],dialog,a[href]'))return;
+   const d={ArrowLeft:-1,ArrowUp:-1,PageUp:-1,ArrowRight:1,ArrowDown:1,PageDown:1}[e.key];
+   if(d){e.preventDefault();move(d);}else if(e.key==='Home'){e.preventDefault();show(0);}else if(e.key==='End'){e.preventDefault();show(slides.length-1);}
+  },{signal:ctx.signal});
+  /* A swipe sideways across the large slide (touch or pen) turns to the next or the earlier one. */
+  let touch=null;
+  root.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'||!e.target.closest('.sl-stage'))return;touch={x:e.clientX,y:e.clientY};});
+  root.addEventListener('pointerup',e=>{if(!touch)return;const dx=e.clientX-touch.x,dy=e.clientY-touch.y;touch=null;if(Math.abs(dx)>=40&&Math.abs(dx)>Math.abs(dy)*1.4)move(dx<0?1:-1);});
+  root.addEventListener('pointercancel',()=>{touch=null;});
+  window.addEventListener('resize',()=>{const f=root.querySelector('.sl-thumb iframe');if(!f)return;const w=cw(),sp=f.closest('.sl-fr');if(sp&&sp.style.getPropertyValue('--cw')!==w+'px'){for(const x of root.querySelectorAll('.sl-strip .sl-fr')){x.style.setProperty('--cw',w+'px');x.style.setProperty('--s',(w/W).toFixed(5));}}},{signal:ctx.signal});
+  draw();drawn=true;
+  ctx.on({kinds:['study.outputs*','study-draft*']},()=>{clearTimeout(reloadTimer);reloadTimer=setTimeout(async()=>{if(gone||!drawn)return;try{const before=JSON.stringify(out);await read();if(gone||!out||out.kind!=='carousel'||JSON.stringify(out)===before)return;build();draw();}catch{}},400);});
+ }
+
  v2.screen({id:'slides',title:'Slides',route:'slides/:id',
   render:()=>'<div class="v2-page sl"><p class="sl-wait" role="status">Opening the slides.</p></div>',
   async mount(el,ctx){
    const root=el.querySelector('.sl');
+   if(ctx.query?.kind==='output')return mountOutput(el,ctx,root);
    let plan=null,cat=[],looksList=[],proposals=[],nextCodes={},sel=0,tab='layout',lset='suits',slot=0,saveOpen=false,busy=false,said=null,sayText='',cropOpen=false,labelOpen=false,tints={};
    const stripCw=()=>window.innerWidth<851?54:63;
    const acctFor={},rolesFor={},assetsFor={},keys={};

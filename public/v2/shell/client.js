@@ -10,6 +10,8 @@
  const ACTOR_KEY='ar-create-ui-actor';
  const NAMES={'agent:claude-code':'Claude','agent:claude-design':'Claude Design','agent:codex':'Codex','agent:hermes':'Hermes','agent:grok':'Grok','agent:chatgpt':'ChatGPT'};
  function actorName(actor){actor=String(actor||'');if(actor.startsWith('human:'))return 'You';if(NAMES[actor])return NAMES[actor];if(actor.startsWith('cron:'))return 'A scheduled job';if(actor.startsWith('import:'))return 'An import';if(actor.startsWith('agent:'))return actor.slice(6);return 'Someone';}
+ // Commands that take no operationId: the server rejects any key outside their small list.
+ const NO_OPERATION_ID=new Set(['presence.post','study-ai.reject']);
  const optional=field=>String(field).endsWith('?')?String(field).slice(0,-1):String(field);
 
  /** The actor for this tab, read exactly as the existing page reads it. */
@@ -65,39 +67,72 @@
  function createClient({base='',fetchImpl=(...a)=>root.fetch(...a),search=root.location?.search||'',storage=(()=>{try{return root.sessionStorage;}catch{return null;}})(),timeoutMs=20000}={}){
   const who=resolveActor(search,storage);let capabilities=null,loading=null;
   const headers=()=>who.explicit?{'X-AR-Actor':who.actor,'X-AR-Client':'ui'}:{};
-  async function request(method,path,body){
+  async function request(method,path,body,wait=timeoutMs){
    if(!who.actor)throw new V2Error('This page was opened with an assistant name the app does not know. Open it again with a listed name.',{kind:'refused'});
    let response;
-   try{response=await fetchImpl(base+path,{method,credentials:'same-origin',...(typeof AbortSignal!=='undefined'&&AbortSignal.timeout?{signal:AbortSignal.timeout(timeoutMs)}:{}),headers:{Accept:'application/json',...headers(),...(body!==undefined?{'Content-Type':'application/json'}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});}
+   try{response=await fetchImpl(base+path,{method,credentials:'same-origin',...(typeof AbortSignal!=='undefined'&&AbortSignal.timeout?{signal:AbortSignal.timeout(wait)}:{}),headers:{Accept:'application/json',...headers(),...(body!==undefined?{'Content-Type':'application/json'}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});}
    catch{throw new V2Error('The app could not be reached. Nothing was changed.',{kind:'failed'});}
    const text=await response.text();let value;try{value=text?JSON.parse(text):null;}catch{value={text};}
    return {ok:response.ok,status:response.status,body:value};
   }
+  // The command list is read with ?only=commands (no recordings, no retained copies, only the commands and the release's
+  // commit), and kept for this browser session under that commit. A page shows from the kept list at once; one read in
+  // the background confirms the commit and swaps the list in if the app was released again meanwhile.
+  const KEPT='v2.commands';
+  const isCommand=c=>!!c&&typeof c==='object'&&typeof c.name==='string'&&c.name&&typeof c.method==='string'&&typeof c.route==='string';
+  const sound=list=>Array.isArray(list)&&list.length>0&&list.every(isCommand);
+  const kept=()=>{try{const v=JSON.parse(storage?.getItem(KEPT)||'null');if(v&&typeof v.sha==='string'&&v.sha&&sound(v.commands))return v;if(v)storage?.removeItem?.(KEPT);}catch{try{storage?.removeItem?.(KEPT);}catch{}}return null;};
+  const keep=(sha,list)=>{try{if(sha&&sound(list))storage?.setItem(KEPT,JSON.stringify({sha,commands:list}));}catch{}};
+  const readCommands=()=>request('GET','/api/capabilities?only=commands').then(r=>{if(!r.ok||!sound(r.body?.commands))throw new V2Error('The list of commands could not be read.',{status:r.status});return {sha:typeof r.body.git?.sha==='string'?r.body.git.sha:null,commands:r.body.commands};});
+  let confirming=null,confirmed=null,usedKept=false; // the one background read that checks a kept list against the running release
   async function commands(){
    if(capabilities)return capabilities;
-   loading||=request('GET','/api/capabilities').then(r=>{if(!r.ok||!Array.isArray(r.body?.commands))throw new V2Error('The list of commands could not be read.',{status:r.status});capabilities=r.body.commands;return capabilities;}).finally(()=>{loading=null;});
+   const have=kept();
+   if(have){
+    capabilities=have.commands;usedKept=true;
+    confirming=confirmed=readCommands().then(fresh=>{if(fresh.sha!==have.sha)capabilities=fresh.commands;keep(fresh.sha,fresh.commands);return fresh.sha!==have.sha;}).catch(()=>false).finally(()=>{confirming=null;});
+    return capabilities;
+   }
+   loading||=readCommands().then(fresh=>{capabilities=fresh.commands;keep(fresh.sha,fresh.commands);return capabilities;}).finally(()=>{loading=null;});
    return loading;
   }
-  async function find(name){const command=(await commands()).find(c=>c.name===name);if(!command)throw new V2Error(`The app has no command called "${name}".`,{kind:'refused',command:name});return command;}
-  async function once(command,input){
-   const built=buildRequest(command,input),r=await request(built.method,built.path,built.body);
+  async function find(name){
+   let command=(await commands()).find(c=>c.name===name);
+   // A list kept from an earlier release may not know a command: wait for the running release's list before refusing.
+   if(!command&&confirming){await confirming;command=(capabilities||[]).find(c=>c.name===name);}
+   if(!command)throw new V2Error(`The app has no command called "${name}".`,{kind:'refused',command:name});
+   return command;
+  }
+  async function once(command,input,wait){
+   const built=buildRequest(command,input),r=await request(built.method,built.path,built.body,wait);
    if(r.ok)return r.body;
    throw explain(r.status,r.body,{name:command.name,actor:who.actor});
   }
   /** Call one command. A write gets a fresh operationId unless the input names one. On 409, with reread, the fresh
       record is read; with merge(fresh, error) returning a new input the write is tried once more, otherwise the error
-      carries .fresh for the screen to show. */
-  async function call(name,input={},{reread,merge}={}){
-   const command=await find(name),write=!command.readOnly;
+      carries .fresh for the screen to show. timeoutMs (optional) is how long this one call may wait; the default is 20 seconds (a large upload asks for longer). */
+  async function call(name,input={},{reread,merge,timeoutMs:wait}={}){
+   const command=await find(name),write=!command.readOnly&&!NO_OPERATION_ID.has(name);
    const first=write&&input&&typeof input==='object'&&!input.operationId?{...input,operationId:uuid()}:input;
-   try{return await once(command,first);}
+   try{
+    try{return await once(command,first,wait);}
+    catch(error){
+     // On a list kept from an earlier release, the router's "API route was not found." is tried once more, and only when the
+     // running release's list gives this command another route or method. Any other 404 is the app's answer and is never sent again.
+     if(!(error instanceof V2Error)||error.status!==404||error.body?.error!=='API route was not found.'||!usedKept||!confirmed)throw error;
+     const swapped=await confirmed;if(!swapped)throw error;
+     const again=await find(name);
+     if(again.route===command.route&&again.method===command.method)throw error;
+     return await once(again,first,wait);
+    }
+   }
    catch(error){
     if(!(error instanceof V2Error)||error.kind!=='stale'||typeof reread!=='function')throw error;
     const fresh=await reread();error.fresh=fresh;error.message='This changed since it was opened here. It has been read again; look at it before saving.';
     const next=typeof merge==='function'?await merge(fresh,error):null;
     if(!next)throw error;
     // A merged write is a new attempt, so it gets its own operation id unless the screen chose one.
-    return once(command,write&&(!next.operationId||next.operationId===first.operationId)?{...next,operationId:uuid()}:next);
+    return once(command,write&&(!next.operationId||next.operationId===first.operationId)?{...next,operationId:uuid()}:next,wait);
    }
   }
   return Object.freeze({call,commands,find,request,actor:()=>who.actor,explicit:()=>who.explicit,isHuman:()=>String(who.actor||'').startsWith('human:'),actorName});

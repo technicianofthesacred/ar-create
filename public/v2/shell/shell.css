@@ -57,8 +57,8 @@ html[data-brand] .v2-logo i{background:var(--v2-br)}
 .v2-desk-chip:hover{background:var(--v2-sec);color:var(--ink)}
 .v2-desk-chip[aria-current]{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--c3-line2)}
 html[data-brand] .v2-desk-chip[aria-current]{box-shadow:inset 0 0 0 1px var(--v2-br)}
-.v2-desk-chip img,.v2-desk-chip>i{width:22px;height:22px;border-radius:5px;flex:none;object-fit:cover}
-.v2-desk-chip>i{border:1px dashed var(--c3-line2)}
+.v2-desk-chip img{width:22px;height:22px;border-radius:5px;flex:none;object-fit:cover}
+.v2-desk-chip.nopic{padding-left:10px}
 .v2-desk-chip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .v2-desk-list{display:grid;gap:2px;margin:0;padding:0;list-style:none}
 .v2-desk-list a{display:flex;align-items:center;min-height:44px;padding:8px 10px;border-radius:8px;font:500 var(--v2-t15)/1.35 var(--ar-ui);color:var(--ink);overflow-wrap:anywhere}
@@ -126,13 +126,6 @@ dialog.v2-sheet::backdrop{background:rgba(10,9,7,.45)}
 .v2-sheet-body{min-width:0;overflow-wrap:break-word}
 .v2-sheet-in h2:focus{outline:0}
 @media (min-width:851px){dialog.v2-sheet{margin:auto;border-bottom:1px solid var(--c3-line2);border-radius:14px}.v2-sheet-in{padding:10px 20px 22px}.v2-sheet-in::before{display:none}}
-/* The Capture sheet: a line saying where it goes, then four tiles. */
-.v2-cap-to{font-size:var(--v2-t13);color:var(--dim);margin-bottom:14px}
-.v2-cap-to b{color:var(--ink);font-weight:600}
-.v2-cap4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.v2-cap4 a{display:grid;justify-items:center;gap:8px;padding:18px 6px 14px;border-radius:10px;background:var(--v2-sec);font:600 var(--v2-t13)/1.2 var(--ar-ui);color:var(--graphite-ink)}
-.v2-cap4 a .v2-ic{width:24px;height:24px}
-.v2-cap4 a.rec{background:var(--graphite-ink);color:var(--graphite-inverse)}
 /* Reorder: Move up and Move down beside each item; shown on hover and focus, always on touch. */
 [data-v2-reorder]{position:relative}
 [data-v2-reorder].v2-dragging{opacity:.45}
@@ -167,3 +160,23 @@ dialog.v2-sheet::backdrop{background:rgba(10,9,7,.45)}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 .v2-sheet-msgs:empty{display:none}
 .v2-sheet-msgs .v2-msg{margin-top:0}
+
+/* ---------- Find (top bar) ---------- */
+.v2-find{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
+.v2-find-box{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;border:1px solid var(--c3-line2);border-radius:10px;background:var(--paper);min-width:0;color:var(--dim)}
+.v2-find-box:focus-within{border-color:var(--c3-ink2)}
+.v2-find-box .v2-ic{flex:none;width:16px;height:16px}
+@layer v2-controls{
+ .v2-find-box input{flex:1 1 120px!important;min-width:0!important;width:auto!important;height:22px!important;border:0!important;background:transparent!important;box-shadow:none!important;outline:0!important;padding:0!important;font:400 var(--v2-t14)/1.4 var(--ar-ui)!important;color:var(--ink)!important}
+ .v2-find-box button{flex:none!important;height:30px!important;min-height:30px!important;border:0!important;padding:0 14px!important;border-radius:6px!important;font:600 var(--v2-t13)/30px var(--ar-ui)!important}
+}
+.v2-find-note,.v2-find-meta{font-size:var(--v2-t13);line-height:1.45;color:var(--dim)}
+.v2-find-meta[data-tone="bad"]{color:var(--c3-bad)}
+.v2-find-out{display:grid;gap:14px;min-width:0}
+.v2-find-out section{display:grid;gap:6px;min-width:0}
+.v2-find-out h3{font:600 var(--v2-t12)/16px var(--ar-ui);color:var(--dim)}
+.v2-find-out ul{list-style:none;padding:0;display:grid;gap:2px;min-width:0}
+.v2-find-out li a{display:grid;gap:2px;padding:7px 8px;margin:0 -8px;border-radius:6px;font:500 var(--v2-t14)/1.35 var(--ar-ui);color:var(--ink);overflow-wrap:anywhere}
+.v2-find-out li a:hover{background:var(--v2-sec)}
+.v2-find-out li small{font:400 var(--v2-t13)/1.4 var(--ar-ui);color:var(--dim)}
+.v2-find-out li b{font-weight:600}

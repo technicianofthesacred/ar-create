@@ -15,7 +15,7 @@ v2.screen({id:'subject', route:'subject/:id', title:'Subject',
 ```
 
 Routes: `''` Home, `subject/:id`, `slides/:id` (an Instagram plan), `looks`, `research`, `research/group/:id`,
-`research/topic/:id`. Unknown addresses go Home; Back and Forward work. Links are ordinary `<a href>`:
+`research/topic/:id`, `write/:id` (the words of one piece: `?piece=<output id>`), `read/:id` (the same piece, saved words only, same `?piece=`), `check/:id` (the same piece checked against its sources). Unknown addresses go Home; Back and Forward work. Links are ordinary `<a href>`:
 `v2.href('subject/:id',{id})` gives `#/subject/<id>`; `v2.go(...)` moves. `ctx` holds `params`, `query`, `el`,
 `signal` (aborted when the screen closes), `setTitle(text)` (the name in the thin phone header and the window
 title), `setAdvanced({subject,piece,section})` (where the top bar's Advanced leads), and `on(filter, fn)`.
@@ -34,6 +34,8 @@ sends it with every call; a screen never reads or passes it.
 **React to a change**: `ctx.on({kind:'needs-you', id}, fn)`, `ctx.on({kinds:['subject-places*']}, fn)`. `kind` and
 `id` match the change's record (`event.scope`), `kinds` match command names (a trailing `*` matches the start).
 `fn({reset:true})` means read everything again. `ctx.on` stops by itself when the screen closes; `v2.on` does not.
+
+**Open the Capture sheet**: `v2.capture({subject})` opens the one sheet for adding things (Speak, Photograph, Write a thought, Ask a question). `subject` is the open subject as an id, or `{id, name}`; leave it out and what is captured goes to the Library, to file later. The shell's Capture buttons call it with the subject open on `subject`, `write`, `read` and `check`. It files through the commands (`sources.import`, then `study.material.attach`, `research-topics.start` or, for an assistant, `research-topics.propose`) and the subject's own screen hears the change on the stream. A call that moves a large file may ask for a longer wait with `v2.call(name, input, {timeoutMs})`; the default is 20 seconds.
 
 **Open Advanced**: `v2.advanced({subject, piece, section})` is the address of the same place in the existing
 workspace. `section` is one of its names: home, subjects, library, material, source, research, direction, write,

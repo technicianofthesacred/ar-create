@@ -19,8 +19,9 @@ function validateIds(args) {
   if (typeof bindingId !== 'string' || !bindingId || typeof parentStudyId !== 'string' || !parentStudyId) throw fail('A bound draft and parent study are required.',400);
   if (operationId !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(operationId)) throw fail('operationId must be a UUID.',400);
 }
-async function evidence(drafts,args) {
-  const draft = await drafts.read({bindingId:args.bindingId,parentStudyId:args.parentStudyId});
+async function evidence(drafts,args,known) {
+  // known: the draft the caller has just read for this same binding (subject standing), so a long draft is not read twice.
+  const draft = known || await drafts.read({bindingId:args.bindingId,parentStudyId:args.parentStudyId});
   if (draft.binding?.id !== args.bindingId || draft.binding?.parentStudyId !== args.parentStudyId || typeof draft.raw !== 'string') throw fail('Draft does not belong to this study.');
   const records = (draft.context?.records || []).filter(r => ['source','context'].includes(r.role) && !r.missing);
   const sources = [];
@@ -191,6 +192,6 @@ export function createStudyDraftChecks({dataDir,drafts,outputs}) {
   }
   return {
     async run(args) {validateIds(args);if(args.targetKind==='carousel'&&args.checkId!==undefined)throw fail('checkId is read-only.',400);if(!args.operationId)throw fail('operationId required.',400);const id=key(args)+args.operationId;if(active.has(id)){const pending=active.get(id);if(args.targetKind==='carousel'&&pending.requestHash!==hash(JSON.stringify(args)))throw fail('Check operation already belongs to another exact request.');return pending;}const pending=args.targetKind==='carousel'?performCarousel(args):perform(args);pending.requestHash=hash(JSON.stringify(args));active.set(id,pending);try{return await pending;}finally{active.delete(id);}},
-    async read(args) {validateIds(args);if(args.checkId)validateIds({...args,operationId:args.checkId});const record=await load(path.join(directory,key(args),(args.checkId||'current')+'.json'));if(!record)return null;try{const current=args.targetKind==='carousel'?await inspect(args):await evidence(drafts,args);if(!same(record.proof,current.proof))return {...record,status:'stale',staleReason:'This receipt covers an earlier draft or source revision.'};}catch(error){return {...record,status:'stale',staleReason:error.message};}return record;}
+    async read(args,known) {validateIds(args);if(args.checkId)validateIds({...args,operationId:args.checkId});const record=await load(path.join(directory,key(args),(args.checkId||'current')+'.json'));if(!record)return null;try{const current=args.targetKind==='carousel'?await inspect(args):await evidence(drafts,args,known?.draft);if(!same(record.proof,current.proof))return {...record,status:'stale',staleReason:'This receipt covers an earlier draft or source revision.'};}catch(error){return {...record,status:'stale',staleReason:error.message};}return record;}
   };
 }

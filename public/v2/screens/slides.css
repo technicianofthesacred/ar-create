@@ -159,3 +159,20 @@
 .sl .sl-empty header p{color:var(--dim);font-size:var(--v2-t14)}
 .sl .sl-empty>p{font-size:var(--v2-t14);line-height:1.5}
 .sl .sl-empty-go{display:flex;flex-wrap:wrap;gap:8px 20px}
+<<<<<<< HEAD
+=======
+
+/* An older Outputs carousel, read only: the same studio, with the controls that change it left out. */
+.sl .sl-back span{min-width:0;max-width:34vw;overflow:hidden;text-overflow:ellipsis}
+.sl .sl-swipe{touch-action:pan-y}
+.sl .sl-ro{display:grid;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);min-width:0}
+.sl .sl-ro p{font-size:var(--v2-t13);line-height:1.45;color:var(--c3-ink2);overflow-wrap:anywhere}
+.sl .sl-ro b{color:var(--ink)}
+.sl .sl-pbody[data-ro]{padding-bottom:40px}
+@media (max-width:850px){
+ .sl .sl-back span{max-width:52vw}
+}
+.sl .sl-rochip{display:none;font-size:var(--v2-t13);color:var(--c3-ink2);text-align:center;margin:0}
+.sl .sl-rochip b{color:var(--ink)}
+@media (max-width:850px){.sl .sl-rochip{display:block}}
+>>>>>>> origin/main
