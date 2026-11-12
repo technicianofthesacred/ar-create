@@ -115,6 +115,16 @@
   let timer=null,gone=false,wanted=false,reading=null;
   const $=sel=>page.querySelector(sel);
   const W=()=>v2.shared.write||{};
+  // ===== capture sources: BEGIN. The list and the one button come from the subject screen (v2.shared.subject); without it this screen does without. =====
+  const cs=(()=>{
+   const make=v2.shared.subject?.createCaptureSources;if(typeof make!=='function')return null;
+   return make({scope:()=>st.loc?.bindingId&&!st.story?{bindingId:st.loc.bindingId,parentStudyId:id}:null,paint:()=>{if(!aborted())paintRun();},
+    // The words did not change, but the captured sources did: read both again, then Check runs again by itself.
+    after:async()=>{await Promise.all([loadDraft(),loadReceipt()]);if(aborted())return;void run();}});
+  })();
+  /** A held check that is held only for want of a source: the one case the list and button are for. */
+  const noSourceHeld=c=>!!c&&c.status==='held'&&(c.quote?.reason==='No captured SRC available.'||(Array.isArray(c.proof?.sources)&&!c.proof.sources.some(x=>x?.role==='source')));
+  // ===== capture sources: END =====
   const aborted=()=>gone||ctx.signal.aborted;
   const scope=()=>({bindingId:st.loc.bindingId,parentStudyId:id});
   const piece=()=>st.loc?.piece||undefined;
@@ -263,6 +273,7 @@
     box.innerHTML=`<h2 id="ck-h-run">Check this piece</h2>
      <div class="ck-state" data-kind="${esc(st.busy?'busy':s.kind)}" role="status"><strong>${esc(st.busy?'Checking this saved draft':s.label)}</strong><span>${esc(st.busy?'Your words are not changed.':empty?'Nothing is written yet. Write some words, then check them here.':s.line)}</span></div>
      ${why&&!st.busy?`<p class="ck-why">${esc(why)}</p>`:''}
+     ${cs&&noSourceHeld(c)&&!st.busy?cs.block({back:v2.href('subject/:id',{id})}):''}
      ${deviceWords()?'<p class="ck-note" role="status">You have unsaved words in Write on this device. A check covers the saved draft only.</p>':''}
      <div class="ck-btns"><button type="button" class="pri" data-ck="run"${st.busy||empty||!st.read?' disabled':''}>${st.busy?'Checking':c?'Check saved draft again':'Check saved draft'}</button>${stale||st.error||st.receiptNote?'<button type="button" class="v2-ghost" data-ck="reload">Load current saved draft</button>':''}${empty?`<a class="wr-btn" href="${esc(writeHref())}">Go to Write</a>`:''}</div>
      ${st.error?`<p class="ck-bad" role="alert">${esc(st.error)}</p>`:''}${st.receiptNote?`<p class="ck-bad" role="alert">${esc(st.receiptNote)}</p>`:''}
@@ -324,7 +335,7 @@
   }
   async function reload(){
    if(st.busy)return;
-   st.error='';
+   st.error='';cs?.reset();
    try{await loadAll();}catch(error){if(aborted())return;st.error=error.message||'The saved draft could not be read.';}
    if(aborted())return;
    paintRun();paintWords();loadDecisions();loadTruth();
@@ -465,6 +476,7 @@
 
   // ---------- events ----------
   function onClick(e){
+   if(cs&&page.contains(e.target)&&cs.handle(e.target)){e.preventDefault();return;}
    const b=e.target.closest?.('[data-ck]');if(!b||!page.contains(b))return;
    const act=b.dataset.ck;
    if(act==='run')void run();

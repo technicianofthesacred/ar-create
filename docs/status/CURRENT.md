@@ -1,8 +1,8 @@
-Tests: 21 passed, 0 failed, 0 skipped, of 21 (commit af5350a, 2026-11-09).
+Tests: not measured.
 
-Installed release: commit af5350a, built 2026-11-08T17:20:43.559Z, by agent:codex, 810 files.
+Installed release: not read.
 
-Installed test evidence: same recorded commit. Read the measured failures and skips above; this is not human acceptance.
+Installed test evidence: unavailable; installed release was not read.
 
 # AR Create: status
 

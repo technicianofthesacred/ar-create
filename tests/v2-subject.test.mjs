@@ -163,12 +163,12 @@ async function server(t){
  t.after(async()=>{await new Promise(r=>s.close(r));fs.rmSync(fixture.dir,{recursive:true,force:true});});
  return 'http://127.0.0.1:'+s.address().port;
 }
-async function page(base,hash,{patch=t=>t}={}){
+async function page(base,hash,{patch=t=>t,stubs={}}={}){
  const html=fs.readFileSync(path.join(repo,'public/v2/index.html'),'utf8');
  const dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:base+'/v2/index.html'+hash,runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,sources=[],calls=[];windows.push(w);
  w.EventSource=class{constructor(u){this.url=u;this.l={};sources.push(this);}addEventListener(t,f){(this.l[t]||=[]).push(f);}close(){}emit(t,data){for(const f of this.l[t]||[])f({data:JSON.stringify(data)});}};
- w.stub={};
+ w.stub=stubs;
  w.fetch=async(input,options={})=>{const u=new URL(String(input),w.location.href);calls.push(u.pathname);if(w.stub[u.pathname]){const v=w.stub[u.pathname];const r=typeof v==='function'?v(options):v;return {ok:r.status<400,status:r.status,text:async()=>JSON.stringify(r.body)};}const r=await fetch(base+u.pathname+u.search,{method:options.method||'GET',headers:{...options.headers,...(options.method&&options.method!=='GET'?{Origin:base}:{})},body:options.body});return {ok:r.ok,status:r.status,text:()=>r.text()};};
  w.HTMLDialogElement.prototype.showModal||=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close||=function(){this.removeAttribute('open');};
  for(const src of [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1]))w.eval(patch(fs.readFileSync(src.startsWith('/')?path.join(repo,'public',src):path.join(repo,'public/v2',src),'utf8'),src));
@@ -719,4 +719,233 @@ test('Use the transcript: a failed add says it was kept and that pressing again 
  assert.doesNotMatch(fn,/\(why\|\|/,'the general refusal is not shown in brackets');
  assert.match(fn,/kept as a source, but it could not be added to this subject\. Press Use the transcript again to try again\./);
  assert.ok(!fn.includes('\u2014'));
+});
+
+// ---------- capture sources: confirm a transcript, then use it for Check (piece B) ----------
+// A real subject and a real saved recording; the transcript's own actions and the two capture-sources commands are answered
+// by stand-ins (the demo cannot transcribe, and the list is piece A's own tests' business). Only the answers are invented.
+const LISTP='/api/study-draft/capture-sources/list',CAPP='/api/study-draft/capture-sources',TID='11111111-aaaa-4aaa-8aaa-111111111111';
+async function scene(t,{kept=true,reviewed=false,list,actor=''}={}){
+ const base=await server(t);
+ await fillDemo(base,{only:['shade-and-patience']});
+ const id='demo-shade-and-patience',facts=(await standingOf(base,id)).facts;
+ const wav=Buffer.alloc(44+800,128);wav.write('RIFF',0);wav.writeUInt32LE(36+800,4);wav.write('WAVEfmt ',8);wav.writeUInt32LE(16,16);wav.writeUInt16LE(1,20);wav.writeUInt16LE(1,22);wav.writeUInt32LE(8000,24);wav.writeUInt32LE(8000,28);wav.writeUInt16LE(1,32);wav.writeUInt16LE(8,34);wav.write('data',36);wav.writeUInt32LE(800,40);
+ const post=async(p,body)=>{const r=await fetch(base+p,{method:'POST',headers:{'Content-Type':'application/json',Origin:base,'X-AR-Actor':'human:adrian','X-AR-Client':'ui'},body:JSON.stringify(body)});return {status:r.status,body:await r.json()};};
+ const folder='Projects/'+facts.projectId;
+ await post('/api/sources/folders',{rootId:'library',folder});
+ const imp=await post('/api/sources/import',{rootId:'library',folder,files:[{name:'Microphone-2026-11-11 09.30.wav',base64:wav.toString('base64')}]});
+ await post('/api/study/material/attach',{bindingId:facts.bindingId,parentStudyId:id,sourceIds:[imp.body.receipts[0].source.id],operationId:'11111111-1111-4111-8111-111111111111'});
+ const job=(await get(base,'/api/recordings')).jobs[0],tree=await get(base,'/api/sources/tree');
+ // S2.by is who stamped the review ('human:adrian' unless a test says otherwise). The stand-ins answer in the shape of the real replies:
+ // the recordings list says only reviewed or not (never who), the look says who (GET /transcription/{id}/look, read only), and the
+ // recording's own actions (recover, speakers, review) take a revision, record the actor that sent them and change it as the server does.
+ const S2={kept,reviewed,by:'human:adrian',named:null,rev:0,said:[],recovers:0,looks:0,lists:0,captures:[],words:'The shade slows the leaf. It grows a deeper green.'};
+ const seg=()=>[{speaker:'s1',text:'The shade slows the leaf.'},{speaker:'s1',text:'It grows a deeper green.'}];
+ const actorOf=o=>o?.headers?.['X-AR-Actor']||'human:adrian';
+ const snap=()=>({expected:{rev:'r'+S2.rev},result:{speakers:[{id:'s1',name:S2.named}],segments:seg()}});
+ const stubs={
+  '/api/recordings':()=>({status:200,body:{capability:{ready:true},jobs:[{...job,state:'done',transcriptReady:true,reviewStatus:S2.reviewed?'reviewed':'unreviewed'}]}}),
+  '/api/sources/tree':()=>({status:200,body:{...tree,sources:[...tree.sources,...(S2.kept?[{id:TID,kind:'transcript',title:'Transcript of the shade talk',recordingId:job.id}]:[])]}}),
+  ['/transcription/'+job.id+'/look']:()=>{S2.looks++;return {status:200,body:{jobId:job.id,coherent:true,reviewStatus:S2.reviewed?'reviewed':'unreviewed',reviewedBy:S2.reviewed?S2.by:null,reviewedAt:S2.reviewed?'2026-11-12T10:00:00.000Z':null,speakers:[{id:'s1',name:S2.named}],segments:seg().map(g=>({speaker:S2.loose?null:g.speaker,text:g.text}))}};},
+  ['/transcription/'+job.id+'/recover']:()=>{S2.recovers++;return {status:200,body:snap()};},
+  ['/transcription/'+job.id+'/speakers']:o=>{const body=JSON.parse(o.body);S2.said.push(['speakers',body]);if(S2.refuse)return {status:403,body:{error:'refused'}};if(body.expected?.rev!=='r'+S2.rev)return {status:409,body:{error:'Transcript changed since inspection. Inspect the current file before applying or reviewing.'}};S2.named=body.names.s1;S2.rev++;S2.reviewed=false;return {status:200,body:snap()};},
+  ['/transcription/'+job.id+'/review']:o=>{const body=JSON.parse(o.body);S2.said.push(['review',body]);if(S2.refuse)return {status:403,body:{error:'refused'}};if(body.expected?.rev!=='r'+S2.rev)return {status:409,body:{error:'Transcript changed since inspection. Inspect the current file before applying or reviewing.'}};if(S2.refuseReview){S2.refuseReview=false;return {status:400,body:{error:'Name every speaker and resolve unattributed segments before confirming review.'}};}S2.reviewed=true;S2.by=actorOf(o);S2.rev++;return {status:200,body:snap()};},
+  ['/api/transcript-check/'+job.id]:{status:200,body:{expected:{jobId:job.id,markdownHash:'h1'}}},
+  '/api/recordings/source':()=>{S2.kept=true;return {status:200,body:{source:{id:TID},jobId:job.id}};},
+  '/api/study/material/attach':{status:200,body:{}},
+  [LISTP]:()=>{S2.lists++;const human=S2.reviewed&&String(S2.by||'').startsWith('human:');return {status:200,body:list?list(S2):{bindingId:facts.bindingId,parentStudyId:id,canCapture:true,sourcesHash:null,hasQuoteSource:false,sources:human?[
+   {id:TID,title:'Transcript of the shade talk',kind:'transcript',hash:'h-after',eligible:true,confirmedByYou:true},
+   {id:'22222222-bbbb-4bbb-8bbb-222222222222',title:'Studio note',kind:'markdown',hash:'n1',eligible:false,confirmedByYou:false,reason:'Not confirmed by you yet. Confirm this material yourself before using it for Check.'}]:[
+   {id:TID,title:'Transcript of the shade talk',kind:'transcript',hash:'h-before',eligible:false,confirmedByYou:false,reason:'Not confirmed by you yet. Confirm this material yourself before using it for Check.'}]}};},
+  [CAPP]:o=>{S2.captures.push(JSON.parse(o.body));return S2.refuseCapture?{status:403,body:{error:'refused'}}:{status:200,body:{captured:[{sourceId:TID}],alreadyCaptured:[],sourcesHash:'f'.repeat(64)}};}
+ };
+ const open=()=>page(base,(actor?'?reviewActor='+actor:'')+'#/subject/'+id+'?step=have',{stubs});
+ return {base,id,facts,job,S2,open};
+}
+const said=doc=>doc.getElementById('v2-messages')?.textContent||'';
+
+test('a kept transcript that is not confirmed offers Confirm this transcript; it opens in place with the words and a name box, and Confirm names the speaker, confirms, and offers Use it for Check',{timeout:300000},async t=>{
+ const {S2,facts,id,open}=await scene(t);
+ const {doc,calls}=await open();
+ const btn=await until(()=>doc.querySelector('[data-cs=open]'));
+ assert.equal(btn.textContent.trim(),'Confirm this transcript');
+ assert.equal(doc.querySelector('[data-cs=capture]'),null,'no Use it for Check before it is confirmed');assert.ok(!calls.includes(LISTP),'the list is not read before there is a confirmed transcript');
+ btn.click();
+ const words=await until(()=>doc.querySelector('[data-cs-confirm] [data-cs-words]'));
+ assert.match(words.textContent,/The shade slows the leaf\./);assert.match(words.textContent,/It grows a deeper green\./);
+ assert.ok(words.hasAttribute('tabindex')&&words.getAttribute('role')==='region','the words scroll and can be reached by keyboard');
+ const boxes=[...doc.querySelectorAll('[data-cs-confirm] input[data-cs-name]')];assert.equal(boxes.length,1,'one name box for the one unnamed speaker');
+ // Confirm with the name box empty: said, and nothing sent.
+ doc.querySelector('[data-cs=confirm]').click();
+ await until(()=>/Say who is speaking first/.test(said(doc)));assert.equal(S2.said.length,0);
+ boxes[0].value='Mara';boxes[0].dispatchEvent(new doc.defaultView.Event('input',{bubbles:true}));
+ doc.querySelector('[data-cs=confirm]').click();
+ await until(()=>doc.querySelector('[data-cs-confirmed]'));
+ assert.equal(doc.querySelector('[data-cs-confirmed]').textContent,'Confirmed by you');assert.equal(doc.querySelector('[data-cs=open]'),null);
+ assert.equal(doc.querySelector('[data-cs-confirm]'),null,'the panel closes');
+ assert.deepEqual(S2.said.map(x=>x[0]),['speakers','review']);
+ assert.deepEqual([S2.said[0][1].expected,S2.said[0][1].names],[{rev:'r0'},{s1:'Mara'}],'the names go with the revision he was shown');
+ assert.deepEqual([S2.said[1][1].expected,S2.said[1][1].confirmed],[{rev:'r1'},true],'the review goes with the revision the names made');
+ // The list is read again after the confirm (its hash changed) and shows the transcript as Confirmed by you with one button.
+ const cap=await until(()=>doc.querySelector('[data-cs=capture]'));
+ assert.equal(cap.textContent,'Use it for Check');assert.ok(!cap.classList.contains('pri'),'plain: the card\'s own Next stays its one primary');
+ const items=[...doc.querySelectorAll('[data-cs-block] li')];
+ assert.match(items[0].textContent,/Transcript of the shade talk/);assert.match(items[0].textContent,/Transcript/);assert.match(items[0].textContent,/Confirmed by you/);
+ assert.match(items[1].textContent,/Studio note/);assert.match(items[1].textContent,/Not confirmed by you yet/,'what is not eligible says why');
+ assert.equal(doc.querySelectorAll('[data-cs=capture]').length,1);
+ const lists=S2.lists;
+ cap.click();
+ await until(()=>S2.captures.length===1);
+ assert.deepEqual(S2.captures[0].sources,[{sourceId:TID,sourceHash:'h-after'}],'exactly the eligible one shown, with the hash just read');
+ assert.deepEqual([S2.captures[0].bindingId,S2.captures[0].parentStudyId,S2.captures[0].expectedSourcesHash],[facts.bindingId,id,null]);assert.match(S2.captures[0].operationId,/^[0-9a-f-]{36}$/);
+ await until(()=>doc.querySelector('[data-cs-done]'));
+ assert.equal(doc.querySelector('[data-cs-done]').textContent,'Check can now read this');
+ assert.ok(S2.lists>lists,'the list is read again after the capture');
+});
+
+test('either order works: confirm first, then Use the transcript, and the list appears once it is kept and confirmed',{timeout:300000},async t=>{
+ const {S2,open}=await scene(t,{kept:false});
+ const {doc}=await open();
+ await until(()=>doc.querySelector('[data-subj-rec="use"]'));
+ await until(()=>doc.querySelector('[data-cs=open]'));
+ assert.ok(doc.querySelector('[data-cs=open]'),'Confirm this transcript is offered beside Use the transcript');
+ doc.querySelector('[data-cs=open]').click();
+ const box=await until(()=>doc.querySelector('[data-cs-name]'));box.value='Mara';box.dispatchEvent(new doc.defaultView.Event('input',{bubbles:true}));
+ doc.querySelector('[data-cs=confirm]').click();
+ await until(()=>doc.querySelector('[data-cs-confirmed]'));
+ assert.ok(doc.querySelector('[data-subj-rec="use"]'),'Use the transcript still works as it did');assert.equal(doc.querySelector('[data-cs=capture]'),null,'not kept yet, so nothing to use for Check');
+ doc.querySelector('[data-subj-rec="use"]').click();
+ const cap=await until(()=>doc.querySelector('[data-cs=capture]'),30000);
+ assert.equal(cap.textContent,'Use it for Check');assert.match(doc.querySelector('.subj-have').textContent,/kept as a source/);
+ assert.match(doc.querySelector('[data-cs-block]').textContent,/Confirmed by you/);
+ // The other way round is the first test: kept first, then confirmed.
+ assert.equal(S2.captures.length,0,'nothing is captured until he presses');
+});
+
+test('an assistant\'s Confirm is accepted by the server as an assistant\'s review, and the page says exactly that: never Confirmed, and no capture offered',{timeout:300000},async t=>{
+ const {S2,open}=await scene(t,{actor:'agent:codex'});
+ const {doc}=await open();
+ const btn=await until(()=>doc.querySelector('[data-cs=open]'));btn.click();
+ const box=await until(()=>doc.querySelector('[data-cs-name]'));box.value='Mara';box.dispatchEvent(new doc.defaultView.Event('input',{bubbles:true}));
+ doc.querySelector('[data-cs=confirm]').click();
+ await until(()=>S2.reviewed);
+ assert.equal(S2.by,'agent:codex','the server recorded the assistant as the reviewer (it does not refuse)');
+ await until(()=>/Reviewed by an assistant\. Not confirmed by Adrian yet\./.test(said(doc)));
+ assert.doesNotMatch(said(doc),/Confirmed by you/);
+ const row=await until(()=>doc.querySelector('[data-cs-reviewed]'));
+ assert.match(row.textContent,/Reviewed by an assistant\. Not confirmed by Adrian yet\./);
+ assert.equal(doc.querySelector('[data-cs-confirmed]'),null,'it never says confirmed');assert.equal(doc.querySelector('[data-cs-confirm]'),null,'the panel closed');
+ assert.equal(doc.querySelector('[data-cs=open]'),null,'an assistant is not offered Confirm again for its own review');
+ // Not confirmed by a human: no list, no button, nothing offered as possible.
+ assert.equal(doc.querySelector('[data-cs-block]'),null);assert.equal(doc.querySelector('[data-cs=capture]'),null,'no capture is offered as possible');
+ assert.doesNotMatch(doc.body.textContent,/Confirmed by you/);
+ // A transcript Adrian confirmed elsewhere: the assistant sees the list and its button, and its press is refused with nothing faked.
+ S2.reviewed=true;S2.by='human:adrian';S2.refuseCapture=true;
+ const second=await open();
+ const cap=await until(()=>second.doc.querySelector('[data-cs=capture]'));
+ assert.match(second.doc.querySelector('[data-cs-confirmed]').textContent,/Confirmed by Adrian/,'an assistant\'s page does not say "you"');
+ cap.click();
+ await until(()=>S2.captures.length===1);
+ await until(()=>/Only Adrian can decide this/.test(said(second.doc)));
+ assert.ok(second.doc.querySelector('[data-cs=capture]'),'the button stays');assert.equal(second.doc.querySelector('[data-cs-done]'),null,'and nothing says Check can read it');
+});
+
+test('nothing eligible shows the list\'s reasons and no button; a damaged record shows its sentence and no button',{timeout:300000},async t=>{
+ const {open,S2}=await scene(t,{reviewed:true,list:()=>({canCapture:true,sourcesHash:'e'.repeat(64),hasQuoteSource:true,sources:[
+  {id:TID,title:'Transcript of the shade talk',kind:'transcript',hash:'h',eligible:false,confirmedByYou:true,captured:true,reason:'Already used for Check.'},
+  {id:'22222222-bbbb-4bbb-8bbb-222222222222',title:'Studio note',kind:'markdown',hash:'n',eligible:false,confirmedByYou:false,reason:'You set this aside, so it is not used.'}]})});
+ const {doc}=await open();
+ await until(()=>doc.querySelector('[data-cs-block] li'));
+ assert.equal(doc.querySelector('[data-cs=capture]'),null);
+ assert.doesNotMatch(doc.body.textContent,/Back to the subject/,'the subject page never links to itself (only Check does)');
+ assert.match(doc.querySelector('[data-cs-block]').textContent,/Already used for Check\./);assert.match(doc.querySelector('[data-cs-block]').textContent,/You set this aside, so it is not used\./);
+ const sentence='The record of the sources added for Check is damaged, so nothing can be added until it is restored.';
+ const bad=await scene(t,{reviewed:true,list:()=>({canCapture:false,damaged:true,reason:sentence,sources:[]})});
+ const second=await bad.open();
+ await until(()=>second.doc.querySelector('[data-cs-sentence]'));
+ assert.equal(second.doc.querySelector('[data-cs-sentence]').textContent.trim(),sentence);assert.equal(second.doc.querySelector('[data-cs=capture]'),null);
+});
+
+test('the shared block lives in the subject screen for Check to read, and the screen keeps the house rules',()=>{
+ const js=fs.readFileSync(path.join(repo,'public/v2/screens/subject.js'),'utf8'),css=fs.readFileSync(path.join(repo,'public/v2/screens/subject.css'),'utf8');
+ assert.match(js,/v2\.shared\.subject=Object\.freeze\(\{gather,createCaptureSources/);
+ assert.doesNotMatch(js+css,/\u2014/);assert.doesNotMatch(js,/\bfetch\s*\(/,'a command is never fetched');
+ const own=css.slice(css.indexOf('capture sources: BEGIN'));assert.doesNotMatch(own,/#[0-9a-f]{3,8}\b|rgba?\(/i);
+ for(const m of own.matchAll(/font(?:-size)?:[^;}]*/g))assert.doesNotMatch(m[0],/\d+px/,'only the six size tokens');
+});
+
+// ---------- Review of piece B, corrected ----------
+test('a transcript reviewed by an assistant, or by no one the stamp names, never reads "Confirmed by you": the row says so and still offers Confirm, and the list agrees',{timeout:300000},async t=>{
+ for(const by of ['agent:codex',null]){
+  const {S2,open}=await scene(t,{kept:true,reviewed:true});S2.by=by;
+  const {doc}=await open();
+  const note=await until(()=>doc.querySelector('[data-cs-reviewed]'));
+  assert.equal(note.textContent.trim(),'Reviewed, not confirmed by you yet',String(by));
+  assert.equal(doc.querySelector('[data-cs-confirmed]'),null,'the row says "Confirmed by you" for a review that is not his');
+  assert.equal(doc.querySelector('[data-cs=open]').textContent.trim(),'Confirm this transcript');
+  assert.equal(doc.querySelector('[data-cs-block]'),null,'the list is drawn only once a transcript is confirmed by him, so the two cannot disagree');
+  assert.equal(doc.querySelector('[data-cs=capture]'),null);assert.doesNotMatch(doc.body.textContent,/Confirmed by you/);
+ }
+ // And a human stamp on the current bytes is the one thing that reads "Confirmed by you", in the row and the list alike.
+ const h=await scene(t,{kept:true,reviewed:true});
+ const {doc}=await h.open();
+ assert.equal((await until(()=>doc.querySelector('[data-cs-confirmed]'))).textContent,'Confirmed by you');
+ assert.equal(doc.querySelector('[data-cs=open]'),null);assert.match((await until(()=>doc.querySelector('[data-cs-block] li'))).textContent,/Confirmed by you/);
+});
+
+test('names saved but the review refused: the panel stays, the transcript is read again, and Confirm again sends only the review at the new revision (no loop)',{timeout:300000},async t=>{
+ const {S2,open}=await scene(t,{kept:true});
+ const {doc}=await open();
+ (await until(()=>doc.querySelector('[data-cs=open]'))).click();
+ const box=await until(()=>doc.querySelector('[data-cs-name]'));box.value='Mara';box.dispatchEvent(new doc.defaultView.Event('input',{bubbles:true}));
+ S2.refuseReview=true;doc.querySelector('[data-cs=confirm]').click();
+ await until(()=>/Name every speaker and resolve unattributed segments/.test(said(doc)));
+ await until(()=>doc.querySelector('[data-cs=confirm]:not([disabled])'));
+ assert.ok(doc.querySelector('[data-cs-confirm]'),'the panel stays open');assert.equal(doc.querySelector('[data-cs-name]'),null,'the named speaker has lost the box: what is on file is read again');
+ assert.match(doc.querySelector('[data-cs-words]').textContent,/Mara/,'and the words show the name now on file');
+ assert.deepEqual(S2.said.map(x=>x[0]),['speakers','review']);
+ doc.querySelector('[data-cs=confirm]').click();
+ await until(()=>doc.querySelector('[data-cs-confirmed]'));
+ assert.deepEqual(S2.said.map(x=>x[0]),['speakers','review','review'],'the names are not sent again');
+ assert.deepEqual(S2.said[2][1].expected,{rev:'r1'},'the review goes at the revision the names made, not the one from before');
+ assert.equal(doc.querySelector('[data-cs-confirm]'),null);
+});
+
+test('opening the confirm panel and drawing the row write nothing: only the read-only look is asked, never recover, speakers or review',{timeout:300000},async t=>{
+ const {S2,job,open}=await scene(t,{kept:true});
+ const {doc,calls}=await open();
+ (await until(()=>doc.querySelector('[data-cs=open]'))).click();
+ await until(()=>doc.querySelector('[data-cs-words]'));
+ assert.ok(S2.looks>=1);assert.equal(S2.recovers,0);assert.equal(S2.said.length,0);
+ assert.ok(!calls.some(p=>/\/transcription\/[^/]+\/(recover|speakers|review|segment|save)$/.test(p)),'no write path was touched');
+ assert.ok(calls.includes('/transcription/'+job.id+'/look'));
+});
+
+test('Escape closes the panel without saving; focus goes into the words on open and back to Confirm this transcript on close',{timeout:300000},async t=>{
+ const {S2,open}=await scene(t,{kept:true});
+ const {doc,w}=await open();
+ const btn=await until(()=>doc.querySelector('[data-cs=open]'));btn.click();
+ const words=await until(()=>doc.querySelector('[data-cs-words]'));
+ await until(()=>doc.activeElement===words);
+ const box=doc.querySelector('[data-cs-name]');box.focus();box.value='Mara';box.dispatchEvent(new w.Event('input',{bubbles:true}));
+ box.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+ await until(()=>!doc.querySelector('[data-cs-confirm]'));
+ assert.equal(S2.said.length,0,'nothing was saved');assert.equal(S2.recovers,0);
+ await until(()=>doc.activeElement===doc.querySelector('[data-cs=open]'));
+ // Not now returns focus the same way.
+ doc.querySelector('[data-cs=open]').click();await until(()=>doc.querySelector('[data-cs=cancel]'));
+ doc.querySelector('[data-cs=cancel]').click();
+ await until(()=>!doc.querySelector('[data-cs-confirm]'));await until(()=>doc.activeElement===doc.querySelector('[data-cs=open]'));
+});
+
+test('the source list has its small heading with a count, rows with the kind\'s icon, and plain buttons that never wrap',{timeout:300000},async t=>{
+ const {open}=await scene(t,{kept:true,reviewed:true});
+ const {doc}=await open();
+ const h=await until(()=>doc.querySelector('.subj-cs-h'));
+ assert.equal(h.querySelector('h3').textContent,'Sources');assert.equal(h.querySelector('span').textContent,'2');
+ const rows=[...doc.querySelectorAll('.subj-cs-list>li')];assert.equal(rows.length,2);for(const r of rows)assert.ok(r.querySelector('svg.v2-ic'),'the kind\'s icon');
+ const css=fs.readFileSync(path.join(repo,'public/v2/screens/subject.css'),'utf8').slice(fs.readFileSync(path.join(repo,'public/v2/screens/subject.css'),'utf8').indexOf('capture sources: BEGIN'));
+ assert.match(css,/\.subj-cs-btns button\.subj-btn[^{]*\{[^}]*white-space:nowrap!important/,'Confirm this transcript and Use it for Check never wrap');
+ assert.match(css,/\.subj-cs-h h3\{font:600 var\(--v2-t15\)/);assert.match(css,/\.subj-cs-list b\{font:500 var\(--v2-t14\)/);assert.match(css,/padding:7px 8px;border-radius:8px/);
+ assert.equal(doc.querySelector('[data-cs=capture]').classList.contains('pri'),false,'the card\'s Next stays its one primary');
 });

@@ -827,3 +827,117 @@ into a passing one and the correction is two lines.
     four the diff touches (653 tests: 645 pass, 3 skipped, 3 todo, 2 fail). The two failures were run alone and fail
     the same way; neither touches this change: `native-language-edition.test.mjs` needs a headless renderer this
     machine lacks, and `native-language-proposal-owner.test.mjs` fails identically on a copy of `origin/main` here.
+
+## Piece B, as built
+
+Piece B is the smallest self-contained change, kept in marked blocks so the thread restyling these screens can carry it.
+
+- `public/v2/screens/subject.js` (blocks marked "capture sources"): the recording's row offers "Confirm this transcript" when the transcript is ready and not confirmed by him. It opens in place with the words (read only, in the speech face), one name box per unnamed speaker and a primary "Confirm"; Confirm calls the recording's own `speakers` then `review` actions through `.transcription.id.action` as the page's actor, and the row then says "Confirmed by you". The words and the speakers were read with the same command's `recover` action. That was wrong: `recover` takes the transcript's writer lock, can finish a half-done publication and, the first time, writes the mapping, so it is not a read (see the corrections below). Once the transcript is kept and confirmed, the list from `study-draft.capture-sources.list` is shown (title, kind, "Confirmed by you"; what is not eligible with the list's own reason) with one primary "Use it for Check" that sends exactly the eligible ones shown to `study-draft.capture-sources`; on success "Check can now read this". The list is read again after every confirm and capture, so either order works.
+- `public/v2/screens/check.js`: when the check is held only for want of a source, the same list and button are drawn below the sentence (through `v2.shared.subject.createCaptureSources`, read when the screen opens; without it Check does without). With nothing eligible it shows the reasons and a link back to the subject; a damaged record shows the list's sentence and no button. After a capture Check reads the draft and the receipt again and runs by itself.
+- An assistant's page has every control; pressing shows the refusal and nothing is faked.
+- `scripts/review-journey.mjs`: step 4 confirms the transcript and presses "Use it for Check"; step 8 asserts a real result (the held break is gone); step 9 no longer expects the held wording.
+- Tests: `tests/v2-subject.test.mjs` and `tests/v2-check.test.mjs`.
+
+## Review of piece B
+
+Independent review, 12 November, of branch `claude/v2-check-new-subject-sources` as pushed. Read the diff; used it on the
+invented demo (port 8871, never 8841) as human:adrian and as agent:codex with a probe that makes a real subject, a real
+saved recording and a finished transcription job the way the journey walk does; ran the walk once at 390 light; ran
+`tests/v2-subject.test.mjs` and `tests/v2-check.test.mjs` (57 pass) and the sideways check for `v2:subject` and
+`v2:check`, plain and `--stress` (nothing scrolls sideways). Three demonstrating tests are added at the end of
+`tests/v2-subject.test.mjs`, marked `todo` so the suite stays green; each fails today.
+
+### Must-fix
+
+1. **"Confirmed by you" shows, and stays, for a transcript an assistant reviewed, and Adrian loses the Confirm
+   button.** `public/v2/screens/subject.js` lines 611 to 617. `csConfirmed` falls back to `job.reviewStatus==='reviewed'`,
+   and the recordings list never says who reviewed. The list was meant to correct it, but `transcriptIdOf` looks in
+   `sources.tree` for an entry of kind `transcript` with a `recordingId`; the real tree has none (measured on the demo: only
+   `note` and `audio` entries), so the correction never happens. The page's own tests pass because their stand-in tree
+   invents that entry. Proved on the demo: after an assistant's review, Adrian's row read "Transcript ready, and kept as a
+   source. Confirmed by you" with no Confirm, while the list just below read "Not confirmed by you yet", and no "Use it for
+   Check" was offered. He cannot get past it in version two. The same happens after a stale capture: the speaker was
+   renamed elsewhere (review reset), the press was refused and the list re-read "Not reviewed yet", but the row kept
+   "Confirmed by you" because `cf.confirmed` (line 632) is never cleared. Demonstrating test: "review of piece B: a
+   transcript reviewed by an assistant does not read ...". Correction: decide "Confirmed by you" from the list's
+   `confirmedByYou` matched by the list's own source (its title or the recording link the list returns), or from the
+   `recover` snapshot's `result.metadata.review.by` starting with `human:`; never from `reviewStatus` alone; drop
+   `cf.confirmed` once the list has been read again.
+2. **On an assistant's page Confirm is not refused: it writes the assistant's speaker names and an assistant review into
+   the transcript, and the page then says "Confirmed by you".** `POST /transcription/{id}/{action}` is open to any actor
+   (`runtime/commands.mjs` line 180, not in `HUMAN_ONLY`), and `review` records `by: agent:codex`
+   (`runtime/services/transcript-corrections.mjs` line 165). Proved on the demo as agent:codex: no message, the
+   transcript file now holds `{"name":"Codex named this"}` and `review.by:"agent:codex"`, and the agent's row read
+   "Confirmed by you". The brief's line "An assistant's page has every control; pressing shows the refusal and nothing is
+   faked" is true of "Use it for Check" (the 403 is shown in plain words and nothing is captured, checked on both
+   screens) but not of Confirm; the test that claims it stubs a 403 the server never sends. Correction (screen only): on
+   an assistant's page show "Confirming this transcript is for Adrian to do." in place of the Confirm button, as the row
+   already does for "Use the transcript", and send nothing; the server rule is a separate decision for Adrian.
+
+### Should-fix
+
+3. **A Confirm that saved the names but had the review refused can never succeed on retry.** `subject.js` lines 623 to
+   634: after the partial success the panel keeps the old snapshot, so the next press resends the names at the revision
+   from before they were saved and is refused "This changed since it was opened here. Read it again before saving." every
+   time, with no way to read it again except Not now and reopen. Proved on the demo with an unattributed line (the server
+   says "Name every speaker and resolve unattributed segments before confirming review.") and by the demonstrating test
+   "review of piece B: after the names are saved ...". The same loop follows any 409. Correction: after any failure read
+   the transcript again with the same action and redraw (named speakers lose their box), and say in plain words that a line
+   with no speaker has to be settled in Advanced.
+4. **`recover` is not a plain read.** It takes the transcript's writer lock, finishes any half-done publication and, the
+   first time, writes the mapping (on the demo, opening the panel as agent:codex changed `transcript.json` and added
+   `transcript.md`, `transcript.txt`, `.corrections/base.json` and a publication receipt). It is the same work as the
+   existing workspace's own `read` (`transcript-corrections.mjs` lines 149 and 169 are identical), so no words change, but
+   the brief's sentence "only returns the transcript's current snapshot" is wrong. Correction: say so in the brief, and
+   do not call it from an assistant's page (see 2) or before he asks.
+5. **Keyboard and focus.** Escape does not close the panel (measured: still open after Escape); focus falls to the page
+   body when the panel opens and again after Not now or Confirm. Correction: move focus into the panel (the words region)
+   on open, close on Escape without saving, and return focus to the row's control after closing.
+6. **"Back to the subject" is drawn on the subject page itself** whenever nothing is eligible (after a capture, or when
+   nothing is confirmed): `subject.js` line 709 passes `back` to its own block. Correction: pass `back` only from Check.
+
+### Notes
+
+7. An unattributed line is labelled "Speaker 0" in the panel (`label` with `findIndex` -1); say "No speaker".
+8. An empty transcript shows "The transcript has no words." with Confirm enabled; the server refuses the review, so nothing
+   is marked confirmed, but unnamed speakers can still be saved first. Hide Confirm when there are no words.
+9. Double click and retry are safe: one POST for a double click on "Use it for Check" (measured), and the server settles a
+   second press with a new operation. A stale list was refused with nothing captured and the list re-read
+   ("Selected parent material is missing, unreadable or unreviewed.", the server's own words).
+10. Step 8 of the walk now fails on a held check and on any kind but `ok` or `review` (read and run once at 390 light: it
+    ended `ok`, no break on steps 4, 8 or 9). The walk's draft has no quotation marks, so the result says "No supported
+    quotes to check": it proves the hold is gone, not that quotes were matched.
+11. `check.js` is unchanged when `v2.shared.subject` is missing (`cs` is null) and for stale, failed and consent states
+    (`noSourceHeld` needs status `held` and no role `source`). After a capture Check runs a check by itself; that is the
+    brief's design, noted because it is a write he did not press. `public/document-study/` is untouched; the eight files
+    are as listed. No em dash, no `fetch`, tokens and the six sizes only. At 390 with the panel open, a 120-character
+    title and a long unbroken speaker name, nothing scrolls sideways (measured); Check's held block at 390 was not
+    measured by me.
+
+Verdict: merge after corrections 1 and 2 (and 3 to 6 in the same pass; each is small and inside the marked blocks).
+
+## Corrections after the review of piece B
+
+Made on `claude/v2-capture-sources-b2`, in the same marked blocks.
+
+- **A read that only reads.** One small command, `GET /transcription/{id}/look` (registry name `.transcription.id.look`, any actor, no
+  lock, nothing created or rewritten), returns a transcript's words, speakers and review stamp (`reviewStatus`, `reviewedBy`,
+  `reviewedAt`, `coherent`). It is built from the Library's own read of the stamp, so a review counts only on the current bytes.
+  `tests/transcript-look.test.mjs` proves the transcript files are byte for byte unchanged after it, as every actor. Opening the
+  confirm panel and drawing the row call only this. The press of Confirm is what writes: it reads the recording's own `recover` once
+  (for a fresh revision, and because the first press may have to make the mapping), then `speakers` if a name is missing, then `review`.
+- **The words come from the stamp.** The row says "Confirmed by you" only when the stamp names a human actor on the current bytes.
+  Reviewed by an assistant, or reviewed with no stamp: "Reviewed, not confirmed by you yet", and "Confirm this transcript" is still
+  offered. The row and the list never disagree: the list is only drawn once the row says confirmed, and it is read again whenever the
+  stamp moves.
+- **An assistant's Confirm.** The server accepts it as an assistant's review (it is not refused; the owner has not decided that). The
+  page says "Reviewed by an assistant. Not confirmed by Adrian yet.", never "Confirmed by you", and offers no capture.
+- **After a failed press** the transcript is read again (one plain read), the panel stays open, a speaker already named loses its box, and
+  Confirm again sends only what is still missing at the revision on file. A line with no speaker is labelled "No speaker" and the panel
+  says it has to be settled in Advanced.
+- **Keyboard.** Escape closes the panel without saving. Focus goes to the words on open and back to "Confirm this transcript" on close.
+- "Back to the subject" is drawn only by Check, never on the subject page.
+- **Look.** The list has the sample's small "Sources" heading and count, rows with the kind's icon (title 14 weight 500, kind and state
+  12, padding 7 and 8, radius 8). The screen's buttons are already 14 and 36 tall everywhere, so the two new buttons follow the screen's
+  own, not the sample's 13 and 28. "Confirm", "Confirm this transcript" and "Use it for Check" are plain buttons, so the card's own
+  "Next" (and Check's "Check saved draft") stays the one primary. "Confirm this transcript" does not wrap at 390.

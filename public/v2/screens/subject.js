@@ -321,6 +321,55 @@
  const OWN_ICONS={mic:'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3',note:'M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5',photo:'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15 9h.01'};
  const ownIcon=name=>`<svg class="v2-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${OWN_ICONS[name]}"/></svg>`;
 
+ // ===== capture sources: BEGIN. The list of what Check can read and the one button, shared with check.js through
+ // v2.shared.subject.captureSources. A screen makes one with createCaptureSources({scope, paint, after}) and puts block()
+ // in its markup; it hands clicks on [data-cs] to handle(). The list and the press are the server's: the list comes from
+ // study-draft.capture-sources.list and the press captures exactly the eligible sources shown, with study-draft.capture-sources
+ // (Adrian only: an assistant's press shows the refusal). Nothing here decides what counts. =====
+ const CS_KIND={transcript:'Transcript',markdown:'Note',note:'Note'};
+ const csKind=k=>CS_KIND[k]||(k?String(k).replace(/^./,c=>c.toUpperCase()):'Material');
+ function createCaptureSources({scope,paint,after}){
+  const S={list:undefined,loading:false,busy:false,done:false};
+  const sc=()=>{try{return scope()||null;}catch{return null;}};
+  async function load(){
+   const at=sc();if(!at||S.loading)return;
+   S.loading=true;
+   try{S.list=await v2.call('study-draft.capture-sources.list',at);}catch(error){S.list={__error:error};}
+   S.loading=false;paint();
+  }
+  const ensure=()=>{if(S.list===undefined&&!S.loading&&sc())load();};
+  /** Read the list again the next time it is drawn (after a confirm, a capture or a change to what is attached). */
+  const reset=()=>{S.list=undefined;};
+  function block({back}={}){
+   if(!sc())return '';
+   const L=S.list;
+   if(L===undefined||S.loading){ensure();return `<div class="subj-cs-block" data-cs-block>${S.done?'<p class="subj-cs-done" role="status" data-cs-done>Check can now read this</p>':'<p class="subj-cs-note" role="status">Reading what Check can use.</p>'}</div>`;}
+   if(L.__error)return `<div class="subj-cs-block" data-cs-block><p class="subj-cs-note" role="alert">${esc(L.__error.message||'What Check can use could not be read.')}</p></div>`;
+   if(L.canCapture===false||L.damaged)return `<div class="subj-cs-block" data-cs-block data-cs-sentence><p class="subj-cs-note" role="status">${esc(L.reason||L.addedError||'Nothing can be added for Check here.')}</p></div>`;
+   const all=Array.isArray(L.sources)?L.sources:[],yes=all.filter(x=>x.eligible),no=all.filter(x=>!x.eligible);
+   const state=x=>x.eligible?(v2.isHuman()?'Confirmed by you':'Confirmed by Adrian'):(x.reason||'It cannot be used for Check.');
+   const item=x=>`<li data-cs-src="${esc(x.id)}"${x.eligible?'':' data-cs-no'}>${ownIcon(x.kind==='transcript'?'mic':'note')}<span><b title="${esc(x.title)}">${esc(x.title)}</b><small>${esc(csKind(x.kind))} · <i class="${x.eligible?'subj-cs-ok':'subj-cs-why'}">${esc(state(x))}</i></small></span></li>`;
+   const link=!yes.length&&back?`<p class="subj-cs-note"><a href="${esc(back)}">Back to the subject</a></p>`:'';
+   return `<div class="subj-cs-block" data-cs-block><div class="subj-cs-h"><h3>Sources</h3><span>${all.length}</span></div>${all.length?`<ul class="subj-cs-list">${yes.map(item).join('')}${no.map(item).join('')}</ul>`:'<p class="subj-cs-note" role="status">Nothing is attached to this subject yet.</p>'}${yes.length?`<div class="subj-cs-btns"><button type="button" class="subj-btn" data-cs="capture"${S.busy?' disabled':''}>Use it for Check</button></div>`:''}${S.done?'<p class="subj-cs-done" role="status" data-cs-done>Check can now read this</p>':''}${link}</div>`;
+  }
+  async function capture(){
+   const at=sc(),L=S.list;
+   if(S.busy||!at||!L||L.__error||L.canCapture===false)return;
+   const yes=(L.sources||[]).filter(x=>x.eligible);if(!yes.length)return;
+   S.busy=true;paint();
+   try{
+    await v2.call('study-draft.capture-sources',{...at,expectedSourcesHash:L.sourcesHash??null,sources:yes.map(x=>({sourceId:x.id,sourceHash:x.hash}))});
+    S.done=true;reset();v2.ui.say('Check can now read this',{tone:'good'});
+    if(typeof after==='function')await after();
+   }catch(error){S.done=false;reset();v2.ui.say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});}
+   finally{S.busy=false;paint();}
+  }
+  /** True when the click was this block's. */
+  function handle(target){const b=target?.closest?.('[data-cs=capture]');if(!b)return false;capture();return true;}
+  return {block,handle,load,ensure,reset,state:S};
+ }
+ // ===== capture sources: END =====
+
  /** Where this subject stands: forms, steps, states, ring, station and what each step waits for. One command, one
      call. Everything the page shows about standing comes from here and nowhere else. */
  const gather=subject=>v2.call('subject.standing',{parentStudyId:subject});
@@ -442,7 +491,7 @@
    if(how==='outer')node.outerHTML=html;else node.innerHTML=html;
    if(back)$(back)?.focus({preventScroll:true});
   }
-  const keyOf=n=>n.dataset?.subjStep&&n.closest('.subj-row')?`.subj-row[data-step="${n.dataset.subjStep}"]>[data-subj-step]`:n.dataset?.subjForm?`[data-subj-form="${cssq(n.dataset.subjForm)}"]`:n.dataset?.subjDraft?`[data-subj-draft="${cssq(n.dataset.subjDraft)}"]`:n.matches?.('[data-subj-say]')?'[data-subj-say]':n.matches?.('[data-subj-dishtext]')?'[data-subj-dishtext]':n.matches?.('[data-subj-add]')?'[data-subj-add]':null;
+  const keyOf=n=>n.dataset?.subjStep&&n.closest('.subj-row')?`.subj-row[data-step="${n.dataset.subjStep}"]>[data-subj-step]`:n.dataset?.subjForm?`[data-subj-form="${cssq(n.dataset.subjForm)}"]`:n.dataset?.subjDraft?`[data-subj-draft="${cssq(n.dataset.subjDraft)}"]`:n.matches?.('[data-subj-say]')?'[data-subj-say]':n.matches?.('[data-subj-dishtext]')?'[data-subj-dishtext]':n.matches?.('[data-subj-add]')?'[data-subj-add]':n.matches?.('[data-cs-words]')?'[data-cs-words]':n.dataset?.csName?`[data-cs-name="${cssq(n.dataset.csName)}"]`:n.dataset?.cs?`[data-cs="${n.dataset.cs}"]${n.dataset.job?`[data-job="${cssq(n.dataset.job)}"]`:''}`:null;
   /** A step as shown; the Facts summary counts the research topics its panel lists. */
   const viewOf=x=>{if(x.id!=='facts')return stepView(x);const f=factsView(x,st.rec.brief);return stepView({...f,note:topicNote(f.note,st.rec.topics)});};
   function paintSteps(steps,form){
@@ -553,6 +602,96 @@
   const reading=()=>`<p class="subj-quiet" role="status">Reading</p>`;
   const rec=k=>st.rec[k];
 
+  // ===== confirm a transcript and use it for Check: BEGIN (the list and the button are createCaptureSources, above) =====
+  // Confirming is Adrian's own act on the transcript's words: the speakers are named, then the review is confirmed, both
+  // through the recording's own actions as the page's actor. The server accepts an assistant's review too and records who made
+  // it, so the page never claims more than the stamp says: "Confirmed by you" only for a human stamp on the current bytes.
+  // Opening the panel and drawing the row only read (.transcription.id.look: no lock, nothing written); the press is what writes.
+  // The transcript file's hash changes when it is confirmed, so the list is read again afterwards.
+  const cs=createCaptureSources({scope:()=>{const b=st.standing?.facts?.bindingId;return b?{bindingId:b,parentStudyId:id}:null;},paint:()=>paintNow(),after:async()=>{ask('recordings',true);}});
+  const cf={job:null,state:'idle',look:null,names:{},error:'',looks:new Map(),fresh:new Set(),pend:new Set(),seen:null};
+  const recAct=(job,action,input={})=>v2.call('.transcription.id.action',{id:job,action,...input});
+  const lookRead=job=>v2.call('.transcription.id.look',{id:job});
+  const lookSig=r=>!r||r.__error?'':[r.reviewStatus,r.reviewedBy].join('|');
+  /** What is on file for one transcript: its words, speakers and review stamp, one read. Kept while the next read is made, so the row does not blink. */
+  function lookOf(jobId){
+   const now=rec('recordings');
+   if(cf.seen!==now){cf.seen=now;cf.fresh.clear();}
+   if(!cf.fresh.has(jobId)&&!cf.pend.has(jobId)){
+    cf.pend.add(jobId);const at=cf.seen;
+    lookRead(jobId).catch(error=>({__error:error})).then(r=>{
+     cf.pend.delete(jobId);if(ctx.signal.aborted||cf.seen!==at)return;
+     const before=cf.looks.get(jobId);cf.looks.set(jobId,r);cf.fresh.add(jobId);
+     // The list is the server's own reading of the same bytes: read it again when the stamp moved, so the two never disagree.
+     if(before&&lookSig(before)!==lookSig(r))cs.reset();
+     schedule();
+    });
+   }
+   return cf.looks.get(jobId);
+  }
+  /** Who stands behind the words: 'human' (confirmed by him, on the current bytes), 'other' (reviewed, but not by a human), 'open' (not reviewed) or null (not read yet). */
+  function reviewOf(job){
+   const L=lookOf(job.id);
+   if(!L)return null;
+   if(L.__error||L.reviewStatus!=='reviewed')return 'open';
+   return String(L.reviewedBy||'').startsWith('human:')?'human':'other';
+  }
+  const csConfirmed=job=>reviewOf(job)==='human';
+  /** The row's words and control for a transcript that is ready: the truth from the stamp, never from "reviewed" alone. */
+  function confirmRow(job){
+   const how=reviewOf(job);if(how===null)return '';
+   const L=cf.looks.get(job.id),mine=v2.isHuman(),button=`<button type="button" class="subj-btn" data-cs="open" data-job="${esc(job.id)}">Confirm this transcript</button>`;
+   if(how==='human')return `<span class="subj-where" data-cs-confirmed tabindex="-1">${mine?'Confirmed by you':'Confirmed by Adrian'}</span>`;
+   if(how==='other'){
+    const note=mine?'Reviewed, not confirmed by you yet':String(L.reviewedBy||'').startsWith('agent:')?'Reviewed by an assistant. Not confirmed by Adrian yet.':'Reviewed, not confirmed by Adrian yet';
+    return `<span class="subj-where" data-cs-reviewed tabindex="-1">${note}</span>${mine?button:''}`;
+   }
+   return L&&!L.__error&&!(L.segments||[]).length?'':button;
+  }
+  const focusSoon=sel=>{const go=()=>$(sel)?.focus({preventScroll:true});go();setTimeout(go,0);};
+  async function openConfirm(job){
+   Object.assign(cf,{job,state:'loading',look:null,names:{},error:''});paintNow();
+   try{cf.look=await lookRead(job);cf.looks.set(job,cf.look);cf.state='ready';}catch(error){cf.state='error';cf.error=error?.message||'The transcript could not be read.';}
+   paintNow();focusSoon('[data-cs-words]');
+  }
+  /** Close without saving; focus goes back to the control that opened it (or, when that is gone, the words that replaced it). */
+  function closeConfirm(){
+   const job=cf.job;cf.job=null;cf.state='idle';paintNow();
+   if(job)focusSoon(`[data-cs="open"][data-job="${cssq(job)}"],[data-cs-confirmed],[data-cs-reviewed]`);
+  }
+  async function doConfirm(){
+   if(cf.state!=='ready')return;
+   const unnamed=(cf.look?.speakers||[]).filter(s=>!s.name),names={};
+   for(const s of unnamed){const v=String(cf.names[s.id]||'').trim();if(!v){v2.ui.say('Say who is speaking first.',{tone:'warn'});return;}names[s.id]=v;}
+   const job=cf.job;cf.state='busy';paintNow();
+   let failed=null;
+   try{
+    // The press may make the transcript's mapping the first time, so the revision comes from the recording's own read, now.
+    let expected=(await recAct(job,'recover')).expected;
+    if(unnamed.length){const named=await recAct(job,'speakers',{expected,names});expected=named.expected;}
+    await recAct(job,'review',{expected,confirmed:true});
+   }catch(error){failed=error;}
+   // One plain read after the press, whatever happened: the panel and the row show what is on file now (named speakers lose their box).
+   let now=null;try{now=await lookRead(job);cf.looks.set(job,now);cf.fresh.add(job);}catch{}
+   if(failed){cf.state='ready';if(now)cf.look=now;v2.ui.say(failed?.message||'That could not be done. Nothing was changed.',{tone:'bad'});paintNow();return;}
+   cs.reset();ask('recordings',true);
+   if(now&&now.reviewStatus==='reviewed'&&!String(now.reviewedBy||'').startsWith('human:'))v2.ui.say(v2.isHuman()?'Reviewed, not confirmed by you yet.':'Reviewed by an assistant. Not confirmed by Adrian yet.',{tone:'warn'});
+   closeConfirm();
+  }
+  function confirmMarkup(){
+   if(!cf.job)return '';
+   const open=inner=>`<section class="subj-cs-confirm" data-cs-confirm aria-label="Confirm this transcript">${inner}</section>`;
+   if(cf.state==='loading')return open('<p class="subj-cs-note" role="status">Reading the transcript.</p>');
+   if(cf.state==='error')return open(`<p class="subj-cs-note" role="alert">${esc(cf.error)}</p><div class="subj-cs-btns"><button type="button" class="v2-ghost" data-cs="cancel">Close</button></div>`);
+   const sp=cf.look?.speakers||[],segs=cf.look?.segments||[],label=sid=>{const i=sp.findIndex(s=>s.id===sid),s=sp[i];return s&&s.name?s.name:i<0?'No speaker':'Speaker '+(i+1);};
+   const words=segs.map(g=>`<p>${sp.length>1||g.speaker==null||sp[0]?.name?`<b>${esc(label(g.speaker))}</b> `:''}${esc(g.text)}</p>`).join('');
+   const boxes=sp.filter(s=>!s.name).map(s=>`<label class="subj-cs-name"><span>Who is ${esc(label(s.id))}?</span><input type="text" data-cs-name="${esc(s.id)}" maxlength="120" autocomplete="off" value="${esc(cf.names[s.id]||'')}"></label>`).join('');
+   const loose=segs.some(g=>g.speaker==null||!sp.some(s=>s.id===g.speaker))?'<p class="subj-cs-note">A line with no speaker has to be settled in Advanced before this can be confirmed.</p>':'';
+   const busy=cf.state==='busy';
+   return open(`<div class="subj-cs-words" data-cs-words tabindex="0" role="region" aria-label="The transcript's words">${words||'<p>The transcript has no words.</p>'}</div>${loose}${boxes}<div class="subj-cs-btns">${segs.length?`<button type="button" class="subj-btn" data-cs="confirm"${busy?' disabled':''}>Confirm</button>`:''}<button type="button" class="v2-ghost" data-cs="cancel"${busy?' disabled':''}>Not now</button></div>`);
+  }
+  // ===== confirm a transcript and use it for Check: END =====
+
   function tool(s,form,steps){
    if(s.state==='unknown'&&s.id!=='publish')return notKnown(s,form);
    switch(s.id){
@@ -605,13 +744,22 @@
     if(x.kind!=='recordings'||x.recordingId)return '';
     const job=byJob.get(x.id),v=jobs&&job?recordingView(job,jobs.capability,done.has(job.id)):null;if(!v)return '';
     const mine=transcriptAct(v.act,v2.isHuman()),act=mine==='owner'?`<span class="subj-quiet" data-subj-owner>Keeping this transcript as a source is for Adrian to do.</span><a class="subj-link subj-quietlink" data-subj-handoff="readTranscript" href="${handoffHref('source',null)}" title="Opens the transcript in Advanced">Open in Advanced</a>`:mine==='use'?`<button type="button" class="subj-btn" data-subj-rec="use" data-job="${esc(job.id)}" title="Keeps the finished transcript as a source of this subject">Use the transcript</button><a class="subj-link subj-quietlink" data-subj-handoff="readTranscript" href="${handoffHref('source',null)}" title="Opens the transcript in Advanced, where its words are checked">Open in Advanced</a>`:v.act?`<button type="button" class="subj-btn" data-subj-rec="${v.act}" data-job="${esc(job.id)}">${v.act==='start'?'Make the transcript':'Try the transcript again'}</button>`:'';
-    return `<span class="subj-where" data-subj-where>${esc(v.say)}</span>${act}`;
+    // capture sources (marked block): the transcript's own confirm control, or the words "Confirmed by you"
+    const ready=job.state==='done'&&job.transcriptReady;
+    const confirm=ready?confirmRow(job):'';
+    return `<span class="subj-where" data-subj-where>${esc(v.say)}</span>${act}${confirm}`;
+   };
+   // capture sources (marked block): the open confirm panel, and the list with its one button once a confirmed transcript is kept
+   const csPanels=()=>{
+    const keptSure=rest.some(x=>{const job=x.kind==='recordings'&&!x.recordingId?byJob.get(x.id):null;return !!job&&job.state==='done'&&job.transcriptReady&&done.has(job.id)&&csConfirmed(job);});
+    const b=keptSure?cs.block():'';
+    return confirmMarkup()+b;
    };
    const list=rest.length?`<ul class="subj-have">${rest.slice(0,11).map(x=>`<li>${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${x.recordingId?'Transcript':KIND[x.kind]}</small>${where(x)}</li>`).join('')}${rest.length>11?`<li><small>and ${rest.length-11} more</small></li>`:''}</ul>`:'';
    const tray=photos.length?`<div class="subj-tray">${photos.slice(0,12).map(x=>`<img src="/api/sources/blob?id=${encodeURIComponent(x.id)}" alt="${esc(x.title)}" loading="lazy">`).join('')}${photos.length>12?`<span>+${photos.length-12}</span>`:''}</div>`:'';
    const any=s.state==='done'||list||tray;
    if(!any)return (!known?reading():'')+ways();
-   return (!known?reading():'')+list+tray+`<a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${handoffHref('material',null)}" title="${wayTip()}">${icon('plus')}Add a recording, note, link or photographs</a>`;
+   return (!known?reading():'')+list+csPanels()+tray+`<a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${handoffHref('material',null)}" title="${wayTip()}">${icon('plus')}Add a recording, note, link or photographs</a>`;
   }
   function toolTranscript(s,form){
    const plans=rec('planRecords'),flags=[];
@@ -729,6 +877,8 @@
   // ---------- doing things ----------
   page.addEventListener('click',e=>{
    // The ways in open the Capture sheet for this subject when the app has one; without it they open Material in Advanced.
+   const csb=e.target.closest('[data-cs]');
+   if(csb){e.preventDefault();const w=csb.dataset.cs;if(w==='open')openConfirm(csb.dataset.job);else if(w==='cancel')closeConfirm();else if(w==='confirm')doConfirm();else cs.handle(csb);return;}
    const cap=e.target.closest('[data-subj-capture]');
    if(cap&&typeof v2.capture==='function'){e.preventDefault();const f=st.standing?.facts||{};v2.capture({subject:{id,name:st.standing?.title||'',title:st.standing?.title||'',bindingId:f.bindingId||null,projectId:f.projectId||null}});return;}
    const rb=e.target.closest('[data-subj-rec]');
@@ -757,7 +907,8 @@
    const f=(st.standing?.forms||[]).find(x=>x.key===key);if(!f)return;
    st.form=key;st.open=firstOpen(stepsOfForm(st.standing,f),f);if(st.open)need(st.open);remember();paintNow();$(`[data-subj-form="${cssq(key)}"]`)?.focus();
   }
-  page.addEventListener('input',e=>{const t=e.target;if(t.dataset.subjDraft)st.drafts[t.dataset.subjDraft]=t.value;if(t.matches('[data-subj-say]'))st.sayLine=t.value;if(t.matches('[data-subj-dishtext]'))st.editDish=t.value;});
+  page.addEventListener('keydown',e=>{if(e.key==='Escape'&&cf.job&&cf.state!=='busy'&&e.target.closest?.('[data-cs-confirm]')){e.preventDefault();e.stopPropagation();closeConfirm();}});
+  page.addEventListener('input',e=>{const t=e.target;if(t.dataset.csName){cf.names[t.dataset.csName]=t.value;return;}if(t.dataset.subjDraft)st.drafts[t.dataset.subjDraft]=t.value;if(t.matches('[data-subj-say]'))st.sayLine=t.value;if(t.matches('[data-subj-dishtext]'))st.editDish=t.value;});
   page.addEventListener('submit',async e=>{
    const form=e.target;e.preventDefault();if(st.busy)return;
    if(form.matches('[data-subj-draftform]')){
@@ -787,7 +938,7 @@
    let failed=false;for(const attempt of tries){try{await attempt();return;}catch(error){failed=true;}}
    if(failed)throw new Error('The transcript was kept as a source, but it could not be added to this subject. Press Use the transcript again to try again.');
   }
-  async function act(keys,run){st.busy=true;page.setAttribute('aria-busy','true');try{await run();for(const k of keys)if(st.rec[k]!==undefined)ask(k,true);await refresh();}catch(error){v2.ui.say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});}finally{st.busy=false;page.removeAttribute('aria-busy');}}
+  async function act(keys,run){st.busy=true;page.setAttribute('aria-busy','true');try{await run();cs.reset();for(const k of keys)if(st.rec[k]!==undefined)ask(k,true);await refresh();}catch(error){v2.ui.say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});}finally{st.busy=false;page.removeAttribute('aria-busy');}}
 
   function addForm(){
    const kinds=addable(st.standing.facts,st.standing.forms);
@@ -828,6 +979,6 @@
 
  v2.screen({id:'subject',title:'Subject',route:'subject/:id',render,mount});
  try{if(!v2.shared)v2.shared={};}catch{}
- try{if(v2.shared&&typeof v2.shared==='object')v2.shared.subject=Object.freeze({gather,...pure});}catch{}
+ try{if(v2.shared&&typeof v2.shared==='object')v2.shared.subject=Object.freeze({gather,createCaptureSources,...pure});}catch{}
  root.V2Subject=Object.freeze({gather,...pure});
 })(typeof window!=='undefined'?window:globalThis);
