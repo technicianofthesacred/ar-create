@@ -362,6 +362,10 @@ async function walkOne(width, theme) {
               await p.locator('[data-cs=capture]').click({timeout: 5000});
               await p.waitForFunction(() => /Check can now read this/.test(document.body.innerText), null, {timeout: 15000}).catch(() => breakOnce(step, 'The subject did not say "Check can now read this" after "Use it for Check".'));
               await wait(600);
+              // The row now in use offers one quiet control, "Stop using for Check". It is only looked for, never pressed: step 8 needs the source.
+              await p.waitForFunction(() => [...document.querySelectorAll('[data-cs=stop]')].some(b => /^Stop using for Check$/.test((b.textContent || '').trim())), null, {timeout: 15000})
+                .catch(() => breakOnce(step, 'The source now used for Check did not offer "Stop using for Check".'));
+              await sideways(step); await shoot(p, step, 'new', 'd');
             }
           }
         }

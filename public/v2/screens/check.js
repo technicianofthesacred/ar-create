@@ -120,10 +120,17 @@
    const make=v2.shared.subject?.createCaptureSources;if(typeof make!=='function')return null;
    return make({scope:()=>st.loc?.bindingId&&!st.story?{bindingId:st.loc.bindingId,parentStudyId:id}:null,paint:()=>{if(!aborted())paintRun();},
     // The words did not change, but the captured sources did: read both again, then Check runs again by itself.
-    after:async()=>{await Promise.all([loadDraft(),loadReceipt()]);if(aborted())return;void run();}});
+    after:async()=>{await Promise.all([loadDraft(),loadReceipt()]);if(aborted())return;void run();},
+    // A stop is not a capture: Check does not run by itself. The saved check reads out of date, and the list says whether a source is left.
+    stopped:async()=>{await Promise.all([loadDraft(),loadReceipt()]);if(aborted())return;paintRun();paintWords();}});
   })();
   /** A held check that is held only for want of a source: the one case the list and button are for. */
   const noSourceHeld=c=>!!c&&c.status==='held'&&(c.quote?.reason==='No captured SRC available.'||(Array.isArray(c.proof?.sources)&&!c.proof.sources.some(x=>x?.role==='source')));
+  /** The list says no source for quotes is left (and the record is whole). Read only when the list has been read. */
+  const quoteGone=()=>{const L=cs?.state.list;return !!L&&!L.__error&&!L.damaged&&L.hasQuoteSource===false;};
+  /** A saved check that reads out of date because the last source was stopped: held, as when there never was one. */
+  const stoppedHeld=(c,cur)=>!!c&&!cur&&quoteGone();
+  const HELD_STOP={label:'Checks held',line:'No source to check against yet.',kind:'held'};
   // ===== capture sources: END =====
   const aborted=()=>gone||ctx.signal.aborted;
   const scope=()=>({bindingId:st.loc.bindingId,parentStudyId:id});
@@ -196,6 +203,7 @@
    if(st.busy)return 'Checking';
    if(!st.read)return '';
    if(st.story)return !st.mag?'Not checked':storyFindings().length?'Review needed':'No findings';
+   if(stoppedHeld(st.receipt,current()))return HELD_STOP.label;
    return stateOf(st.receipt,current()).label;
   }
   function shell(){
@@ -220,9 +228,11 @@
   }
   /** Repaint a part of the screen and put his focus back on the same control. */
   function keepFocus(box,draw){
-   const a=doc.activeElement,mark=a&&box?.contains(a)?{ck:a.dataset.ck,n:a.dataset.n}:null;
+   const a=doc.activeElement,mark=a&&box?.contains(a)?{ck:a.dataset.ck,n:a.dataset.n,cs:a.dataset.cs,src:a.dataset.src}:null;
    draw();
    if(mark?.ck){const t=box.querySelector(`[data-ck="${CSS.escape(mark.ck)}"]${mark.n!==undefined?`[data-n="${CSS.escape(mark.n)}"]`:''}`);if(t&&!t.disabled)t.focus({preventScroll:true});}
+   // a Sources control keeps focus through a repaint: the same control on the same source
+   else if(mark?.cs&&mark.src){const t=[...box.querySelectorAll('[data-cs]')].find(x=>x.dataset.cs===mark.cs&&x.dataset.src===mark.src);if(t)t.focus({preventScroll:true});}
   }
   const currentFindings=()=>{
    if(st.story)return storyFindings();
@@ -261,19 +271,22 @@
    const box=$('[data-ck-run]');if(!box)return;
    if(st.story)return paintStoryRun(box);
    keepFocus(box,()=>{
-    const c=st.receipt,cur=current(),s=stateOf(c,cur),why=heldWhy(c),empty=!st.rows.some(r=>r.words.trim());
+    const c=st.receipt,cur=current(),held=stoppedHeld(c,cur),s=held?HELD_STOP:stateOf(c,cur),why=heldWhy(c),empty=!st.rows.some(r=>r.words.trim());
+    // capture sources: a saved check that reads out of date needs the list, to know whether a stop took the last source
+    if(cs&&c&&!cur&&!st.busy)cs.ensure();
+    const mainBlock=!!cs&&!st.busy&&(noSourceHeld(c)||held);
     const finds=c&&!st.busy?currentFindings():[];
-    const stale=c&&!cur;
+    const stale=c&&!cur&&!held;
     const quotes=c?(()=>{const n=quoteCounts(c.quote),said=outcome(c.quote,'quote');return said+(n&&c.quote?.status==='failed'?': '+n.found+' of '+n.of+' quoted passages matched the captured source':n&&n.found?': '+n.found+' of '+n.of+' quoted passages matched':'');})():'';
     const rows=c?`<dl class="ck-results"><div><dt>Quotes</dt><dd>${esc(quotes)}${reason(c.quote)?`<small>${esc(reason(c.quote))}</small>`:''}</dd></div><div><dt>Splits</dt><dd>${esc(outcome(c.split,'split'))}${reason(c.split)?`<small>${esc(reason(c.split))}</small>`:''}</dd></div></dl>`:'';
     const list=finds.map(({n,f,issue,onPage,old})=>`<li class="ck-find" data-find="${n}"${old?' data-old="true"':''}><div class="ck-find-h"><strong>${esc(f.title)}</strong>${old?'<span class="ck-pill">From the older check</span>':''}${onPage?`<button type="button" class="v2-ghost" data-ck="go" data-n="${n}" aria-pressed="${st.hit?.n===n}">Show in the words</button>`:''}</div><p>${esc(f.action)}</p>${f.words?`<blockquote>${esc(f.words)}</blockquote>`:''}${onPage?'':`<p class="ck-dim">${esc(old?'Recheck the current revision to locate this finding.':locatorNote(issue.locator?.reason)||'No unique passage jump is available. The words are on the page; compare them there.')}</p>`}</li>`).join('');
     const sourceNote=finds.some(x=>x.f.words&&!x.old)?`<div class="ck-src">${v2.ui.notBuilt('Viewing the captured source beside a finding.',{advanced:{subject:id,piece:piece(),section:'check'}})}</div>`:'';
     const empty0=c&&!st.busy&&!finds.length?(cur&&c.status==='checked'?'No findings recorded by these named mechanical checks. Editorial review remains separate.':'No current findings to show. Run or recheck the saved revision before treating the manuscript as checked.'):'';
-    const proof=c?`<details class="ck-proof"><summary>Check details and saved proof</summary><p>${esc(c.staleReason||'')}</p><p>Meaning, narration, bracket intent, independent editorial review, blind reading and rating are not verified. No editorial approval was granted.</p><p class="ck-dim">${esc('Saved '+whenLabel(c.finishedAt||c.createdAt))}${c.checkId?esc(' · receipt '+String(c.checkId).slice(0,8)):''}</p>${c.checkId?`<p>${esc('Receipt '+c.checkId)}</p>`:''}<p>${esc('Draft SHA-256: '+(c.proof?.draftHash??''))}</p>${(c.proof?.sources||[]).map(x=>`<p>${esc((x.role||'')+' '+(x.id||'')+' · SHA-256 '+(x.hash||''))}</p>`).join('')}<h3>Quote output</h3><pre>${esc(c.quote?.output||c.quote?.reason||'No completed output.')}</pre><h3>Split output</h3><pre>${esc(c.split?.output||c.split?.reason||'No completed output.')}</pre></details>`:'';
+    const proof=c?`<details class="ck-proof"${st.proofOpen?' open':''}><summary data-ck="proof">Check details and saved proof</summary>${cs&&!mainBlock&&st.proofOpen?cs.block({noCapture:true}):''}<p>${esc(c.staleReason||'')}</p><p>Meaning, narration, bracket intent, independent editorial review, blind reading and rating are not verified. No editorial approval was granted.</p><p class="ck-dim">${esc('Saved '+whenLabel(c.finishedAt||c.createdAt))}${c.checkId?esc(' · receipt '+String(c.checkId).slice(0,8)):''}</p>${c.checkId?`<p>${esc('Receipt '+c.checkId)}</p>`:''}<p>${esc('Draft SHA-256: '+(c.proof?.draftHash??''))}</p>${(c.proof?.sources||[]).map(x=>`<p>${esc((x.role||'')+' '+(x.id||'')+' · SHA-256 '+(x.hash||''))}</p>`).join('')}<h3>Quote output</h3><pre>${esc(c.quote?.output||c.quote?.reason||'No completed output.')}</pre><h3>Split output</h3><pre>${esc(c.split?.output||c.split?.reason||'No completed output.')}</pre></details>`:'';
     box.innerHTML=`<h2 id="ck-h-run">Check this piece</h2>
      <div class="ck-state" data-kind="${esc(st.busy?'busy':s.kind)}" role="status"><strong>${esc(st.busy?'Checking this saved draft':s.label)}</strong><span>${esc(st.busy?'Your words are not changed.':empty?'Nothing is written yet. Write some words, then check them here.':s.line)}</span></div>
      ${why&&!st.busy?`<p class="ck-why">${esc(why)}</p>`:''}
-     ${cs&&noSourceHeld(c)&&!st.busy?cs.block({back:v2.href('subject/:id',{id})}):''}
+     ${mainBlock?cs.block({back:v2.href('subject/:id',{id})}):''}
      ${deviceWords()?'<p class="ck-note" role="status">You have unsaved words in Write on this device. A check covers the saved draft only.</p>':''}
      <div class="ck-btns"><button type="button" class="pri" data-ck="run"${st.busy||empty||!st.read?' disabled':''}>${st.busy?'Checking':c?'Check saved draft again':'Check saved draft'}</button>${stale||st.error||st.receiptNote?'<button type="button" class="v2-ghost" data-ck="reload">Load current saved draft</button>':''}${empty?`<a class="wr-btn" href="${esc(writeHref())}">Go to Write</a>`:''}</div>
      ${st.error?`<p class="ck-bad" role="alert">${esc(st.error)}</p>`:''}${st.receiptNote?`<p class="ck-bad" role="alert">${esc(st.receiptNote)}</p>`:''}
@@ -487,6 +500,9 @@
    else if(act==='passage')void reviewPassage(b.dataset.n);
   }
   page.addEventListener('click',onClick);
+  // capture sources: the Sources list inside the details is read and drawn once they are opened
+  const onToggle=e=>{const d=e.target;if(!d?.matches?.('details.ck-proof')||st.proofOpen===d.open)return;st.proofOpen=d.open;if(d.open&&cs)paintRun();};
+  page.addEventListener('toggle',onToggle,true);
   ctx.on({kinds:['study-draft*','current-work*','study-ai*','concept*','study.outputs*','consent*','magazine*']},e=>{
    if(e&&!e.reset&&e.operationId&&st.mine.has(e.operationId))return;// this screen's own check
    soon();
@@ -523,7 +539,7 @@
    }catch(error){if(aborted())return;plain(error.message||'This piece could not be opened.');}
   }
   function leave(){
-   gone=true;clearTimeout(timer);page.removeEventListener('click',onClick);
+   gone=true;clearTimeout(timer);page.removeEventListener('click',onClick);page.removeEventListener('toggle',onToggle,true);
   }
   return {ready:ready(),leave,state:st};
  }
