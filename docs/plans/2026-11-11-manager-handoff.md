@@ -24,6 +24,14 @@
 
 ## WHERE THIS STANDS, 12 November: the coordinator has stepped back
 
+**The direction, decided by Adrian on 12 November:** "Yes, everything needs to be the new. But there needs to be a way to access all the old so that when things are going I can pull from the old as well if I need to let's call it version two. Let me know how to get there."
+
+- **Three things now have names.** "Advanced": the original workspace, never used. **"Version two": what the stage threads built and merged (pull requests 236 to 241); it is the old one and must stay reachable and working.** "The new one": the design he approved with the Write director (`design/2026-11-write/`); it has no name yet, and it is the direction for the whole app.
+- **How the old stays reachable (recommended to him and sent to the Write director):** the new look is built as its own front beside version two, as version two was built beside Advanced: its own folder and address, started from a copy of version two's screen files so the sound machinery comes across, a link each way that keeps the subject, piece and section, the same commands and records. Version two's screens are not restyled in place.
+- **Order:** the Write director finishes Write, Read and Check in the new front as the pattern; then a fresh director takes Home, the subject page, Research, Capture, the studio and Looks, each look first, his approval, then machinery. Stage 6 finishes in version two as planned.
+- Stages 1 to 4 of the old line were closed at his word. Stage 5 (waiting for his confirmation) and stage 6 (building) are open.
+- Open with him: the new one's name, and which front opens by default once the new one can be used.
+
 **Corrected the same day by Adrian's words:** "I think the version two is good, but it's the old outdated version.. Which I'm trying to move away from and move on to the new one." Read (not yet confirmed by him) as: the version two the stage threads built carries the old look, and "the new one" is the design he approved with the Write director (`design/2026-11-write/` on `claude/v2-write-read-check`, sample at claude.ai/artifact/7YEpQwzBggob13CTrFUtVF). So the approved design is the authority on how Write, Read and Check look and behave; the stage line's machinery is kept where sound. The stage 6 thread (`session_017kitFhPkQUgzXjiJe9mK5K`, building Check screens) and the Write director were both told, to stop two threads changing `check.js` in two looks. Open with Adrian: whether the new look should spread to the other screens (Home, the subject page, Research) or stay with Write, Read and Check.
 
 Asked "Which line runs the build from here?", with the stage line recommended, Adrian answered on 12 November: "Let's go with your recommendations". So:
