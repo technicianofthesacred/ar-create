@@ -164,3 +164,12 @@ test('agents/mcp/server.mjs over real STDIO: registry tools plus the six manuscr
  const refused=await client.callTool({name:'ar_create_call',arguments:{name:'study-ai.reject',input:{bindingId:randomUUID(),parentStudyId:pid,requestId:randomUUID()}}});
  assert.equal(refused.isError,true);assert.equal(JSON.parse(refused.content[0].text).status,403);
 });
+
+test('study-draft.capture-sources is a human-only draft write with no relay and no undo; its read is open to any actor; both are listed',async t=>{
+ const f=await setup(t),list=f.capabilities.commands||f.capabilities,c=list.find(x=>x.name==='study-draft.capture-sources'),l=list.find(x=>x.name==='study-draft.capture-sources.list');
+ assert.ok(c&&l);assert.equal(c.section,'draft');assert.deepEqual(c.actors,['human']);assert.equal(c.readOnly,false);assert.equal(c.relay,undefined);assert.equal(c.undo,undefined);
+ assert.equal(l.section,'draft');assert.equal(l.readOnly,true);assert.deepEqual(l.actors,['any']);assert.deepEqual(l.schema.query.sort(),['bindingId','parentStudyId']);
+ const docs=fs.readFileSync(path.join(repo,'docs/CAPABILITIES.md'),'utf8');assert.match(docs,/`study-draft\.capture-sources` \| `POST \/api\/study-draft\/capture-sources` \| human \| write/);assert.match(docs,/`study-draft\.capture-sources\.list` \| `GET \/api\/study-draft\/capture-sources\/list` \| any \| read/);
+ const refused=await f.cli(['call','study-draft.capture-sources'],{bindingId:randomUUID(),parentStudyId:'p',operationId:randomUUID(),expectedSourcesHash:null,sources:[{sourceId:randomUUID(),sourceHash:'0'.repeat(64)}]});
+ assert.equal(refused.exitCode,5,JSON.stringify(refused.result));
+});
