@@ -243,9 +243,13 @@ test('a check held for want of a source waits and is not the next thing; other h
  const base = {material: notes, ...finishedWords, pieces: [article()]};
  const held = facts({...base, check: {status: 'held', issues: 0, noSource: true}});
  const s = standingOf(held, {now: NOW}), check = at(s.forms[0].steps, 'check');
- assert.equal(check.state, 'wait'); assert.equal(check.note, 'No source to check against yet'); assert.equal(check.waitsFor, 'A source to check against');
- assert.notEqual(s.next?.step, 'check'); assert.ok(!JSON.stringify(s).includes('Check again'));
- assert.notEqual(say(s.next), 'Check');
+ assert.equal(check.state, 'wait'); assert.equal(check.note, 'No source to check against yet');
+ // Nothing arrives on its own: Check still leads, the station stays at Create, and Home's words are not a bare "Check".
+ assert.equal(s.station, 'create'); assert.equal(s.next.step, 'check'); assert.equal(s.next.state, 'wait');
+ assert.equal(say(s.next), 'Check: No source to check against yet'); assert.ok(!JSON.stringify(s).includes('Check again'));
+ // A piece simply not checked yet is as before.
+ const fresh = standingOf(facts({...base, check: {status: null, issues: 0}}), {now: NOW});
+ assert.equal(fresh.next.step, 'check'); assert.equal(fresh.next.state, 'next'); assert.equal(say(fresh.next), 'Check'); assert.equal(fresh.station, 'create');
  // The same rule in the browser copy.
  assert.deepEqual(browser.standingOf(held, {now: NOW}), s);
  // Held for another reason, failed or stale: unchanged.

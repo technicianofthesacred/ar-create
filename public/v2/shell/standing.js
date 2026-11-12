@@ -159,8 +159,9 @@ export function stepsFor(form, facts = {}) {
    else if (c.status === 'running') add('check', 'Create', 'Check', 'wait', 'Checking', {waitsFor: 'The check to finish'});
    else if (c.status === 'checked' && !c.issues) add('check', 'Create', 'Check', 'done', 'Checked');
    else if (c.issues) add('check', 'Create', 'Check', 'flag', plural(c.issues, 'thing') + ' to look at');
-   // Held for want of a captured source: checking again cannot help, so the step waits and is not the thing to do now.
-   else if (c.status === 'held' && c.noSource) add('check', 'Create', 'Check', 'wait', 'No source to check against yet', {waitsFor: 'A source to check against'});
+   // Held for want of a captured source: checking again cannot help, so the step is drawn as waiting, yet it still leads
+   // (nothing will arrive on its own), so the station stays at Create.
+   else if (c.status === 'held' && c.noSource) add('check', 'Create', 'Check', 'wait', 'No source to check against yet', {stuck: true});
    else add('check', 'Create', 'Check', 'flag', 'Check again');
   }
   if (kind === 'instagram') {
@@ -216,10 +217,10 @@ export function ringOf(steps) {const done = steps.filter(s => s.state === 'done'
     any of the others); null otherwise, or when none is left. The last step, whether the piece is out, does not
     block: nothing comes after it. */
 export function leadOf(steps) {
- const lead = steps.find(s => s.state === 'flag') || steps.find(s => s.state === 'next') || steps.find(s => s.state === 'wait') || null;
+ const lead = steps.find(s => s.state === 'flag' || s.stuck) || steps.find(s => s.state === 'next') || steps.find(s => s.state === 'wait') || null;
  const firstUnknown = steps.findIndex(s => s.state === 'unknown' && s.unknownWhy !== 'published');
  if (firstUnknown < 0) return lead;
- const flag = steps.find(s => s.state === 'flag');
+ const flag = steps.find(s => s.state === 'flag' || s.stuck);
  return flag && steps.indexOf(flag) < firstUnknown ? flag : null;
 }
 

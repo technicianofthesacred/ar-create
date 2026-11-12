@@ -216,12 +216,15 @@ test('a check held for want of a captured source is a plain fact in the standing
   instagram: {plans: async () => ({plans: []}), read: async () => null}, places: {read: async () => ({places: []})}});
  const article = async record => (await owners(async () => ({outputs: [{id: 'o1', kind: 'article', placements: [], createdAt: '2026-11-01T00:00:00Z'}]}), '2026-11-10T00:00:00Z', record).one({parentStudyId: 'invented'}));
  try {
-  const none = await article({status: 'held', issues: [], quote: {status: 'held', reason: 'No captured SRC available.'}, split: {status: 'held', reason: 'No captured SRC available.'}});
-  assert.equal(none.facts.check.noSource, true); assert.ok(!JSON.stringify(none.facts.check).includes('SRC'));
+  const none = await article({status: 'held', issues: [], proof: {sources: []}, quote: {status: 'held', reason: 'Some other words.'}});
+  assert.equal(none.facts.check.noSource, true); assert.ok(!JSON.stringify(none.facts.check).includes('Some other'));
+  assert.equal(none.station, 'create'); assert.equal(none.next.step, 'check');
   const step = none.forms[0].steps.find(x => x.id === 'check');
-  assert.equal(step.state, 'wait'); assert.equal(step.note, 'No source to check against yet'); assert.notEqual(none.next?.step, 'check');
-  const other = await article({status: 'held', issues: [], quote: {status: 'held', reason: 'Canonical words need recovery.'}});
+  assert.equal(step.state, 'wait'); assert.equal(step.note, 'No source to check against yet'); 
+  const other = await article({status: 'held', issues: [], proof: {sources: [{id: 's', role: 'source', hash: 'h'}]}, quote: {status: 'held', reason: 'No captured SRC available.'}});
   assert.equal(other.facts.check.noSource, false); assert.equal(other.forms[0].steps.find(x => x.id === 'check').note, 'Check again');
+  const older = await article({status: 'held', issues: [], quote: {status: 'held', reason: 'No captured SRC available.'}});
+  assert.equal(older.facts.check.noSource, false, 'an older record with no list of sources claims nothing');
   const stale = await article({status: 'stale', issues: []});
   assert.equal(stale.facts.check.noSource, false);
  } finally {fs.rmSync(dir, {recursive: true, force: true});}
