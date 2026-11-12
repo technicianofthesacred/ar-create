@@ -153,3 +153,23 @@
  .sl .sl-seg button,.sl .sl-chips button,.sl .sl-ctl button,.sl .sl-cap button:not(.v2-icon-btn),.sl .sl-bar>button{white-space:nowrap!important;max-width:100%!important}
  .sl .sl-thumb .v2-move button.v2-ghost{min-height:24px!important;width:28px!important;padding:0!important}
 }
+
+.sl .sl-empty{display:grid;gap:14px;max-width:560px;padding:28px var(--v2-gutter) 40px}
+.sl .sl-empty h1{font:600 var(--v2-t22)/1.2 var(--ar-ui)}
+.sl .sl-empty header p{color:var(--dim);font-size:var(--v2-t14)}
+.sl .sl-empty>p{font-size:var(--v2-t14);line-height:1.5}
+.sl .sl-empty-go{display:flex;flex-wrap:wrap;gap:8px 20px}
+
+/* An older Outputs carousel, read only: the same studio, with the controls that change it left out. */
+.sl .sl-back span{min-width:0;max-width:34vw;overflow:hidden;text-overflow:ellipsis}
+.sl .sl-swipe{touch-action:pan-y}
+.sl .sl-ro{display:grid;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);min-width:0}
+.sl .sl-ro p{font-size:var(--v2-t13);line-height:1.45;color:var(--c3-ink2);overflow-wrap:anywhere}
+.sl .sl-ro b{color:var(--ink)}
+.sl .sl-pbody[data-ro]{padding-bottom:40px}
+@media (max-width:850px){
+ .sl .sl-back span{max-width:52vw}
+}
+.sl .sl-rochip{display:none;font-size:var(--v2-t13);color:var(--c3-ink2);text-align:center;margin:0}
+.sl .sl-rochip b{color:var(--ink)}
+@media (max-width:850px){.sl .sl-rochip{display:block}}

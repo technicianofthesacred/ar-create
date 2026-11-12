@@ -16,7 +16,7 @@ import * as RULE from '../runtime/standing-rule.mjs';
 
 const repo=path.resolve(import.meta.dirname,'..');
 // The screen file, run as the browser runs it but with no shell: it hands back only its pure half.
-const S=(()=>{const ctx={module:{exports:{}},Date,JSON,Object,Array,Set,Map,String,Number,Math,isNaN,console};ctx.globalThis=ctx;vm.runInNewContext(fs.readFileSync(path.join(repo,'public/v2/screens/subject.js'),'utf8'),ctx);
+const S=(()=>{const ctx={module:{exports:{}},URLSearchParams,Date,JSON,Object,Array,Set,Map,String,Number,Math,isNaN,console};ctx.globalThis=ctx;vm.runInNewContext(fs.readFileSync(path.join(repo,'public/v2/screens/subject.js'),'utf8'),ctx);
  const own=v=>v===undefined?v:JSON.parse(JSON.stringify(v));return Object.fromEntries(Object.entries(ctx.module.exports).map(([k,v])=>[k,typeof v==='function'?(...a)=>own(v(...a)):own(v)]));})();
 const {JSDOM}=createRequire(new URL('../runtime/package.json',import.meta.url))('jsdom');
 
@@ -72,7 +72,7 @@ test('a step is shown as the command says: done carries no note, not known says 
 test('the form shown first holds the next step; pills say where each goes and tell alike names apart',()=>{
  const standing={next:{form:'ig:2'},forms:[{key:'out:1',name:'Article',to:'the magazine',title:'T',alike:false,done:1,total:8,ring:.125,steps:[]},{key:'ig:2',name:'Carousel',to:'Instagram',title:'Spring',alike:true,done:3,total:9,ring:.33,steps:[]}]};
  assert.equal(S.chooseForm(standing).key,'ig:2');assert.equal(S.chooseForm(standing,'out:1').key,'out:1');assert.equal(S.chooseForm({forms:[],steps:[1]}),null);
- assert.deepEqual(S.pillView(standing.forms[0],0),{key:'out:1',name:'Article',line:'the magazine',ring:.125,count:'1/8',say:'First: Article for the magazine, 1 of 8 steps done'});
+ assert.deepEqual(S.pillView(standing.forms[0],0),{key:'out:1',name:'Article',line:'the magazine',lead:'',tell:'',ring:.125,count:'1/8',say:'First: Article for the magazine, 1 of 8 steps done'});
  assert.equal(S.pillView(standing.forms[1],1).line,'Instagram · Spring');
  assert.equal(S.pillView({...standing.forms[1],name:'Post',alike:false},1).line,'Instagram','a Post shows where it goes');
  assert.deepEqual([S.pieceOf({key:'out:1',id:'1'}),S.pieceOf({key:'ig:2',id:'2'}),S.pieceOf({key:'draft:x',id:'x'})],['1',undefined,undefined]);
@@ -197,7 +197,8 @@ test('six invented subjects at different stages each show exactly what subject.s
   // The steps of the form shown, every one with the state the command gave (never a state of its own).
   const form=S.chooseForm(standing),steps=form?form.steps:standing.steps.filter(x=>['Gather','Research','Simmer'].includes(x.group)),all=form?form.steps:standing.steps;
   assert.deepEqual(rowsOf(doc).map(r=>[r[0],r[1]]),steps.map(s=>[s.id,s.state]),id);
-  for(const [row,s] of steps.map((s,i)=>[rowsOf(doc)[i],s]))assert.equal(row[2],s.state==='done'?'':s.state==='unknown'?'Not known':s.note,id+' '+s.id+' note');
+  {const facts=rowsOf(doc).find(r=>r[0]==='facts');if(facts)assert.doesNotMatch(facts[2],/research topic/,id+': no topic count before the panel has read its topics');}
+ for(const [row,s] of steps.map((s,i)=>[rowsOf(doc)[i],s]))assert.equal(row[2],s.state==='done'?'':s.state==='unknown'?'Not known':s.id==='facts'?s.note.replace(/( · )?\d+ research topics? on this material/,''):s.note,id+' '+s.id+' note (the topic count waits until the panel has read its topics)');
   // Opened on the step the command calls next, or the first that needs him; never a step not known.
   const open=doc.querySelector('.subj-row[data-open]')?.dataset.step;
   assert.equal(open,S.firstOpen(steps,form));
@@ -415,6 +416,267 @@ test('topic wording: a question stays his own words, others keep the prefix; kep
  assert.equal(S.topicNote('3 of 5 things looked at · 1 research topic on this material',{list:[1,2,3,4]}),'3 of 5 things looked at · 4 research topics on this material');
  assert.equal(S.topicNote('1 research topic on this material',{list:[{}]}),'1 research topic on this material');
  assert.equal(S.topicNote('2 sources · 1 research topic on this material',{list:[]}),'2 sources');
- assert.equal(S.topicNote('1 research topic on this material',undefined),'1 research topic on this material');
- assert.equal(S.topicNote('1 research topic on this material',{error:true,list:[]}),'1 research topic on this material');
+ assert.equal(S.topicNote('1 research topic on this material',undefined),'','the panel has not read its topics: no count from the first paint');
+ assert.equal(S.topicNote('2 sources not looked at yet · 1 research topic on this material',undefined),'2 sources not looked at yet');
+ assert.equal(S.topicNote('1 research topic on this material',{error:true,list:[]}),'','topics that could not be read: no count');
+});
+
+// ---------- the small fixes of 11 November: the header sentence, and a Carousel that is not yet laid out ----------
+const CONCEPT=(adopted,thoughts='')=>'# Concept\n\n## Author thoughts \u2014 supplied verbatim\n\n'+thoughts+(adopted?'\n\n## Adopted human direction \u2014 explicit\n\n'+adopted:'')+'\n\n## AI interpretation \u2014 provisional\n\nA provisional reading.\n\n## Suggestions \u2014 unadopted\n\nTry another angle.\n\n## Selected Library passages \u2014 references, not approval\n\n';
+
+test('the sentence beside a subject\'s name is only his: the dish he named, else the words he adopted, whatever shape the record has',()=>{
+ // The whole concept record: only the adopted words come out, never the headings or the provisional parts.
+ assert.equal(S.adoptedWords(CONCEPT('One line, drawn slowly.','My own thoughts.')),'One line, drawn slowly.');
+ assert.equal(S.adoptedWords(CONCEPT('One line.\n\nAnd then another, kept.')),'One line. And then another, kept.','whitespace is laid flat for the line, nothing is cut');
+ // No adopted words yet: nothing, and never his thoughts or an assistant's reading.
+ assert.equal(S.adoptedWords(CONCEPT('','Only my thoughts.')),'');
+ assert.equal(S.adoptedWords(CONCEPT('')),'');
+ // An empty record and a missing one.
+ for(const none of ['',null,undefined,'   \n '])assert.equal(S.adoptedWords(none),'');
+ // An old or hand-written record that is one plain paragraph is his sentence as it stands.
+ assert.equal(S.adoptedWords('A short piece about tea.\nCalm and exact.'),'A short piece about tea. Calm and exact.');
+ // Markers the app keeps in a record are not words.
+ assert.equal(S.adoptedWords('<!-- ar-create:direction-choices:v1 {"a":1} -->\nA plain direction.'),'A plain direction.');
+ assert.equal(S.adoptedWords(CONCEPT('Kept.')+'\n\n<!-- ar-create:direction-plan:v1 -->\n## Planning intent\n```json\n{"title":"x"}\n```\n<!-- /ar-create:direction-plan:v1 -->'),'Kept.');
+ // The real blocks the app appends (choices, planning intent) are data, wrapped in markers: none of it is words.
+ const BLOCK='\n\n<!-- ar-create:direction-choices:v1 -->\n```json\n{"schema":1,"events":[]}\n```\n<!-- /ar-create:direction-choices:v1 -->';
+ assert.equal(S.adoptedWords('Tea at dawn, slowly.'+BLOCK),'Tea at dawn, slowly.');
+ assert.equal(S.adoptedWords(CONCEPT('Kept.')+BLOCK),'Kept.');
+ assert.equal(S.adoptedWords('Tea.\n\n<!-- ar-create:direction-plan:v1 -->\n## Planning intent\n```json\n{"title":"x"}\n```\n<!-- /ar-create:direction-plan:v1 -->'),'Tea.');
+ // His own headings are his words, in a plain paragraph and inside the adopted section.
+ assert.equal(S.adoptedWords('Tea, #1 of the morning {slowly}, kept whole.'),'Tea, #1 of the morning {slowly}, kept whole.','a # or braces inside his sentence stay');
+ assert.equal(S.adoptedWords(CONCEPT('Slowly, #1 {kept}.')),'Slowly, #1 {kept}.');
+ // A heading of any kind ends the adopted section, and a plain record that holds headings is not a shape we read.
+ assert.equal(S.adoptedWords(CONCEPT('Slowly.\n\n# My line\n\nNot part of it.')),'Slowly.');
+ assert.equal(S.adoptedWords('Suggestions about tea\n\n## Notes, mine\n\nShade first.'),'');
+ // Edit starts from his paragraphs as they were.
+ assert.equal(S.adoptedRaw(CONCEPT('One.\n\nTwo.')),'One.\n\nTwo.');
+ // A hand-written record with the headings in another order still gives only the adopted section.
+ assert.equal(S.adoptedWords('# Concept\n\n## Author thoughts \u2014 supplied verbatim\n\nNot this.\n\n## Adopted human direction \u2014 explicit\n\nFirst.\n\n## AI interpretation \u2014 provisional\n\nNor this.'),'First.');
+ // The dish he named wins; it is his exact sentence.
+ assert.equal(S.sentenceOf({forming:{named:{text:'  The dish, as said.  '}}},{body:CONCEPT('Other words.')}),'The dish, as said.');
+ assert.equal(S.sentenceOf({forming:{named:'A string dish.'}},{body:''}),'A string dish.');
+ assert.equal(S.sentenceOf({forming:{named:null}},{body:CONCEPT('From the direction.')}),'From the direction.');
+ assert.equal(S.sentenceOf(null,{body:CONCEPT('')}),'');
+ assert.equal(S.sentenceOf(null,null),'');
+ // The line never says a heading word of the record.
+ assert.doesNotMatch(S.sentenceOf(null,{body:CONCEPT('Words.','Thought.')}),/Concept|Author thoughts|AI interpretation|Suggestions/);
+});
+
+test('a subject whose dish is named shows his sentence in the header, never the stored record; a new Carousel says what each waiting step waits for and offers Advanced',{timeout:300000},async t=>{
+ const base=await server(t);
+ await fillDemo(base,{only:['a-single-line','the-first-cup']});
+ const id='demo-a-single-line',actor={'Content-Type':'application/json','X-AR-Actor':'agent:claude-code','X-AR-Client':'http'},uuid=()=>crypto.randomUUID();
+ const post=async(p,b)=>{const r=await fetch(base+p,{method:'POST',headers:actor,body:JSON.stringify({operationId:uuid(),...b})});const v=await r.json();assert.ok(r.ok,p+' '+JSON.stringify(v));return v;};
+ const board=await get(base,'/api/simmer/board?subject='+id);
+ await post('/api/simmer/dish',{subject:id,sentence:'One line, drawn slowly, and what it asks of the hand.',said:'typed',expectedRevision:board.revision,expectedHash:board.hash});
+ const stored=(await get(base,'/api/study/human-direction?parentStudyId='+id)).body;
+ assert.match(stored,/^# Concept/,'the stored record is the whole concept record');
+ const plan=await post('/api/instagram/plan',{subject:id,title:'A single line',material:{transcripts:[],photos:[]}});
+ {const {doc}=await page(base,'#/subject/'+id);
+  await until(()=>doc.querySelector('.subj-dir span')&&doc.querySelector('.subj-row'));
+  assert.equal(doc.querySelector('.subj-dir span').textContent,'One line, drawn slowly, and what it asks of the hand.');
+  assert.doesNotMatch(doc.querySelector('.subj-head').textContent,/# Concept|Author thoughts|Adopted human direction/);
+  // The record itself is untouched by showing it.
+  assert.equal((await get(base,'/api/study/human-direction?parentStudyId='+id)).body,stored);
+  // The step he is asked to open shows the same words in the dish step, and Edit starts from them.
+  doc.querySelector('.subj-row[data-step="dish"]>[data-subj-step]').click();
+  await until(()=>doc.querySelector('.subj-quote.big'));
+  assert.equal(doc.querySelector('.subj-quote.big').textContent,'One line, drawn slowly, and what it asks of the hand.');
+  doc.querySelector('[data-subj-dishedit]').click();
+  assert.equal(doc.querySelector('[data-subj-dishtext]').value,'One line, drawn slowly, and what it asks of the hand.');}
+ // The Carousel: nothing waits without saying what for, and no step opens the bare studio.
+ {const {doc}=await page(base,'#/subject/'+id+'?form=ig:'+plan.id+'&step=story');
+  await until(()=>doc.querySelector('[data-subj-panel] [data-subj-waiting]'));
+  const panel=doc.querySelector('[data-subj-panel]');
+  assert.match(panel.querySelector('[data-subj-waiting]').textContent,/^An assistant proposes the stories from your words and photographs\. You choose one\.$/);
+  assert.equal(sectionOf(panel.querySelector('a[data-subj-handoff="story"]').getAttribute('href')),'arrange','the way forward that exists');
+  assert.equal(panel.querySelector('a[href*="slides/"]'),null,'no slide studio before there are slides');
+  doc.querySelector('.subj-row[data-step="slides"]>[data-subj-step]').click();
+  await until(()=>doc.querySelector('[data-subj-panel] [data-subj-waiting]')?.textContent.startsWith('The slides wait'));
+  assert.ok(doc.querySelector('[data-subj-panel] [data-subj-step="story"]'),'it still offers Go to the story');
+  assert.equal(sectionOf(doc.querySelector('[data-subj-panel] a[data-subj-handoff="slides"]').getAttribute('href')),'arrange');
+  assert.equal(doc.querySelector('[data-subj-panel] a[href*="slides/"]'),null);
+  doc.querySelector('.subj-row[data-step="posttext"]>[data-subj-step]').click();
+  await until(()=>doc.querySelector('[data-subj-panel] h2')?.textContent==='The post text');
+  assert.equal(doc.querySelector('[data-subj-panel] a[href*="slides/"]'),null,'the post text step does not open the studio either');
+  assert.ok(doc.querySelector('[data-subj-panel] [data-subj-step="slides"]'),'it says what it waits for with a way there');}
+});
+
+test('a stored direction that is only the app\'s direction-choices block, however it is written, gives no header sentence and no raw text',()=>{
+ const JSON_BLOCK='{"schema":1,"events":[{"action":"select","angle":"Slow tea"}]}';
+ const shapes=[
+  '<!-- ar-create:direction-choices:v1 -->\n```json\n'+JSON_BLOCK+'\n```\n<!-- /ar-create:direction-choices:v1 -->',
+  '<!-- ar-create:direction-choices:v1 -->\n'+JSON_BLOCK,
+  '<!-- ar-create:direction-choices:v1 -->\n```json\n'+JSON_BLOCK+'\n```\n',
+  '\n\n<!-- ar-create:direction-choices:v1 -->'+JSON_BLOCK+'\n<!-- /ar-create:direction-choices:v1 -->\n',
+ ];
+ for(const body of shapes){
+  assert.equal(S.adoptedWords(body),'',body);
+  assert.equal(S.sentenceOf(null,{body}),'');
+  assert.equal(S.sentenceOf({forming:{named:{text:'The dish he named.'}}},{body}),'The dish he named.','his named dish still wins');
+ }
+ // His own sentence next to the block is kept, and only it.
+ const mixed='Tea at dawn.\n\n'+shapes[0];
+ assert.equal(S.sentenceOf(null,{body:mixed}),'Tea at dawn.');
+ assert.doesNotMatch(S.sentenceOf(null,{body:mixed}),/<!--|\{|json/);
+});
+
+test('a stored concept record with headings and thoughts but no adopted words gives no header sentence and no heading marks',()=>{
+ const full='# Concept\n\n## Author thoughts — supplied verbatim\n\nI keep thinking about the steam.\n\n## AI interpretation — provisional\n\nA reading.\n\n## Suggestions — unadopted\n\nAn idea.\n\n## Selected Library passages — references, not approval\n\n';
+ const bare='# Concept\n\n## Author thoughts\n\nI keep thinking about the steam.\n\n## AI interpretation\n\nA reading.\n';
+ const choices='\n\n<!-- ar-create:direction-choices:v1 -->\n```json\n{"schema":1,"events":[]}\n```\n<!-- /ar-create:direction-choices:v1 -->';
+ for(const body of [full,bare,full+choices,'# Concept\n\n## Author thoughts - supplied verbatim\n\nSteam.\n']){
+  const line=S.sentenceOf(null,{body});
+  assert.equal(line,'',JSON.stringify(body));
+  assert.doesNotMatch(line,/^#|<!--|\{/);
+ }
+ // With his adopted words the line is those words alone, in either heading style.
+ assert.equal(S.sentenceOf(null,{body:'# Concept\n\n## Author thoughts\n\nSteam.\n\n## Adopted human direction\n\nSlow tea, said plainly.\n\n## AI interpretation\n\nA reading.'}),'Slow tea, said plainly.');
+ assert.equal(S.sentenceOf(null,{body:full.replace('## AI interpretation','## Adopted human direction — explicit\n\nSlow tea.\n\n## AI interpretation')+choices}),'Slow tea.');
+});
+
+test('every header reads his sentence through the one reader and shows no stored record text',{timeout:300000},async t=>{
+ const base=await server(t);
+ await fillDemo(base,{only:['a-single-line']});
+ const id='demo-a-single-line';
+ // Stand in for the two stored shapes: the screen reads the direction record through the same command it always used.
+ const src=fs.readFileSync(path.join(repo,'public/v2/screens/subject.js'),'utf8');
+ assert.match(src,/sentenceOf\(ok\(st\.rec\.board\)\?st\.rec\.board:null,d\)/,'the header goes through the one sentence reader');
+ assert.doesNotMatch(src,/String\(d\.body\|\|''\)/,'no place shows a stored body as it is');
+ const {doc}=await page(base,'#/subject/'+id);
+ await until(()=>doc.querySelector('.subj-head'));
+ assert.doesNotMatch(doc.querySelector('.subj-head').textContent,/<!--|"schema"|^#|# Concept|Author thoughts/);
+});
+
+// ---------- real records on the subject page (First look, 12 November) ----------
+const car=(key,over={})=>({key,kind:'slides',name:'Carousel',to:'Instagram',title:'',alike:true,done:1,total:5,ring:.2,id:key.slice(4),slides:5,words:41,createdAt:'2026-10-03T12:00:00Z',updatedAt:null,steps:[],...over});
+
+test('two forms of one name are told apart by real fields only: the slide count and the date made, never an invented name',()=>{
+ const forms=[car('out:c1'),car('out:c2',{slides:7,createdAt:'2026-10-09T12:00:00Z'}),{...car('out:a1'),kind:'article',name:'Article',to:'the magazine',alike:false,slides:0}];
+ const d=S.tellApart(forms);
+ assert.equal(d.length,3);
+ assert.equal(d[0],'5 slides · made 3 Oct');assert.equal(d[1],'7 slides · made 9 Oct');assert.equal(d[2],'','a form with a name of its own needs nothing added');
+ assert.equal(S.pillView(forms[0],0,d[0]).line,'Instagram · 5 slides · made 3 Oct');
+ assert.deepEqual([S.pillView(forms[0],0,d[0]).lead,S.pillView(forms[0],0,d[0]).tell],['Instagram · ','5 slides · made 3 Oct'],'a phone drops where it goes and keeps what tells them apart');
+ assert.match(S.pillView(forms[1],1,d[1]).say,/Carousel for Instagram, 7 slides · made 9 Oct, /);
+ // The piece's own title, when it has one, comes first.
+ assert.equal(S.tellApart([car('out:c1',{title:'Spring'}),car('out:c2')])[0],'Spring · 5 slides · made 3 Oct');
+ // A title they all share tells nothing apart, so it is left out.
+ assert.equal(S.tellApart([car('out:c1',{title:'Spring'}),car('out:c2',{title:'Spring',slides:7})])[1],'7 slides · made 3 Oct');
+ // Two Instagram plans with one title: the frame count and the day each was last changed (a plan keeps no date made).
+ const plans=[car('ig:p1',{kind:'instagram',createdAt:null,updatedAt:'2026-11-02T12:00:00Z',slides:3,title:'Same'}),car('ig:p2',{kind:'instagram',createdAt:null,updatedAt:'2026-11-04T12:00:00Z',slides:5,title:'Same'})];
+ assert.deepEqual(S.tellApart(plans),['3 slides · changed 2 Nov','5 slides · changed 4 Nov']);
+ // No record of a slide count or a date: nothing is invented, and the old line is unchanged.
+ const bare=[car('out:c1',{slides:0,createdAt:null}),car('out:c2',{slides:0,createdAt:null,title:'Autumn'})];
+ assert.deepEqual(S.tellApart(bare),['','Autumn']);
+ assert.equal(S.pillView(bare[0],0,'').line,'Instagram');
+ // Same slides, same day: the time made tells them apart.
+ const same=S.tellApart([car('out:c1',{createdAt:'2026-10-03T08:15:00Z'}),car('out:c2',{createdAt:'2026-10-03T16:40:00Z'})]);
+ assert.notEqual(same[0],same[1]);assert.match(same[0],/^5 slides · made 3 Oct, \d\d:\d\d$/);
+ // The same minute: the second.
+ const close=S.tellApart([car('out:c1',{createdAt:'2026-10-03T08:15:10Z'}),car('out:c2',{createdAt:'2026-10-03T08:15:40Z'})]);
+ assert.notEqual(close[0],close[1]);assert.match(close[0],/, \d\d:\d\d:\d\d$/);
+});
+
+test('an Outputs carousel opens in version two\'s studio, read only; a plan keeps the studio it had',()=>{
+ assert.equal(S.outputStudio({key:'out:c1',id:'c1',kind:'slides'}),'c1');
+ assert.equal(S.outputStudio({key:'out:a1',id:'a1',kind:'article'}),null);
+ assert.equal(S.outputStudio({key:'ig:p1',id:'p1',kind:'instagram'}),null);
+ assert.equal(S.outputStudio(null),null);
+});
+
+test('the Facts step says findings only when they are there; a result with none says what is there',()=>{
+ const rule=(over={})=>({id:'facts',name:'The facts',group:'Research',state:'flag',note:'Research came back',why:'research-result',...over});
+ const full={step:'directions',research:{question:'Why?',body:'Some findings.'}};
+ assert.equal(S.findingsOf(full),1);
+ assert.equal(S.findingsOf({research:{question:'Why?',body:'  '},directions:[]}),0);
+ assert.equal(S.findingsOf({research:{body:'x',brief:'y'},directions:[{},{}]}),4);
+ assert.equal(S.findingsOf(null),null);assert.equal(S.findingsOf({__error:true}),null);assert.equal(S.findingsOf(undefined),null);
+ // Before the brief is read, the rule's own words stand (they do not claim findings).
+ assert.equal(S.factsView(rule(),undefined).note,'Research came back');
+ const some=S.factsView(rule(),full);assert.deepEqual([some.state,some.note],['flag','Findings to read']);
+ const none=S.factsView(rule(),{step:'directions',research:{question:'Why?'}});
+ assert.deepEqual([none.state,none.note],['wait','The question is asked, waiting for findings']);
+ assert.ok(!JSON.stringify(none).includes('Findings to read'));
+ // Another state of the step is left alone.
+ const other={id:'facts',state:'todo',note:'Ready to look into'};assert.deepEqual(S.factsView(other,full),other);
+});
+
+test('an assistant is not offered what only Adrian can do; a refusal says what happened',()=>{
+ assert.equal(S.transcriptAct('use',true),'use');assert.equal(S.transcriptAct('use',false),'owner');
+ assert.equal(S.transcriptAct('start',false),'start','making a transcript is the assistants\' to do as well');assert.equal(S.transcriptAct(null,false),null);
+ const stale=Object.assign(new Error('This changed since it was opened here. Read it again before saving.'),{status:409,command:'recordings.source',body:{error:'Recording transcript or audio changed. Open its current Source before using it.'}});
+ assert.equal(S.sourceRefusal(stale),'Recording transcript or audio changed. Open its current Source before using it.');
+ assert.match(S.sourceRefusal(Object.assign(new Error('x'),{status:409,command:'recordings.source',body:{}})),/transcript or the recording changed/);
+ assert.equal(S.sourceRefusal(Object.assign(new Error('Only Adrian can decide this.'),{status:403})),'Only Adrian can decide this.');
+ assert.equal(S.sourceRefusal(new Error('')),'That could not be done. Nothing was changed.');
+});
+
+test('private or machine text never reaches the header, whatever suffix a heading has or however a marker is broken',()=>{
+ const J='{"schema":1,"events":[{"action":"select"}]}';
+ const ADOPT='## Adopted human direction \u2014 explicit\n\nHis line, kept.';
+ // A heading whose suffix is not a dash is still the concept record: his private thoughts stay out.
+ assert.equal(S.adoptedWords('# Concept: tea\n\n## Author thoughts (verbatim)\n\nPrivate thought.\n\n'+ADOPT),'His line, kept.');
+ assert.equal(S.adoptedWords('# Concept: tea\n\n## Author thoughts (verbatim)\n\nPrivate thought.'),'');
+ assert.equal(S.adoptedWords('## Author thoughts (verbatim)\n\nPrivate thought.'),'');
+ assert.equal(S.adoptedWords('# Concept\n\n## Adopted human direction: mine\n\nHis line.\n\n## AI interpretation (provisional)\n\nNot his.'),'His line.');
+ // An unknown section after his words is not his words.
+ assert.equal(S.adoptedWords('# Concept\n\n'+ADOPT+'\n\n## Something new\n\nAn assistant\'s text.'),'His line, kept.');
+ assert.equal(S.adoptedWords('# Concept\n\n'+ADOPT+'\n\n### Deeper\n\nMore.'),'His line, kept.','a heading of any level ends it');
+ // A closing marker with no opening one: what is before it is data.
+ assert.equal(S.adoptedWords(J+'\n<!-- /ar-create:direction-choices:v1 -->\nA plain direction.'),'A plain direction.');
+ assert.equal(S.adoptedWords('```json\n'+J+'\n```\n<!-- /ar-create:direction-choices:v1 -->'),'');
+ // A comment left open: what is after it is data.
+ assert.equal(S.adoptedWords('A plain direction.\n<!-- '+J),'A plain direction.');
+ assert.equal(S.adoptedWords('<!-- '+J),'');
+ // A record that is only data, and a shape that is not recognised, give nothing.
+ assert.equal(S.adoptedWords(J),'');
+ assert.equal(S.adoptedWords('## Notes\n\nSomething.'),'');
+});
+
+// ---------- a Magazine story as a subject ----------
+test('a Magazine story leads to the workspace itself, never to an address it does not know', () => {
+ const piece = 'mag-x:article';
+ assert.equal(S.magazineHref('mag-x', {}), '/document-study/index.html', 'no ?subject= and no story address: either would open another project');
+ assert.equal(S.magazineHref('mag-x', {actor: 'agent:claude-code'}), '/document-study/index.html?reviewActor=agent%3Aclaude-code');
+ assert.equal(S.isMagazine({origin: {kind: 'magazine', storyId: 'mag-x'}}), true); assert.equal(S.isMagazine({}), false);
+ assert.equal(S.pieceFor({key: 'mag:' + piece, id: piece, owner: {kind: 'magazine'}}), piece); assert.equal(S.pieceFor({key: 'out:a1', id: 'a1'}), 'a1');
+ assert.equal(S.inMagazine('Choose photographs in Advanced'), 'Open the Magazine in Advanced'); assert.equal(S.inMagazine('Write'), 'Write');
+ // The rule may name a step not known as the one to open; only then is it opened by the page.
+ const steps = [step('words', 'done'), step('check', 'unknown')];
+ assert.equal(S.firstOpen(steps, {next: {step: 'check', state: 'unknown'}}), 'check'); assert.equal(S.firstOpen(steps, {next: {step: 'check', state: 'next'}}), 'words');
+});
+
+test('a Magazine story\'s page: a direction is chosen in the Magazine and not shown as his words, every link leads somewhere that exists, nothing it cannot do is offered', {timeout: 300000}, async t => {
+ const {addMagazineToSyntheticHome} = await import('../scripts/demo-magazine.mjs');
+ const fixture = syntheticHome(); t.after(() => fs.rmSync(fixture.dir, {recursive: true, force: true}));
+ await addMagazineToSyntheticHome(fixture);
+ const config = JSON.parse(fs.readFileSync(fixture.config, 'utf8'));
+ const s = await createServer({dataDir: config.dataDir, publicDir: path.join(repo, 'public'), studyOriginalRoots: config.studyOriginalRoots, researchEnabled: false, packageView: {syntheticFixtures: true}});
+ await new Promise(r => s.listen(0, '127.0.0.1', r)); t.after(() => new Promise(r => {s.closeAllConnections?.(); s.close(r);}));
+ const base = 'http://127.0.0.1:' + s.address().port;
+ for (const [id, said, next] of [['mag-kiln-keeper', /A direction is chosen in the Magazine, the dish is not named/, 'check'], ['mag-salt-lake-weaver', /No direction yet/, 'check'], ['mag-bamboo-carver', /No direction yet/, 'facts']]) {
+  const standing = await standingOf(base, id);
+  assert.equal(standing.next.step, next, id + ': a true next step');
+  const {doc} = await page(base, '#/subject/' + id);
+  await until(() => doc.querySelector('.subj-row') && doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
+  const dir = doc.querySelector('.subj-dir');
+  assert.match(dir.textContent, said, id); assert.doesNotMatch(dir.textContent, /fire's handwriting|Waiting as craft/, 'the picked option is never shown as his words');
+  assert.equal(doc.querySelector('.subj-form.add'), null, 'a story cannot add a form here');
+  assert.deepEqual(rowsOf(doc).map(r => [r[0], r[1]]), (standing.forms[0].steps).map(x => [x.id, x.state]));
+  // Open every step; every link on the page is version two's own screen or the story's place in the Magazine.
+  const hrefs = new Set();
+  for (const row of [...doc.querySelectorAll('.subj-row')]) {
+   row.querySelector('[data-subj-step]').click(); await new Promise(r => setTimeout(r, 60));
+   for (const a of doc.querySelectorAll('[data-subj-panel] a, .subj-head a[data-subj-handoff]')) hrefs.add(a.getAttribute('href'));
+   assert.equal(doc.querySelector('[data-subj-panel] [data-subj-capture], [data-subj-panel] [data-subj-add]'), null, 'no way to attach material or add a form here');
+  }
+  for (const href of hrefs) {
+   if (/^#\//.test(href)) assert.match(href, new RegExp('^#/(write|read|check|research)/' + id + '(\\?piece=' + encodeURIComponent(id + ':article') + ')?$'));
+   else assert.match(href, /^\/document-study\/index\.html(\?reviewActor=[^&]*)?$/, href);
+  }
+  assert.ok([...hrefs].some(h => h.startsWith('#/write/' + id + '?piece=')), 'Write is version two\'s own screen');
+  assert.doesNotMatch(doc.querySelector('[data-v2-advanced]').getAttribute('href'), /subject=/, 'the bar never names a story it cannot open');
+ }
 });

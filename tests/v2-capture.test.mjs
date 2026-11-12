@@ -142,10 +142,12 @@ test('a thought is saved exactly as typed, in the subject folder, then attached;
 
 test('with no subject a thought goes to the Library root and says so; with a subject that has no project id, the attach is the material one',async()=>{
  const home=await capPage({respond:goodSave(),hash:'#/'});
- await home.open();home.tile('thought');home.typeInto('Only for later.');home.press('save');
+ await home.open();home.tile('thought');home.typeInto('Only for later.');
+ const before=home.calls.length;// Home's own reads came first; only the sheet's calls are checked below
+ home.press('save');
  await until(()=>home.named('sources.import').length>0&&/saved in the Library/.test(home.text()),'the done line');
  assert.equal(home.named('sources.import')[0].body.folder,'');
- assert.deepEqual(home.calls.map(c=>c.name).filter(n=>/sources|attach/.test(n)),['sources.import'],'no folder and no attach at the root');
+ assert.deepEqual(home.calls.slice(before).map(c=>c.name).filter(n=>/sources|attach/.test(n)),['sources.import'],'no folder, no tree read and no attach at the root');
  assert.match(home.text(),/Thought saved in the Library, to file later\./);
  assert.match(home.doc.querySelector('dialog.v2-capture [data-cap-link]').getAttribute('href'),/^\/document-study\/index\.html\?.*section=library/,'the Library is opened in Advanced');
  const noProject=await capPage({respond:(n,b)=>n==='subject.standing'?{title:'T',facts:{bindingId:'bind-9',projectId:null}}:goodSave()(n,b)});
@@ -402,13 +404,13 @@ test('a native close (a second Escape) keeps a live recording and the microphone
 });
 
 /** A server that keeps what it is sent in a table and can lose its answer, as a network drop would. */
-function lossyServer({dropFirst=true}={}){
+function lossyServer({dropFirst=true,skew=0}={}){
  const files=[];let dropped=false;
  const tree=()=>({roots:[{id:'library',tree:{rel_path:'',files:[],folders:[{rel_path:'Projects',files:[],folders:[{rel_path:'Projects/proj-1',folders:[],files:files.map(f=>({rel_path:'Projects/proj-1/'+f.name,name:f.name,size_bytes:f.size,id:f.id,hash:f.hash,provenance:{capturedAt:new Date(f.at).toISOString()}}))}]}]}}]});
  const respond=(name,body)=>{
   if(name==='sources.import'){
    const f=body.files[0],id='src-'+(files.length+1);
-   if(!files.some(x=>x.name===f.name)){const b=f.content!=null?Buffer.from(f.content):Buffer.from(f.base64,'base64');files.push({name:f.name,size:b.length,id,hash:createHash('sha256').update(b).digest('hex'),at:Date.now()});}
+   if(!files.some(x=>x.name===f.name)){const b=f.content!=null?Buffer.from(f.content):Buffer.from(f.base64,'base64');files.push({name:f.name,size:b.length,id,hash:createHash('sha256').update(b).digest('hex'),at:Date.now()-skew});}
    if(dropFirst&&!dropped){dropped=true;throw new Error('connection dropped');}
    return receipt(f.name,id);
   }
@@ -569,4 +571,51 @@ test('a question whose answer was lost: Try again sends the same operationId, ma
   q.typeInto('Other words');q.press('save');await until(()=>q.named(command).length===2,'second');
   assert.notEqual(q.named(command)[1].body.operationId,q.named(command)[0].body.operationId,'changed words get a new operationId');
  }
+});
+
+/* ---------------- the small corrections ---------------- */
+test('with no subject open the line says where it goes in the sample\'s bold words',async()=>{
+ const p=await capPage({respond:goodSave(),hash:'#/'});
+ await p.open();
+ assert.equal(p.doc.querySelector('[data-cap-to] b')?.textContent,'the Library, to file later');
+ assert.match(p.text(),/Goes to the Library, to file later\. A question goes to Research\./);
+});
+test('Escape while a save is running says it is saving, not that it is unsaved',async()=>{
+ let release;const hold=new Promise(r=>{release=r;});
+ const p=await capPage({respond:async(n,b)=>{if(n==='sources.import')await hold;return goodSave()(n,b);}});
+ await p.open({id:'p1'});await settle();p.tile('thought');p.typeInto('Words being saved.');p.press('save');
+ await until(()=>p.named('sources.import').length===1,'the save to start');
+ p.sheet().dispatchEvent(new p.w.Event('cancel',{cancelable:true}));
+ assert.ok(p.sheet(),'it stays open');
+ assert.match(p.text(),/saving/i);assert.doesNotMatch(p.text(),/Save it, or discard it/);
+ release();await until(()=>/Thought added/.test(p.text()),'the save to finish');
+});
+test('moving to another screen with work unsaved keeps the sheet and says so',async()=>{
+ const p=await capPage({respond:goodSave()});
+ await p.open({id:'p1'});await settle();p.tile('thought');p.typeInto('Words not saved yet.');
+ p.w.location.hash='#/research';await settle(60);
+ assert.ok(p.sheet(),'the sheet stays open');
+ assert.match(p.text(),/another screen/i);assert.match(p.text(),/not saved/i);
+ // With nothing waiting it still closes quietly.
+ const q=await capPage({respond:goodSave()});
+ await q.open({id:'p1'});await settle();q.w.location.hash='#/research';await settle(60);
+ assert.equal(q.sheet(),null);
+});
+test('a phone clock that runs ahead does not make a real save look old: the retry finds it and saves nothing twice',async()=>{
+ // The server stamps each file 30 seconds before the phone's clock says the attempt began.
+ const srv=lossyServer({skew:30000});
+ const p=await capPage({respond:srv.respond});
+ await p.open({id:'p1'});await settle();p.tile('thought');p.typeInto('Words saved while the phone clock ran fast.');p.press('save');
+ await until(()=>/may already be saved/.test(p.text()),'the lost answer');
+ p.press('save');await until(()=>/Thought added/.test(p.text()),'the retry');
+ assert.equal(p.named('sources.import').length,1,'found, not sent again');
+ assert.equal(srv.files.length,1);
+});
+test('the clock margin is small: a file saved far before the attempt is not taken for this one',async()=>{
+ const srv=lossyServer({skew:10*60*1000});
+ const p=await capPage({respond:srv.respond});
+ await p.open({id:'p1'});await settle();p.tile('thought');p.typeInto('Words saved ten minutes early by the server clock.');p.press('save');
+ await until(()=>/may already be saved/.test(p.text()),'the lost answer');
+ p.press('save');await until(()=>/Thought added|not saved/.test(p.text()),'the retry');
+ assert.equal(p.named('sources.import').length,2,'an old file is not taken for this one: it is sent again');
 });

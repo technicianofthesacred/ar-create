@@ -37,6 +37,7 @@ async function page({hash='',answers={},search='',storage={}}={}){
  return {w,calls,sources,doc:w.document};
 }
 const row=(id,words,extra={})=>({id,blockKind:'paragraph',words,safe:true,blockHash:id.padEnd(64,'0'),...extra});
+const window_changes=()=>{const src=read('public/v2/screens/read.js'),m=src.match(/const changesWords=([^\n]*)\n/);return new Function('return '+m[1].replace(/;$/,''))();};
 const standing={title:'Invented piece',look:null,forms:[{key:'out:o1',kind:'article',name:'Article',id:'o1',title:'Invented piece'},{key:'ig:p1',kind:'instagram',name:'Carousel',id:'p1',title:'Slides'}],facts:{bindingId:'b1'}};
 const draft=(rows,hash='h1')=>({binding:{id:'b1',parentStudyId:'s1'},projection:rows,expected:{workflow:{draft:hash}},history:[]});
 const owned={'/api/study/outputs':{outputBindings:[{outputId:'o1',wordOwner:{kind:'native',bindingId:'b1'}}]}};
@@ -46,7 +47,7 @@ test('the shared helpers Write leaves for Read and Check: locate and bar',async(
  const {locate,bar}=w.v2.shared.write;
  assert.equal(typeof locate,'function');assert.equal(typeof bar,'function');
  const found=plain(await locate('s1','o1'));
- assert.deepEqual(Object.keys(found).sort(),['bindingId','form','forms','native','piece','standing']);
+ assert.deepEqual(Object.keys(found).sort(),['bindingId','form','forms','native','piece','standing','story']);
  assert.equal(found.bindingId,'b1');assert.equal(found.native,true);assert.equal(found.piece,'o1');assert.equal(found.form.key,'out:o1');
  assert.equal(plain(await locate('s1',undefined)).form.id,'o1','no piece named opens the first Article');
  assert.equal(plain(await locate('s1','nope')).form,null,'a piece that is not an Article of the subject is not opened');
@@ -164,6 +165,35 @@ test('when the newer words cannot be read, Read says so and offers Try again; th
  doc.querySelector('[data-rd-retry]').click();
  await until(()=>doc.querySelector('.rd-p').textContent==='After.',3000);
  assert.equal(doc.querySelector('[data-rd-stale]').hidden,true);
+});
+
+test('every change to the saved words counts as newer words: save, undo, restore, recover; a check or read does not',()=>{
+ const R=window_changes();
+ for(const k of ['study-draft.save','study-draft.undo','study-draft.history-restore','study-draft.recover','study-draft.root-recovery.post'])assert.equal(R(k),true,k);
+ for(const k of ['study-draft.check.post','study-draft.read','study-draft.inspect.post','study-draft.history-preview','','other.save'])assert.equal(R(k),false,k);
+});
+test('a failed re-read after an undo says newer words exist',async()=>{
+ const answers={'/api/subject/standing':standing,...owned,'/api/study-draft/read':draft([row('r0','Before.')])};
+ const {doc,sources}=await page({hash:'#/read/s1?piece=o1',answers});await settle(150);
+ answers['/api/study-draft/read']=[500,{error:'down'}];
+ for(const s of sources)s.emit('change',{kind:'study-draft.undo',cursor:9400,bootId:'b',scope:{kind:'draft',id:'b1'},operationId:'u1'});
+ await until(()=>!doc.querySelector('[data-rd-stale]').hidden,3000);
+ assert.match(doc.querySelector('[data-rd-stale]').textContent,/Newer words exist/);
+});
+test('a failed re-read says newer words exist only when a save was announced; otherwise it says the re-read failed',async()=>{
+ const answers={'/api/subject/standing':standing,...owned,'/api/study-draft/read':draft([row('r0','Before.')])};
+ const {doc,sources}=await page({hash:'#/read/s1?piece=o1',answers});await settle(150);
+ answers['/api/study-draft/read']=[500,{error:'down'}];
+ for(const s of sources)s.emit('change',{kind:'study-draft.check',cursor:9300,bootId:'b',operationId:'y1'});
+ await until(()=>!doc.querySelector('[data-rd-stale]').hidden,3000);
+ const said=doc.querySelector('[data-rd-stale]').textContent;
+ assert.match(said,/could not be read again/);assert.doesNotMatch(said,/Newer words exist/);
+ assert.ok(doc.querySelector('[data-rd-retry]'));
+});
+
+test('the page leaves no grey band under a short piece on a phone',()=>{
+ const css=read('public/v2/screens/read.css');
+ assert.match(css,/@media \(max-width:850px\)\{[^@]*\.rd\.v2-page\{[^}]*background:var\(--paper\)[^}]*min-height:calc\(100dvh - var\(--v2-top\)\)/);
 });
 
 test('Edit words is in one place per width: the bar on a computer, under the text on a phone',()=>{

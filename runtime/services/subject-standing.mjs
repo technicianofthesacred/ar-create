@@ -22,6 +22,11 @@
 //   consent                                   the consent desk
 //   word checks, open questions, places,      each listed once for all and kept until a change of its kind
 //   research topics
+// Magazine stories: each registered, active story whose draft is not the original of a subject appears as a subject of
+// its own, id = the story's own id (mag-<slug>: letters, digits and hyphens, safe in an address, and the id the consent
+// desk already knows it by). Its facts come from the Magazine's records alone (registered story, working draft through
+// the working-draft bridge, open proposals, vault files); nothing is copied, made or written. Each fact the Magazine
+// holds no record of is left out, so the shared rule says "Not known" (see gatherMagazine).
 // Freshness: every write in the app becomes a change on the event bus (kind = command name, scope = the record).
 // A change about one subject (its id, writing place, project, piece or plan) marks only that subject to be read
 // again; a change to something every subject draws on (Library, plans, questions, places, word checks, topics)
@@ -34,7 +39,11 @@ import path from 'node:path';
 import {StateError} from '../store.mjs';
 import {digest, readJson} from './files.mjs';
 import {standingOf, summaryOf} from '../standing-rule.mjs';
+import {isLiveLink} from './magazine-vault/index.mjs';
+import {storyFromName, storyId as storyIdOf, frontmatter} from './magazine-vault/kinds.mjs';
+import * as native from './draft-correspondence.mjs';
 
+const READ_AT_ONCE = 4;
 const yieldNow = () => new Promise(resolve => setImmediate(resolve));
 const quiet = async fn => {try {return await fn();} catch {return undefined;}};
 const TIMING = new Map();
@@ -43,7 +52,7 @@ export const standingTiming = () => Object.fromEntries([...TIMING].map(([k, v]) 
 const UUID = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
 const newest = times => {let best = null, t = -Infinity; for (const x of times) {const v = Date.parse(x || ''); if (Number.isFinite(v) && v > t) {t = v; best = new Date(v).toISOString();}} return best;};
 /** Changes that never alter where a subject stands. */
-const IGNORE = [/^presence/, /^leases?\./, /^handoff$/, /^needs-decision$/, /^journal\./, /^looks?\b/, /^accounts?\b/, /^templates?\b/, /^template\./, /^instagram\.template/, /^subject-places\.folders/, /^terminal/, /^study-draft\.open$/];
+const IGNORE = [/^presence/, /^leases?\./, /^handoff$/, /^needs-decision$/, /^journal\./, /^looks?\b/, /^accounts?\b/, /^templates?\b/, /^template\./, /^instagram\.template/, /^subject-places\.folders/, /^terminal/, /^study-draft\.open$/, /^standing\./];
 /** Shared lists, and the change kinds that touch them. A matching change marks the list and every subject. */
 const SHARED = {
  catalog: [/^study-draft\.create-collection/, /^study\.outputs\./, /^study\.carousel-make/, /^study-draft\.(?!save|undo|history|check)/],
@@ -54,15 +63,16 @@ const SHARED = {
  places: [/^subject-places\.(save|reorder|carry)/],
  wordChecks: [/^words\./, /^transcript-check/],
  topics: [/^inquiries\./],
+ proposals: [/^magazine\./],
 };
 
-export function createSubjectStanding({dataDir, drafts, outputs, checks, consentDesk, library, firstFlow, simmer, instagram, suggestions, needsYou, places, wordChecks, topics, events, settle = async () => {}, maxAgeMs = 5 * 60_000, now = () => Date.now()} = {}) {
+export function createSubjectStanding({dataDir, drafts, outputs, checks, consentDesk, library, firstFlow, simmer, instagram, suggestions, needsYou, places, wordChecks, topics, magazine = null, working = null, magazineFiles = null, originalsRoot = null, events, settle = async () => {}, suggestionWaitMs = 5000, maxAgeMs = 5 * 60_000, now = () => Date.now()} = {}) {
  if (!dataDir || !drafts) throw new TypeError('Subject standing needs the data folder and the study drafts.');
  const shared = new Map();  // name -> {value, at, dirty, pending}
  const subjects = new Map(); // id -> {facts, at, gen, dirty}
  const verdicts = new Map(); // id -> {key, count?, pending?}: how many of its suggestions the proposal owner still offers
  const ids = new Map();      // any record id (binding, project, output, plan) -> subject id
- let everythingGen = 0;
+ let everythingGen = 0, changes = 0; // changes: every change heard that could matter, to catch one that lands during a read
  const stats = {sharedReads: 0, subjectReads: 0};
 
  // ---------- shared lists, read once and kept until a change of their kind ----------
@@ -75,11 +85,14 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   places: async () => places ? (await places.read({})).places || [] : null,
   wordChecks: async () => wordChecks ? (await wordChecks()).recordings || [] : null,
   topics: async () => topics ? (await topics()).collections || [] : null,
+  proposals: async () => magazine?.proposalList ? (await magazine.proposalList({status: 'open'})).proposals || [] : null,
  };
  async function sharedRead(name) {
   let s = shared.get(name);
+  // A read under way (it started because the list was marked changed) answers before the older kept value does. One
+  // marked changed again while it ran may hold the state from before that change: let it finish, then read again.
+  if (s?.pending) {if (!s.dirty) return s.pending; await s.pending.catch(() => {}); return sharedRead(name);}
   if (s && !s.dirty && now() - s.at < maxAgeMs) return s.value;
-  if (s?.pending) return s.pending;
   s = s || {}; shared.set(name, s);
   const started = everythingGen;
   s.dirty = false;
@@ -105,6 +118,47 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   const catalog = await sharedRead('catalog'), out = [], seen = new Set();
   for (const c of catalog?.collections || []) {const id = c?.parentStudyId; if (typeof id !== 'string' || !id || seen.has(id)) continue; seen.add(id); out.push({id, title: String(c.title || '').trim() || 'Untitled subject', bindingId: c.bindingId || null});}
   for (const d of catalog?.drafts || []) {const id = d?.parentStudyKey; if (typeof id !== 'string' || !id || seen.has(id)) continue; seen.add(id); out.push({id, title: String(d.title || '').trim() || 'Untitled subject', bindingId: null, draft: {id: d.id, title: d.title, modifiedAt: d.modifiedAt || null}});}
+  // Magazine stories that are nobody's original: one subject each, never a copy of a story already a subject.
+  const taken = originalStories(catalog?.drafts || []);
+  for (const story of magazineStories()) {
+   if (seen.has(story.storyId) || taken.ids.has(story.storyId) || story.draftRels.some(rel => taken.files.has(resolved(vaultRoot(), rel)))) continue;
+   seen.add(story.storyId); out.push({id: story.storyId, title: story.name, bindingId: null, magazine: story});
+  }
+  return out;
+ }
+
+ /** A path made absolute and real, even when its file is gone (an older round replaced): the folder is resolved, the name kept. */
+ function resolved(root, rel) {
+  if (!root || !rel) return null;
+  const abs = path.resolve(root, rel);
+  try {return fs.realpathSync(abs);} catch {try {return path.join(fs.realpathSync(path.dirname(abs)), path.basename(abs));} catch {return abs;}}
+ }
+ /** What the subjects' originals are, by full resolved path, and by story (any round of a story is that story). */
+ function originalStories(drafts) {
+  const files = new Set(), ids = new Set(), mag = vaultRoot(), magReal = mag ? resolved(mag, '.') : null;
+  for (const d of drafts) {
+   if (typeof d?.path !== 'string' || !originalsRoot) continue;
+   const abs = resolved(originalsRoot, d.path); if (!abs) continue;
+   files.add(abs);
+   if (magReal && abs.startsWith(magReal + path.sep)) {const name = storyFromName(abs.split(path.sep).pop()); if (name) try {ids.add(storyIdOf(name.replace(/\s*\(.*$/, '')));} catch {}}
+  }
+  return {files, ids};
+ }
+
+ /** The registered, active Magazine stories (the registered index and project files: small, read at each call, so a
+     newly registered or archived story shows at once). Never throws: an unreadable index means no stories. */
+ function magazineStories() {
+  if (!magazine?.projects?.list || magazine.configured === false) return [];
+  let rows; try {rows = magazine.projects.list();} catch {return [];}
+  if (!rows?.registered) return [];
+  const out = [];
+  for (const row of rows.stories || []) {
+   if (!row?.storyId || row.archived) continue;
+   const pieces = row.pieces || [], drafts = pieces.filter(p => ['article', 'article-part'].includes(p.kind) && p.rel);
+   // The whole Article when there is one, else the first part; a story with no draft yet still has its (empty) Article.
+   const piece = drafts.find(p => p.kind === 'article') || drafts.slice().sort((a, b) => String(a.pieceId).localeCompare(String(b.pieceId), 'en', {numeric: true}))[0] || pieces.find(p => p.kind === 'article') || null;
+   out.push({storyId: row.storyId, name: String(row.name || row.storyId), pieceId: piece?.pieceId || row.storyId + ':article', rel: piece?.rel || null, draftRels: drafts.map(p => p.rel)});
+  }
   return out;
  }
 
@@ -138,6 +192,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
  };
  async function gather(subject) {
   stats.subjectReads++;
+  if (subject.magazine) return gatherMagazine(subject);
   const {id, bindingId} = subject, times = [subject.draft?.modifiedAt], facts = {id, title: subject.title, bindingId, projectId: null};
   const [lib, reqs, planList, placeList, askList, topicList] = await Promise.all(['library', 'requests', 'plans', 'places', 'asks', 'topics'].map(sharedQuiet));
   // Where it lives.
@@ -159,13 +214,13 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   let pieces = [];
   if (bindingId && outputIndexHolds(id, bindingId)) {
    const view = await quiet(timed('outputs', () => outputs.read({rootBindingId: bindingId, parentStudyId: id})));
-   if (view) for (const o of view.outputs || []) {pieces.push({key: 'out:' + o.id, id: o.id, kind: o.kind, title: o.title || o.name || '', status: o.status || null, placements: (o.placements || []).length, slides: (o.slides || []).length}); times.push(o.createdAt, o.updatedAt);}
+   if (view) for (const o of view.outputs || []) {pieces.push({key: 'out:' + o.id, id: o.id, kind: o.kind, title: o.title || o.name || '', status: o.status || null, placements: (o.placements || []).length, slides: (o.slides || []).length, words: o.kind === 'carousel' && (o.slides || []).some(x => typeof x?.text === 'string') ? (o.slides || []).reduce((n, x) => n + (typeof x?.text === 'string' && x.text.trim() ? x.text.trim().split(/\s+/).length : 0), 0) : null, createdAt: o.createdAt || null, updatedAt: o.updatedAt || null}); times.push(o.createdAt, o.updatedAt);}
    else pieces = null;
   } else if (subject.draft) pieces.push({key: 'draft:' + subject.draft.id, id: subject.draft.id, kind: 'article', title: subject.draft.title || '', status: null, placements: 0, slides: 0});
   if (pieces && planRecords) for (const [i, pr] of planRecords.entries()) {
    if (!pr) {pieces = null; break;}
    const fmt = Object.keys(pr.layouts || {})[0] || pr.stories?.[0]?.format || 'carousel', lay = pr.layouts?.[fmt], chosen = pr.chosen?.storyId, story = (pr.stories || []).find(s => s.id === chosen), cap = lay?.caption;
-   pieces.push({key: 'ig:' + pr.id, id: pr.id, kind: 'instagram', title: pr.title || '', plan: {format: fmt, stories: (pr.stories || []).length, chosen: !!(chosen || pr.chosen?.named), chosenTitle: story?.title || '', frames: (lay?.frames || []).length, caption: !!(typeof cap === 'string' ? cap.trim() : cap?.parts?.length), ready: !!(pr.ready && Object.keys(pr.ready).length), look: pr.drawnIn && pr.drawnIn.from !== 'default' ? pr.drawnIn.id : null}});
+   pieces.push({key: 'ig:' + pr.id, id: pr.id, kind: 'instagram', title: pr.title || '', slides: (lay?.frames || []).length, updatedAt: mine[i].updatedAt || pr.updatedAt || null, plan: {format: fmt, stories: (pr.stories || []).length, chosen: !!(chosen || pr.chosen?.named), chosenTitle: story?.title || '', frames: (lay?.frames || []).length, caption: !!(typeof cap === 'string' ? cap.trim() : cap?.parts?.length), ready: !!(pr.ready && Object.keys(pr.ready).length), look: pr.drawnIn && pr.drawnIn.from !== 'default' ? pr.drawnIn.id : null}});
    times.push(mine[i].updatedAt);
   } else if (!planRecords) pieces = null;
   facts.pieces = pieces;
@@ -259,14 +314,14 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
        entry.pending = quiet(timed('suggestions', () => suggestions({bindingId, parentStudyId: id}))).then(listed => {
         entry.count = listed ? (listed.items || []).filter(i => i.status === 'pending' && !i.stale).length : null;
         entry.pending = null; if (entry.count === null) verdicts.delete(id);
-        const e = subjects.get(id); if (e) e.dirty = true;
+        const e = subjects.get(id); if (e) {e.dirty = true; e.late = true;}
        });
        verdicts.set(id, entry);
       }
      }
     }
    }
-   const c = await quiet(timed('check', async () => ({value: await checks.read({bindingId, parentStudyId: id})})));
+   const c = await quiet(timed('check', async () => ({value: await checks.read({bindingId, parentStudyId: id}, {draft: read})})));
    facts.check = c ? {status: c.value?.status || null, issues: (c.value?.issues || []).length} : null;
    times.push(c?.value?.checkedAt, c?.value?.createdAt);
   } else if (subject.draft) {facts.words = null; facts.suggestions = null; facts.check = null;}
@@ -282,9 +337,138 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   return facts;
  }
 
+ // ---------- a Magazine story as a subject ----------
+ const IMAGE = /\.(jpe?g|png|heic|webp|tiff?)$/i;
+ const vaultRoot = () => {try {return magazine?.status?.().vaultRoot || null;} catch {return null;}};
+ const vaultStat = rel => {const root = vaultRoot(); if (!root || !rel) return null; try {const s = fs.statSync(path.join(root, rel)); return {mtime: s.mtime.toISOString(), key: s.mtimeMs + ':' + s.size};} catch {return null;}};
+ /** CHECK files of a story: the registered ones, and any in the review folder named for it since (registration is a snapshot). */
+ function checkFiles(project) {
+  const names = new Set([].concat(project.vaultRecords?.checks || []).map(r => r.rel)), root = vaultRoot();
+  if (root) try {for (const n of fs.readdirSync(path.join(root, 'Workflow', '4-Review'))) if (n.startsWith('CHECK - ' + project.name)) names.add('Workflow/4-Review/' + n);} catch {}
+  return [...names].filter(rel => vaultStat(rel)).sort();
+ }
+ /** Whether the story's MAP records a direction picked: a dated "Direction:" line in the "Adrian's decisions" section,
+     newest first. Only that it was chosen is taken; the line's text is an option offered on the Magazine page, not his words. */
+ function directionChosen(texts) {
+  let newest = null;
+  for (const text of texts) {
+   const sec = text.match(/^##\s*Adrian's decisions[^\n]*$([\s\S]*?)(?=^##\s|$(?![\s\S]))/im); if (!sec) continue;
+   for (const m of sec[1].matchAll(/^\s*-\s*(\d{4}-\d{2}-\d{2}):\s*Direction:\s*\S/gim)) if (!newest || m[1] >= newest) newest = m[1];
+  }
+  return newest;
+ }
+ /** Words of a draft, counted as the working draft counts them, kept in memory by the file's hash so a long draft is
+     counted once until it changes. */
+ const counted = new Map();
+ // A block with no markup at all counts as its own text (the common paragraph, which is most of a long draft); any
+ // other block goes through the same mapping Write uses. tests/subject-standing-magazine.test.mjs holds the two equal.
+ const PLAIN = /^[\p{L}"“‘'(][^\n%=\[\]*_\\<>`~|#]*$/u;
+ function countWords(storyId, file) {
+  const kept = counted.get(storyId); if (kept?.hash === file.hash) return kept.value;
+  const model = native.capture(file.text, storyId), rows = model.blocks.map(b => PLAIN.test(b.raw.trim()) ? {words: b.raw.trim(), blockKind: 'paragraph'} : native.inlineMap(b.raw)).filter(r => String(r.words || '').trim());
+  const value = {paragraphs: rows.filter(r => r.blockKind !== 'heading').length, count: rows.reduce((n, r) => n + String(r.words).trim().split(/\s+/).length, 0)};
+  counted.set(storyId, {hash: file.hash, value}); return value;
+ }
+ /** The Magazine's own check on a draft, counted: {status: 'checked', issues}, or null when it cannot be read. It is asked as
+     the Magazine's own check asks by itself (the draft alone: the story's one transcript and its context note are found by
+     the Magazine), and kept in memory by the hashes of the draft and of the files it reads, so it is not run again on
+     every read. */
+ const checkedBefore = new Map();
+ function magazineCheck(m, project, file, recs) {
+  const checks = magazine?.extra?.checks; if (typeof checks?.run !== 'function' || !m.rel || !file?.hash) return null;
+  const hashOf = rel => {try {return magazine.read({path: rel}).hash || '';} catch {return '';}};
+  const key = JSON.stringify([file.hash, [...recs('src'), ...recs('context')].sort().map(r => r + ':' + hashOf(r))]);
+  const kept = checkedBefore.get(m.storyId); if (kept?.key === key) return kept.value;
+  let value = null;
+  try {
+   const r = checks.run({draft: m.rel});
+   value = {status: 'checked', issues: (r.quotes?.notFound?.length || 0) + (r.splits?.splits?.length || 0)};
+  } catch {value = null;}
+  checkedBefore.set(m.storyId, {key, value}); return value;
+ }
+ async function gatherMagazine(subject) {
+  const {id, magazine: m} = subject, times = [];
+  const facts = {id, title: subject.title, bindingId: null, projectId: null, folder: [], magazine: {storyId: m.storyId, pieceId: m.pieceId}};
+  const [placeList, askList, propList] = await Promise.all(['places', 'asks', 'proposals'].map(sharedQuiet));
+  const place = placeList?.find(p => p.parentStudyId === id);
+  if (place) {facts.folder = place.folder || []; facts.archived = !!place.archived; if (place.saved) times.push(place.updatedAt);}
+  if (askList) facts.asks = askList.filter(a => a.scope?.id === id).length;
+  let project = null; try {project = magazine.projects.project(m.storyId);} catch {}
+  const recs = key => [].concat(project?.vaultRecords?.[key] || []).map(r => r.rel).filter(Boolean);
+  // The working draft's file (registered, so the same piece the bridge edits), read once; the words are counted from it.
+  let file = null;
+  if (project && m.rel) file = await quiet(async () => {const f = magazine.read({path: m.rel}); return f.exists && typeof f.text === 'string' && !f.conflicts?.length ? f : null;}) || null;
+  const draftText = file?.text ?? null;
+  const fmTitle = draftText ? frontmatter(draftText).meta.title : null;
+  if (typeof fmTitle === 'string' && fmTitle.trim()) facts.title = fmTitle.trim();
+  if (file?.mtime) times.push(file.mtime);
+  // The words. A story with no draft file yet has none: known. A draft that could not be read: not known.
+  if (!m.rel) facts.words = {paragraphs: 0, count: 0};
+  else if (file) facts.words = (() => {try {return countWords(m.storyId, file);} catch {return null;}})();
+  else facts.words = null;
+  // Suggestions waiting: open Magazine proposals on this draft, made on its current words (an older one is stale).
+  if (!m.rel) facts.suggestions = 0;
+  else if (!propList || !file?.hash) facts.suggestions = null;
+  else facts.suggestions = propList.filter(p => p.scope?.id === m.storyId && p.path === m.rel && p.baseHash === file.hash).length;
+  // Material: the story's written sources (recording transcripts, raw intake, his context) and its photograph folder. The
+  // Magazine keeps no audio, so nothing is counted as a recording.
+  const sources = [...recs('raw'), ...recs('src'), ...recs('context')];
+  let photos = null;
+  if (magazineFiles && project && !/[\\/]|^\.\.?$/.test(project.name)) {try {photos = fs.readdirSync(path.join(magazineFiles, project.name, 'Photos')).filter(f => IMAGE.test(f)).length;} catch (error) {photos = error.code === 'ENOENT' ? 0 : null;}}
+  facts.material = project && photos !== null ? {total: sources.length + photos, recordings: 0, notes: sources.length, links: 0, photos} : null;
+  facts.transcript = facts.material ? {open: 0, checked: false} : null;
+  // Research: a story with no research file was not looked into (known); one with a file says only that the file is on
+  // record (nothing says whether its findings were read or used).
+  facts.research = !project ? null : recs('research').length ? {step: 'filed', unreviewed: 0} : {step: null, unreviewed: 0};
+  // The dish he named: only a Simmer board of this id holds his own sentence. A direction picked on the Magazine page
+  // (the MAP's dated decisions) says only that a direction is chosen, never its words.
+  const board = simmer ? await quiet(timed('board', async () => (await simmer).boards.read({subject: id}))) : undefined;
+  const maps = project ? recs('map').map(rel => {try {const f = magazine.read({path: rel}); return f.exists && typeof f.text === 'string' ? f.text : '';} catch {return null;}}) : null;
+  if (board && maps && !maps.includes(null)) {
+   const f = board.forming || {}, namedText = typeof f.named?.text === 'string' ? f.named.text.trim() : '', sentText = f.sentAt && typeof f.sentence?.dish === 'string' ? f.sentence.dish.trim() : '', chosen = directionChosen(maps);
+   facts.dish = {named: !!(namedText || sentText), text: namedText || sentText || '', at: namedText ? f.named.dictated?.at || null : sentText ? f.sentAt : null, dishes: (f.dishes || []).length, direction: !!chosen};
+  } else facts.dish = null;
+  // Check: no CHECK file means never checked (known). With one, the Magazine's own check (magazine.check: real quotes and
+  // splits against the transcript) is read on the draft as it is now, so it is current by being read now; its findings are
+  // counted. A check that cannot be read (no draft, no single transcript) leaves the Check not known.
+  facts.check = project ? (checkFiles(project).length ? magazineCheck(m, project, file, recs) : {status: null, issues: 0}) : null;
+  // The piece: one Article, its photograph markers counted in the draft.
+  facts.pieces = [{key: 'mag:' + m.pieceId, id: m.pieceId, kind: 'article', title: facts.title, status: null, placements: draftText ? (draftText.match(/%%\s*photos?\s*:/gi) || []).length : 0, slides: 0}];
+  // Published: the draft's own `published:` link, the Magazine's record of it. No draft file: nothing published.
+  if (project) {
+   let out = false;
+   for (const rel of recs('draft')) {const f = await quiet(async () => magazine.read({path: rel})); if (f === undefined) {out = undefined; break;} if (f.exists && isLiveLink((String(f.text || '').split(/\n---\n/)[0].match(/^published:[ \t]*(\S+)[ \t]*$/m) || [])[1])) {out = true; break;}}
+   if (out !== undefined) facts.published = out;
+  }
+  const desk = consentDesk ? await quiet(timed('desk', () => consentDesk.read({parentStudyId: id}))) : undefined;
+  facts.consent = desk ? {people: (desk.people || []).map(p => ({name: p.name, state: p.consent?.state || 'not-asked', request: !!p.request})), released: !!desk.release?.released, overridden: !!desk.release?.overridden, ready: !!desk.release?.ready, held: !!desk.release?.held} : null;
+  for (const rel of [...recs('draft'), ...recs('map'), ...recs('src'), ...recs('raw'), ...recs('context'), ...(project ? checkFiles(project) : [])]) times.push(vaultStat(rel)?.mtime);
+  facts.changedAt = newest(times);
+  ids.set(m.pieceId, id);
+  return facts;
+ }
+ /** What a story's facts draw from, cheap to read: file times of its records and its open proposals. */
+ async function magazineSignature(subject) {
+  const m = subject.magazine, propList = await sharedQuiet('proposals'), place = (await sharedQuiet('places'))?.find(p => p.parentStudyId === subject.id), askList = await sharedQuiet('asks');
+  let project = null; try {project = magazine.projects.project(m.storyId);} catch {}
+  const rels = project ? [...new Set([...['draft', 'map', 'src', 'raw', 'context', 'research'].flatMap(k => [].concat(project.vaultRecords?.[k] || []).map(r => r.rel)), ...checkFiles(project)])].sort() : [];
+  let photos = null; if (magazineFiles && project) try {photos = fs.readdirSync(path.join(magazineFiles, project.name, 'Photos')).length;} catch {}
+  return JSON.stringify(['magazine', subject.title, m.pieceId, m.rel, rels.map(rel => rel + ':' + (vaultStat(rel)?.key || '')), photos,
+   propList ? propList.filter(p => p.scope?.id === m.storyId).map(p => p.proposalId) : null, place ? [place.folder, place.archived, place.updatedAt] : null, askList ? askList.filter(a => a.scope?.id === subject.id).length : null]);
+ }
+ /** Mark a Magazine story's standing so a screen can tell: the subject and its one Article are owned by the Magazine story. */
+ function decorate(standing, facts) {
+  if (!facts?.magazine) return standing;
+  const owner = {kind: 'magazine', storyId: facts.magazine.storyId, pieceId: facts.magazine.pieceId};
+  standing.origin = {kind: 'magazine', storyId: owner.storyId};
+  for (const f of standing.forms || []) if (f.key === 'mag:' + owner.pieceId) f.owner = owner;
+  return standing;
+ }
+
  /** A cheap fingerprint of what a subject's facts draw from the shared lists: when it differs from the one its facts
      were read with, the subject is read again, so a change to a shared list re-reads only the subjects it touches. */
  async function signature(subject, deps = {}) {
+  if (subject.magazine) return magazineSignature(subject);
   const [lib, reqs, planList, placeList, askList, topicList, checksList] = await Promise.all(['library', 'requests', 'plans', 'places', 'asks', 'topics', ...(deps.jobs?.length ? ['wordChecks'] : [])].map(sharedQuiet));
   const place = placeList?.find(p => p.parentStudyId === subject.id);
   const folder = deps.projectId ? (lib?.byFolder.get(deps.projectId) || []).map(s => s.id + ':' + s.hash) : [fs.existsSync(path.join(dataDir, 'study-project-bindings', digest(subject.id) + '.json'))];
@@ -303,14 +487,18 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   let e = subjects.get(subject.id);
   const sig = await signature(subject, e?.deps);
   if (isFresh(e, sig)) return e.facts;
-  if (e?.pending) return e.pending;
+  if (e?.pending) {
+   if (e.pendingGen === e.gen && e.pendingEvery === everythingGen) return e.pending;
+   await e.pending.catch(() => {}); return factsOf(subject);
+  }
   e = e || {gen: 0}; subjects.set(subject.id, e);
-  const gen = e.gen, every = everythingGen;
+  const gen = e.gen, every = everythingGen, heard = changes;
+  e.pendingGen = gen; e.pendingEvery = every;
   e.pending = (async () => {try {
    const facts = await gather(subject);
    e.deps = {projectId: facts.projectId, sources: facts._sources || [], jobs: facts._jobs || []};
    delete facts._sources; delete facts._jobs;
-   e.sig = await signature(subject, e.deps); e.facts = facts; e.at = now(); e.everything = every; e.dirty = gen !== e.gen; return facts;
+   e.sig = await signature(subject, e.deps); e.facts = facts; e.at = now(); e.everything = every; e.dirty = gen !== e.gen || heard !== changes || !!e.late; e.late = false; return facts;
   } finally {e.pending = null;}})();
   return e.pending;
  }
@@ -320,7 +508,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   if (!event || event.status === 'rejected' || event.status === 'conflict') return;
   const kind = String(event.kind || ''), sid = event.scope?.id;
   if (IGNORE.some(r => r.test(kind))) return;
-  let touchedShared = false;
+  let touchedShared = false; changes++;
   for (const [name, patterns] of Object.entries(SHARED)) if (patterns.some(r => r.test(kind))) {touchedShared = true; const s = shared.get(name); if (s) s.dirty = true;}
   const subjectId = typeof sid === 'string' ? (subjects.has(sid) ? sid : ids.get(sid)) : null;
   if (subjectId) {const e = subjects.get(subjectId); if (e) {e.gen++; e.dirty = true;}}
@@ -329,17 +517,28 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
  }
  const stop = events?.subscribe ? events.subscribe(onChange) : () => {};
 
+ /** The facts of a subject, waiting for the proposal owner's count of its suggestions when it is still being asked (right
+     after a start or a change), so a read never states a station that a fresh read would not. After suggestionWaitMs the
+     count is honestly Not known and the facts are marked for another read, never kept as final. */
+ async function settledFacts(subject) {
+  let facts = await factsOf(subject);
+  const v = verdicts.get(subject.id);
+  if (facts.suggestions !== null || !v?.pending) return facts;
+  let timer; const timedOut = Symbol();
+  const done = await Promise.race([v.pending.then(() => true, () => true), new Promise(r => {timer = setTimeout(() => r(timedOut), suggestionWaitMs);})]);
+  clearTimeout(timer);
+  if (done === timedOut) {const e = subjects.get(subject.id); if (e) e.dirty = true; return facts;}
+  return factsOf(subject);
+ }
+
  // ---------- the two reads ----------
  async function one({parentStudyId} = {}) {
   await quiet(settle);
   if (typeof parentStudyId !== 'string' || !parentStudyId.trim() || parentStudyId.length > 256 || /[\x00-\x1f\x7f]/.test(parentStudyId)) throw new StateError('Name the subject by its project id (parentStudyId).', 400);
   const subject = (await list()).find(s => s.id === parentStudyId);
   if (!subject) throw new StateError('No subject with that id.', 404);
-  let facts = await factsOf(subject);
-  // One subject's page waits for the proposal owner's answer about its suggestions, rather than say Not known.
-  const v = verdicts.get(subject.id);
-  if (facts.suggestions === null && v?.pending) {await v.pending; facts = await factsOf(subject);}
-  return {...standingOf(facts, {now: now()}), facts, readAt: new Date(now()).toISOString()};
+  const facts = await settledFacts(subject);
+  return {...decorate(standingOf(facts, {now: now()}), facts), facts, readAt: new Date(now()).toISOString()};
  }
  let running = null;
  async function all() {
@@ -347,13 +546,18 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   await quiet(settle);
   while (running) await running.catch(() => {});
   const work = (async () => {
-   const started = now(), subjectsNow = await list(), out = [];
-   let read = 0;
-   for (const subject of subjectsNow) {
-    const before = stats.subjectReads, facts = await factsOf(subject);
-    if (stats.subjectReads !== before) {read++; await yieldNow();}
-    out.push(summaryOf(standingOf(facts, {now: now()})));
-   }
+   const started = now(), subjectsNow = await list(), out = new Array(subjectsNow.length), startReads = stats.subjectReads;
+   // A few subjects at a time; each read still gives the server back (yieldNow) so other calls never wait behind it.
+   let next = 0;
+   const worker = async () => {
+    while (next < subjectsNow.length) {
+     const i = next++, before = stats.subjectReads, facts = await settledFacts(subjectsNow[i]);
+     if (stats.subjectReads !== before) await yieldNow();
+     out[i] = summaryOf(decorate(standingOf(facts, {now: now()}), facts));
+    }
+   };
+   await Promise.all(Array.from({length: Math.min(READ_AT_ONCE, subjectsNow.length)}, worker));
+   const read = stats.subjectReads - startReads;
    for (const id of subjects.keys()) if (!subjectsNow.some(s => s.id === id)) subjects.delete(id);
    return {schema: 'ar-create.subjects-standing.v1', readAt: new Date(now()).toISOString(), count: out.length, readAgain: read, ms: now() - started, subjects: out};
   })();

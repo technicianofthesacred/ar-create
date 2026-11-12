@@ -9,7 +9,7 @@ import {createRequire} from 'node:module';
 const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
 const repo=path.resolve(import.meta.dirname,'..'),v2dir=path.join(repo,'public/v2');
 const COMMANDS=[['research-topics','GET','/api/research-topics',true],['research-topics.read','GET','/api/research-topics/read',true],['research-topics.groups','GET','/api/research-topics/groups',true],['research-topics.group','GET','/api/research-topics/group',true],
- ['research-topics.ask','POST','/api/research-topics/ask',true],['research-topics.save','POST','/api/research-topics/save',false],['research-topics.take','POST','/api/research-topics/take',false],['research-topics.let-go','POST','/api/research-topics/let-go',false],['research-topics.undo','POST','/api/research-topics/undo',false],['research-topics.keep','POST','/api/research-topics/keep',false],['research-topics.group.sources','POST','/api/research-topics/group/sources',false],
+ ['research-topics.ask','POST','/api/research-topics/ask',true],['research-topics.save','POST','/api/research-topics/save',false],['research-topics.take','POST','/api/research-topics/take',false],['research-topics.let-go','POST','/api/research-topics/let-go',false],['research-topics.undo','POST','/api/research-topics/undo',false],['research-topics.keep','POST','/api/research-topics/keep',false],['research-topics.group.sources','POST','/api/research-topics/group/sources',false],['research-topics.group.save','POST','/api/research-topics/group/save',false],
  ['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true],['subjects.standing','GET','/api/subjects/standing',true],['research-topics.link','POST','/api/research-topics/link',false],['inquiries.projects','GET','/api/inquiries/projects',true]].map(([name,method,route,readOnly])=>({name,method,route,readOnly,schema:{},actors:['any']}));
 const origin={kind:'conversation',label:'Invented recording, 2:10',say:'From a conversation · Invented recording, 2:10',ref:null,at:new Date().toISOString()};
 const topic=(over={})=>({id:'p-1111',kind:'proposal',name:'Reed screens and who still makes them',saved:true,revision:1,origin,status:'kept',state:'new',stateSay:'',note:'',groupId:'g-tea',suggestedGroupId:null,sourceCount:2,usedIn:[],hasSomethingToSay:false,waiting:0,madeThisWeek:true,madeForYou:false,...over});
@@ -136,4 +136,38 @@ test('the match pass: the sample\'s subtitle, an always-present week section, th
  const css=fs.readFileSync(path.join(v2dir,'screens/research.css'),'utf8');
  assert.match(css,/\.rs-topic \.rs-lead\{font:500 var\(--v2-t15\)/,'the lead stands out at weight 500');
  assert.doesNotMatch(fs.readFileSync(path.join(v2dir,'screens/research.js'),'utf8')+css,/—/,'no em dash');
+});
+
+test('New group answers where it was pressed: a refusal and a name already taken show inside the sheet, and the button works on the first paint',async()=>{
+ const submit=(r,name)=>{const dlg=r.doc.querySelector('dialog.v2-sheet');dlg.querySelector('input[name=name]').value=name;dlg.querySelector('form').dispatchEvent(new r.w.Event('submit',{cancelable:true,bubbles:true}));return dlg;};
+ // Refused: an assistant is told, in the sheet that covers the page, and the sheet stays open for another try.
+ let r=await page('#/research',{actor:'agent:codex',answers:{'/api/research-topics/group/save':[403,{error:'Only Adrian does this.'}]}});
+ r.doc.querySelector('[data-rs-newgroup]').click();await settle();
+ let dlg=submit(r,'Tea: drying');await settle(200);
+ assert.match(dlg.querySelector('[data-v2-sheet-msgs]').textContent,/Only Adrian can decide this/,'the refusal is inside the sheet');
+ assert.ok(dlg.isConnected,'the sheet stays so he can change the name');
+ assert.doesNotMatch(r.doc.querySelector('#v2-messages').textContent,/Only Adrian/,'not hidden behind it');
+ // A name already in use: the server's own plain sentence, not the line about a stale page.
+ r=await page('#/research',{actor:'agent:codex',answers:{'/api/research-topics/group/save':[409,{error:'There is already a group called Tea: drying.'}]}});
+ r.doc.querySelector('[data-rs-newgroup]').click();await settle();
+ dlg=submit(r,'Tea: drying');await settle(200);
+ assert.match(dlg.querySelector('[data-v2-sheet-msgs]').textContent,/^There is already a group called Tea: drying\.\s*$/);
+ // A fault with no word from the app is still said.
+ r=await page('#/research',{actor:'agent:codex',answers:{'/api/research-topics/group/save':[500,{}]}});
+ r.doc.querySelector('[data-rs-newgroup]').click();await settle();
+ dlg=submit(r,'Tea: drying');await settle(200);
+ assert.match(dlg.querySelector('[data-v2-sheet-msgs]').textContent,/Nothing was changed/);
+ // Pressed before Research has finished reading: the sheet still opens (the button is not wired only after the read).
+ r=await page('#/research/group/g-tea',{actor:'agent:codex'});
+ r.doc.querySelector('[data-rs-newgroup]').click();await settle();
+ assert.ok(r.doc.querySelector('dialog.v2-sheet h2')?.textContent==='New group','also on a group\'s page');
+ // A good answer opens the new group's page.
+ r=await page('#/research',{actor:'agent:codex',answers:{'/api/research-topics/group/save':{id:'g-new',name:'Tea: drying'}}});
+ r.doc.querySelector('[data-rs-newgroup]').click();await settle();submit(r,'Tea: drying');await settle(200);
+ assert.equal(r.w.location.hash,'#/research/group/g-new');
+});
+test('on a phone a section\'s short count stays beside its heading instead of taking a row of its own',()=>{
+ const css=fs.readFileSync(path.join(import.meta.dirname,'..','public/v2/screens/research.css'),'utf8'),phone=css.slice(css.indexOf('@media (max-width:850px)'));
+ assert.doesNotMatch(phone,/\.rs-sec-h>span\{[^}]*flex-basis:100%/);
+ assert.match(phone,/\.rs-sec-h>span\{flex:0 1 auto/);
 });

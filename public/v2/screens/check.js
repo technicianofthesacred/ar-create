@@ -110,7 +110,7 @@
 
  function open(page,ctx){
   const id=ctx.params.id,human=v2.isHuman();
-  const st={loc:null,read:null,rows:[],receipt:null,receiptNote:'',busy:false,error:'',hit:null,mine:new Set(),
+  const st={loc:null,story:null,mag:null,magAt:null,magRecord:null,none:false,read:null,rows:[],receipt:null,receiptNote:'',busy:false,error:'',hit:null,mine:new Set(),
    dec:{state:'idle',packet:null,report:null,note:'',busyOn:null},truth:{state:'idle',desk:null,note:''}};
   let timer=null,gone=false,wanted=false,reading=null;
   const $=sel=>page.querySelector(sel);
@@ -123,8 +123,36 @@
 
   // ---------- reading ----------
   async function loadDraft(){
+   if(st.story){
+    const read=await v2.call('magazine.working-draft.read',{storyId:st.story.storyId,pieceId:st.story.pieceId,edition:'working'});if(aborted())return false;
+    st.read=read;st.rows=W().storyRows(read);return true;
+   }
    const read=await v2.call('study-draft.read',scope());if(aborted())return false;
    st.read=read;st.rows=rowsOf(read);return true;
+  }
+  // ---------- a Magazine story: what magazine.check finds in its saved words, read only ----------
+  // The check names the quoted passages it could not find in the captured transcript and any quote that looks split. It
+  // saves nothing and changes nothing. Recording a check (magazine.mechanical-check) is Adrian's own decision and has no
+  // screen here yet. A story has no decisions record and no claims desk of its own, so those say so where they cannot answer.
+  async function loadStoryCheck(){
+   const path=st.read?.authority?.path;
+   if(!path){st.mag=null;return;}
+   const [result,record]=await Promise.all([
+    v2.call('magazine.check',{draft:path}),
+    v2.call('magazine.mechanical-check.get',{parentStudyId:id,storyId:st.story.storyId,pieceId:st.story.pieceId}).catch(()=>null)]);
+   if(aborted())return;
+   st.mag=result;st.magAt=new Date().toISOString();st.magRecord=record&&record.record?record.record:null;
+  }
+  /** The findings of a story's check, in the same words as any piece's: a quote not found, a possible split. */
+  function storyFindings(){
+   const m=st.mag;if(!m)return [];
+   const out=[];
+   (m.quotes?.notFound||[]).forEach(passage=>out.push({f:finding({message:'NOT FOUND: "'+passage+'"',locator:{passage}}),passage}));
+   if(m.splits&&m.splits.ok===false)(m.splits.lines||[]).forEach(line=>out.push({f:finding({message:String(line)}),passage:''}));
+   return out.map((x,n)=>{
+    const row=x.passage?st.rows.find(r=>r.words.includes(x.passage)):null;
+    return {n,f:x.f,issue:{locator:{passage:x.passage}},native:row?row.id:null,onPage:!!row,old:false};
+   });
   }
   async function loadReceipt(){
    try{
@@ -132,10 +160,12 @@
     st.receipt=receipt&&typeof receipt==='object'?receipt:null;st.receiptNote='';
    }catch(error){if(aborted())return;st.receiptNote=error.message||'The saved check could not be read.';}
   }
-  const current=()=>receiptCurrent(st.receipt,st.read,{bindingId:st.loc?.bindingId,parentStudyId:id});
+  const current=()=>st.story?!!st.mag&&st.mag.draft?.hash===st.read?.document?.hash:receiptCurrent(st.receipt,st.read,{bindingId:st.loc?.bindingId,parentStudyId:id});
   /** Unsaved words in Write on this device are his alone and are not part of what is checked. Only the human is told. */
   function deviceWords(){
-   if(!human||!st.loc?.bindingId)return false;
+   if(!human)return false;
+   if(st.story){try{return v2.shared.read?.storyUnsaved?.(st.story)||false;}catch{return false;}}
+   if(!st.loc?.bindingId)return false;
    try{
     const kept=JSON.parse(root.localStorage.getItem('ar-v2-write:'+st.loc.bindingId)||'null');
     return !!kept&&(Array.isArray(kept.edits)&&kept.edits.length>0||Array.isArray(kept.added)&&kept.added.some(a=>String(a?.text||'').trim()));
@@ -155,6 +185,7 @@
   function stateLabel(){
    if(st.busy)return 'Checking';
    if(!st.read)return '';
+   if(st.story)return !st.mag?'Not checked':storyFindings().length?'Review needed':'No findings';
    return stateOf(st.receipt,current()).label;
   }
   function shell(){
@@ -184,6 +215,7 @@
    if(mark?.ck){const t=box.querySelector(`[data-ck="${CSS.escape(mark.ck)}"]${mark.n!==undefined?`[data-n="${CSS.escape(mark.n)}"]`:''}`);if(t&&!t.disabled)t.focus({preventScroll:true});}
   }
   const currentFindings=()=>{
+   if(st.story)return storyFindings();
    if(!st.receipt)return [];
    const cur=current();// an outdated check still lists its findings, marked as older, and points at nothing on the new words
    return (st.receipt.issues||[]).map((issue,n)=>{
@@ -191,8 +223,33 @@
     return {n,f,issue,native,onPage,old:!cur};
    });
   };
+  function paintStoryRun(box){
+   keepFocus(box,()=>{
+    const m=st.mag,finds=m&&!st.busy?storyFindings():[],empty=!st.rows.some(r=>r.words.trim());
+    const tone=st.busy?'busy':!m?'none':finds.length?'review':'ok';
+    const label=st.busy?'Checking this saved draft':!m?'Not checked yet':finds.length?'Review needed':'No findings';
+    const line=st.busy?'Your words are not changed.':empty?'Nothing is written yet. Write some words, then check them here.':!m?'Press Check saved draft.':current()?'Covers the saved words as they are now.':'The saved words changed since this check. Check the saved draft again.';
+    const q=m?.quotes,counts=q?(q.passages?`${q.found} of ${q.passages} quoted passages found in the captured transcript`:'No quoted passages to check'):'';
+    const rows=m?`<dl class="ck-results"><div><dt>Quotes</dt><dd>${esc(counts)}${q&&q.narration?`<small>${esc(q.narration+(q.narration===1?' paragraph has':' paragraphs have')+' no quotation marks and are left unchecked.')}</small>`:''}</dd></div><div><dt>Splits</dt><dd>${esc(m.splits?.ok===false?'Possible split, review':'No split detected')}</dd></div></dl>`:'';
+    const list=finds.map(({n,f,onPage})=>`<li class="ck-find" data-find="${n}"><div class="ck-find-h"><strong>${esc(f.title)}</strong>${onPage?`<button type="button" class="v2-ghost" data-ck="go" data-n="${n}" aria-pressed="${st.hit?.n===n}">Show in the words</button>`:''}</div><p>${esc(f.action)}</p>${f.words?`<blockquote>${esc(f.words)}</blockquote>`:''}${onPage?'':'<p class="ck-dim">The check could not point to one place in the draft.</p>'}</li>`).join('');
+    const sourceNote=finds.some(x=>x.f.words)?`<div class="ck-src">${v2.ui.notBuilt('Viewing the captured source beside a finding.',{advanced:{subject:id,piece:piece(),section:'check'}})}</div>`:'';
+    const none=m&&!st.busy&&!finds.length?'No findings from these named mechanical checks. Editorial review remains separate.':'';
+    const src=m?.source?.path?`Checked against ${m.source.path.split('/').pop()}.`:m?'No captured transcript is attached to this story, so quotes could not be compared.':'';
+    const rec=st.magRecord?`A check was recorded${st.magRecord.finishedAt?' '+esc(whenLabel(st.magRecord.finishedAt)):''}.`:'No check has been recorded for this story.';
+    box.innerHTML=`<h2 id="ck-h-run">Check this piece</h2>
+     <div class="ck-state" data-kind="${esc(tone)}" role="status"><strong>${esc(label)}</strong><span>${esc(line)}</span></div>
+     ${deviceWords()?'<p class="ck-note" role="status">You have unsaved words in Write on this device. A check covers the saved draft only.</p>':''}
+     <div class="ck-btns"><button type="button" class="pri" data-ck="run"${st.busy||empty||!st.read?' disabled':''}>${st.busy?'Checking':m?'Check saved draft again':'Check saved draft'}</button>${empty?`<a class="wr-btn" href="${esc(writeHref())}">Go to Write</a>`:''}</div>
+     ${st.error?`<p class="ck-bad" role="alert">${esc(st.error)}</p>`:''}
+     ${rows}${list?`<ol class="ck-finds" aria-label="Findings">${list}</ol>`:none?`<p class="ck-dim" data-ck-empty>${esc(none)}</p>`:''}
+     ${sourceNote}
+     <details class="ck-proof"><summary>Check details</summary><p>This check only reads the saved words. It saves nothing.</p>${src?`<p>${esc(src)}</p>`:''}${m?`<p>${esc('Draft SHA-256: '+(m.draft?.hash||''))}</p>`:''}<p>${rec}</p><p class="ck-dim">Meaning, narration, bracket intent, independent editorial review, blind reading and rating are not verified. Recording a check is Adrian’s own decision.</p></details>`;
+   });
+   paintBar();
+  }
   function paintRun(){
    const box=$('[data-ck-run]');if(!box)return;
+   if(st.story)return paintStoryRun(box);
    keepFocus(box,()=>{
     const c=st.receipt,cur=current(),s=stateOf(c,cur),why=heldWhy(c),empty=!st.rows.some(r=>r.words.trim());
     const finds=c&&!st.busy?currentFindings():[];
@@ -247,12 +304,16 @@
    st.busy=true;st.error='';st.hit=null;paintRun();paintWords();
    const operationId=uuid();st.mine.add(operationId);
    try{
-    const receipt=await v2.call('study-draft.check.post',{...scope(),expected:st.read.expected,operationId});
-    if(aborted())return;
-    st.receipt=receipt;st.receiptNote='';
+    if(st.story){await loadDraft();if(aborted())return;await loadStoryCheck();}
+    else{
+     const receipt=await v2.call('study-draft.check.post',{...scope(),expected:st.read.expected,operationId});
+     if(aborted())return;
+     st.receipt=receipt;st.receiptNote='';
+    }
    }catch(error){
     if(aborted())return;
-    if(error.kind==='stale'){
+    if(st.story)st.error=(v2.shared.writeStory?.storyWords(error))||'This check could not finish. Your words remain unchanged.';
+    else if(error.kind==='stale'){
      await Promise.all([loadDraft(),loadReceipt()]);
      st.error='The saved words changed before the check started. Press Check saved draft to cover the new words.';
     }else st.error=error.message||'This check could not finish. Your words remain unchanged.';
@@ -264,17 +325,22 @@
   async function reload(){
    if(st.busy)return;
    st.error='';
-   try{await Promise.all([loadDraft(),loadReceipt()]);}catch(error){if(aborted())return;st.error=error.message||'The saved draft could not be read.';}
+   try{await loadAll();}catch(error){if(aborted())return;st.error=error.message||'The saved draft could not be read.';}
    if(aborted())return;
    paintRun();paintWords();loadDecisions();loadTruth();
+  }
+  /** The saved words and what a check says of them: a story's from the Magazine, any other piece's from its saved receipt. */
+  async function loadAll(){
+   if(st.story){if(await loadDraft())await loadStoryCheck();return;}
+   await Promise.all([loadDraft(),loadReceipt()]);
   }
   function soon(){
    wanted=true;clearTimeout(timer);
    timer=setTimeout(async()=>{
-    if(aborted())return;
+    if(aborted()||!st.loc||st.none||!st.read)return;// nothing is open to keep up with yet, or this story has no draft
     if(st.busy)return;// shown after the check, which asks again
     wanted=false;
-    try{await Promise.all([loadDraft(),loadReceipt()]);}catch{return;}
+    try{await loadAll();}catch{return;}
     if(aborted())return;
     paintRun();paintWords();loadDecisions();loadTruth();
    },250);
@@ -283,7 +349,7 @@
   // ---------- decisions in this piece ----------
   const rootBindingId=()=>st.loc?.standing?.facts?.bindingId||null;
   const selector=()=>({parentStudyId:id,rootBindingId:rootBindingId(),outputId:piece()});
-  const decisionsPossible=()=>!!piece()&&!!rootBindingId()&&st.loc.native!==false;
+  const decisionsPossible=()=>!st.story&&!!piece()&&!!rootBindingId()&&st.loc.native!==false;
   let coverage=null;
   const coverageModule=()=>coverage||=import('/lib/decision-coverage.js');
   async function loadDecisions(){
@@ -309,6 +375,7 @@
    keepFocus(box,()=>{
     const d=st.dec,report=d.report;
     const head=`<div class="ck-dec-h"><h2 id="ck-h-dec">Decisions in this piece</h2>${decisionsPossible()?'<button type="button" class="v2-ghost" data-ck="decisions">Reload decisions</button>':''}</div>`;
+    if(st.story){box.innerHTML=head+`<p class="ck-dim">Decisions are read from a subject’s own pages. They do not answer for a Magazine story yet.</p>`+v2.ui.notBuilt('Decisions recorded against a Magazine story.',{advanced:{subject:id,piece:piece(),section:'check'}});return;}
     if(d.state==='none'||d.state==='idle'){box.innerHTML=head+`<p class="ck-dim">${esc(decisionsPossible()?'Reading saved words and decisions.':'Decisions are read for the saved words of an Article that Check can open. They are not available for this piece.')}</p>`;return;}
     if(d.state==='reading'){box.innerHTML=head+'<p class="ck-dim" role="status">Reading saved words and decisions.</p>';return;}
     if(d.state==='error'||!report){box.innerHTML=head+`<p class="ck-bad" role="alert">${esc(d.note||'Saved decisions are unavailable.')}</p>`;return;}
@@ -352,7 +419,8 @@
     t.desk=desk;t.state='ready';
    }catch(error){
     if(aborted()||token!==t.token)return;
-    t.desk=null;t.state='error';t.note=error.message||'The claims and people for this piece could not be read.';
+    const plainRead='The claims and people for this piece could not be read.';
+    t.desk=null;t.state='error';t.note=error.kind==='owner-only'||!error.message?plainRead:error.message;
    }
    paintTruth();
   }
@@ -369,7 +437,7 @@
     const people=d.people.length?`<ul class="ck-decs">${d.people.map(p=>`<li class="ck-dec"><p><strong>${esc(p.name)}</strong> <span class="ck-dim">${esc((p.appears||[]).join(', '))}</span></p><p class="ck-dim">${personState(p,d)}</p></li>`).join('')}</ul>`
      :'<p class="ck-dim">No one is listed in this piece. If someone is named, pictured or quoted, list them so their consent is asked before release.</p>';
     box.innerHTML=head+`<section aria-label="Claims and quotes" class="ck-sub"><h3>Claims and quotes</h3>${counts?`<p class="ck-dim">${esc(counts)}</p>`:''}${claims}</section>
-     <section aria-label="People in this piece" class="ck-sub"><h3>People</h3>${people}${d.people.length?`<p class="ck-dim">Answers and the release hold are in Share. They are Adrian's to give.</p><div class="ck-btns"><a class="wr-btn" href="${esc(adv('share'))}">Open Share${icon('out')}</a></div>`:''}</section>`;
+     <section aria-label="People in this piece" class="ck-sub"><h3>People</h3>${people}${d.people.length?`<p class="ck-dim">Answers and the release hold are in Share.</p><div class="ck-btns"><a class="wr-btn" href="${esc(adv('share'))}">Open Share${icon('out')}</a></div>`:''}</section>`;
    });
   }
   /** Review passage: the packet is read again, the recorded paragraph is found exactly, and only then shown. */
@@ -407,7 +475,7 @@
    else if(act==='passage')void reviewPassage(b.dataset.n);
   }
   page.addEventListener('click',onClick);
-  ctx.on({kinds:['study-draft*','current-work*','study-ai*','concept*','study.outputs*','consent*']},e=>{
+  ctx.on({kinds:['study-draft*','current-work*','study-ai*','concept*','study.outputs*','consent*','magazine*']},e=>{
    if(e&&!e.reset&&e.operationId&&st.mine.has(e.operationId))return;// this screen's own check
    soon();
   });
@@ -428,6 +496,14 @@
     ctx.setAdvanced({subject:id,piece:piece(),section:'check'});
     if(ctx.query.piece&&!st.loc.form){plain('This piece is not one of this subject’s Articles, or it does not exist. Go back to the subject to choose one.',{link:false});return;}
     if(!st.loc.form){plain('This subject has no Article yet, so there is nothing to check here.',{link:false});return;}
+    if(st.loc.story){
+     st.story=st.loc.story;
+     const S=v2.shared.writeStory;
+     if(S&&await S.storyHasNoDraft(st.story)){if(aborted())return;st.none=true;page.innerHTML=`${bar()}<div class="ck-none"><p role="status">${esc('This story has no draft yet, so there is nothing to check. A draft is started in the Magazine.')}</p></div>`;return;}
+     try{await loadDraft();if(aborted())return;await loadStoryCheck();}catch(error){if(aborted())return;plain((S?.storyWords(error))||'This story’s words could not be checked.');return;}
+     if(aborted())return;
+     shell();loadTruth();return;
+    }
     if(st.loc.native===false||!st.loc.bindingId){plain('The words of this piece are not kept where Check can open them. Check them in Advanced.');return;}
     await loadDraft();if(aborted())return;
     await loadReceipt();if(aborted())return;

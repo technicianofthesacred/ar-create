@@ -19,11 +19,151 @@ Everything below is merged into `claude/direction-d-build`. The four work-in-pro
 | Write inside version two (stage 1) | In, reviewed three times, corrections made |
 | Read and Check inside version two (stage 2) | In, reviewed twice, corrections made |
 | Capture inside version two (stage 3) | In, reviewed three times, corrections made |
+| What stands between him and starting (stage 4) | In, each piece reviewed, the dangerous ones twice; see "Stage 4" below |
 
 Adrian has seen four pictures of Home and has been given a demo to click through and one page of pictures of every
 screen. He has not yet said yes to any screen. On 11 November he asked that every screen be checked against the sample he approved and, once it matches and
 works, that it be shipped without asking again (a pull request merged into main). The release to his installed app is
 run on his Mac.
+
+## First look with his real records, 12 November: the five that stand between Adrian and using it
+
+Version two was installed on his Mac on 12 November and walked as an assistant with his real records (8 subjects,
+one open question, the Teajia look). These come before everything below, in this order.
+
+1. **His magazine work is not on Home.** Home shows 8 subjects, three of them test stand-ins ("Hong Kong Day 1 ·
+   structure test", "Fresh Article", "Hong Kong Day 1 · New Article"). The nine active Magazine stories (Tea Teacher,
+   Yixing Masters, Wood-Fired Potter, Lu Zhaokai, An Cha Master, Taiwan Tea Philosopher, Hong Kong Day 1, Teaware
+   Collector, Shanyin Qiwu) are not subjects at all, so `standing all` and Home never list them. Until his real
+   stories are subjects, there is nothing for him to work on here.
+2. **Raw machine text where his direction should be.** A subject's header shows the stored direction record as
+   written: on "Hong Kong Day 1 · structure test" the direction-choices comment and its JSON, on "2019 Liubao ·
+   Golden Flower" the markdown headings of the concept ("# Concept ## Author thoughts..."). On a phone the JSON fills
+   the whole first screen and pushes the page 7 pixels sideways.
+3. **Nothing he would make can be made inside version two.** Every Create step opens Advanced. His three Carousels
+   on "Let the good tea find you" are older Outputs carousels, and there are no Instagram plans at all, so the slide
+   studio has nothing real to open. The three Carousels carry the same name and cannot be told apart. Piece 7 (Write,
+   Read, Check) and a way to open an existing Carousel in the studio are the work.
+4. **Research is empty and The facts says more than it shows.** Research has two topics, both "Study photographs",
+   0 sources each. On a subject, "The facts: Findings to read" shows only the question that was asked and no findings.
+   On a Carousel, "The words on the slides: 1428 words" is the whole article's count, the same on every form.
+5. **Slower with 8 real subjects than the demo was with 150.** The first `standing all` after a restart took 6.2
+   seconds (1.4 the second time). Every page waits about 1.2 seconds on `/api/capabilities` before anything shows;
+   the Hong Kong subject takes 5.7 seconds to settle at 1440.
+
+Not seen, because his records hold none: photographs on desk cards or rows (nothing is on the desk; no subject has
+a photograph), the tint under the bar on a subject (no subject has a look; the tint does show on Looks), a topic's
+Decide count, findings and "What people say". What held: Home's stations, counts and next steps match the CLI for
+all 8; the Hong Kong subject's eight steps match `standing subject`; Needs you shows his one real question with its
+link; Looks shows the real Teajia look; no other page scrolls sideways at 390.
+
+The automatic check, found the same night: the package check fails because three test servers orphaned by earlier
+runs (started 13:24, 14:40 and 15:12 on 11 November, synthetic magazine fixtures, random ports) keep rewriting
+`.scratch/magazine-fixtures` on the runner after checkout wipes it; deleting the folder does not last until they are
+stopped, and the fixture helper should not leave them. The photo inspect test is not slow: the workspace page
+mounts in 18.4, 19.1 and 19.7 seconds on the Mac; it fails because the photo details panel never opens (no caption
+box), first at the Screens stage A merge (PR 235). Likely its new keyboard aid, which walks computed styles of every
+focusable control, under jsdom. Version two was released with `--no-ci-check` naming this.
+
+## Stage 4, 12 November: what was done about the five, and what is still open
+
+Built on branch `claude/v2-before-starting`, every piece by one model and reviewed by another, the dangerous ones
+twice. Seen only on the demo with invented records. **The first thing to do on his Mac after the next release is to
+walk this list with his real records.**
+
+**To check on his Mac first**
+
+1. **His Magazine stories on Home.** Each registered, active Magazine story now stands as a subject in
+   `subjects.standing` and `subject.standing` (id: the story's own id; the subject carries `origin`, its one Article
+   carries `owner` with storyId and pieceId). No record is made, nothing is copied; reading writes nothing (tested by
+   hashing data and vault). A story that is already a subject's original shows once. Check: all nine show, none
+   twice, with true stations; "Hong Kong Day 1" in particular, which is both a story and a subject. The three test
+   stand-ins are his to archive from Home's row menu.
+2. **The link from a story into the Magazine.** The existing workspace has no address that opens one story on a cold
+   load outside review mode, so every such link says "Open the Magazine in Advanced" and leads to the workspace, not
+   to the story. Wanted: an address in the existing workspace that opens one story.
+3. **Read and Check for a story** open inside version two (`magazine.working-draft.read`, `magazine.check`, read
+   only). Decisions in a story's Check say they are not built (`current-work.read` refuses a story id). The count on
+   the subject page comes from the Magazine's check on the draft alone and may differ from the Magazine's own page,
+   which passes linked context notes.
+4. **A subject's header** shows only the dish he named, else the "Adopted human direction" section, else nothing.
+   Check the two subjects that showed raw text ("Hong Kong Day 1 · structure test", "2019 Liubao · Golden Flower").
+5. **His three Carousels** on "Let the good tea find you" are told apart by slide count and date, and "Open the
+   slides" opens each read only in the studio (`#/slides/<output id>?kind=output&subject=<id>`); changing one is in
+   Advanced (Arrange). A Carousel's word count is its own slides' words.
+6. **Speed.** A page no longer waits on the full `/api/capabilities` (the shell reads `?only=commands`, 4 ms, and
+   keeps it for the browser session by release); the first `subjects.standing` is warmed at start; the settle step
+   runs only after a write; a check no longer re-reads the draft. Measured on a demo with long drafts: first read
+   2.8 to 3.5 s down to about 2 s cold and milliseconds once warmed. Measure again with his records. One shortcut was
+   taken out after review because it made a subject state a wrong station for a few seconds: a read waits for the
+   suggestion count again (up to 5 s, then Not known and not kept).
+7. **Find** in the top bar (also Ctrl or Cmd with K) finds subjects by name and Library items by their exact words
+   (`concept.sources.search`). **To file** on Home lists Library top-folder files no subject, plan or placement uses,
+   each with "File in a subject". It reads the whole Library tree (`sources.tree`): watch its time with his Library.
+   It cannot tell a capture from any other loose file, and cannot see Magazine or citation uses.
+
+**Write for a Magazine story: built, shipped switched off**
+
+`STORY_EDITING` in `public/v2/screens/write.js` is false: a story's words show read only in Write with a link.
+Editing one paragraph at a time through `magazine.working-draft.edit` is built behind the switch and held every
+guarantee about held-up words, but the second review changed the story's file in ways he did not type. Before the
+switch may be turned on, correct and review again:
+
+- `placeEdit` (the 409 resend and `adopt`): his words can land on a duplicate paragraph (a story with "Yes." twice).
+  A paragraph may only match its own block, or the same block with the same neighbours. No test covers it.
+- `runtime/reference/mag-edit.mjs` `rebuild`: adding one word to a paragraph moves marks he did not touch (bold to
+  the first matching word, glossary `[[term:...]]` links likewise, an inline comment to the paragraph's end), and
+  text already in the file as " /a/ " becomes a rework order. Either fix `rebuild` or keep paragraphs with bold,
+  glossary links, comments or slash pairs read only.
+- `markupIn` lets through "# " after a line break, a line of "--" or "=" under text, and a `<div>` block.
+- A resend while another Magazine write holds the lock (8 s or more) or after the 20 s timeout can make the second
+  request's 409 delete the first one's committed receipt (`operation()` `rmSync` in the working-draft bridge). No
+  words are lost; Undo and history lose that record. Needs a server fix.
+- Small: the first click on "Keep my words" does nothing while the cursor is in a box; a leftover device copy whose
+  words are already saved shows "Not saved: a newer version exists" with both sides the same.
+- There is no command to add, split, join or remove a story's paragraph one at a time (`magazine.working-draft.prepare`
+  was not tried). "Rewrite it as mine" does not exist for a story's proposals; Accept replaces the whole file.
+
+**Not done from the five**
+
+- Finding 3: making a new Carousel as an Instagram plan from an old Outputs carousel (no command converts one; a
+  carousel's words come from the article, a plan's from transcript lines).
+- Finding 4: Research is as empty as his records; "Findings to read" is now said only when findings are known, but
+  Home and the CLI cannot know the count and say "Research came back" (the count is not in `gather()`'s research
+  facts).
+- Finding 5: the draft read itself (`readOwned`, parsing in `ar-project-folders` and `draft-correspondence`) is the
+  remaining cost.
+
+**Done from the open corrections below (do not redo)**
+
+Section 7b's five small ones (Write's bar is one row from 320 with tabs that scroll inside it; Check's message when
+consent cannot be read; "They are Adrian's to give." removed; Read's "Newer words exist" only after a real change to
+the saved words; the grey band on a phone). Section 1: Home's header rounding; Research's count beside its heading
+on a phone; the parts list's width on a subject. Section 3: the shell reads desk and needs-you once (34 calls on load
+down to 22); a desk chip with no photograph is its name alone. Section 7c: Escape while saving; the sheet says why
+it stays; a 60 second clock margin; an assistant is told "Use the transcript" is Adrian's to do; a 409 from
+`recordings.source` shows the server's words. Section 8: Find. The earlier small fixes branch
+(`claude/v2-small-fixes`) is in: waiting steps of a Carousel, an empty studio, messages inside an open sheet.
+
+**Looked at and left**
+
+- The light theme's grey stays #5e6257: the sample's #686c61 is below 4.5 to 1 on the tinted surfaces (4.38 on
+  `--v2-sec`, 4.24 on `--c3-sel`).
+- Home's chip widths and the Needs you panel's height differ from the sample only by content (digits, three
+  questions against two).
+- The Capture line says "the Library, to file later", not "your inbox".
+- Find is not reachable on a phone (the bar's button is hidden there; the sample's phone search icon goes to
+  Research). A Library result opens the Library in Advanced, not the item.
+- The checker against the sample, 12 November (Home, subject, Write, Find, Capture at 1440 and 390, both themes;
+  nothing scrolls sideways at 390, 700, 1000, 1440). Older differences it listed, none from this stage: Write heads
+  the page with the subject's name where the sample has the piece's title; Write's status reads "Saved 23:40" with no
+  date; on a phone a subject's open step card sits under its own row where the sample lists all stations first; the
+  suggestions column shows only when there are suggestions.
+- Forms still cannot be reordered (no record keeps a hand-set order). Two plans changed in the same second look the
+  same.
+- `npm run demo` now starts with three invented Magazine stories (Kiln Keeper, Salt Lake Weaver, Bamboo Carver with
+  no draft); `npm run demo:plain` is the old demo. demo:fill adds "The lantern night" with an older Carousel.
+- The bound on the settle step's wait for a hung write (5 s, `AR_ANNOUNCE_WAIT_MS`) has no test.
 
 ## Open corrections, most important first
 

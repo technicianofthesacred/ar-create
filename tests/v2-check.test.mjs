@@ -361,3 +361,14 @@ test('Check follows the house rules: six sizes, no em dash, no fetch, escaped re
  assert.doesNotMatch(css,/white-space:\s*nowrap/,'long words and labels break instead of cutting the card off');
  assert.match(js,/import\('\/lib\/decision-coverage\.js'\)/,'decisions use the app\'s own coverage projection');
 });
+
+// ---- small corrections after the last review ----
+test('a refused consent.desk read says it could not be read, not that only Adrian can decide; People adds no sentence the existing Check lacks',async()=>{
+ const {doc}=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/consent/desk':[403,{error:'Only a person can do this.'}]})});await ready(doc);
+ await until(()=>doc.querySelector('[data-ck-truth] .ck-bad'));
+ const said=doc.querySelector('[data-ck-truth] .ck-bad').textContent;
+ assert.match(said,/could not be read/);assert.doesNotMatch(said,/Only Adrian|decide|human|person can/i);
+ const ok=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/consent/desk':{claims:[],people:[{id:'x1',name:'Invented Person',appears:['One'],consent:{state:'not asked'}}],summary:{claims:0},release:{blockers:[]}}})});await ready(ok.doc);
+ await until(()=>/Invented Person/.test(ok.doc.querySelector('[data-ck-truth]').textContent));
+ assert.doesNotMatch(ok.doc.querySelector('[data-ck-truth]').textContent,/to give/);
+});

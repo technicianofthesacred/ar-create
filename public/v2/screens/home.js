@@ -68,7 +68,7 @@
  const V2Client=W.V2Client;
  const uuid=()=>{try{return crypto.randomUUID();}catch{return V2Client?.uuid?.()||String(Date.now());}};
  // The controls a repaint must hand focus back to, by what they are and which subject they belong to.
- const FOCUS_KEYS=['data-pin','data-v2-up','data-v2-down','data-row-menu','data-group-by','data-view','data-station','data-arrange','data-archived','data-show-all','data-home-find','data-ask-change','data-ask-choice','data-unarchive'];
+ const FOCUS_KEYS=['data-pin','data-v2-up','data-v2-down','data-row-menu','data-group-by','data-view','data-station','data-arrange','data-archived','data-show-all','data-home-find','data-file-in','data-file-more','data-ask-change','data-ask-choice','data-unarchive'];
 
  /* ======================= the screen ======================= */
  v2.screen({id:'home',title:'Home',route:'',
@@ -76,11 +76,12 @@
  <header><div><h1>Home</h1><p>${esc(today())}</p></div><button type="button" class="home-new" data-home-new>${icon('plus')}New subject</button></header>
  <div class="home-needs-slot" data-home-needs></div>
  <section class="home-desk" data-home-desk aria-labelledby="home-desk-h" hidden></section>
+ <section class="home-file" data-home-file aria-labelledby="home-file-h" hidden></section>
  <section class="home-all" data-home-all aria-labelledby="home-all-h"><div class="home-sec-h"><h2 id="home-all-h">Everything</h2></div><p class="home-quiet" data-home-loading>Reading your subjects…</p></section>
 </div>`,
   async mount(el,ctx){
    const root=el.querySelector('[data-home]');if(!root)return;
-   const ui={...prefs(),station:null,find:'',open:new Set(),archived:false,arrange:false,allAsks:false};
+   const ui={...prefs(),station:null,find:'',open:new Set(),archived:false,arrange:false,allAsks:false,allFile:false};
    let data=null,failed=null,loading=null,again=false,loadedAt=0,timer=0,dragId=null,dragging=false,deskStops=[],allStops=[],repaintWaiting=false;
    // Needs you: a question answered here stays in its place, marked answered, until he leaves the page.
    const answeredHere=new Map(),changing=new Set(),askOrder=[],askBook=new Map(),lookRoles=new Map(),lookNames=new Map();
@@ -101,7 +102,7 @@
      if(data)void v2.desk.use(async()=>desk().map(s=>({id:s.id,title:s.title,...(covers.get(s.id)?{cover:covers.get(s.id)}:{})})));
      loadedAt=Date.now();
      if(busy()&&data)repaint();else paint();
-     void readCovers();void readLooks();
+     void readCovers();void readLooks();if(!unfiledRead||unfiledStale)void readUnfiled();
      if(again){again=false;void load();}
     })();
     return loading;
@@ -158,6 +159,73 @@
    }
    function folderDot(path){if(!path?.length)return '';const id=folderLook(path),a=id&&accentOf(id);return !a?'<i class="home-dot" aria-hidden="true"></i>':`<i class="home-dot" style="--home-dot:${esc(a)}" title="${esc(lookNames.get(id)?'Drawn in the '+lookNames.get(id)+' look':'Drawn in one look')}" aria-hidden="true"></i>`;}
    function accentOf(id){const roles=lookRoles.get(id),a=roles?.[v2.theme()==='dark'?'dark':'light']?.accent||roles?.dark?.accent;return typeof a==='string'&&/^#[0-9a-f]{3,8}$/i.test(a)?a:null;}
+
+   /* ---------- to file: things in the Library that no subject or plan uses ---------- */
+   // The Library's own top folder is where Capture puts what has no subject ("to file later"), but anything else can sit
+   // there too, so the list says only what the records support: files there that no subject lists as its material
+   // (library.source-projects), no Instagram plan uses (instagram.plans, then each plan's material) and no saved
+   // photograph placement uses (library.usage). A use the records do not keep (a Magazine story, a citation) cannot be
+   // seen, so such a file may still be listed. The Library tree is read once, and again only when a change that could
+   // alter it arrives.
+   const FILE_CUT=5,PLAN_CAP=40;
+   let unfiled=[],filing=new Set(),unfiledRead=false,unfiledStale=false;
+   const sourceIdsOf=plan=>[...(plan?.material?.transcripts||[]),...(plan?.material?.photos||[])].map(x=>x?.sourceId).filter(Boolean);
+   async function readUnfiled(){
+    unfiledRead=true;unfiledStale=false;
+    const [tree,used,plans]=await Promise.all([quiet(v2.call('sources.tree',{})),quiet(v2.call('library.source-projects',{})),quiet(v2.call('instagram.plans',{}))]);
+    if(ctx.signal.aborted)return;
+    const library=(tree?.roots||[]).find(r=>r?.id==='library'),top=library?.tree?.files;
+    if(!Array.isArray(top)||!used||!Array.isArray(used.projects)){unfiled=[];return keepFocus(paintFile);}
+    const taken=new Set(used.projects.flatMap(p=>p.sourceIds||[]));
+    const planList=(plans?.plans||[]).filter(p=>p&&typeof p.id==='string').slice(0,PLAN_CAP);
+    for(const plan of await Promise.all(planList.map(p=>quiet(v2.call('instagram.plan.get',{id:p.id})))))for(const id of sourceIdsOf(plan))taken.add(id);
+    let rest=top.filter(f=>f&&typeof f.id==='string'&&f.id&&!f.missing&&!taken.has(f.id));
+    if(rest.length){
+     const placed=await quiet(v2.call('library.usage',{sourceId:rest.map(f=>f.id)}));
+     const usedIds=new Set((placed?.sources||[]).filter(x=>(x?.occurrences||[]).length).map(x=>x.sourceId));
+     rest=rest.filter(f=>!usedIds.has(f.id));
+    }
+    if(ctx.signal.aborted)return;
+    unfiled=rest.sort((a,b)=>String(b.provenance?.capturedAt||b.modified_at||'').localeCompare(String(a.provenance?.capturedAt||a.modified_at||'')));
+    keepFocus(paintFile);
+   }
+   function paintFile(){
+    const sec=root.querySelector('[data-home-file]');if(!sec||ctx.signal.aborted)return;
+    if(!unfiled.length||!live().length){sec.hidden=true;sec.innerHTML='';return;}
+    const show=ui.allFile?unfiled:unfiled.slice(0,FILE_CUT),more=unfiled.length-show.length,lib=v2.advanced({section:'library'});
+    sec.hidden=false;
+    sec.innerHTML=`<div class="home-sec-h"><h2 id="home-file-h">To file</h2><span>${plural(unfiled.length,'thing')} in the Library, not with a subject yet</span></div>
+<ul class="home-file-list">${show.map(f=>`<li data-source="${esc(f.id)}"><span class="home-file-name">${esc(f.rel_path||f.name||'Untitled')}</span><small>${esc(when(f.provenance?.capturedAt||f.modified_at))}</small><span class="home-file-acts"><button type="button" class="v2-ghost" data-file-in="${esc(f.id)}">File in a subject</button><a class="home-act" href="${esc(lib)}">See it in Advanced</a></span></li>`).join('')}</ul>
+${more>0?`<button type="button" class="v2-ghost home-more" data-file-more>Show ${more} more</button>`:''}`;
+   }
+   /** File one capture with a subject, as the Capture sheet does: study.material.attach, else first-flow.attach. */
+   function fileSheet(id){
+    const item=unfiled.find(f=>f.id===id);if(!item)return;
+    // A Magazine story keeps its material in the Magazine, so nothing is filed in it from here.
+    const subjects=live().filter(s=>s.origin?.kind!=='magazine').sort(byName);
+    const f=form(`<label for="home-file-to">Subject</label><select id="home-file-to" name="subject">${subjects.map(s=>`<option value="${esc(s.id)}">${esc(s.title)}</option>`).join('')}</select><p class="home-quiet">${esc(item.rel_path||item.name||'')}</p>${formActs('File it')}`);
+    const sheet=v2.ui.sheet({title:'File in a subject',body:f});f.elements.subject.focus();
+    f.addEventListener('submit',async e=>{
+     e.preventDefault();const subject=subjects.find(s=>s.id===f.elements.subject.value);if(!subject||filing.has(id))return;
+     filing.add(id);f.querySelector('[type=submit]').disabled=true;
+     try{
+      const st=await v2.call('subject.standing',{parentStudyId:subject.id}),facts=st?.facts||{};
+      const tries=[];
+      if(facts.bindingId)tries.push(()=>v2.call('study.material.attach',{bindingId:facts.bindingId,parentStudyId:subject.id,sourceIds:[id]}));
+      if(facts.projectId)tries.push(()=>v2.call('first-flow.attach',{projectId:facts.projectId,sourceIds:[id]}));
+      if(!tries.length)throw new Error('This subject has no place of its own yet, so nothing can be filed in it.');
+      let why='',done=false;for(const attempt of tries){try{await attempt();done=true;break;}catch(error){why=error?.message||why;}}
+      if(!done)throw new Error(why||'The app refused it.');
+      const at=unfiled.findIndex(x=>x.id===id);
+      sheet.close();unfiled=unfiled.filter(x=>x.id!==id);paintFile();v2.ui.say(`Filed in "${subject.title}".`,{tone:'good'});
+      // Focus goes to the next line; with none left the block is gone, so to the page's own heading.
+      const next=[...root.querySelectorAll('[data-file-in]')][Math.min(Math.max(at,0),unfiled.length-1)]||root.querySelector('h1');
+      if(next){if(next.tagName==='H1')next.tabIndex=-1;next.focus({preventScroll:true});}
+      unfiledStale=true;void readUnfiled();
+     }catch(error){f.querySelector('[type=submit]').disabled=false;v2.ui.say((error?.message||'It could not be filed.')+' Press File it to try again.',{tone:'bad'});}
+     finally{filing.delete(id);}
+    });
+   }
 
    /* ---------- the model ---------- */
    const find=id=>data?.subjects.find(s=>s.id===id);
@@ -219,7 +287,7 @@
     }
     if(!data)return;
     if(failed)v2.ui.say('Home could not be read again just now. What is shown is from '+new Date(data.readAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'.',{tone:'warn',timeout:8000});
-    keepFocus(()=>{paintNeeds();paintDesk();paintAll();applyCovers();});
+    keepFocus(()=>{paintNeeds();paintDesk();paintFile();paintAll();applyCovers();});
    }
 
    /** The questions waiting, in the order they first appeared. One answered here keeps its place; one that is gone from
@@ -441,6 +509,8 @@ ${all.length&&ui.group==='folder'?`<div class="home-foot"><button type="button" 
    root.addEventListener('click',e=>{
     const t=e.target.closest?.('button');if(!t||!root.contains(t)||t.closest('.v2-move'))return;
     if(t.matches('[data-home-new]'))return newSubject();
+    if(t.dataset.fileIn)return fileSheet(t.dataset.fileIn);
+    if(t.hasAttribute('data-file-more')){ui.allFile=true;return keepFocus(paintFile);}
     if(t.matches('[data-home-retry]')){t.disabled=true;t.textContent='Reading again…';return void load();}
     if(t.dataset.groupBy){ui.group=t.dataset.groupBy;ui.open.clear();if(ui.group!=='folder')ui.arrange=false;keepPrefs(ui);return keepFocus(paintAll);}
     if(t.dataset.view){ui.view=t.dataset.view;keepPrefs(ui);return keepFocus(()=>{paintAll();applyCovers();});}
@@ -469,10 +539,11 @@ ${all.length&&ui.group==='folder'?`<div class="home-foot"><button type="button" 
    ctx.on({kinds:['subject-places*','study-draft*','study.human-direction*','study.outputs*','study.photos*','study.material*','instagram*','inquiries*','sources*','library*','recordings*','first-flow*','needs-you*','lease*','magazine*','study-ai*','words*','consent*','simmer*']},e=>{
     if(e?.reset)return;
     if(/^(study\.photos|study\.outputs)/.test(String(e?.kind||''))){coversStale=true;bindings=null;}
+    if(/^(sources|library|study\.material|first-flow|instagram|study\.photos|study\.outputs)/.test(String(e?.kind||'')))unfiledStale=true;
     soon();
    });
    // A reset asks for everything to be read again; one that comes while the first reading is still under way is that reading.
-   ctx.on({},e=>{if(e?.reset&&(data||failed)&&Date.now()-loadedAt>3000){coversStale=true;bindings=null;soon();}});
+   ctx.on({},e=>{if(e?.reset&&(data||failed)&&Date.now()-loadedAt>3000){coversStale=true;bindings=null;unfiledStale=true;soon();}});
    ctx.setAdvanced({section:'home'});
    ctx.homeStop=()=>{clearTimeout(timer);deskStops.forEach(f=>f());allStops.forEach(f=>f());coverRun++;};
    await load();

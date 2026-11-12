@@ -147,10 +147,19 @@
  .wr .wr-sheet{padding:24px max(18px,env(safe-area-inset-left,0px)) 130px}
 }
 @media (max-width:380px){
- .wr .wr-bar{padding:0 max(6px,env(safe-area-inset-left,0px));gap:0 2px}
+ .wr .wr-bar{padding:0 max(6px,env(safe-area-inset-left,0px));gap:0 2px;flex-wrap:nowrap}
  .wr .wr-back{padding:6px 2px 6px 0}
- .wr .wr-tabs{gap:0;min-width:0;flex:0 1 auto}
- .wr .wr-tabs a{padding:0 4px;max-width:64px;flex:0 1 auto;min-width:0}
- .wr .wr-tabs a[aria-label^="Add a piece"]{flex:none;max-width:none;padding:0 5px}
+ /* one row: the tabs keep their readable width and scroll sideways inside the bar; the ring sits inside each tab so the scroll box cannot cut it */
+ .wr .wr-tabs{gap:0;min-width:0;flex:0 1 auto;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+ .wr .wr-tabs::-webkit-scrollbar{display:none}
+ .wr .wr-tabs a{padding:0 6px;max-width:none;flex:none}
+ .wr .wr-tabs a:focus-visible{outline-offset:-2px}
+ .wr .wr-tabs a[aria-label^="Add a piece"]{padding:0 5px}
  .wr .wr-seg>*{padding:0 5px}
 }
+
+/* a Magazine story: the suggestions sit above the words, and a line kept as it is says why */
+.wr .wr-props{margin:0 0 24px}
+.wr .wr-props .wr-note{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--c3-lift)}
+.wr .wr-dt-x{font:400 var(--v2-t14)/1.5 var(--ar-ui);color:var(--dim);overflow-wrap:anywhere;margin:0;padding-left:10px;border-left:2px solid var(--c3-line2)}
+.wr .wr-lock-why{margin:-16px 0 22px;font-size:var(--v2-t12)}

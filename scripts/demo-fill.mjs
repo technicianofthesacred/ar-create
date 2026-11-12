@@ -64,6 +64,15 @@ export const CHECKED = {slug: 'the-green-gate', title: 'The green gate', folder:
  'Later the same page was remembered a little differently: "Entirely invented source fixtures. Nobody ever interviewed anyone."',
  'The rest is only the walk to the gate, with nothing quoted.',
 ]};
+// One subject whose Article has an older Outputs carousel (an entry in the Article's outputs, not an Instagram plan), so
+// version two's read only slide view has something to open. Invented words only.
+export const OUTPUTS_CAROUSEL = {slug: 'the-lantern-night', title: 'The lantern night', folder: ['Journey'], tags: ['travel', 'carousel'], words: [
+ 'The lanterns went up at dusk, one at a time, and nobody said anything.',
+ 'By the third hour the whole street was lit from above, paper and wax and a little smoke.',
+ 'A child asked why they were not hung straight. Nobody could say, and nobody minded.',
+ 'Near midnight the wind came, and the lanterns turned together like a slow field.',
+ 'In the morning there was only string, and the street looked ordinary again.',
+]};
 const PARAGRAPHS = t => [
  `${t} began with something small that was noticed and then kept.`,
  'It would have been easy to pass by. Looking again showed how much was already there.',
@@ -239,6 +248,31 @@ export async function fillDemo(base = process.env.AR_CREATE_URL || 'http://127.0
   } catch (e) { unreached.push({id: SLUG(CHECKED.slug), title: CHECKED.title, wanted: 'quotes its source', reached: 'not made', why: e.message}); }
  }
 
+
+ // 2c. The subject whose Article carries an older Outputs carousel (made with study.outputs.create, kind carousel).
+ let carouselSubject = null;
+ if (!only || only.includes(OUTPUTS_CAROUSEL.slug)) {
+  try {
+   const id = SLUG(OUTPUTS_CAROUSEL.slug);
+   let root = (await catalogAll()).find(c => c.parentStudyId === id);
+   if (!root) { await call('/api/study-draft/create-collection', {parentStudyId: id, title: OUTPUTS_CAROUSEL.title, operationId: op()}); root = (await catalogAll()).find(c => c.parentStudyId === id); }
+   const scope = {parentStudyId: id, bindingId: root.bindingId};
+   let draft = await call('/api/study-draft/read' + q(scope));
+   if (!draft.projection.some(r => r.words.trim())) {
+    const last = draft.projection.at(-1);
+    await call('/api/study-draft/save', {...scope, operationId: op(), expected: draft.expected, operations: OUTPUTS_CAROUSEL.words.map(raw => ({kind: 'insert', id: crypto.randomUUID(), beforeId: last.id, raw}))}, OWNER);
+    draft = await call('/api/study-draft/read' + q(scope));
+   }
+   const group = {rootBindingId: root.bindingId, parentStudyId: id};
+   let outputs = await call('/api/study/outputs' + q(group));
+   if (!outputs.outputs?.some(o => o.kind === 'article')) { await call('/api/study/outputs/create', {...group, kind: 'article', sourceBindingId: root.bindingId, expectedNative: draft.expected, expectedOutput: outputs.expectedOutput, operationId: op()}, OWNER); outputs = await call('/api/study/outputs' + q(group)); }
+   if (!outputs.outputs?.some(o => o.kind === 'carousel')) await call('/api/study/outputs/create', {...group, kind: 'carousel', sourceBindingId: root.bindingId, expectedNative: draft.expected, expectedOutput: outputs.expectedOutput, operationId: op()}, OWNER);
+   const place = ((await call('/api/subject-places')).places || []).find(p => p.parentStudyId === id) || {saved: false, revision: 0};
+   if (!place.saved) await call('/api/subject-places/save', {parentStudyId: id, operationId: op(), expectedRevision: place.revision, folder: OUTPUTS_CAROUSEL.folder, tags: OUTPUTS_CAROUSEL.tags, pinned: false, archived: false, order: specs.length + 1});
+   carouselSubject = id; log(id + ' -> has an Outputs carousel');
+  } catch (e) { unreached.push({id: SLUG(OUTPUTS_CAROUSEL.slug), title: OUTPUTS_CAROUSEL.title, wanted: 'an Outputs carousel', reached: 'not made', why: e.message}); }
+ }
+
  // 3. Where each subject lives. Only what differs is saved; the hand-set order is the position in the list.
  const places = new Map(((await call('/api/subject-places')).places || []).map(p => [p.parentStudyId, p]));
  for (const s of specs) {
@@ -257,7 +291,7 @@ export async function fillDemo(base = process.env.AR_CREATE_URL || 'http://127.0
    await call('/api/needs-you/raise', {operationId: op(), band: 'only-adrian', question: a.question, choices: a.choices, about: a.about, scope: {kind: 'project', id: SLUG(a.slug)}});
   } catch (e) { await call('/api/needs-you/raise', {operationId: op(), band: 'only-adrian', question: a.question, choices: a.choices, about: a.about}); }
  }
- return {origin, large, subjects: specs.length, checkedSubject, unreached, states: STATES, readBack: await readBack(origin, {fetch: fetchFn})};
+ return {origin, large, subjects: specs.length, checkedSubject, carouselSubject, unreached, states: STATES, readBack: await readBack(origin, {fetch: fetchFn})};
 }
 
 /** Reads the world back through the commands and says which state each subject is in. */
