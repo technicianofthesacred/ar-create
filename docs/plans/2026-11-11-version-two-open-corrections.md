@@ -92,6 +92,19 @@ screen photographed beside each step. Two real breaks stood between a recording 
    Meanwhile the standing no longer tells him to "Check again" when the hold is for want of a source (branch
    `claude/v2-held-standing`).
 
+**Where stage 5 stands (kept current by its director).** Work branch `claude/v2-journey-work` holds everything
+reviewed so far; the director merges it into `claude/v2-journey-walked` for the pull request.
+
+- The walk script: built, reviewed once, corrected (a real finished transcription job is put into the demo's own
+  temporary data and the real "Use the transcript" is pressed; step 8b checks "The green gate"; `pairs.json` lists the
+  new and old picture for every step). In.
+- Break 1 (starting an Article): built in three passes on `claude/v2-start-article`, reviewed three times. The page is
+  not rebuilt when the Article is made. Article is offered for any subject with no Article, source or not.
+- Standing for a check held for want of a source: built, reviewed, corrected. In.
+- Third break, found by the corrected walk: after "Use the transcript" the subject kept saying "Transcript ready."
+  with the button; and Home's row said a bare "Check" for a held check. Being fixed on `claude/v2-transcript-kept`.
+- Still to do: the whole suite once, the full sideways check, the page of pictures, the pull request.
+
 ## Stage 4, 12 November: what was done about the five, and what is still open
 
 Built on branch `claude/v2-before-starting`, every piece by one model and reviewed by another, the dangerous ones
