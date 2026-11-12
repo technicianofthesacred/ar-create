@@ -11,6 +11,7 @@
 
 ## How Adrian wants to be answered
 
+- **Only decisions. No status updates.** His words, 12 November: "Don't just tell me all these things I need to know what it is I actually need to make a decision on not just have all these updates." So write to him only when he must decide or do something, lead with the decision as a question he can answer in a word, give the recommendation, and stop. When a thread reports progress that needs nothing from him, record it in this file and say nothing, or at most one line. Keep a running list of open decisions and give it whole when asked.
 - He judges by eye: lead with a link or a picture, never code or diffs.
 - Plain full sentences, the names the app shows him, no commit hashes, no internal codes.
 - Never use the em dash character.
