@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AR Create</title>
+<!-- Version three. The app's own palette and interface face; then version two's frame styles and every version two
+     screen's styles, loaded as they are from /v2/, because the screens version three has not built yet are version two's
+     files and need them (shell.css names the control layer before Graphite's); then the Graphite controls; then version
+     three's own frame, last, whose rules all start with a .v3- class. -->
+<link rel="stylesheet" href="/document-study/c3-theme.css">
+<link rel="stylesheet" href="/v2/shell/shell.css">
+<link rel="stylesheet" href="/v2/shell/capture.css">
+<link rel="stylesheet" href="/document-study/graphite-controls.css">
+<link rel="stylesheet" href="/v2/screens/home.css">
+<link rel="stylesheet" href="/v2/screens/subject.css">
+<link rel="stylesheet" href="/v2/screens/slides.css">
+<link rel="stylesheet" href="/v2/screens/looks.css">
+<link rel="stylesheet" href="/v2/screens/research.css">
+<link rel="stylesheet" href="/v2/screens/write.css">
+<link rel="stylesheet" href="/v2/screens/read.css">
+<link rel="stylesheet" href="/v2/screens/check.css">
+<link rel="stylesheet" href="shell/frame.css">
+</head>
+<body>
+<div id="v3-frame"></div>
+<!-- One shell only: version three's frame. Version two's command client, shared parts and Capture are loaded as they
+     are; version two's shell.js is never loaded here. -->
+<script src="/document-study/recovery-storage.js"></script>
+<script src="/v2/shell/client.js"></script>
+<script src="/v2/shell/parts.js"></script>
+<script src="/v2/shell/capture.js"></script>
+<script src="shell/frame.js"></script>
+<!-- The route table: each screen is the file that registers its route. A screen version three builds takes over its
+     address by replacing version two's file here (its .js above and its .css in the head); two files never claim one
+     route (the frame refuses it). Until then every screen is version two's, unchanged. -->
+<script src="/v2/screens/home.js"></script>
+<script src="/v2/screens/subject.js"></script>
+<script src="/v2/screens/slides.js"></script>
+<script src="/v2/screens/looks.js"></script>
+<script src="/v2/screens/research.js"></script>
+<script src="/v2/screens/write.js"></script>
+<script src="/v2/screens/read.js"></script>
+<script src="/v2/screens/check.js"></script>
+</body>
+</html>

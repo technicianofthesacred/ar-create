@@ -31,6 +31,7 @@
  }
  for(const type of ['pointerdown','click','contextmenu','auxclick','focusin'])doc.addEventListener(type,markWay,true);
  doc.addEventListener('keydown',e=>{if(e.key==='Enter')markWay(e);},true);
+ for(const type of ['pointerdown','mouseover','click','contextmenu','auxclick','focusin'])doc.addEventListener(type,e=>{const a=e.target?.closest?.('a[data-v2-v3]');if(a)a.setAttribute('href','/v3/index.html'+root.location.search+root.location.hash);},true);// version three, at the same place
 
  // ---------- theme: follows the system, unless he chose one with the theme button ----------
  // A choice made with the theme button is kept in this page's own key and wins from then on. Until he makes one, the
@@ -142,6 +143,7 @@
  <a class="v2-ghost v2-wide v2-needs" data-v2-needs href="#/" hidden><i aria-hidden="true"></i><span>Needs you · <b data-v2-needs-count>0</b></span></a>
  <button type="button" class="v2-ghost v2-wide" data-v2-capture>${icon('plus')}Capture</button>
  <button type="button" class="v2-ghost v2-icon-btn" data-v2-theme aria-label="Switch theme">${icon('sun')}</button>
+ <a class="v2-advanced" data-v2-v3 href="${esc('/v3/index.html'+root.location.search+root.location.hash)}">Version three</a>
  <a class="v2-advanced" data-v2-advanced href="${esc(advanced())}">Advanced</a>
 </header>
 <div class="v2-messages" id="v2-messages" role="status" aria-live="polite"></div>

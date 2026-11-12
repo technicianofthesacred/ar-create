@@ -14,19 +14,23 @@
 //   --shoot-all  save a PNG of every view, not only those with a finding.
 //   --explain    add, to each finding, the chain of boxes that holds it (width, wrapping, display), to find the rule to change.
 //   --v2         visit only version two (public/v2/). Without it, version two is visited after the existing workspace.
-//   --no-v2      visit only the existing workspace, as before version two.
+//   --v3         visit only version three (public/v3/, the default front). Without it, version three is visited last.
+//                --v2 --v3 visits both fronts and not the existing workspace.
+//   --no-v2      do not visit version two. --no-v3 does not visit version three. Both: the existing workspace only.
 //   --only=NAMES check only these views (comma separated), e.g. --only=v2:home or --only=Home,Write or --only=v2.
 //                The names it accepts:
 //                existing workspace: Home, Subjects, Library, Material, Source, Research, Direction, Write, Read, Check,
 //                  Media, Arrange, Audience, Share, Outputs, Instagram, and the menus over Home: sheet-develop,
 //                  sheet-make, sheet-deliver (phone widths only), subject-switch;
 //                version two: v2 (every view), v2:<screen id> (v2:home, v2:subject, v2:slides, v2:looks, v2:research,
-//                  v2:research-group, v2:research-topic, and any screen registered later), v2:capture, v2:ask.
+//                  v2:research-group, v2:research-topic, and any screen registered later), v2:capture, v2:ask;
+//                version three: the same names with v3 (v3, v3:home, v3:write, v3:capture...): its frame around each
+//                  screen it has registered, its own or borrowed from version two.
 //                SIDEWAYS_ONLY=NAMES in the environment does the same. One screen at four widths and two themes takes a
 //                minute or two; add widths and themes after shotDir to narrow it further, e.g. "" 390,1440 dark.
 // It prints one line per view as it goes (ok, or found with what was found), then every finding again at the end.
-// Version two: every screen version two has registered (v2.screens()), opened by its address, and its Capture and Ask
-// sheets, with the same widths, themes and checks. A route's :id is a real record of the demo where one exists (the
+// Version two and version three: every screen the front has registered (v2.screens(), the contract both keep), opened by
+// its address, and its Capture and Ask sheets, with the same widths, themes and checks. A route's :id is a real record of the demo where one exists (the
 // first subject, the first Instagram plan); SIDEWAYS_V2_IDS='{"subject":"..."}' names others by screen id. Write, Read and Check open the first subject, and the piece named by SIDEWAYS_V2_IDS='{"subject":"...","piece":"<output id>"}'.
 // It only reads and clicks the demo (port 8854 by default). It never targets 8841, and nothing it changes in the page is saved.
 import fs from 'node:fs';import path from 'node:path';
@@ -40,18 +44,20 @@ const shotDir=args[0]||'';if(shotDir)fs.mkdirSync(shotDir,{recursive:true});
 const widths=(args[1]||'390,700,1000,1440').split(',').map(Number),themes=(args[2]||'light,dark').split(',');
 const onlyText=[...flags].filter(a=>a.startsWith('--only=')).map(a=>a.slice(7)).join(',')||process.env.SIDEWAYS_ONLY||'';
 for(const f of [...flags])if(f.startsWith('--only='))flags.delete(f);
-const ONLY=onlyText?onlyText.split(',').map(n=>n.trim()).filter(Boolean):null,V2_ONLY=flags.has('--v2');
+const ONLY=onlyText?onlyText.split(',').map(n=>n.trim()).filter(Boolean):null,V2_FLAG=flags.has('--v2'),V3_FLAG=flags.has('--v3'),V2_ONLY=V2_FLAG||V3_FLAG;
 const DEST_ALL='Home,Subjects,Library,Material,Source,Research,Direction,Write,Read,Check,Media,Arrange,Audience,Share,Outputs,Instagram'.split(',');
 const OVER_NAMES=['sheet-develop','sheet-make','sheet-deliver','subject-switch'];
-const isV2=n=>n==='v2'||n.startsWith('v2:');
-const unknown=(ONLY||[]).filter(n=>!DEST_ALL.includes(n)&&!OVER_NAMES.includes(n)&&!isV2(n));
-if(unknown.length)throw Error(`--only does not know ${unknown.join(', ')}. It accepts ${[...DEST_ALL,...OVER_NAMES].join(', ')}, v2, v2:<screen id>, v2:capture and v2:ask.`);
+const isV2=n=>n==='v2'||n.startsWith('v2:'),isV3=n=>n==='v3'||n.startsWith('v3:'),isFront=n=>isV2(n)||isV3(n);
+const unknown=(ONLY||[]).filter(n=>!DEST_ALL.includes(n)&&!OVER_NAMES.includes(n)&&!isFront(n));
+if(unknown.length)throw Error(`--only does not know ${unknown.join(', ')}. It accepts ${[...DEST_ALL,...OVER_NAMES].join(', ')}, v2, v2:<screen id>, v2:capture, v2:ask, and the same with v3.`);
 const DEST=V2_ONLY?[]:(ONLY?DEST_ALL.filter(n=>ONLY.includes(n)):DEST_ALL);
 const overWanted=name=>!V2_ONLY&&(!ONLY||ONLY.includes(name));
 const OLD_WANTED=!V2_ONLY&&(DEST.length>0||OVER_NAMES.some(overWanted));
-const V2_WANTED=!flags.has('--no-v2')&&(V2_ONLY||!ONLY||ONLY.some(isV2));
-const v2Wanted=id=>!ONLY||ONLY.includes('v2')||ONLY.includes('v2:'+id);
-const v2url=`${base}/v2/index.html?reviewActor=${encodeURIComponent(process.env.AR_CREATE_ACTOR||'agent:claude-code')}`;
+// The two fronts on the one contract, each with its own address. Version three borrows version two's screens in its frame.
+const FRONTS=[['v2',isV2,V2_FLAG,!V3_FLAG||V2_FLAG],['v3',isV3,V3_FLAG,!V2_FLAG||V3_FLAG]]
+ .filter(([front,is,,byFlag])=>!flags.has('--no-'+front)&&byFlag&&(!ONLY||ONLY.some(is)))
+ .map(([front])=>({front,url:`${base}/${front}/index.html?reviewActor=${encodeURIComponent(process.env.AR_CREATE_ACTOR||'agent:claude-code')}`,wanted:id=>!ONLY||ONLY.includes(front)||ONLY.includes(front+':'+id)}));
+const V2_WANTED=FRONTS.length>0;
 // Material has no entry in the phone bar today, so it cannot be measured at phone widths. That is noted, not counted.
 const PHONE={Library:'develop',Source:'develop',Research:'develop',Direction:'develop',Write:'make',Read:'make',Check:'make',Media:'make',Arrange:'make',Audience:'deliver',Share:'deliver',Outputs:'deliver'};
 const KNOWN_UNREACHABLE=new Set(['Material@phone']);
@@ -148,7 +154,7 @@ const measure=()=>{
 const findings=[],notes=[];let views=0,v2views=0;
 // One line per view as it goes, so a long run shows that it is moving.
 const pushFinding=findings.push.bind(findings);findings.push=(...entries)=>{for(const f of entries)console.log('found '+JSON.stringify(f));return pushFinding(...entries);};
-console.log(`Checking${OLD_WANTED?` the existing workspace (${DEST.length?DEST.join(', '):'menus only'})`:''}${OLD_WANTED&&V2_WANTED?' and':''}${V2_WANTED?' version two':''} at ${widths.join(', ')} wide, ${themes.join(' and ')}${STRESS?', under stress':''}.`);
+console.log(`Checking${OLD_WANTED?` the existing workspace (${DEST.length?DEST.join(', '):'menus only'})`:''}${OLD_WANTED&&V2_WANTED?' and':''}${FRONTS.map(f=>f.front==='v2'?' version two':' version three').join(' and')} at ${widths.join(', ')} wide, ${themes.join(' and ')}${STRESS?', under stress':''}.`);
 // Real records of the demo to open version two's screens on, read through the app's own commands.
 const v2ids=await (async()=>{const ids={};const get=async route=>{try{const r=await fetch(base+route,{headers:{'X-AR-Actor':'agent:claude-code','X-AR-Client':'http'}});return r.ok?await r.json():null;}catch{return null;}};
  const catalog=await get('/api/study-draft/catalog'),first=[...(catalog?.collections||[]),...(catalog?.drafts||[])].map(r=>r.parentStudyId||r.parentStudyKey).find(Boolean);if(first)ids.subject=first;
@@ -195,30 +201,32 @@ for(const width of widths)for(const theme of themes){
   try{await go('Home');await page.waitForTimeout(600);await open();}catch(error){findings.push({view:label,width,theme,unreachable:String(error.message).split('\n')[0].slice(0,100)});continue;}
   await check(label);await page.keyboard.press('Escape');
  }
- // Version two: each registered screen by its address, then the sheets over the frame.
- if(V2_WANTED){
+ // Version two, then version three: each registered screen by its address, then the sheets over the frame.
+ for(const {front,url:frontUrl,wanted:v2Wanted} of FRONTS){
   const v2page=await context.newPage();page=v2page;
-  const open=async hash=>{await page.goto(v2url+hash,{waitUntil:'load'});await page.waitForTimeout(900);
+  // Under stress every view starts from what the app drew: going to the same address again only moves the hash and keeps
+  // the grown page, so leave the page first.
+  const open=async hash=>{if(STRESS||PLANT)await page.goto('about:blank');await page.goto(frontUrl+hash,{waitUntil:'load'});await page.waitForTimeout(900);
    if(await page.evaluate(()=>document.documentElement.dataset.theme)!==theme){await page.locator('[data-v2-theme]').click();await page.waitForTimeout(300);}};
   await open('#/');
   const routes=await page.evaluate(()=>window.v2?.screens?.()||[]);
-  if(!routes.length)findings.push({view:'v2',width,theme,unreachable:'version two did not start (no screens registered)'});
+  if(!routes.length)findings.push({view:front,width,theme,unreachable:(front==='v2'?'version two':'version three')+' did not start (no screens registered)'});
   for(const r of routes){
    if(!v2Wanted(r.id))continue;
    // Write, Read and Check open the words of one piece: the subject (the first one, or SIDEWAYS_V2_IDS's write, read or check) and, when named, its piece (SIDEWAYS_V2_IDS's piece, an output id).
    const words=['write','read','check'].includes(r.id);
    const hash='#/'+r.route.split('/').map(p=>p.startsWith(':')?encodeURIComponent(v2ids[r.id]||(words&&v2ids.subject)||'none'):p).join('/')+(words&&v2ids.piece?'?piece='+encodeURIComponent(v2ids.piece):'');
    await open(hash);
-   if(await page.evaluate(()=>window.v2?.route?.()?.id)!==r.id){findings.push({view:'v2:'+r.id,width,theme,unreachable:'its address did not open it'});continue;}
-   await check('v2-'+r.id);v2views++;
+   if(await page.evaluate(()=>window.v2?.route?.()?.id)!==r.id){findings.push({view:front+':'+r.id,width,theme,unreachable:'its address did not open it'});continue;}
+   await check(front+'-'+r.id);v2views++;
   }
   for(const [id,selector] of [['capture','[data-v2-capture]'],['ask','[data-v2-ask]']]){
    if(!v2Wanted(id))continue;
    // On a phone, Ask or find has no place in the phone bar (Home, Research, Capture, Needs you), as in the mock-up.
-   if(id==='ask'&&phone){notes.push({view:'v2:ask',width,theme,note:'not in the phone bar'});continue;}
+   if(id==='ask'&&phone){notes.push({view:front+':ask',width,theme,note:'not in the phone bar'});continue;}
    await open('#/');
-   try{await page.locator(selector+':visible').first().click({timeout:3000});}catch(error){findings.push({view:'v2:'+id,width,theme,unreachable:String(error.message).split('\n')[0].slice(0,100)});continue;}
-   await check('v2-'+id);v2views++;
+   try{await page.locator(selector+':visible').first().click({timeout:3000});}catch(error){findings.push({view:front+':'+id,width,theme,unreachable:String(error.message).split('\n')[0].slice(0,100)});continue;}
+   await check(front+'-'+id);v2views++;
    // The Capture sheet's four tiles, each in its open state: the microphone (or the plain line when there is none),
    // photographs, a long thought and a long question typed in, as an unbroken word would be.
    if(id==='capture'){
@@ -227,8 +235,8 @@ for(const width of widths)for(const theme of themes){
      try{
       await page.locator(`dialog.v2-capture [data-view="${tile}"]`).click({timeout:3000});await page.waitForTimeout(700);
       if(tile==='thought'||tile==='question')await page.locator('dialog.v2-capture [data-cap-text]').fill('Gardenkeeperswinterledgerofteapickingdaysnotebook '.repeat(tile==='thought'?8:3).trim());
-     }catch(error){findings.push({view:'v2:capture-'+tile,width,theme,unreachable:String(error.message).split('\n')[0].slice(0,100)});continue;}
-     await check('v2-capture-'+tile);v2views++;
+     }catch(error){findings.push({view:front+':capture-'+tile,width,theme,unreachable:String(error.message).split('\n')[0].slice(0,100)});continue;}
+     await check(front+'-capture-'+tile);v2views++;
      if(tile==='thought'||tile==='question')await page.locator('dialog.v2-capture [data-cap="discard"]').click();else await back();
      await page.waitForTimeout(200);
     }
@@ -239,7 +247,7 @@ for(const width of widths)for(const theme of themes){
  await context.close();
 }
 await browser.close();
-console.log(`Measured ${views} views (${DEST.length} destinations plus sheets and menus, ${widths.length} widths, ${themes.length} themes)${STRESS?' under stress':''}${PLANT?' with a planted offender':''}${v2views?`, of which ${v2views} are version two`:''}.`);
+console.log(`Measured ${views} views (${DEST.length} destinations plus sheets and menus, ${widths.length} widths, ${themes.length} themes)${STRESS?' under stress':''}${PLANT?' with a planted offender':''}${v2views?`, of which ${v2views} are version two and version three`:''}.`);
 for(const n of notes)console.log('note '+JSON.stringify(n));
 for(const f of findings)console.log(JSON.stringify(f));
 if(!findings.length)console.log('Nothing scrolls sideways.');

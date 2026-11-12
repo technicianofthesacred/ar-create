@@ -775,9 +775,10 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
         response.setHeader('Allow', 'GET, HEAD');
         throw new StateError('Method is not supported.', 405);
       }
-      // The app's own address opens version two (public/v2/). Every address of the existing workspace
-      // (/document-study/index.html and its deep links) is served exactly as before.
-      if(pathname==='/'||pathname==='/v2'){const search=new URL(request.url||'/','http://local.invalid').search;response.writeHead(302,{Location:'/v2/index.html'+search,'Cache-Control':'no-cache'});return response.end();}
+      // The app's own address opens version three (public/v3/), the default since 12 November 2026. Version two
+      // (public/v2/) keeps its own addresses, /v2 and /v2/index.html, and every address of the existing workspace
+      // (/document-study/index.html and its deep links) is served exactly as before. The query is kept.
+      if(pathname==='/'||pathname==='/v3'||pathname==='/v2'){const search=new URL(request.url||'/','http://local.invalid').search;response.writeHead(302,{Location:(pathname==='/v2'?'/v2/index.html':'/v3/index.html')+search,'Cache-Control':'no-cache'});return response.end();}
       let file;try{file=await staticFile(path.resolve(publicDir),pathname);}catch(error){if((error.status!==404&&error.code!=='ENOENT')||!/^\/(assets|ig-assets)\//.test(pathname))throw error;file=await staticFile(path.join(root,'public'),pathname);}
       response.writeHead(200, { 'Content-Type': file.type, 'Content-Length': file.contents.length, 'Cache-Control': 'no-cache' });
       response.end(request.method === 'HEAD' ? undefined : file.contents);

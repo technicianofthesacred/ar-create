@@ -71,6 +71,8 @@ The page defaults its author to `human:adrian`, so an agent's clicks would be st
 
 The value is kept for that browser tab. A name that is not in the actor list below blocks every request from the page.
 
+The app's own address opens version three, the default front: `http://127.0.0.1:8841/v3/index.html?reviewActor=agent:<your-name>`. Version two stays at `/v2/index.html` with the same `?reviewActor=`; the address above is Advanced.
+
 ## Write
 
 Every write names its author with `--actor` or `AR_CREATE_ACTOR` (`agent:claude-code`, `agent:codex`, `agent:claude-design`, `agent:hermes`, `agent:grok`, `agent:chatgpt`, `cron:<name>`, `import:<source>`). Read the record first, then send its `expectedRevision`, `expectedHash` and a fresh UUID `operationId`.

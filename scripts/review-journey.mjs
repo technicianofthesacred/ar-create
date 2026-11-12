@@ -508,7 +508,8 @@ async function walkOne(width, theme) {
       if (sub.check.some(t => t.includes(HOLD)) || subjText.includes(HOLD)) breakOnce(step, `The subject's Check step still said "${HOLD}" after the transcript was used for Check and the check ran.`);
 
       // The way into Advanced and back, by the bar: the bar's Advanced in this tab, the old picture of the subject, then
-      // the old workspace's own "Version two" link.
+      // the old workspace's own "Version three" link (it leads to the default front since 12 November; the walk then
+      // goes on in version two at the same address).
       const adv = p.locator('[data-v2-advanced]:visible').first();
       if (await adv.count()) {
         await adv.click();
@@ -517,12 +518,13 @@ async function walkOne(width, theme) {
         await settleOld(p, walk.subject, null, step);
         await oldShot(step, '', p);
         const back = p.locator('a.v2-front:visible').first();
-        if (!(await back.count())) { breakOnce(step, 'The old workspace shows no "Version two" link at this width, so there is no way back by clicking.'); await p.goto(BASE + '/v2/index.html#/', {waitUntil: 'load'}); }
+        if (!(await back.count())) { breakOnce(step, 'The old workspace shows no "Version three" link at this width, so there is no way back by clicking.'); await p.goto(BASE + '/v2/index.html#/', {waitUntil: 'load'}); }
         else {
           await back.click();
-          await p.waitForURL(/\/v2\//, {timeout: 15000}).catch(() => breakOnce(step, 'The old workspace\'s "Version two" link did not lead back to version two.'));
+          await p.waitForURL(/\/v3\//, {timeout: 15000}).catch(() => breakOnce(step, 'The old workspace\'s "Version three" link did not lead to version three.'));
           await wait(1500);
-          if (!/^#\/subject\//.test(await p.evaluate(() => location.hash))) breakOnce(step, 'The "Version two" link in the old workspace did not return to the subject that was open.');
+          if (!/^#\/subject\//.test(await p.evaluate(() => location.hash))) breakOnce(step, 'The "Version three" link in the old workspace did not return to the subject that was open.');
+          if (/\/v3\//.test(p.url())) await p.goto(p.url().replace('/v3/index.html', '/v2/index.html'), {waitUntil: 'load'});
         }
         await p.waitForFunction(() => !!document.querySelector('[data-v2-theme]'), null, {timeout: 10000}).catch(() => {});
         await theTheme(p).catch(() => {});
