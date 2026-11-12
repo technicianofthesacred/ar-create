@@ -313,3 +313,142 @@ Never two builders on one file; each piece runs `npm run build` and the tests it
 - The recording workshop's "Mark reviewed" never succeeds (no `expected`), for anyone.
 - The workshop page itself sends no actor; after this stage that only mislabels who corrected a segment or named a
   speaker, never who confirmed.
+
+## Review of the design
+
+Reviewed 12 November 2026 against this branch (equal to main), by reading every cited file and searching for every
+writer of `reviewedBy`, `f.reviews` and `metadata.review`. Nothing was changed or built. Checked by reading, not by
+running: the one test file tried (`tests/subject-standing.test.mjs`) could not start because the generated
+`runtime/article-codec.mjs` is absent in this checkout, so the build has to be run before any builder relies on it.
+
+Verdict: the design finds every path that marks reviewed, its line references are right, and the stop entry is inside
+the hash chain. Three things must be corrected in the design before building. None changes the shape of the stage.
+
+What was confirmed as the design says:
+
+- The only writers of a review are `first-flow.mjs` 247, 251 and 253 and `transcript-corrections.mjs` 165. The older
+  route at `magazine/jobs.mjs` 229 to 231 cannot be reached: `recordings.mjs` 163 to 179 uses the same strict path
+  pattern, and for a POST to `review` it always answers or throws. `jobs.mjs` 208 writes a review field on a
+  translation file only. No scheduled job, phone pickup, import, CLI or MCP routine, demo fill or walk marks reviewed.
+- The existing workspace hole is real. `stage-flow.js` 12 sends plain `fetch`, `review-mode.js` 16 adds the actor only
+  to `/api/` paths, and `actor.mjs` 92 to 93 reads a same-origin request with no header as `human:adrian`.
+- Nobody but the existing workspace and tests sends `sourceReviews` to the plain `first-flow.prepare`
+  (`stage-flow.js` 115). No assistant routine, script or demo fill does, so refusing an added review breaks no
+  assistant flow, and an assistant preparing a subject whose material is already reviewed still works.
+- Every edit to a transcript's words or speakers resets its review (`transcript-corrections.mjs` 47, 164).
+
+### Must fix
+
+1. **The 403 at the gate can be stepped round, so the check inside the service is the real one and must be written as
+   such.** `server.mjs` 799 gives `guardHumanOnly` the raw request path, while routing uses other forms of it:
+   `recordings.route` matches `new URL(request.url).pathname` (`server.mjs` 574, `recordings.mjs` 163), which folds
+   `/transcription/x/../<id>/review` and `/transcription/<id>\review` into `/transcription/<id>/review`; neither
+   spelling matches the registry pattern, so the gate finds no command and lets it through. The route map uses the
+   decoded path (`server.mjs` 462, 760), so `/api/study-draft/capture-sources/sto%70` also passes the gate.
+   Correction to Decision 4 and Decision 5: say that the service check is required, not a second look; put it first
+   in `review` (before `lock`, `initialize` and `clean`, `transcript-corrections.mjs` 165, because `initialize` writes
+   the mapping) and first in the stop command, so a refusal writes nothing and is 403 rather than 409. Correct
+   Decision 8's "403 before the body is read" to "403, nothing written". Add both spellings and the encoded stop path
+   to Decision 7's table, to `tests/review-human-only-http.test.mjs`, `tests/study-draft-stop-sources-http.test.mjs`
+   and the attack list.
+
+2. **The standing rule in Decision 5 is too wide and its claim about old drafts is wrong.** As written ("a receipt
+   that reads `stale` while the draft now has no source is reported held, no source") it also fires when the added
+   record is damaged (`read.addedSources.error`, no records, so `sourceNow` is false at `subject-standing.mjs` 328),
+   where the true reason is the damage, and when the draft could not be read. It reverses assertions stage 6 pinned
+   on purpose: `tests/subject-standing.test.mjs` 229 (a stale receipt claims nothing), 249 and 256 ("Check again"),
+   and would wrongly flip 261 (damaged record). "Old drafts opened from a vault original always have their locked
+   source" is not so: a vault draft whose support files include none labelled source, or whose source is missing,
+   has none (`study-originals.mjs` 119, `study-draft-checks.mjs` 214 to 215), and those cannot take added sources
+   (`study-draft-copies.mjs` 258). Correction: state the rule exactly: the draft read is present, it has no
+   `addedSources.error`, no record with role `source` that is not missing, and the receipt reads `stale`; then
+   `{status:'held', noSource:true, issues:0}`. A damaged record keeps "Check again". List the three assertions that
+   change and the one that must not. Say plainly that the wording change reaches every draft with no source,
+   including old vault drafts, forks and structure tests, and include one of those in the before and after pictures.
+   See question 2 for Adrian.
+
+3. **After a stop the subject page and Check would say different things.** The standing would say "No source to
+   check against yet" at once, but Check shows its Sources block only for a receipt that is itself `held`
+   (`check.js` 126, 276); after a stop the receipt is `stale`, so Check says out of date and offers "Check saved
+   draft again", which then holds. The approved wording is that Check is held when no source for quotes is left.
+   Correction to Decision 5 and piece 5: on Check, when the list reports `hasQuoteSource:false` and the receipt is
+   stale, show the held words and the Sources block as for a held receipt, without running. Also state that
+   `createCaptureSources` needs a separate callback for a stop: the one it has runs Check again by itself
+   (`check.js` 123), which Decision 6 says must not happen after a stop.
+
+### Should fix
+
+1. **Refuse `reviewed:true` before the replay check.** `operation()` (`first-flow.mjs` 216) returns the current view
+   for a repeated operation ID before the step runs, so an assistant repeating Adrian's own operation gets 200, not
+   403. Nothing is written, but Decision 7's row "403 at the gate before any replay" is not true for
+   `first-flow.source-review` or for `prepare`, which have no gate. Do the actor check at the top of `reviewSources`
+   (line 240) and before `operation` in `prepare` where it can be, or reword the row.
+2. **Decision 1 should name the source list.** Today's loop only reads an entry whose source is in `sourceIds`
+   (`first-flow.mjs` 253). Say "an entry for a source in this call's `sourceIds`", so an entry for another source
+   stays ignored as now, and test it.
+3. **The stand-in on a structure-test copy still writes a review as an assistant** (`first-flow.mjs` 251, stamped
+   with the assistant's name, in the copy's own flow file). That is a deliberate exception to "his alone by every
+   path" and the approved text names both `sourceReviews` branches. Keep it, but say so to Adrian: question 3.
+4. **Removing the last entry is not detected.** Decision 7 says removing a stop entry breaks the chain. That is true
+   only for an entry in the middle; nothing pins the newest entry, so cutting the stop off the end leaves a valid
+   record (`study-draft-copies.mjs` 246 to 252). Only someone with file access can do it, the same as today. Correct
+   the row to say so.
+5. **A repeat of an old capture after a stop answers "captured".** `captureSources` step 1 (281 to 282) returns the
+   old entries for a repeated operation ID. Nothing is written and it is Adrian only, but the reply should give the
+   present state: add `stopped` or leave the source out of `captured` when its latest entry is a stop.
+6. **`again:true` on a source that is in use should settle, not fail.** Decision 6 answers 400. Two tabs make this
+   ordinary: one pressed "Use for Check again", the other presses it too. Treat it as "already used" (step 3, 302).
+7. **Keep the reader's new bookkeeping out of `records`.** `addedForRead` (256) spreads every field of a record into
+   the draft read. The capture entry's `entryHash`, needed to check `stops`, must live in a separate map, or old
+   drafts' reads change. The planned deep-equal test would catch it; say it in Decision 5.
+8. **Add list keys only when they apply.** If every row gains `stopped:false` and `capturedHash:null`, assertions in
+   the three capture test files that piece 1 owns may fail from piece 2's change. Add `capturedHash` only on a used
+   row and `stopped`, `stoppedAt` only on a stopped row, or give those three files to one builder in sequence.
+9. **Pin the workshop page's refusal.** The recording workshop page (`workshop-ui.mjs` 189) sends no actor, so an
+   assistant driving it is read as Adrian and passes the new gate; its "Mark reviewed" fails only because it sends no
+   `expected` (`transcript-corrections.mjs` 119). Add a test that a review with no `expected` is refused for
+   everyone, with a comment that mending that page must first make it say who is pressing.
+10. **Piece 4 must ship in the same release as piece 3.** Without it the existing workspace still stamps an
+    assistant's "Review and save" as Adrian and the gate passes it. Say so in Decision 9. The fix itself is right and
+    changes nothing for Adrian: with no actor chosen and no review mode the page is not patched and behaves as now;
+    in review mode it adds `human:adrian` and `ui`, which is what the server already assumed. One visible difference
+    to record: a tab opened with an unknown `reviewActor` now has its transcript reads refused too.
+11. **Scope the promise about the Library label.** A file whose own front matter says `review_status: reviewed`
+    reads "human review is recorded" in the Library and reaches research answers and prepared sources as a label
+    (`library.mjs` 421 to 430, `research-answer.mjs` 69, `article-source.mjs` 30). An import can create such a file.
+    It does not reach `reviewed()`, capture or Check, as the design says, but the attack list's goal ("get any
+    material to read reviewed") fails on it as worded. Reword the goal to what the stage covers and tell Adrian:
+    question 4.
+
+### Notes
+
+- Decision 2 and 3 are sound. Withdrawing a review and renaming speakers let an assistant undo his confirmation; that
+  is unchanged from today and recorded in the journal.
+- The assistant's Confirm sending only `review` is right for a second reason: today it would first save speaker
+  names, which resets a confirmation Adrian already made (`subject.js` 670 to 672).
+- A stop is by source, not by words. A second Library item with the same words is a different source. Only Adrian
+  can confirm and capture it, so an assistant cannot use it to bring the words back; a captured note also supports
+  quotes while any transcript is in use (`study-draft-checks.mjs` 54). Worth one plain sentence in Decision 6.
+- An older release cannot read a record that holds a stop entry: it reads as damaged and Check holds
+  (`study-draft-copies.mjs` 248). That is the safe direction, but the home should not be rolled back past this
+  release once a stop has been written. Put it in the release note.
+- The `keep` rule in `review` (`transcript-corrections.mjs` 165) becomes dead once non-humans are refused; leave or
+  remove, no effect.
+- A review POST will be journalled and announced as `.transcription.id.review` instead of `.transcription.id.action`.
+  Listeners match by prefix (`subject-standing.mjs` 59, `subject.js` 229 to 232), so nothing breaks.
+- The gate weakness in Must fix 1 is general: any human-only command with no check inside its service (for example
+  `first-flow.material-triage`, which the design lists as already his) can be reached with an encoded path. It needs
+  a deliberate caller, the same as a false actor header, and is outside this stage. Matching the gate on the same
+  path the router uses (`server.mjs` 799) would close it and sits in piece 3's file; raise it separately.
+- The build split is otherwise safe: no file has two builders, 3 follows 1 and 2, 5 is last, and each piece has its
+  own tests.
+
+### For Adrian (each answerable in one word)
+
+1. Use again (the design's own question): yes is right.
+2. A subject with no source whose words changed since its last held check: should it say "No source to check
+   against yet" instead of "Check again", on every draft including old ones? Recommendation: yes.
+3. May an assistant's stand-in still mark material reviewed inside its own test copy, never in a real subject?
+   Recommendation: yes.
+4. Leave the Library's "human review is recorded" label for a file that declares itself reviewed to a later stage?
+   Recommendation: yes.
