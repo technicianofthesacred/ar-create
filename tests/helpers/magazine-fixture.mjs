@@ -4,9 +4,72 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {randomUUID, createHash} from 'node:crypto';
+import {spawn} from 'node:child_process';
 
 const repo = path.resolve(import.meta.dirname, '..', '..');
 export const SCRATCH = path.join(repo, '.scratch', 'magazine-fixtures');
+
+// Nothing a test starts may outlive the test. A test file normally stops its own server and removes its own
+// fixture in t.after, but a run that is cancelled or killed never reaches t.after: the server it started then keeps
+// running and keeps its fixture folder alive inside the checkout (this is how three servers from 11 November kept
+// tripping the package check). So every fixture folder and every server started over one is also recorded with a
+// small watcher process. The watcher holds the read end of a pipe from this test process; the pipe closes when this
+// process ends in any way, a kill included, and the watcher then stops the recorded servers and removes the
+// recorded folders. It only ever removes a folder directly inside SCRATCH.
+const WATCHER = `
+const fs=require('node:fs'),path=require('node:path'),scratch=process.argv[1],pids=new Set(),dirs=new Set();
+for(const signal of ['SIGINT','SIGTERM','SIGHUP'])process.on(signal,()=>{});
+let text='',done=false;process.stdin.setEncoding('utf8');
+function finish(){
+ if(done)return;done=true;
+ for(const pid of pids){try{process.kill(pid,'SIGKILL');}catch{}}
+ const end=Date.now()+5000;
+ const sweep=()=>{
+  for(const dir of dirs){if(path.dirname(dir)!==scratch)continue;try{fs.rmSync(dir,{recursive:true,force:true});}catch{}if(!fs.existsSync(dir))dirs.delete(dir);}
+  if(dirs.size&&Date.now()<end)return setTimeout(sweep,100);
+  try{fs.rmdirSync(scratch);}catch{}
+  process.exit(0);
+ };
+ sweep();
+}
+process.stdin.on('data',chunk=>{text+=chunk;for(let i;(i=text.indexOf('\\n'))>=0;){let m;try{m=JSON.parse(text.slice(0,i));}catch{}text=text.slice(i+1);if(!Array.isArray(m))continue;const set=m[0].endsWith('pid')?pids:dirs;if(m[0][0]==='+')set.add(m[1]);else set.delete(m[1]);}});
+process.stdin.on('end',finish);process.stdin.on('close',finish);process.stdin.on('error',finish);
+`;
+const ownedChildren = new Set(), ownedDirs = new Set();
+let watcher = null;
+// A helper process that a test starts, restarts and stops on purpose must not own the fixture it builds: the fixture
+// has to outlive it. Such a process is started with AR_FIXTURE_OWNER=parent, and the test itself records the folder
+// with ownDir.
+const ownsNothing = process.env.AR_FIXTURE_OWNER === 'parent';
+function tell(message) {
+  if (ownsNothing) return;
+  try {
+    if (!watcher) {
+      watcher = spawn(process.execPath, ['-e', WATCHER, SCRATCH], {detached: true, stdio: ['pipe', 'ignore', 'ignore']});
+      watcher.on('error', () => {}); watcher.stdin.on('error', () => {});
+      watcher.unref(); watcher.stdin.unref?.();
+      // An ordinary end of this process (the run finished, or a test threw) is handled here at once, without waiting for the watcher.
+      process.on('exit', () => {
+        for (const child of ownedChildren) { try { child.kill('SIGKILL'); } catch {} }
+        for (const dir of ownedDirs) { try { fs.rmSync(dir, {recursive: true, force: true}); } catch {} }
+      });
+    }
+    watcher.stdin.write(JSON.stringify(message) + '\n');
+  } catch {}
+}
+/** Record a fixture folder that another process built for this test. Returns a function to call once the test has removed it. */
+export function ownDir(dir) {
+  if (path.dirname(dir) !== SCRATCH) throw Error('Only a folder directly inside the fixture scratch folder can be recorded.');
+  ownedDirs.add(dir); tell(['+dir', dir]);
+  return () => { ownedDirs.delete(dir); tell(['-dir', dir]); };
+}
+/** Record a server process a test started, so it is stopped even when the test run is killed before its own cleanup. Returns the child. */
+export function ownChild(child) {
+  if (!child?.pid) return child;
+  ownedChildren.add(child); tell(['+pid', child.pid]);
+  child.once('exit', () => { ownedChildren.delete(child); tell(['-pid', child.pid]); });
+  return child;
+}
 
 const SRC_CLAY = `---
 type: SRC
@@ -185,7 +248,9 @@ export function buildMagazineFixture({foreignLock = null, extra = {}} = {}) {
   fs.writeFileSync(path.join(drop, 'MIC001.m4a'), Buffer.from('synthetic audio bytes'));
   if (foreignLock) put(vault, 'Workflow/_mag-running.md', `machine: ${foreignLock.machine || 'innerstellar'}\nsince: ${foreignLock.since || new Date().toISOString()}\ndoing: ${foreignLock.doing || 'step 5, River Potter'}\n`);
   const data = path.join(dir, 'data'); fs.mkdirSync(data, {recursive: true});
-  return {dir, vault, files, drop, phoneDrop, drops: [drop, phoneDrop], data, cleanup: () => fs.rmSync(dir, {recursive: true, force: true})};
+  if (!ownsNothing) ownedDirs.add(dir);
+  tell(['+dir', dir]);
+  return {dir, vault, files, drop, phoneDrop, drops: [drop, phoneDrop], data, cleanup: () => { fs.rmSync(dir, {recursive: true, force: true}); ownedDirs.delete(dir); tell(['-dir', dir]); }};
 }
 
 /** sha256 of committed files under a root, keyed by relative path (for "nothing changed" proofs). */
