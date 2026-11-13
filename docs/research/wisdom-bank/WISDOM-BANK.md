@@ -218,6 +218,7 @@ All on branch `claude/ar-create-ui-ux-review-71qso6`, in `docs/research/wisdom-b
 | `12-interfaces-for-clusters.md` | Interfaces for taking in, finding and moving through clusters (13 Nov) |
 | `13-clusters-research-page.html` | The three notes above as one page |
 | `14-what-goes-in.html` | Foundations before capture: five kinds of unit (concept, claim, practice, example, open question), how each is written and shown, link kinds, grouping by the bank (open discovery) and by his suggestions (closed discovery, bridge reports); three decisions open (14 Nov). Page: https://claude.ai/artifact/FHgLTThr1if2rPGgSGQkh3 |
+| `examples/helper-trap/` | The first real distillation, made to every rule above: the page, its data, the transcript, and the quote check script (14 Nov). Page: https://claude.ai/artifact/BEAEDH8iayJAbdVAHNcCv7 |
 | `screens/prior-art/` | Screenshots of the existing interfaces |
 
 The plans that briefed the work are `docs/plans/2026-11-11-09`, `-11`, `-12` and `-13`.
