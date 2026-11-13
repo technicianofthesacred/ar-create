@@ -150,15 +150,23 @@ Design, its review, the code reviews, the review made as an assistant and every 
 - The walk (`scripts/review-journey.mjs`) asserts Stop is offered and opens "Show all" on Home before looking for
   the new subject, so a second walk on one demo no longer reports it missing.
 
-**Asked of Adrian on 12 November, not yet answered; built as if yes to 1 to 4**
+**Answered by Adrian on 13 November: "we can go with your recommendations" on all five**
 
 1. A stopped source can be used again by him ("Use for Check again"). Built.
 2. A subject with no source whose words changed since its last held check says "No source to check against yet",
    not "Check again", on old drafts too. Built.
 3. An assistant's stand-in may still mark reviewed inside its own structure-test copy, never a real subject. Built.
-4. The Library's "human review is recorded" label for a file that declares itself reviewed is left for later.
-5. Should a refused attempt at a human-only decision show in History? Today a refusal at the gate records nothing
-   (`runtime/server.mjs`, the gate runs before the actor is set). Recommended yes, as a later stage. Not built.
+4. The Library's "human review is recorded" label for a file that declares itself reviewed is corrected in a later
+   stage. Not built; not yet a stage in the record.
+5. A refused attempt at a human-only decision should show in History, as a later stage. Today a refusal at the gate
+   records nothing (`runtime/server.mjs`, the gate runs before the actor is set). Not built; not yet a stage in the
+   record.
+
+How he asked for this part to feel (13 November): simple and effortless, as few choices for him as possible, and
+safe. He mostly brings recordings in as audio files from his microphone or phone ("Add an audio file" in Capture's
+Speak) and only sometimes records in the app. The words "stop a transcript" did not make sense to him without the
+steps before it explained: a later stage should look at whether Confirm, "Use it for Check" and Stop can become
+fewer steps or say more plainly what they are for.
 
 **Open after stage 7**
 
