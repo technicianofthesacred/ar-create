@@ -104,9 +104,15 @@ const BODY = {
   '/api/study/structure-tests': ['sourceBindingId','sourceParentStudyId','expected','title','operationId'],
   '/api/study-draft/create-collection': ['parentStudyId', 'title', 'operationId', 'sourceBindingId', 'sourceParentStudyId', 'expected'],
   '/api/study-draft/open': ['parentStudyId', 'originalId', 'originalHash', 'operationId'],
-  '/api/study-draft/capture-sources': ['bindingId', 'parentStudyId', 'operationId', 'expectedSourcesHash', 'sources:[{sourceId,sourceHash}]'],
+  '/api/study-draft/capture-sources': ['bindingId', 'parentStudyId', 'operationId', 'expectedSourcesHash', 'sources:[{sourceId,sourceHash,again?}]'],
+  '/api/study-draft/capture-sources/stop': ['bindingId', 'parentStudyId', 'operationId', 'expectedSourcesHash', 'sourceId', 'copiedHash'],
+  // Marking material reviewed is Adrian's alone. reviewed:true is refused to everyone else inside the service; reviewed:false (withdrawing) is open.
+  '/api/first-flow/source-review': ['projectId', 'operationId', 'sourceId', 'expectedHash', 'reviewed', 'humanDecision'],
+  // Open to assistants. A sourceReviews entry that would ADD a review is refused (403) by the service for anyone but Adrian; entries already on file are accepted.
+  '/api/first-flow/prepare': ['projectId', 'operationId', 'sourceIds', 'question', 'sourceReviews?:[{sourceId,hash}]'],
   '/api/study-draft/save': ['bindingId', 'parentStudyId', 'operationId', 'expected', 'operations'],
   '/api/study-draft/undo': ['bindingId', 'parentStudyId', 'operationId', 'expected', 'undoOperationId'],
+  '/api/study-draft/set-aside': ['bindingId', 'parentStudyId', 'operationId', 'reason (conflict|recovery|failed-save)', 'expected? (the revision the words were written against)', 'paragraphs:[{id?, words, baseHash?, savedHash?}]'],
   '/api/study/direction-decision':['parentStudyId','bindingId','operationId','expectedRevision','expectedHash','target','kind','action','optionId?','text?','reason?','source?'],
   '/api/study/human-direction/select': ['parentStudyId', 'scope', 'bindingId?', 'outputId?', 'operationId', 'title'],
   '/api/study/human-direction/write': ['parentStudyId', 'scope', 'bindingId?', 'outputId?', 'operationId', 'expectedRevision', 'expectedHash', 'body'],
@@ -177,7 +183,7 @@ export const CUSTOM_COMMANDS = [
   ['GET', '/api/carousel/exports/{id}/render/{index}', ['rootBindingId?', 'parentStudyId?', 'selectedOutputId?']], ['GET', '/api/carousel/exports/{id}/file/{name}', ['rootBindingId?', 'parentStudyId?', 'selectedOutputId?']],
   ['GET', '/api/exports/{id}/file', ['rootBindingId?', 'parentStudyId?', 'selectedOutputId?']], ['GET', '/api/ingestion/raw', ['id', 'file']], ['GET', '/api/study-originals/audio', ['id']], ['GET', '/api/sources/blob', ['id', 'original?']],
   ['POST', '/api/media', ['image bytes (image/jpeg|png|webp)']],
-  ['GET', '/transcription/{id}/view'], ['GET', '/transcription/{id}/look'], ['POST', '/transcription/{id}/{action}'],
+  ['GET', '/transcription/{id}/view'], ['GET', '/transcription/{id}/look'], ['POST', '/transcription/{id}/review'], ['POST', '/transcription/{id}/{action}'],
   ...NEEDS_YOU_COMMANDS,
   ...WORDS_COMMANDS,
   ...LOOKS_COMMANDS,
@@ -215,7 +221,7 @@ export const PROSE_SAVES = Object.freeze(['POST /api/study-draft/save', 'POST /a
 /** Human-only decisions an agent may carry from a chat with Adrian, with his exact words (actor.mjs chatDecider). */
 export const CHAT_RELAYABLE = Object.freeze(new Set(['POST /api/instagram/choose', 'POST /api/instagram/confirm', 'POST /api/instagram/meaning', 'POST /api/instagram/ready', 'POST /api/consent/people/answer']));
 /** Decisions only a human makes. Agents propose; the record says who decided. */
-const HUMAN_ONLY = new Set([...PROSE_SAVES, 'POST /api/study-draft/capture-sources', 'POST /api/instagram/choose', 'POST /api/instagram/confirm', 'POST /api/instagram/meaning', 'POST /api/instagram/ready', 'POST /api/source-sessions/check','POST /api/recordings/source','POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/voice-corrections/decide', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
+const HUMAN_ONLY = new Set([...PROSE_SAVES, 'POST /api/study-draft/capture-sources', 'POST /api/study-draft/capture-sources/stop', 'POST /api/study-draft/set-aside', 'POST /transcription/{id}/review', 'POST /api/instagram/choose', 'POST /api/instagram/confirm', 'POST /api/instagram/meaning', 'POST /api/instagram/ready', 'POST /api/source-sessions/check','POST /api/recordings/source','POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/voice-corrections/decide', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
   'POST /api/article/make/{id}/accept', 'POST /api/consent/people/sent', 'POST /api/consent/people/answer', 'POST /api/consent/people/remove', 'POST /api/consent/share/answer', 'POST /api/consent/share/override', 'POST /api/consent/share/release', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
 
@@ -259,7 +265,7 @@ export const publicEntry = ({ pattern, ...rest }) => {const schema=rest.route===
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {captureStudySources,listStudySources,nativeCarouselMake,voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    const {captureStudySources,stopStudySources,listStudySources,nativeCarouselMake,voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
     // The one publish check (consent desk): refuses with the reason while anyone on the piece is unanswered.
     const holdPublish=(scopes,what)=>consentDesk.assertNotHeld(scopes,what);
     // The older single-project export routes belong to the workspace's own project.
@@ -481,8 +487,11 @@ export function createRouteMap(services) {
       '/api/study-draft/create-collection': {POST:input=>draftCall(()=>createStudyCollection(input))},
       '/api/study-draft/open': {POST:input=>draftCall(()=>studyDrafts.openCopy(input))},
       '/api/study-draft/capture-sources': {POST:input=>draftCall(()=>captureStudySources(input))},
+      '/api/study-draft/capture-sources/stop': {POST:input=>draftCall(()=>stopStudySources(input))},
       '/api/study-draft/capture-sources/list': {GET:()=>draftCall(()=>listStudySources({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')}))},
       '/api/study-draft/save': {POST:input=>draftCall(()=>studyDrafts.save(input))},
+      '/api/study-draft/set-aside': {POST:input=>draftCall(()=>studyDrafts.setAside(input))},
+      '/api/study-draft/set-aside/list': {GET:()=>draftCall(()=>studyDrafts.listSetAside({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')}))},
       '/api/study-draft/history-preview': {POST:input=>draftCall(()=>studyDrafts.previewVersion(input))},
       '/api/study-draft/history-restore': {POST:input=>draftCall(()=>studyDrafts.restoreVersion(input))},
       '/api/study-draft/undo': {POST:input=>draftCall(()=>studyDrafts.undo(input))},

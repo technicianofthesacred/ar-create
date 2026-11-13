@@ -301,7 +301,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const wr=b.dataset.wr,act=b.dataset.act;
    if(wr==='src'){st.src=!st.src;const w=$('.wr-work');w.dataset.src=st.src?'open':'closed';page.querySelectorAll('[data-wr="src"]').forEach(x=>x.setAttribute('aria-pressed',String(st.src)));if(st.src&&st.sources===null)loadSources();return;}
    if(wr==='focus'||wr==='unfocus'){setFocus(wr==='focus');return;}
-   if(wr==='versions'){v2.ui.sheet({title:'Earlier versions',body:v2.ui.notBuilt('Earlier versions of this piece, with what changed in each and who made it.',{advanced:{subject:id,piece:st.piece||undefined,section:'write'}})});return;}
+   if(wr==='versions'){void versionsSheet();return;}
    if(wr==='undo')return void W.undoLast();
    if(wr==='undo-yes')return void W.yesAsk();
    if(wr==='undo-no')return void W.noAsk();
@@ -312,6 +312,15 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    if(act==='mark'){const p=st.props.find(x=>x.id===b.dataset.id);if(!p)return;const rd=reading(p);rd.marks[b.dataset.rid]=!rd.marks[b.dataset.rid];keepReading(p);paintNotes();page.querySelector(`[data-act="mark"][data-rid="${CSS.escape(b.dataset.rid)}"]`)?.focus({preventScroll:true});return;}
    if(act==='mine')return void keepMine();
    if(act==='theirs')return void useSaved();
+   if(['keep','rec','earlier','merged-see','side-done'].includes(act))return void W.sideAct(act,b.dataset.v,b.dataset.k);
+  }
+  /** Earlier versions: not built yet, except the words of his set aside here or on the app, which are listed in full. */
+  async function versionsSheet(){
+   if(st.human)await W.loadAsides();
+   const list=st.human?[...(st.asides||[]).map(e=>({...e,here:false})),...W.deviceAsides().map(e=>({...e,at:new Date(e.at).toISOString(),here:true}))].sort((a,b)=>String(b.at).localeCompare(String(a.at))):[];
+   const why={conflict:'Not kept when two versions met',recovery:'Left out after the app closed',['failed-save']:'Not saved when the app did not answer'};
+   const items=list.map(e=>`<li class="wr-item"><div class="wr-hd"><h2>${esc(why[e.reason]||'Set aside')}</h2><p class="wr-by">${esc((e.here?'Kept on this device, ':'Kept on the app, ')+savedLabel(e.at).replace(/^Saved /,''))}</p></div>${e.paragraphs.map(p=>`<p class="wr-pr">${esc(p.words)}</p>`).join('')}</li>`).join('');
+   v2.ui.sheet({title:'Earlier versions',body:(items?`<p class="wr-label">Your words set aside</p><ul class="wr-asides">${items}</ul>`:'')+v2.ui.notBuilt('Earlier versions of this piece, with what changed in each and who made it.',{advanced:{subject:id,piece:st.piece||undefined,section:'write'}})});
   }
   function setFocus(on){
    st.focus=on;page.classList.toggle('wr-focus',on);
@@ -346,7 +355,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   doc.addEventListener('visibilitychange',onHide);root.addEventListener('pagehide',onUnload);root.addEventListener('resize',onResize);
   ctx.on({kinds:['study-draft*','study-ai*']},onChange);
   ctx.on({},e=>{if(e.reset)onChange(e);});
-  clk.presenceTimer=setInterval(()=>presence(true),60000);
+  clk.presenceTimer=setInterval(()=>{presence(true);void W.offerNext();},60000);// a tab that closed a moment ago may let go of its key late
 
   // ---------- opening ----------
   function plain(text,withLink=true){
@@ -360,11 +369,14 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     if(!st.bindingId){shell0('The words of this piece are not kept where Write can open them. They open in Advanced.');return;}
     const read=await readDraft();if(ctx.signal.aborted)return;
     st.base=read;st.rows=rowsOf(read);st.baseWords=wordsMap(st.rows);
+    // This tab's own key first: its words come back as before. A closed tab's words are offered once, in place, after.
+    await W.claim();if(ctx.signal.aborted||clk.gone){W.letAllGo();return;}
     const saved=unstash(),committed=(read.history||[]).filter(x=>x.state==='committed'),h=committed.filter(x=>x.modifiedAt).slice(-1)[0];
     if(h)st.savedAt=h.modifiedAt;
     let newer=false,restored=false;
     if(saved){
-     for(const [rid,text,orig] of saved.edits)st.edits.set(rid,{text:String(text),orig:String(orig??'')});
+     const times=new Map(Array.isArray(saved.times)?saved.times:[]);
+     for(const [rid,text,orig] of saved.edits)st.edits.set(rid,{text:String(text),orig:String(orig??''),...(times.get(rid)?{at:times.get(rid)}:{})});
      for(const a of saved.added){if(a&&typeof a.id==='string'&&typeof a.text==='string'&&a.text.trim())st.added.push({id:a.id,afterId:a.afterId??null,text:flat(a.text)});}
      for(const i of saved.sent)if(i&&typeof i.operationId==='string')st.ops.add(i.operationId);
      // A save that was on its way when the page closed. If the server holds it, it is his own save and not a newer version:
@@ -377,27 +389,36 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
       restored=true;
      }else{
       st.sent=saved.sent;// a late commit of these is still his own
-      for(const rid of [...st.edits.keys()]){const r=st.rows.find(x=>x.id===rid);if(!r||!r.safe||st.edits.get(rid).text===r.words)st.edits.delete(rid);}
+      // Words typed into a paragraph that is gone now (removed or joined elsewhere) or that now holds formatting this page
+      // keeps as it is come back as a new paragraph where it stood, never dropped.
+      const order=Array.isArray(saved.base)?saved.base.map(x=>x[0]):[],have=new Set(st.rows.map(x=>x.id));
+      const after=rid=>{const i=order.indexOf(rid);for(let j=i-1;j>=0;j--)if(have.has(order[j]))return order[j];return null;};
+      for(const rid of [...st.edits.keys()]){const r=st.rows.find(x=>x.id===rid),text=st.edits.get(rid).text;if(!r||!r.safe||text===r.words){st.edits.delete(rid);if((!r||!r.safe)&&String(text).trim()&&text!==r?.words)st.added.push({id:uuid(),afterId:r?r.id:after(rid),text:flat(text)});}}
       foldAdded();
       newer=!!saved.draft&&saved.draft!==read.expected?.workflow?.draft;
       if(newer&&Array.isArray(saved.base))st.baseWords=new Map(saved.base);
+      // Two versions still waiting when the page closed: the words he started from are kept with his, so they wait again.
+      else if(Array.isArray(saved.base)){const b=new Map(saved.base);for(const [rid] of st.edits)if(b.has(rid)&&b.get(rid)!==st.baseWords.get(rid)){st.baseWords.set(rid,b.get(rid));newer=true;}}
       restored=true;
      }
      for(const [rid,e] of st.edits){if(!e.orig)e.orig=st.rows.find(x=>x.id===rid)?.words??'';}
     }
     shell();stash();W.loadBack();paintSaved();
+    void W.sendAsides();void W.loadAsides();
     if(restored&&dirty()&&newer)noticeNewer(read);
     else if(restored&&dirty()){say('Your unsaved words from earlier are back.','info');schedule(600);}
     presence(true);loadProps();W.loadKept();if(st.src)loadSources();
     // Words are saved but the Article was never made (a reload or a closed tab between the two): make it now.
     if(st.starting&&st.human&&!dirty()&&!st.conflict&&st.rows.some(r=>r.words.trim()))void startArticle();
+    void W.offerNext();for(const ms of [3000,12000])clk['offer'+ms]=setTimeout(()=>void W.offerNext(),ms);
    }catch(error){if(ctx.signal.aborted)return;plain(error.message||'This piece could not be opened.');}
   }
   function shell0(text){shell();$('[data-wr-text]').innerHTML=`<p class="wr-dim" role="status">${esc(text)}</p>`;$('.wr-todo')?.remove();}
   function leave(){
-   clk.gone=true;clearTimeout(clk.timer);clearTimeout(clk.startTimer);clearTimeout(clk.propTimer);clearInterval(clk.presenceTimer);
+   clk.gone=true;clearTimeout(clk.timer);clearTimeout(clk.startTimer);clearTimeout(clk.propTimer);clearInterval(clk.presenceTimer);clearTimeout(clk.offer3000);clearTimeout(clk.offer12000);
    doc.removeEventListener('visibilitychange',onHide);root.removeEventListener('pagehide',onUnload);root.removeEventListener('resize',onResize);
    if(st.human&&dirty()&&!st.conflict&&st.bindingId&&!st.stopped){try{void save({quiet:true,hold:null});}catch{/* kept on this device */}}
+   void W.settled().then(()=>W.letAllGo());// his key stays his until the last save is answered
    if(clk.presenceOk&&clk.presenceSent==='true'){clk.presenceSent='';v2.call('presence.post',{stage:'Write',scope:{kind:'draft',id:st.bindingId},dirty:false,sequence:++clk.presenceSeq,session,leaving:true}).catch(()=>{});}
   }
   Object.assign(W,{locate,adv,readDraft,sameRevision,presence,shell,paintSources,kindOf,loadSources,onClick,setFocus,onKey,onFocusOut,onHide,onUnload,onResize,plain,ready,shell0,leave});// what the other files reach in this one

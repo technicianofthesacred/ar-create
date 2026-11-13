@@ -30,8 +30,11 @@ test('an assistant cannot make Check trust words it wrote, even with Adrian pres
  const source=imported.body.receipts[0].source;assert.equal(source.kind,'transcript','front matter alone makes it a transcript');
  assert.equal((await h.call('/api/study/material/attach',{...scope,operationId:randomUUID(),sourceIds:[source.id]},AGENT)).status,200);
  assert.equal((await h.call('/api/first-flow/select',{projectKey:parentStudyId,title:'Invented kiln subject',operationId:randomUUID()},AGENT)).status,200);
- const reviewed=await h.call('/api/first-flow/source-review',{projectId,operationId:randomUUID(),sourceId:source.id,expectedHash:source.hash,reviewed:true,humanDecision:true},AGENT);
- assert.equal(reviewed.status,200,'assistants may still mark material reviewed; the record now says who did');
+ const refused=await h.call('/api/first-flow/source-review',{projectId,operationId:randomUUID(),sourceId:source.id,expectedHash:source.hash,reviewed:true,humanDecision:true},AGENT);
+ assert.equal(refused.status,403,'an assistant may no longer mark material reviewed');
+ // A review an assistant made before that change is made by writing the old stamp, so "Reviewed by an assistant" stays tested.
+ const stampFile=fs.readdirSync(path.join(h.dataDir,'first-flow')).map(n=>path.join(h.dataDir,'first-flow',n,'flow.json')).find(f=>fs.existsSync(f)&&JSON.parse(fs.readFileSync(f,'utf8')).projectId===projectId);
+ const held=JSON.parse(fs.readFileSync(stampFile,'utf8'));assert.equal(held.reviews[source.id],undefined,'the refusal wrote nothing');held.reviews[source.id]=source.hash;held.reviewedBy={...(held.reviewedBy||{}),[source.id]:{by:AGENT,at:new Date().toISOString(),hash:source.hash}};fs.writeFileSync(stampFile,JSON.stringify(held));
  const row=(await h.call('/api/study-draft/capture-sources/list'+q)).body.sources.find(s=>s.id===source.id);
  assert.equal(row.reviewed,true);assert.equal(row.review.by,AGENT);assert.equal(row.eligible,false);assert.match(row.reason,/Not confirmed by you yet/);assert.equal(row.role,'context','never source from its own kind');
  const done=await h.call('/api/study-draft/capture-sources',{...scope,operationId:randomUUID(),expectedSourcesHash:null,sources:[{sourceId:source.id,sourceHash:source.hash}]});
@@ -52,9 +55,10 @@ test('Adrian confirms a recording transcript and presses; a true quote passes an
  const made=await h.call('/api/study-draft/create-collection',{parentStudyId,title:'Invented tone subject',operationId:randomUUID()});assert.equal(made.status,200,JSON.stringify(made.body));
  const bindingId=made.body.binding.id,scope={bindingId,parentStudyId},q='?bindingId='+bindingId+'&parentStudyId='+parentStudyId;
  let snap=(await h.call('/transcription/'+jobId+'/snapshot')).body;assert.ok(snap.expected,JSON.stringify(snap));
- // An assistant may call the review route; it is stamped as the assistant's and does not count.
+ // An assistant may name speakers but may not confirm; a confirmation it made before this change is made by writing the old stamp.
  const named=await h.call('/transcription/'+jobId+'/speakers',{expected:snap.expected,names:{s1:'Potter',s2:'Visitor'}},'agent:codex');assert.equal(named.status,200,JSON.stringify(named.body));
- const agentReview=await h.call('/transcription/'+jobId+'/review',{expected:named.body.expected,confirmed:true},'agent:codex');assert.equal(agentReview.status,200,JSON.stringify(agentReview.body));
+ const agentReview=await h.call('/transcription/'+jobId+'/review',{expected:named.body.expected,confirmed:true},'agent:codex');assert.equal(agentReview.status,403,JSON.stringify(agentReview.body));
+ {const tf=path.join(h.fixture.output,'transcript.json'),bf=path.join(h.fixture.output,'.corrections','base.json'),doc=JSON.parse(fs.readFileSync(tf,'utf8'));doc.metadata.review={status:'reviewed',reviewedAt:new Date().toISOString(),inspectedRevision:named.body.expected.revision,by:'agent:codex'};fs.writeFileSync(tf,JSON.stringify(doc,null,2));const base=JSON.parse(fs.readFileSync(bf,'utf8'));base.json=fs.readFileSync(tf,'utf8');fs.writeFileSync(bf,JSON.stringify(base,null,2));}
  const snapNow=async()=>(await h.call('/transcription/'+jobId+'/snapshot')).body;
  const registered=await h.call('/api/recordings/source',{jobId,expected:(await snapNow()).expected,operationId:randomUUID()});assert.equal(registered.status,200,JSON.stringify(registered.body));const source=registered.body.source;
  assert.equal((await h.call('/api/study/material/attach',{...scope,operationId:randomUUID(),sourceIds:[source.id]})).status,200);

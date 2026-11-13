@@ -272,6 +272,7 @@ dialog.subj-sheetdlg{width:min(560px,100%)}
 .subj-cs-list small{font-size:var(--v2-t12);line-height:1.4;color:var(--dim);overflow-wrap:anywhere}
 .subj-cs-list small i{font-style:normal}
 .subj-cs-list .subj-cs-ok{color:var(--ink)}
+.subj-cs-list button.v2-ghost{justify-self:start;margin:2px 0 0 -10px}/* the row's one quiet control sits under its words, not stretched across the row */
 .subj-cs-words{max-height:260px;overflow:auto;padding:10px 12px;border-radius:8px;background:var(--paper);border:1px solid var(--line);font-family:var(--v2-speech);font-size:var(--v2-t15);line-height:1.6;color:var(--ink);overflow-wrap:anywhere}
 .subj-cs-words p{margin:0 0 .6em}
 .subj-cs-words p:last-child{margin-bottom:0}

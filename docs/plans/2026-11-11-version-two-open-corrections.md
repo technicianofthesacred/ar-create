@@ -22,6 +22,7 @@ Everything below is merged into `claude/direction-d-build`. The four work-in-pro
 | What stands between him and starting (stage 4) | In, each piece reviewed, the dangerous ones twice; see "Stage 4" below |
 | The whole journey walked (stage 5) | In; see "Stage 5" below |
 | Check can read a new subject's sources (stage 6) | In, the command reviewed three times and the screens twice; see "Stage 6" below |
+| Confirming is his alone, and stopping a captured source (stage 7) | In, the design reviewed once, the commands three times (once as an assistant), the screens twice; see "Stage 7" below |
 
 Adrian has seen four pictures of Home and has been given a demo to click through and one page of pictures of every
 screen. He has not yet said yes to any screen. On 11 November he asked that every screen be checked against the sample he approved and, once it matches and
@@ -121,38 +122,60 @@ real check result at 1440 and 390, dark and light.
   row says "Confirmed by you" only for his own confirmation; an assistant's review reads "Reviewed, not confirmed by
   you yet". The shared block is `v2.shared.subject`; Check does without it when missing.
 
-### Stage 7, approved 12 November, not started: confirming is his alone, and a captured source can be stopped
+### Stage 7, done 12 November: confirming is his alone, and a captured source can be stopped
 
-Adrian was asked three things after stage 6 and answered on 12 November: yes, marking material reviewed becomes his
-alone; yes, he can stop a captured source counting; not yet, a note does not unlock Check (only a recording's
-transcript he confirmed is a source for quotes). The stage is the first two. Read
-`version-two-briefs/v2-12-capture-sources.md` first: its design and five reviews name every file.
+Design, its review, the code reviews, the review made as an assistant and every correction:
+`version-two-briefs/v2-13-confirm-and-stop.md`; the screens' review and re-check:
+`version-two-briefs/v2-13-screen-review.md`. Adrian said yes to both changes on 12 November.
 
-What done looks like: an assistant that tries to mark any material or transcript reviewed gets 403 with the plain
-reason, by every path; nothing an assistant could do before is lost except that; he can stop a captured source
-counting from the Sources list on the subject page and in Check, and Check then no longer reads it; every old draft,
-receipt, fork and structure test still reads and validates as before; the walk still ends in a real result.
+**What is in**
 
-- **Confirming is his alone.** The paths that mark reviewed today, all open to any actor: `first-flow.source-review`,
-  both `sourceReviews` branches of `first-flow.prepare`, and `POST /transcription/{id}/review`. Make the act of
-  marking reviewed human-only in the one registry, like the other human-only decisions. Decide and have a second
-  model review before building: whether `first-flow.prepare` as a whole stays open to assistants with only its
-  `sourceReviews` part refused (an assistant preparing a subject must still work); whether un-reviewing and setting
-  aside stay open; whether `speakers` and segment edits stay open (they reset the review, so they cannot forge one);
-  what the existing workspace's screens and any assistant routine or scheduled job that marks reviewed today will
-  now show, so nothing fails silently. Reviews made before stage 6 carry no name and stay "not confirmed by you yet".
-- **Stop a captured source counting.** As the design proposed: a human-only command that appends a "no longer used"
-  entry to the same append-only, hash-pinned added-sources record (nothing is rewritten or deleted); Check and the
-  list skip a stopped source; a receipt made before reads stale; if no source for quotes is left, Check is held with
-  "No source to check against yet" again and the standing follows. Decide whether a stopped source can be used again
-  (a later capture of the same bytes) and say so on the row.
-- **The screens** (a visual change: before and after pictures for Adrian): in the Sources list a captured row gains
-  one quiet control, "Stop using for Check", on the subject page and in Check, through `v2.shared.subject`. An
-  assistant's page shows the control and the server's refusal. Keep it small and in the marked blocks: the version
-  three thread (below) will carry these screens into its look. Tell that thread before touching `check.js` or
-  `subject.js` and when it is on main.
-- Review the trust change twice, the second time as an assistant trying to get a source confirmed or to bring a
-  stopped source back.
+- Marking material or a transcript reviewed is his alone, by every path: `first-flow.source-review` with
+  `reviewed:true`, a `first-flow.prepare` whose `sourceReviews` would add a review not on file (the whole call is
+  refused, nothing dropped silently), and `POST /transcription/{id}/review` (its own human-only registry entry, and
+  refused again inside the service). An assistant gets 403 and the plain reason; odd spellings of the path are
+  refused at the gate. Assistants keep the rest: an ordinary prepare, withdrawing a review, speaker names, segment
+  edits, decide. When he prepares, his stamp replaces an assistant's or an unnamed one.
+- The existing workspace now sends its actor on `/transcription/` calls, so an assistant's "Review and save" there is
+  no longer recorded as his. Nothing he sees changed.
+- `study-draft.capture-sources.stop` (human only) appends a "no longer used" entry to the same hash-chained
+  added-sources record. Check, the list, the standing and receipts follow: a stopped source is skipped, an earlier
+  receipt reads stale, and with no source for quotes left Check is held with "No source to check against yet". A
+  stopped source comes back only when he presses "Use for Check again" (`again:true` on that one source); the bulk
+  press, a replayed operation and a re-import of the same bytes do not revive it. Records with no stop entry read
+  byte for byte as before.
+- The screens: in the Sources list, on the subject page, on Check's held state and inside Check's details, a row in
+  use reads "Used for Check" with "Stop using for Check"; a stopped row reads "Not used for Check. You stopped it."
+  with "Use for Check again". Other row words are listed in `v2-13-screen-review.md`. An assistant's page shows the
+  controls and the server's refusal. Before and after pictures were sent to Adrian on 12 November; he has not yet
+  answered. Version three loads the same two files and shows the same change.
+- The walk (`scripts/review-journey.mjs`) asserts Stop is offered and opens "Show all" on Home before looking for
+  the new subject, so a second walk on one demo no longer reports it missing.
+
+**Asked of Adrian on 12 November, not yet answered; built as if yes to 1 to 4**
+
+1. A stopped source can be used again by him ("Use for Check again"). Built.
+2. A subject with no source whose words changed since its last held check says "No source to check against yet",
+   not "Check again", on old drafts too. Built.
+3. An assistant's stand-in may still mark reviewed inside its own structure-test copy, never a real subject. Built.
+4. The Library's "human review is recorded" label for a file that declares itself reviewed is left for later.
+5. Should a refused attempt at a human-only decision show in History? Today a refusal at the gate records nothing
+   (`runtime/server.mjs`, the gate runs before the actor is set). Recommended yes, as a later stage. Not built.
+
+**Open after stage 7**
+
+- Known limits, older than this stage: any caller that claims to be Adrian is believed (the app's own Origin with no
+  actor header, or his header); the recording workshop page sends no actor; cutting the newest stop entry off the
+  record by file access brings a source back (a test pins this as a known limit; anchoring the newest entry outside
+  the file would close it).
+- Found in passing, older than this stage: a plain `first-flow.prepare` makes a later material attach answer 409
+  for everyone.
+- The new control is styled as version two's quiet button (14, on its own line under the row), not the sample's
+  warm 13 link; the Sources list is not in the sample.
+- A demo server a checker left on port 8865 in the director's container could not be stopped by it; it dies with
+  the container.
+- The version three thread (session_017kitFe2b6MQFZwy3MNMGpN) is archived; its Write fix (pull request 249) is on
+  main and merged here. It was told at the start of this stage; the later notices could not be delivered.
 
 **Open after stage 6**
 

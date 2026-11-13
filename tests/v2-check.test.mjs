@@ -46,7 +46,7 @@ const COVERAGE_URL=pathToFileURL(path.join(repo,'public/lib/decision-coverage.js
 const COMMANDS=[['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true],['look','GET','/api/look',true],
  ['subject.standing','GET','/api/subject/standing',true],['study.outputs','GET','/api/study/outputs',true],['study-draft.read','GET','/api/study-draft/read',true],['study-draft.save','POST','/api/study-draft/save',false],
  ['study-draft.check.get','GET','/api/study-draft/check',true],['study-draft.check.post','POST','/api/study-draft/check',false],['current-work.read','POST','/api/current-work/read',true],['study-ai.read','GET','/api/study-ai/read',true],['presence.post','POST','/api/presence',false],['consent.desk','GET','/api/consent/desk',true],
- ['study-draft.capture-sources.list','GET','/api/study-draft/capture-sources/list',true],['study-draft.capture-sources','POST','/api/study-draft/capture-sources',false]]
+ ['study-draft.capture-sources.list','GET','/api/study-draft/capture-sources/list',true],['study-draft.capture-sources','POST','/api/study-draft/capture-sources',false],['study-draft.capture-sources.stop','POST','/api/study-draft/capture-sources/stop',false]]
  .map(([name,method,route,readOnly])=>({name,method,route,readOnly,schema:{},actors:['any']}));
 
 /** Loads the page's scripts, then Check (and the stand-in for Write's helpers when they are missing). */
@@ -414,7 +414,7 @@ test('with nothing eligible the held Check gives the list\'s reasons and a way b
  const {doc}=await page({hash:'#/check/s1?piece=o1',answers});await ready(doc);
  await until(()=>doc.querySelector('[data-cs-block] li'));
  assert.equal(doc.querySelector('[data-cs=capture]'),null);
- assert.match(doc.querySelector('[data-cs-block]').textContent,/Not reviewed yet\. Review it before using it for Check\./);assert.match(doc.querySelector('[data-cs-block]').textContent,/Already used for Check\./);
+ assert.match(doc.querySelector('[data-cs-block]').textContent,/Not reviewed yet\. Review it before using it for Check\./);assert.match(doc.querySelector('[data-cs-block]').textContent,/Used for Check/);assert.doesNotMatch(doc.querySelector('[data-cs-block]').textContent,/Already used/);
  assert.equal(doc.querySelector('[data-cs-block] a').getAttribute('href'),'#/subject/s1');assert.equal(doc.querySelector('[data-cs-block] a').textContent,'Back to the subject');
  const none=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/study-draft/check':[200,HELD],[LIST]:listOf([])})});await ready(none.doc);
  await until(()=>none.doc.querySelector('[data-cs-block]'));
@@ -454,4 +454,104 @@ test('a stale capture is said once and the list is read again', async()=>{
  await until(()=>/changed since it was opened here/.test(doc.getElementById('v2-messages').textContent));
  await until(()=>n>=2&&doc.querySelector('[data-cs=capture]'));
  assert.equal(doc.getElementById('v2-messages').textContent.match(/changed since it was opened here/g).length,1,'said once');
+});
+
+
+// ---- capture sources: Stop using a source, from Check's details and from its held state (stage 7) ----
+const STOP='/api/study-draft/capture-sources/stop',HASH='c'.repeat(64);
+const used=(extra={})=>src({eligible:false,captured:true,capturedCurrent:true,capturedHash:HASH,reason:'Already used for Check.',...extra});
+const stoppedRow=()=>src({eligible:false,captured:false,stopped:true,stoppedAt:'2026-11-12T10:00:00.000Z',reason:'You stopped using this for Check.'});
+const STALE=receipt({status:'stale',staleReason:'The source changed.',issues:[]});
+const openDetails=async doc=>{const d=await until(()=>doc.querySelector('details.ck-proof'));d.open=true;d.dispatchEvent(new doc.defaultView.Event('toggle'));return d;};
+
+test('Check\'s details carry the Sources block without the capture button, so Stop is reachable when Check is not held; nothing is read until the details are opened', async()=>{
+ const answers=base({'/api/study-draft/check':[200,PASSED],[LIST]:listOf([used(),src({id:'src-2',title:'Studio note',kind:'markdown'})],{sourcesHash:'e'.repeat(64),hasQuoteSource:true})});
+ const {doc,calls}=await page({hash:'#/check/s1?piece=o1',answers});await ready(doc);await settle(100);
+ assert.equal(doc.querySelector('[data-cs-block]'),null);assert.ok(!calls.some(c=>c.path===LIST),'the list is read only once the details are opened');
+ assert.equal(doc.querySelector('details.ck-proof summary').textContent,'Check details and saved proof');
+ await openDetails(doc);
+ await until(()=>doc.querySelector('details.ck-proof [data-cs-block] [data-cs=stop]'));
+ assert.equal(doc.querySelectorAll('[data-cs-block]').length,1);assert.equal(doc.querySelector('[data-cs=capture]'),null,'no capture button inside the details, even with an eligible source');
+ const stop=doc.querySelector('[data-cs=stop]');assert.equal(stop.textContent.trim(),'Stop using for Check');assert.ok(stop.classList.contains('v2-ghost'));
+ assert.equal(doc.querySelectorAll('[data-cs=stop]').length,1);assert.match(doc.querySelector('[data-cs-block]').textContent,/Used for Check/);
+ assert.ok(doc.querySelector('details.ck-proof').open,'the details stay open through repaints');
+ assert.equal(doc.querySelector('[data-ck-run] > .subj-cs-block'),null,'one block only, and not in the main area');
+});
+
+test('stopping the only source from the details: the press sends what the list read, Check does not run by itself, and Check shows the held state with the block and Use for Check again', async()=>{
+ let stopped=false;
+ const answers=base({'/api/study-draft/check':(u,body)=>body?PASSED:stopped?STALE:PASSED,[LIST]:()=>listOf([stopped?stoppedRow():used()],{sourcesHash:stopped?'f'.repeat(64):'e'.repeat(64),hasQuoteSource:!stopped}),[STOP]:()=>{stopped=true;return {stopped:[{sourceId:'src-1',copiedHash:HASH}],sourcesHash:'f'.repeat(64)};}});
+ const {doc,calls}=await page({hash:'#/check/s1?piece=o1',answers});await ready(doc);
+ await openDetails(doc);
+ const stop=await until(()=>doc.querySelector('[data-cs=stop]'));stop.focus();stop.click();
+ await until(()=>stopped);
+ const post=calls.find(c=>c.method==='POST'&&c.path===STOP);
+ assert.deepEqual(plain({...post.body,operationId:'x'}),{bindingId:'root1',parentStudyId:'s1',expectedSourcesHash:'e'.repeat(64),sourceId:'src-1',copiedHash:HASH,operationId:'x'});assert.match(post.body.operationId,/^[0-9a-f-]{36}$/);
+ await until(()=>/Check no longer reads this\./.test(doc.getElementById('v2-messages').textContent));
+ await until(()=>/No source to check against yet/.test(doc.querySelector('.ck-state')?.textContent||''));
+ assert.match(doc.querySelector('.ck-state').textContent,/Checks held/);assert.doesNotMatch(doc.querySelector('.ck-state').textContent,/Outdated|out of date|changed/i);
+ assert.equal(doc.querySelector('.ck-state').dataset.kind,'held');assert.match(doc.querySelector('[data-ck-bar]').textContent,/Checks held/,'the bar agrees');
+ const again=await until(()=>doc.querySelector('[data-ck-run] [data-cs-block] [data-cs=again]'));
+ assert.equal(again.textContent.trim(),'Use for Check again');assert.match(doc.querySelector('[data-cs-src]').textContent,/Not used for Check\. You stopped it\./);
+ assert.equal(doc.querySelector('details.ck-proof [data-cs-block]'),null,'the block is not drawn twice');
+ assert.equal(doc.activeElement,again,'focus is not lost');
+ assert.equal(calls.filter(c=>c.method==='POST'&&c.path==='/api/study-draft/check').length,0,'a stop does not run Check');
+ assert.equal(doc.querySelector('[data-cs=capture]'),null,'the stopped source is not in the bulk press');
+});
+
+test('a stop that leaves a source for quotes leaves Check out of date, not held', async()=>{
+ let stopped=false;
+ const answers=base({'/api/study-draft/check':(u,body)=>body?PASSED:stopped?STALE:PASSED,[LIST]:()=>listOf([stopped?stoppedRow():used(),used({id:'src-2',title:'Studio note',kind:'markdown',capturedHash:'d'.repeat(64)})],{sourcesHash:'e'.repeat(64),hasQuoteSource:true}),[STOP]:()=>{stopped=true;return {sourcesHash:'f'.repeat(64)};}});
+ const {doc}=await page({hash:'#/check/s1?piece=o1',answers});await ready(doc);
+ await openDetails(doc);
+ const stop=await until(()=>doc.querySelector('[data-cs=stop]'));stop.click();
+ await until(()=>stopped);await until(()=>/Outdated check/.test(doc.querySelector('.ck-state')?.textContent||''));
+ assert.doesNotMatch(doc.querySelector('.ck-state').textContent,/No source to check against yet/);
+ await until(()=>doc.querySelector('details.ck-proof [data-cs=again]'));assert.equal(doc.querySelectorAll('[data-cs=stop]').length,1,'the other source can still be stopped');
+});
+
+test('a check left out of date by a stop made elsewhere opens held when no source is left, and says out of date when one is', async()=>{
+ const none=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/study-draft/check':[200,STALE],[LIST]:listOf([stoppedRow()],{sourcesHash:'f'.repeat(64),hasQuoteSource:false})})});await ready(none.doc);
+ await until(()=>/No source to check against yet/.test(none.doc.querySelector('.ck-state')?.textContent||''));
+ assert.ok(none.doc.querySelector('[data-ck-run] [data-cs=again]'));assert.equal(none.doc.querySelector('[data-ck=reload]'),null);
+ const some=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/study-draft/check':[200,STALE],[LIST]:listOf([used()],{sourcesHash:'e'.repeat(64),hasQuoteSource:true})})});await ready(some.doc);await settle(150);
+ assert.match(some.doc.querySelector('.ck-state').textContent,/Outdated check/);
+ const damaged=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/study-draft/check':[200,STALE],[LIST]:listOf([],{canCapture:false,damaged:true,reason:'The record is damaged.',hasQuoteSource:false})})});await ready(damaged.doc);await settle(150);
+ assert.match(damaged.doc.querySelector('.ck-state').textContent,/Outdated check/,'a damaged record is not "no source"');
+});
+
+test('on an assistant\'s page Stop is shown; pressing it shows the server\'s refusal once, the list is not read again and Check does not move', async()=>{
+ let lists=0;
+ const answers=base({'/api/study-draft/check':[200,PASSED],[LIST]:()=>{lists++;return listOf([used()],{sourcesHash:'e'.repeat(64),hasQuoteSource:true});},[STOP]:[403,{error:'refused'}]});
+ const {doc,calls}=await page({hash:'#/check/s1?piece=o1',search:'?reviewActor=agent:codex',answers});await ready(doc);
+ await openDetails(doc);
+ const stop=await until(()=>doc.querySelector('[data-cs=stop]'));stop.focus();stop.click();
+ await until(()=>/Only Adrian can decide this/.test(doc.getElementById('v2-messages').textContent));
+ assert.match(doc.getElementById('v2-messages').textContent,/Codex can propose it, not do it/);assert.equal(doc.getElementById('v2-messages').textContent.match(/Only Adrian can decide this/g).length,1);
+ await settle(150);assert.equal(lists,1,'the list is read once');assert.ok(doc.querySelector('[data-cs=stop]'),'the control stays');
+ assert.match(doc.querySelector('.ck-state').textContent,/Mechanical checks complete/);assert.equal(calls.filter(c=>c.method==='POST'&&c.path==='/api/study-draft/check').length,0);
+ assert.equal(doc.activeElement.dataset.cs,'stop','focus stays on the control');
+});
+
+test('Use for Check again then Stop: "Check can now read this" is gone from Check after the stop', async()=>{
+ let phase='stopped';
+ const answers=base({'/api/study-draft/check':(u,body)=>body?PASSED:phase==='used'?PASSED:STALE,[LIST]:()=>listOf([phase==='used'?used():stoppedRow()],{sourcesHash:'e'.repeat(64),hasQuoteSource:phase==='used'}),[STOP]:()=>{phase='stopped';return {stopped:[{sourceId:'src-1',copiedHash:HASH}],sourcesHash:'f'.repeat(64)};},'/api/study-draft/capture-sources':()=>{phase='used';return {captured:[{sourceId:'src-1'}],sourcesHash:'e'.repeat(64)};}});
+ const {doc}=await page({hash:'#/check/s1?piece=o1',answers});await ready(doc);
+ const again=await until(()=>doc.querySelector('[data-ck-run] [data-cs=again]'));again.click();
+ await until(()=>phase==='used');await settle(100);await openDetails(doc);
+ await until(()=>doc.querySelector('details.ck-proof [data-cs-done]'));
+ const stop=await until(()=>doc.querySelector('[data-cs=stop]'));stop.click();
+ await until(()=>doc.querySelector('[data-cs=again]')&&/Checks held/.test(doc.querySelector('.ck-state')?.textContent||''));await settle(150);
+ assert.equal(doc.querySelector('[data-cs-done]'),null,'nothing says Check can read this after a stop');
+});
+
+test('another tab\'s stop reaches Check\'s list through the change stream', async()=>{
+ let stopped=false;
+ const answers=base({'/api/study-draft/check':[200,STALE],[LIST]:()=>listOf([stopped?stoppedRow():used()],{sourcesHash:'e'.repeat(64),hasQuoteSource:!stopped})});
+ const {doc,sources}=await page({hash:'#/check/s1?piece=o1',answers});await ready(doc);
+ await openDetails(doc);await until(()=>doc.querySelector('[data-cs=stop]'));
+ stopped=true;for(const s of sources)s.emit('change',{kind:'study-draft.capture-sources.stop',cursor:5,bootId:'b',scope:{kind:'draft',id:'root1'}});
+ await until(()=>doc.querySelector('[data-cs=again]'));
+ assert.match(doc.querySelector('[data-cs-src]').textContent,/Not used for Check\. You stopped it\./);
+ await until(()=>/No source to check against yet/.test(doc.querySelector('.ck-state')?.textContent||''));
 });

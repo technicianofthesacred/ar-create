@@ -325,10 +325,11 @@
  // v2.shared.subject.captureSources. A screen makes one with createCaptureSources({scope, paint, after}) and puts block()
  // in its markup; it hands clicks on [data-cs] to handle(). The list and the press are the server's: the list comes from
  // study-draft.capture-sources.list and the press captures exactly the eligible sources shown, with study-draft.capture-sources
- // (Adrian only: an assistant's press shows the refusal). Nothing here decides what counts. =====
+ // (Adrian only: an assistant's press shows the refusal). A row in use also offers Stop using for Check (study-draft.capture-sources.stop),
+ // and a stopped row Use for Check again. Nothing here decides what counts. =====
  const CS_KIND={transcript:'Transcript',markdown:'Note',note:'Note'};
  const csKind=k=>CS_KIND[k]||(k?String(k).replace(/^./,c=>c.toUpperCase()):'Material');
- function createCaptureSources({scope,paint,after}){
+ function createCaptureSources({scope,paint,after,stopped,signal}){
   const S={list:undefined,loading:false,busy:false,done:false};
   const sc=()=>{try{return scope()||null;}catch{return null;}};
   async function load(){
@@ -340,33 +341,87 @@
   const ensure=()=>{if(S.list===undefined&&!S.loading&&sc())load();};
   /** Read the list again the next time it is drawn (after a confirm, a capture or a change to what is attached). */
   const reset=()=>{S.list=undefined;};
-  function block({back}={}){
+  /** Read the list again now, leaving the old one on screen until the new one is in, so a row's control keeps its focus. */
+  async function refresh(){
+   const at=sc();if(!at)return;
+   try{S.list=await v2.call('study-draft.capture-sources.list',at);}catch(error){S.list={__error:error};}
+   paint();
+  }
+  // What a row says: the design's words for a source in use, a stopped one, and the list's own reason for the rest.
+  const inUse=x=>!!x.captured&&!x.stopped;
+  const say=x=>x.stopped?'Not used for Check. You stopped it.'
+   :inUse(x)?(x.setAside?'Used for Check. Set aside in the Library since.':x.reason===UNREAD?'Used for Check. '+UNREAD:x.changedSinceCapture?'Used for Check. Changed in the Library since.':x.capturedCurrent===false&&!x.changedSinceCapture?'Used for Check. No longer attached to this subject.':'Used for Check')
+   :x.eligible?(v2.isHuman()?'Confirmed by you':'Confirmed by Adrian'):(x.reason||'It cannot be used for Check.');
+  const KEPT='Check can now read this';
+  const UNREAD='This material could not be read.';
+  const LOST='The answer did not come back. The list shows what is on file now.';
+  /** The one quiet control of a row: Stop for a source in use (it names the copy shown), Use for Check again for a stopped one. */
+  function control(x,L){
+   const off=S.busy?' aria-disabled="true"':'';
+   if(inUse(x)&&x.capturedHash&&typeof L.sourcesHash==='string')return `<button type="button" class="v2-ghost" data-cs="stop" data-src="${esc(x.id)}"${off}>Stop using for Check</button>`;
+   if(x.stopped&&x.hash)return `<button type="button" class="v2-ghost" data-cs="again" data-src="${esc(x.id)}"${off}>Use for Check again</button>`;
+   return '';
+  }
+  /** `noCapture` leaves out the button that captures (Check's details: Stop is reachable there, capturing is not). */
+  function block({back,noCapture}={}){
    if(!sc())return '';
    const L=S.list;
-   if(L===undefined||S.loading){ensure();return `<div class="subj-cs-block" data-cs-block>${S.done?'<p class="subj-cs-done" role="status" data-cs-done>Check can now read this</p>':'<p class="subj-cs-note" role="status">Reading what Check can use.</p>'}</div>`;}
+   if(L===undefined||S.loading){ensure();return `<div class="subj-cs-block" data-cs-block>${S.done?`<p class="subj-cs-done" role="status" data-cs-done>${KEPT}</p>`:'<p class="subj-cs-note" role="status">Reading what Check can use.</p>'}</div>`;}
    if(L.__error)return `<div class="subj-cs-block" data-cs-block><p class="subj-cs-note" role="alert">${esc(L.__error.message||'What Check can use could not be read.')}</p></div>`;
    if(L.canCapture===false||L.damaged)return `<div class="subj-cs-block" data-cs-block data-cs-sentence><p class="subj-cs-note" role="status">${esc(L.reason||L.addedError||'Nothing can be added for Check here.')}</p></div>`;
    const all=Array.isArray(L.sources)?L.sources:[],yes=all.filter(x=>x.eligible),no=all.filter(x=>!x.eligible);
-   const state=x=>x.eligible?(v2.isHuman()?'Confirmed by you':'Confirmed by Adrian'):(x.reason||'It cannot be used for Check.');
-   const item=x=>`<li data-cs-src="${esc(x.id)}"${x.eligible?'':' data-cs-no'}>${ownIcon(x.kind==='transcript'?'mic':'note')}<span><b title="${esc(x.title)}">${esc(x.title)}</b><small>${esc(csKind(x.kind))} · <i class="${x.eligible?'subj-cs-ok':'subj-cs-why'}">${esc(state(x))}</i></small></span></li>`;
+   const item=x=>`<li data-cs-src="${esc(x.id)}"${x.eligible?'':' data-cs-no'}>${ownIcon(x.kind==='transcript'?'mic':'note')}<span><b title="${esc(x.title)}">${esc(x.title)}</b><small>${esc(csKind(x.kind))} · <i class="${x.eligible?'subj-cs-ok':'subj-cs-why'}">${esc(say(x))}</i></small>${control(x,L)}</span></li>`;
    const link=!yes.length&&back?`<p class="subj-cs-note"><a href="${esc(back)}">Back to the subject</a></p>`:'';
-   return `<div class="subj-cs-block" data-cs-block><div class="subj-cs-h"><h3>Sources</h3><span>${all.length}</span></div>${all.length?`<ul class="subj-cs-list">${yes.map(item).join('')}${no.map(item).join('')}</ul>`:'<p class="subj-cs-note" role="status">Nothing is attached to this subject yet.</p>'}${yes.length?`<div class="subj-cs-btns"><button type="button" class="subj-btn" data-cs="capture"${S.busy?' disabled':''}>Use it for Check</button></div>`:''}${S.done?'<p class="subj-cs-done" role="status" data-cs-done>Check can now read this</p>':''}${link}</div>`;
+   return `<div class="subj-cs-block" data-cs-block><div class="subj-cs-h"><h3>Sources</h3><span>${all.length}</span></div>${all.length?`<ul class="subj-cs-list">${yes.map(item).join('')}${no.map(item).join('')}</ul>`:'<p class="subj-cs-note" role="status">Nothing is attached to this subject yet.</p>'}${yes.length&&!noCapture?`<div class="subj-cs-btns"><button type="button" class="subj-btn" data-cs="capture"${S.busy?' disabled':''}>Use it for Check</button></div>`:''}${S.done?`<p class="subj-cs-done" role="status" data-cs-done>${KEPT}</p>`:''}${link}</div>`;
   }
   async function capture(){
    const at=sc(),L=S.list;
    if(S.busy||!at||!L||L.__error||L.canCapture===false)return;
-   const yes=(L.sources||[]).filter(x=>x.eligible);if(!yes.length)return;
+   // The bulk press names only what the list calls eligible: a stopped source is never eligible, so it is never sent here.
+   const yes=(L.sources||[]).filter(x=>x.eligible&&!x.stopped);if(!yes.length)return;
    S.busy=true;paint();
    try{
     await v2.call('study-draft.capture-sources',{...at,expectedSourcesHash:L.sourcesHash??null,sources:yes.map(x=>({sourceId:x.id,sourceHash:x.hash}))});
-    S.done=true;reset();v2.ui.say('Check can now read this',{tone:'good'});
+    S.done=true;reset();v2.ui.say(KEPT,{tone:'good'});
     if(typeof after==='function')await after();
    }catch(error){S.done=false;reset();v2.ui.say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});}
    finally{S.busy=false;paint();}
   }
+  /** Focus goes back to the row only while the screen is open and the page the press came from is still on screen, and only inside that page. */
+  const focusRow=(id,which,host)=>{
+   if(signal?.aborted||!host||!host.isConnected)return;
+   const row=[...host.querySelectorAll('[data-cs-src]')].find(r=>r.dataset.csSrc===id);
+   (row?.querySelector(`[data-cs="${which}"]`)||row?.querySelector('button')||host.querySelector('[data-cs-block] button'))?.focus({preventScroll:true});
+  };
+  /** Stop using one source (his alone: an assistant's press shows the server's refusal and leaves the list as it was) or use a stopped one again. */
+  async function change(kind,id,host){
+   const at=sc(),L=S.list,x=(L?.sources||[]).find(r=>r.id===id);
+   if(S.busy||!at||!L||L.__error||L.canCapture===false||!x)return;
+   if(kind==='stop'&&(!x.capturedHash||typeof L.sourcesHash!=='string'))return;
+   if(kind==='again'&&!x.stopped)return;
+   S.busy=true;paint();
+   let ok=false,refused=false,lost=false;
+   try{
+    if(kind==='stop'){await v2.call('study-draft.capture-sources.stop',{...at,expectedSourcesHash:L.sourcesHash,sourceId:x.id,copiedHash:x.capturedHash});S.done=false;v2.ui.say('Check no longer reads this.',{tone:'good'});}
+    else{await v2.call('study-draft.capture-sources',{...at,expectedSourcesHash:L.sourcesHash??null,sources:[{sourceId:x.id,sourceHash:x.hash,again:true}]});S.done=true;v2.ui.say(KEPT,{tone:'good'});}
+    ok=true;
+   }catch(error){refused=error?.kind==='owner-only';lost=error?.kind==='failed';S.done=false;if(!lost)v2.ui.say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});}
+   S.busy=false;
+   // A refusal changed nothing, so the list stays as it was; anything else is read again so the rows tell the truth.
+   if(!refused)await refresh();else paint();
+   // The answer never came back, so what happened is not known: say so after the list shows what the server holds.
+   if(lost&&!signal?.aborted)v2.ui.say(LOST,{tone:'bad'});
+   if(ok){try{if(kind==='stop'){if(typeof stopped==='function')await stopped();}else if(typeof after==='function')await after();}catch{/* the screen shows its own state */}}
+   focusRow(id,kind==='stop'?'again':'stop',host);
+  }
   /** True when the click was this block's. */
-  function handle(target){const b=target?.closest?.('[data-cs=capture]');if(!b)return false;capture();return true;}
-  return {block,handle,load,ensure,reset,state:S};
+  function handle(target){
+   const b=target?.closest?.('[data-cs=capture],[data-cs=stop],[data-cs=again]');if(!b)return false;
+   if(b.getAttribute('aria-disabled')==='true')return true;
+   if(b.dataset.cs==='capture')capture();else change(b.dataset.cs,b.dataset.src,b.closest('[data-subj],[data-ck]'));
+   return true;
+  }
+  return {block,handle,load,ensure,reset,refresh,state:S};
  }
  // ===== capture sources: END =====
 
@@ -491,7 +546,7 @@
    if(how==='outer')node.outerHTML=html;else node.innerHTML=html;
    if(back)$(back)?.focus({preventScroll:true});
   }
-  const keyOf=n=>n.dataset?.subjStep&&n.closest('.subj-row')?`.subj-row[data-step="${n.dataset.subjStep}"]>[data-subj-step]`:n.dataset?.subjForm?`[data-subj-form="${cssq(n.dataset.subjForm)}"]`:n.dataset?.subjDraft?`[data-subj-draft="${cssq(n.dataset.subjDraft)}"]`:n.matches?.('[data-subj-say]')?'[data-subj-say]':n.matches?.('[data-subj-dishtext]')?'[data-subj-dishtext]':n.matches?.('[data-subj-add]')?'[data-subj-add]':n.matches?.('[data-cs-words]')?'[data-cs-words]':n.dataset?.csName?`[data-cs-name="${cssq(n.dataset.csName)}"]`:n.dataset?.cs?`[data-cs="${n.dataset.cs}"]${n.dataset.job?`[data-job="${cssq(n.dataset.job)}"]`:''}`:null;
+  const keyOf=n=>n.dataset?.subjStep&&n.closest('.subj-row')?`.subj-row[data-step="${n.dataset.subjStep}"]>[data-subj-step]`:n.dataset?.subjForm?`[data-subj-form="${cssq(n.dataset.subjForm)}"]`:n.dataset?.subjDraft?`[data-subj-draft="${cssq(n.dataset.subjDraft)}"]`:n.matches?.('[data-subj-say]')?'[data-subj-say]':n.matches?.('[data-subj-dishtext]')?'[data-subj-dishtext]':n.matches?.('[data-subj-add]')?'[data-subj-add]':n.matches?.('[data-cs-words]')?'[data-cs-words]':n.dataset?.csName?`[data-cs-name="${cssq(n.dataset.csName)}"]`:n.dataset?.cs?`[data-cs="${n.dataset.cs}"]${n.dataset.job?`[data-job="${cssq(n.dataset.job)}"]`:''}${n.dataset.src?`[data-src="${cssq(n.dataset.src)}"]`:''}`:null;
   /** A step as shown; the Facts summary counts the research topics its panel lists. */
   const viewOf=x=>{if(x.id!=='facts')return stepView(x);const f=factsView(x,st.rec.brief);return stepView({...f,note:topicNote(f.note,st.rec.topics)});};
   function paintSteps(steps,form){
@@ -608,7 +663,9 @@
   // it, so the page never claims more than the stamp says: "Confirmed by you" only for a human stamp on the current bytes.
   // Opening the panel and drawing the row only read (.transcription.id.look: no lock, nothing written); the press is what writes.
   // The transcript file's hash changes when it is confirmed, so the list is read again afterwards.
-  const cs=createCaptureSources({scope:()=>{const b=st.standing?.facts?.bindingId;return b?{bindingId:b,parentStudyId:id}:null;},paint:()=>paintNow(),after:async()=>{ask('recordings',true);}});
+  const cs=createCaptureSources({scope:()=>{const b=st.standing?.facts?.bindingId;return b?{bindingId:b,parentStudyId:id}:null;},paint:()=>paintNow(),after:async()=>{ask('recordings',true);},stopped:async()=>{ask('check',true);},signal:ctx.signal});
+  // Another tab's stop or capture: read the list again, keeping the old one on screen meanwhile.
+  ctx.on({kinds:['study-draft.capture-sources*']},()=>{void cs.refresh();});
   const cf={job:null,state:'idle',look:null,names:{},error:'',looks:new Map(),fresh:new Set(),pend:new Set(),seen:null};
   const recAct=(job,action,input={})=>v2.call('.transcription.id.action',{id:job,action,...input});
   const lookRead=job=>v2.call('.transcription.id.look',{id:job});
@@ -661,15 +718,19 @@
   }
   async function doConfirm(){
    if(cf.state!=='ready')return;
-   const unnamed=(cf.look?.speakers||[]).filter(s=>!s.name),names={};
+   // An assistant's press sends only the review: naming speakers or making the revision first would write things Adrian never asked for, and the server refuses the review itself.
+   const mine=v2.isHuman(),unnamed=mine?(cf.look?.speakers||[]).filter(s=>!s.name):[],names={};
    for(const s of unnamed){const v=String(cf.names[s.id]||'').trim();if(!v){v2.ui.say('Say who is speaking first.',{tone:'warn'});return;}names[s.id]=v;}
    const job=cf.job;cf.state='busy';paintNow();
    let failed=null;
    try{
     // The press may make the transcript's mapping the first time, so the revision comes from the recording's own read, now.
-    let expected=(await recAct(job,'recover')).expected;
-    if(unnamed.length){const named=await recAct(job,'speakers',{expected,names});expected=named.expected;}
-    await recAct(job,'review',{expected,confirmed:true});
+    if(!mine)await recAct(job,'review',{confirmed:true});
+    else{
+     let expected=(await recAct(job,'recover')).expected;
+     if(unnamed.length){const named=await recAct(job,'speakers',{expected,names});expected=named.expected;}
+     await recAct(job,'review',{expected,confirmed:true});
+    }
    }catch(error){failed=error;}
    // One plain read after the press, whatever happened: the panel and the row show what is on file now (named speakers lose their box).
    let now=null;try{now=await lookRead(job);cf.looks.set(job,now);cf.fresh.add(job);}catch{}
