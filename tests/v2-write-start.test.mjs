@@ -156,9 +156,13 @@ test('typing steadily across the moment the Article is made loses no letter: the
  const box=pg.doc.querySelector('textarea.wr-ed'),t=typist(pg);
  box.focus();
  for(let i=0;i<5;i++){t.press('abcde'[i]);await settle(15);}
- await settle(1900);// his first pause: the first save goes out
- const letters='fghijklmnopqrstuvwxyz';let moved=false,during=null,after=null;
- for(let i=0;i<240;i++){
+ // His first pause: the first save goes out and is answered, and the making of the Article begins. Wait for that itself, not
+ // for a fixed time: the page only makes the Article once a save has come back with nothing typed since, so on a slower
+ // machine a fixed pause resumed the typing before the save was answered and the Article was never made while he typed.
+ await until(()=>savedLine(pg.doc)==='Starting the Article',30000);
+ // Then steadily on: at least 240 letters, and until the Article is made (it takes at least the 600 ms above).
+ const letters='fghijklmnopqrstuvwxyz',limit=Date.now()+30000;let moved=false,during=null,after=null;
+ for(let i=0;i<240||(!moved&&Date.now()<limit);i++){
   t.press(letters[i%letters.length]);await settle(15);
   if(!during&&savedLine(pg.doc)==='Starting the Article')during=pg.doc.activeElement;
   if(!moved&&/[?&]piece=/.test(pg.w.location.hash)){moved=true;after=pg.doc.activeElement;}
