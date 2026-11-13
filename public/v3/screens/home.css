@@ -1,0 +1,225 @@
+/* Version three: Home, in the approved look (design/2026-11-write/NOTES.md, the third pass). Every rule starts with
+   .v3-home, so nothing here reaches another screen; every class is h3- so it cannot meet version two's Home.
+   The system, in short: the interface face only; 14 (everything ordinary) and 13 (quiet details); weights 400 and 600;
+   three text tones (--ink main, --dim quiet, --warm the accent, kept for what needs him: the Needs you dot and label and
+   the border of the panel while it asks him); corners 6 for controls and 8 for surfaces, only dots and the progress
+   ring are round; the page is the desk, and the Needs you panel, each desk card and each folder group are paper with a
+   hairline, 8 apart; three kinds of button, all 32 tall (44 on a phone where version two's were): main (filled dark, one
+   per item), ordinary (quiet grey fill), quiet text (no fill); navigation is plain text with a line under the chosen one;
+   nothing changes size or place on hover or focus, and Move up and Move down are always there, quietly, in space kept
+   for them. Colours are the app's own tokens (c3-theme.css) and the frame's (--v3-fill, --v3-fill2, --v3-edge). */
+
+.v3-home{color:var(--ink);font:400 14px/1.5 var(--ar-ui)}
+.v3-home.v2-page{gap:24px}
+.v3-home>*{min-width:0}
+.v3-home [hidden]{display:none!important}
+.v3-home .v2-ic{width:16px;height:16px;flex:none;pointer-events:none}
+.v3-home .h3-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.v3-home :focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:6px}
+.v3-home .h3-title{margin:0;font:600 14px/1.4 var(--ar-ui);letter-spacing:0;color:var(--ink);overflow-wrap:anywhere}
+.v3-home .h3-quiet{margin:0;font:400 13px/1.45 var(--ar-ui);color:var(--dim);overflow-wrap:anywhere}
+.v3-home>header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 16px}
+.v3-home>header .h3-quiet{margin-top:2px}
+.v3-home .h3-sec-h{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;min-width:0;min-height:32px}
+.v3-home .h3-sec-h>span{font:400 13px/1.45 var(--ar-ui);color:var(--dim);min-width:0}
+
+/* ---------- the three kinds of button, 32 tall, and icon buttons ----------
+   Graphite's control layer sets every plain button with !important, so these are declared in version two's control layer
+   (named first by shell.css), which wins over it. Hover and focus change colour and background only. */
+@layer v2-controls{
+ .v3-home button.h3-btn,.v3-home button.h3-pri,.v3-home button.h3-q,.v3-home .v2-move button,.v3-home.h3-form button{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;box-sizing:border-box!important;height:32px!important;min-height:32px!important;max-height:none!important;width:auto!important;min-width:0!important;padding:0 12px!important;margin:0!important;border:0!important;border-radius:6px!important;font:600 14px/1 var(--ar-ui)!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap!important;box-shadow:none!important;filter:none!important;transform:none!important;transition:none!important;flex:none!important;background-clip:border-box!important;cursor:pointer!important}
+ .v3-home button.h3-btn{background:var(--v3-fill)!important;color:var(--ink)!important}
+ .v3-home button.h3-btn:not(:disabled):hover{background:var(--v3-fill2)!important}
+ .v3-home button.h3-btn[aria-pressed="true"]{background:var(--v3-fill2)!important}
+ .v3-home button.h3-pri{background:var(--ink)!important;color:var(--paper)!important}
+ .v3-home button.h3-pri:not(:disabled):hover{background:color-mix(in srgb,var(--ink) 86%,var(--paper))!important}
+ .v3-home button.h3-q,.v3-home .v2-move button{background:transparent!important;color:var(--dim)!important}
+ .v3-home button.h3-q:not(:disabled):hover,.v3-home .v2-move button:not(:disabled):hover{background:var(--v3-fill)!important;color:var(--ink)!important}
+ .v3-home button:disabled{opacity:.42!important;cursor:default!important}
+ .v3-home button.h3-pri:focus-visible{outline:2px solid var(--ink)!important;outline-offset:2px!important}
+ .v3-home button:not(.h3-pri):focus-visible{outline:2px solid var(--ink)!important;outline-offset:-2px!important}
+ /* an icon button: the quiet kind with only an icon */
+ .v3-home button.h3-ic,.v3-home .v2-move button{width:32px!important;padding:0!important}
+ .v3-home button.h3-pin[aria-pressed="true"]{color:var(--ink)!important;background:var(--v3-fill)!important}
+ /* a choice that can be long wraps instead of running sideways */
+ .v3-home .h3-acts button{height:auto!important;padding:6px 12px!important;line-height:1.3!important;white-space:normal!important;text-align:left!important;overflow-wrap:anywhere!important;max-width:100%!important}
+ .v3-home .h3-acts button small{font:400 13px/1.3 var(--ar-ui);color:var(--dim)}
+ /* navigation is plain text: quiet, and main with a line under it where he is. Never a pill. */
+ .v3-home button.h3-nav{position:relative!important;display:inline-flex!important;align-items:center!important;gap:6px!important;box-sizing:border-box!important;height:32px!important;min-height:32px!important;width:auto!important;min-width:0!important;padding:0 10px!important;margin:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--dim)!important;font:600 14px/1 var(--ar-ui)!important;letter-spacing:0!important;white-space:nowrap!important;box-shadow:none!important;filter:none!important;transition:none!important;flex:none!important}
+ .v3-home button.h3-nav:not(:disabled):hover,.v3-home button.h3-nav[aria-pressed="true"]{background:transparent!important;color:var(--ink)!important}
+ .v3-home button.h3-nav small{font:400 13px/1 var(--ar-ui);color:var(--dim);font-variant-numeric:tabular-nums}
+ .v3-home .h3-find input{border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;min-height:0!important;height:100%!important;font:400 14px/20px var(--ar-ui)!important;color:var(--ink)!important;outline:0!important}
+ .v3-home .h3-find input::placeholder{color:var(--dim);opacity:1}
+ /* "Show all" lines its words up with the text above it (its padding is 12) */
+ .v3-home .h3-needs>button.h3-more,.v3-home .h3-group>button.h3-more{margin-left:-12px!important}
+ /* the sheets Home opens (New subject, New folder, Move to a folder, File in a subject) sit outside the page, in a dialog */
+ .v3-home.h3-form :is(input,select){box-sizing:border-box!important;width:100%!important;min-width:0!important;height:32px!important;min-height:32px!important;padding:0 10px!important;border:1px solid var(--v3-edge)!important;border-radius:6px!important;background:var(--paper)!important;color:var(--ink)!important;box-shadow:none!important;font:400 14px/1.3 var(--ar-ui)!important}
+ .v3-home.h3-form button[type="submit"]{background:var(--ink)!important;color:var(--paper)!important}
+ .v3-home.h3-form button[type="button"]{background:transparent!important;color:var(--dim)!important}
+ .v3-home.h3-form button[type="button"]:not(:disabled):hover{background:var(--v3-fill)!important;color:var(--ink)!important}
+ .v3-home.h3-form button[type="submit"]:not(:disabled):hover{background:color-mix(in srgb,var(--ink) 86%,var(--paper))!important}
+ @media (max-width:850px),(pointer:coarse){
+  .v3-home button.h3-btn,.v3-home button.h3-pri,.v3-home button.h3-q,.v3-home.h3-form button{height:44px!important;min-height:44px!important}
+  .v3-home .h3-acts button{height:auto!important;min-height:44px!important}
+  .v3-home button.h3-ic,.v3-home .v2-move button{width:36px!important;height:44px!important;min-height:44px!important}
+  .v3-home .h3-card .v2-move button{width:32px!important}
+  .v3-home .h3-needs>button.h3-more{margin-top:-8px!important;margin-bottom:-8px!important}
+  .v3-home .h3-needs>button.h3-more:last-child{margin-bottom:-12px!important}
+  .v3-home.h3-form :is(input,select){height:44px!important;min-height:44px!important}
+ }
+}
+.v3-home button.h3-nav[aria-pressed="true"]::after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;background:var(--ink)}
+.v3-home.h3-form{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;font:400 14px/1.5 var(--ar-ui)}
+.v3-home.h3-form label{font:600 14px/1.3 var(--ar-ui);color:var(--ink)}
+.v3-home.h3-form .h3-quiet{font:400 13px/1.45 var(--ar-ui);color:var(--dim)}
+.v3-home .h3-form-acts{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:8px}
+.v3-home .h3-form-split .h3-grow{flex:1 1 0}
+
+/* a link that is a quiet text action, for "Open", "Go through them", "See it in Advanced" */
+.v3-home a.h3-act{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border-radius:6px;font:600 14px/1.3 var(--ar-ui);color:var(--dim)}
+.v3-home a.h3-act:hover{background:var(--v3-fill);color:var(--ink)}
+
+/* the progress ring keeps the app's own shape, in the quiet tone: the accent is kept for what needs him */
+.v3-home .v2-ring{background:conic-gradient(var(--dim) calc(var(--p,0)*1turn),var(--v3-edge) 0)}
+.v3-home .v2-ring.full{background:var(--dim)}
+.v3-home .h3-st{display:inline-flex;align-items:center;gap:6px;font:400 13px/1.45 var(--ar-ui);color:var(--dim);white-space:nowrap}
+.v3-home .h3-held{font:400 13px/1.45 var(--ar-ui);font-style:normal;color:var(--dim)}
+
+/* Move up and Move down: always there, quietly, in space kept for them (nothing appears on hover) */
+.v3-home .v2-move{display:inline-flex;gap:0;opacity:1;transition:none}
+.v3-home .h3-grip{display:block;width:14px;height:22px;flex:none;cursor:grab;margin-right:8px;background:radial-gradient(circle,var(--dim) 1.2px,transparent 1.5px) 0 0/7px 7px;opacity:.6}
+.v3-home .v2-drop{box-shadow:inset 0 2px 0 var(--ink)}
+.v3-home .h3-card.v2-drop{box-shadow:inset 3px 0 0 var(--ink)}
+
+/* ---------- Needs you: one piece of paper, with the accent border while it asks him ---------- */
+.v3-home .h3-needs{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.v3-home .h3-needs.h3-asking{border-color:var(--warm)}
+.v3-home .h3-label{display:flex;align-items:center;gap:8px;margin:0;font:600 14px/1.4 var(--ar-ui);color:var(--warm)}
+.v3-home .h3-pip{display:block;width:8px;height:8px;border-radius:50%;background:var(--warm);flex:none}
+.v3-home .h3-needs ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr)}
+.v3-home .h3-needs li{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:8px 0;min-width:0}
+.v3-home .h3-needs li:first-child{padding-top:0}
+.v3-home .h3-needs li:last-child{padding-bottom:0}
+.v3-home .h3-needs li+li{border-top:1px solid var(--line)}
+.v3-home .h3-needs li>p{flex:1 1 240px;min-width:0;margin:0;overflow-wrap:anywhere}
+.v3-home .h3-needs li b{font-weight:600}
+.v3-home .h3-about,.v3-home .h3-state,.v3-home .h3-due{display:block;margin:0;font:400 13px/1.45 var(--ar-ui);color:var(--dim)}
+.v3-home .h3-said{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8px;background:var(--v3-fill);color:var(--ink);font:400 14px/1.4 var(--ar-ui);overflow-wrap:anywhere}
+.v3-home .h3-needs li.ok>.v2-ic{color:var(--dim)}
+.v3-home .h3-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0;max-width:100%}
+.v3-home .h3-needs>.h3-more{align-self:flex-start}
+.v3-home .h3-needs>.h3-quiet{margin:0}
+.v3-home .h3-carry{margin:0}
+
+/* ---------- On your desk: each card is paper; with no cover picture it is its name, its station and its next step ---------- */
+.v3-home .h3-desk{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.v3-home .h3-cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.v3-home .h3-card{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:1fr auto;min-width:0;border:1px solid var(--line);border-radius:8px;background:var(--paper);overflow:hidden}
+.v3-home .h3-card-open{grid-column:1/-1;display:grid;align-content:start;gap:4px;min-width:0;padding:12px;border-bottom:1px solid var(--line)}
+.v3-home .h3-card-pic{display:block;aspect-ratio:2/1;margin:-12px -12px 8px;overflow:hidden;background:var(--v3-edge)}
+.v3-home .h3-card-pic img,.v3-home .h3-cover-pic img{display:block;width:100%;height:100%;object-fit:cover}
+.v3-home .h3-card-open b{font:600 14px/1.4 var(--ar-ui);color:var(--ink);overflow-wrap:break-word;text-wrap:balance}
+.v3-home .h3-card-next{display:flex;align-items:center;gap:6px;flex:0 1 auto;min-width:0;min-height:32px;margin:0;padding:5px 8px;border-radius:6px;font:600 14px/1.3 var(--ar-ui);color:var(--dim)}
+.v3-home .h3-card-next span{min-width:0;overflow-wrap:break-word}
+.v3-home .h3-card-next:hover{background:var(--v3-fill);color:var(--ink)}
+/* The footer is one bar (the next step, then Move up and Move down pushed right). It has one line when they fit side by side
+   and two when they do not; the cards of one row share their rows, so the hairlines above the footers line up. */
+.v3-home .h3-card>.v2-move{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:0;padding:4px}
+.v3-home .h3-move-btns{display:inline-flex;margin-left:auto}
+/* The cards of one row share their rows (subgrid): the top hairline of every footer lines up, whatever the next step says. */
+@supports (grid-template-rows:subgrid){
+ .v3-home .h3-cards{row-gap:0;margin-bottom:-8px}
+ .v3-home .h3-card{grid-row:span 2;grid-template-rows:subgrid;row-gap:0;margin-bottom:8px}
+}
+
+/* ---------- To file ---------- */
+.v3-home .h3-file{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.v3-home .h3-file-list{list-style:none;margin:0;padding:4px 12px;display:grid;grid-template-columns:minmax(0,1fr);border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.v3-home .h3-file-list li{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;padding:8px 0;min-width:0}
+.v3-home .h3-file-list li+li{border-top:1px solid var(--line)}
+.v3-home .h3-file-name{flex:1 1 220px;min-width:0;overflow-wrap:anywhere;color:var(--ink)}
+.v3-home .h3-file-list small{font:400 13px/1.45 var(--ar-ui);color:var(--dim)}
+.v3-home .h3-file-acts{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;min-width:0}
+.v3-home .h3-file>.h3-more{justify-self:start}
+
+/* ---------- Everything ---------- */
+.v3-home .h3-all{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.v3-home .h3-find{display:flex;align-items:center;gap:8px;margin-left:auto;height:32px;padding:0 10px;border:1px solid var(--v3-edge);border-radius:6px;background:var(--paper);width:240px;max-width:100%;color:var(--dim);font:400 14px/1.3 var(--ar-ui)}
+.v3-home .h3-find input{flex:1;min-width:0;width:100%}
+.v3-home .h3-find:focus-within{outline:2px solid var(--ink);outline-offset:1px}
+.v3-home .h3-tools{display:flex;align-items:center;flex-wrap:wrap;gap:0 24px;min-width:0}
+.v3-home .h3-grow{flex:1 1 0}
+.v3-home .h3-seg,.v3-home .h3-chips{display:flex;flex-wrap:wrap;gap:0;min-width:0}
+.v3-home .h3-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;min-width:0}
+.v3-home .h3-group{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-content:start;min-width:0;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.v3-home .h3-group>*{grid-column:1/-1}
+.v3-home .h3-group>header{grid-column:1;grid-row:1;display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;min-height:32px;min-width:0}
+.v3-home .h3-group>.v2-move{grid-column:2;grid-row:1;align-self:center}
+.v3-home .h3-group>header>span{font:400 13px/1.45 var(--ar-ui);color:var(--dim)}
+.v3-home .h3-path{margin-left:auto;font:400 13px/1.45 var(--ar-ui);color:var(--dim);overflow-wrap:anywhere;min-width:0;text-align:right}
+.v3-home .h3-dot{display:block;width:8px;height:8px;border-radius:50%;flex:none;background:var(--h3-dot,transparent)}
+.v3-home .h3-dot:not([style]){display:none}
+.v3-home .h3-group>header.h3-over{background:var(--v3-fill);box-shadow:inset 0 -2px 0 var(--ink)}
+.v3-home .h3-group>.h3-more{justify-self:start;margin-top:8px}
+.v3-home .h3-rows{list-style:none;margin:8px 0 0;padding:0;width:100%;min-width:0;border-top:1px solid var(--line)}
+.v3-home .h3-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;align-items:center;min-width:0}
+.v3-home .h3-row+.h3-row{border-top:1px solid var(--line)}
+.v3-home .h3-row:hover{background:var(--v3-fill)}
+.v3-home .h3-row>*{grid-row:1}
+.v3-home .h3-row>.h3-grip{grid-column:1}
+.v3-home .h3-row>.h3-row-open{grid-column:2}
+.v3-home .h3-row>.v2-move{grid-column:3}
+.v3-home .h3-row>.h3-rowmenu{grid-column:4}
+.v3-home .h3-row>.h3-pin{grid-column:5}
+.v3-home .h3-row>.h3-unarchive{grid-column:4/6}
+.v3-home .h3-row-open{display:grid;grid-template-columns:34px minmax(0,1.3fr) minmax(0,.7fr) 140px minmax(0,1fr) 56px;align-items:center;gap:12px;min-height:44px;padding:4px 0;min-width:0;font:400 13px/1.45 var(--ar-ui);color:var(--dim)}
+.v3-home .h3-row-pic{display:block;width:34px;height:26px;border-radius:6px;overflow:hidden;background:var(--v3-fill)}
+.v3-home .h3-row-pic.has-img{background:var(--v3-edge)}
+.v3-home .h3-row-pic img{display:block;width:100%;height:100%;object-fit:cover}
+.v3-home .h3-row-open b{font:400 14px/1.4 var(--ar-ui);color:var(--ink);overflow-wrap:anywhere;min-width:0}
+.v3-home .h3-row-open>small{font:400 13px/1.45 var(--ar-ui);color:var(--dim);text-align:right;white-space:nowrap}
+.v3-home .h3-next{min-width:0;color:var(--dim);overflow-wrap:anywhere}
+.v3-home .h3-tags{display:flex;flex-wrap:wrap;gap:0 6px;min-width:0}
+.v3-home .h3-tags i{font:400 13px/1.45 var(--ar-ui);font-style:normal;color:var(--dim);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v3-home .h3-tags i:not(:last-child)::after{content:","}
+
+/* Covers */
+.v3-home .h3-covers{list-style:none;margin:0;padding:12px 0 0;width:100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;min-width:0}
+.v3-home .h3-cover{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-content:start;min-width:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.v3-home .h3-cover>a{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:4px;min-width:0;padding:12px}
+.v3-home .h3-cover-pic{display:block;aspect-ratio:4/3;margin:-12px -12px 8px;overflow:hidden;background:var(--v3-edge)}
+.v3-home .h3-cover b{font:600 14px/1.4 var(--ar-ui);color:var(--ink);overflow-wrap:anywhere}
+.v3-home .h3-cover>.v2-move{grid-column:1;grid-row:2;justify-self:start;margin:0 0 4px 4px}
+.v3-home .h3-cover>.h3-rowmenu{grid-column:2;grid-row:2;margin:0 0 4px}
+.v3-home .h3-cover>.h3-pin{grid-column:3;grid-row:2;margin:0 4px 4px 0}
+
+.v3-home .h3-foot{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}
+.v3-home .h3-foot .h3-quiet{flex:1 1 260px;min-width:0}
+.v3-home .h3-archived{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;justify-items:start}
+.v3-home .h3-archived .h3-rows{margin:0;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.v3-home .h3-empty{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font:400 14px/1.5 var(--ar-ui)}
+.v3-home .h3-empty p{flex:1 1 240px;min-width:0;margin:0}
+
+/* ---------- narrower ---------- */
+@media (max-width:1180px){
+ .v3-home .h3-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .v3-home .h3-row-open{grid-template-columns:34px minmax(0,1.3fr) minmax(0,.7fr) 112px minmax(0,1fr) 56px;gap:10px}
+}
+@media (max-width:850px){
+ .v3-home.v2-page{gap:24px}
+ /* the Needs you panel is tight: the same 12 inside and 8 between, the question over its answers, no empty gap above Show all */
+ .v3-home .h3-needs li>p,.v3-home .h3-needs li>.h3-acts{flex-basis:100%}
+ .v3-home .h3-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .v3-home .h3-card-next{min-height:44px;padding:5px 4px 5px 8px;gap:4px}
+ .v3-home .h3-card>.v2-move{padding:0 2px 0 0}
+ .v3-home .h3-find{width:100%;margin-left:0}
+ .v3-home .h3-row>.h3-row-open{grid-column:2/-1}
+ .v3-home .h3-row>.v2-move,.v3-home .h3-row>.h3-rowmenu,.v3-home .h3-row>.h3-pin,.v3-home .h3-row>.h3-unarchive{grid-row:2}
+ .v3-home .h3-row>.h3-unarchive{grid-column:3/-1}
+ .v3-home .h3-row-open{grid-template-columns:34px minmax(0,1fr);gap:0 10px;padding:6px 0}
+ .v3-home .h3-row-open .h3-row-pic{grid-row:1/3}
+ .v3-home .h3-row-open b{grid-column:2}
+ .v3-home .h3-row-open .h3-st{grid-column:2}
+ .v3-home .h3-row-open .h3-next,.v3-home .h3-row-open .h3-tags,.v3-home .h3-row-open>small{display:none}
+ .v3-home .h3-covers{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

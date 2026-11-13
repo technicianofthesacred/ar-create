@@ -92,5 +92,6 @@ The rules in `docs/plans/2026-11-11-direction-d-build.md` ("Rules for every work
 | Stage 8: one press to confirm a transcript and use it for Check | | | Not started. Adrian said yes on 13 November. The work: "Stage 8" in the open corrections file |
 | 8 Where a subject stands | Opus | Sonnet | In. `subject.standing` and `subjects.standing`, one shared rule; 150 subjects in under two seconds cold and milliseconds warm |
 | Advanced lands on the right section | Opus, finished by Sonnet | Opus | In. All 61 addresses land for an Article and a Carousel, with and without a piece |
+| Version three: its own Home in the approved look | Sonnet | Opus, twice (the first build, then the phone footers and remembered covers); the last correction to failed cover reads has tests but no second review | Built on branch `claude/v3-home`, approved by Adrian by eye on 13 November. Version two's Home is unchanged. Sizes 13 and 14, weights 400 and 600, corners 6 and 8; nothing scrolls sideways at 390, 700, 1000, 1440 |
 
 What is open, piece by piece and most important first: `2026-11-11-version-two-open-corrections.md`.

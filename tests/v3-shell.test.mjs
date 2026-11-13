@@ -61,7 +61,7 @@ async function theWorld(){
 after(async()=>{if(world)await world.close();});
 
 // Screens version three has built are its own files (screens/<name>.js); every other screen is version two's file as it is.
-const OWN={write:['screens/write-page.js','screens/write-margin.js','screens/write-versions.js','screens/write.js']};
+const OWN={home:['screens/home.js'],write:['screens/write-page.js','screens/write-margin.js','screens/write-versions.js','screens/write.js']};
 const scriptOf=s=>OWN[s]||[`/v2/screens/${s}.js`],styleOf=s=>OWN[s]?[`screens/${s}.css`]:[`/v2/screens/${s}.css`];
 test('index.html loads one shell only, version two\'s client, parts, Capture and every screen file it has not built as they are, its own screens, and its own frame',()=>{
  const html=read('public/v3/index.html'),scripts=scriptsOf(html),styles=stylesOf(html);
