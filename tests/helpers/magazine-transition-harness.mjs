@@ -7,7 +7,7 @@ import net from 'node:net';
 import {spawn} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
-import {buildMagazineFixture,treeHashes} from './magazine-fixture.mjs';
+import {buildMagazineFixture,treeHashes,ownChild} from './magazine-fixture.mjs';
 import {apply as register,dryRun} from '../../tools/magazine/register.mjs';
 import {createMagazinePortfolio} from '../../runtime/services/magazine-portfolio.mjs';
 import {createExistingWorkReview} from '../../scripts/review-existing.mjs';
@@ -43,7 +43,7 @@ export async function startMagazineTransitionHarness({ownerPort=0,reviewPort=0}=
  fs.writeFileSync(ownerConfig,JSON.stringify({dataDir,port:ownerPort,allowScratchRoots:true,tools:{},sourceRoots:[],magazine:{vaultRoot:f.vault,filesRoot:f.files,writable:true,machine:'invented-transition'}}));
  let child=null,ownerLog='';
  async function startOwner(){
-  child=spawn(process.execPath,[path.join(repo,'serve.mjs'),'--config',ownerConfig],{cwd:repo,env:{PATH:process.env.PATH,HOME:process.env.HOME,TMPDIR:process.env.TMPDIR},stdio:['ignore','pipe','pipe']});
+  child=ownChild(spawn(process.execPath,[path.join(repo,'serve.mjs'),'--config',ownerConfig],{cwd:repo,env:{PATH:process.env.PATH,HOME:process.env.HOME,TMPDIR:process.env.TMPDIR},stdio:['ignore','pipe','pipe']}));
   const launched=child;
   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Synthetic owner did not start: '+ownerLog)),10000);const onData=chunk=>{ownerLog+=chunk;if(String(chunk).includes('AR Create:')){clearTimeout(timer);resolve();}};launched.stdout.on('data',onData);launched.stderr.on('data',chunk=>{ownerLog+=chunk;});launched.once('exit',code=>{clearTimeout(timer);reject(Error('Synthetic owner exited '+code+': '+ownerLog));});});
  }
