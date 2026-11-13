@@ -563,10 +563,14 @@ Adrian was sent pictures of the sheet beside the sample and of the subject page.
     started lived on and kept its fixture folder in the checkout. `tests/helpers/magazine-fixture.mjs` now records
     every fixture folder and every server a test starts (`ownChild`, `ownDir`) with a small watcher process that
     stops the servers and removes the folders when the test process ends in any way, a kill included
-    (`tests/magazine-fixture-orphans.test.mjs` proves it). The `ci` job on the Mac now also begins by stopping any
-    node process left working inside the runner's checkout and removing `.scratch`, so the three servers left on
-    11 November are cleared by the next run without anyone touching the machine. That step has not yet been seen to
-    run on the Mac: watch the first run there.
+    (`tests/magazine-fixture-orphans.test.mjs` proves it). This stops new leftovers; the three servers left on
+    11 November still have to be stopped by hand on the Mac, and `.scratch` deleted in the runner's checkout.
+  - *A step that was tried and taken out.* Pull request 251 first carried a step at the start of the `ci` job, on
+    the Mac only, that stopped every node process whose working folder was inside the runner's checkout. On its
+    first run (13 November, 03:14 UTC) the Mac's runner took the job, reported no step and no log, and was offline
+    ten minutes later. Whether the step caused that or the Mac simply slept could not be told from a cloud machine,
+    so the step was removed. Do not put it back without watching it run on the Mac, and never without first checking
+    that the workspace path is not empty. On the Mac, check that the runner and the app on 8841 are both running.
   - The 12 November thread that was meant to run on the Mac in fact ran on a cloud machine, so the release, the walk
     with real records and the status refresh (items 1 to 3 of `2026-11-12-up-to-date-and-shipped.md`) are still to do.
 - Several tests fail only when many suites run at once and pass alone ("failed exact Direction load keeps a discovered
