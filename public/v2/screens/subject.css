@@ -287,3 +287,34 @@ dialog.subj-sheetdlg{width:min(560px,100%)}
 }
 .subj .subj-have>li:has(button[data-cs]){grid-column:span 2}/* room for a button that never wraps */
 /* ===== capture sources: END ===== */
+
+/* ---------- one page: every step is a section, the side list follows the page ---------- */
+.subj .subj-secs{display:grid;gap:14px;min-width:0}
+.subj .subj-step{min-height:0;scroll-margin-top:calc(var(--v2-top) + 12px)}
+.subj .subj-step>header{grid-template-columns:minmax(0,1fr) auto;column-gap:12px;align-items:start}
+.subj .subj-step>header>*{grid-column:1}
+.subj .subj-step>header>.subj-zoom{grid-column:2;grid-row:1/span 3;align-self:start}
+.subj .subj-steps{max-height:calc(100dvh - var(--v2-top) - 24px);overflow-y:auto}
+.subj .subj-glance{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;min-width:0;font-size:var(--v2-t13);line-height:1.5;color:var(--dim)}
+.subj .subj-glance b{font-weight:500;color:var(--ink)}
+.subj-sheetdlg .subj-lookmore{margin-top:14px}
+.subj-sheetdlg .subj-kinds button[aria-pressed="true"]{border-color:var(--c3-ink2)}
+@layer v2-controls{
+ .subj button.subj-look{display:inline-flex!important;align-items:center!important;gap:6px!important;min-height:0!important;height:24px!important;padding:0 10px 0 8px!important;border:0!important;border-radius:12px!important;background:transparent!important;color:var(--c3-ink2)!important;font:500 var(--v2-t12)/1 var(--ar-ui)!important;box-shadow:inset 0 0 0 1px var(--c3-line2)!important;white-space:nowrap!important;cursor:pointer}
+ .subj button.subj-look:hover{color:var(--ink)!important;box-shadow:inset 0 0 0 1px var(--c3-ink2)!important}
+}
+/* A section opened to the whole window. The page behind keeps its place. */
+.subj .subj-step.zoomed{position:fixed;inset:var(--v2-top) 0 0 0;z-index:24;overflow:auto;margin:0;padding:22px max(20px,calc((100vw - 1180px)/2)) 120px;border:0;border-radius:0;box-shadow:none;background:var(--bg);overscroll-behavior:contain}
+.subj .subj-step.zoomed .subj-tray{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+@media (max-width:850px){
+ .subj .subj-steps{position:sticky;top:var(--v2-top);z-index:20;display:flex;gap:6px;max-height:none;overflow-x:auto;overflow-y:hidden;padding:8px 0;background:var(--bg);border-bottom:1px solid var(--line);scrollbar-width:none}
+ .subj .subj-steps::-webkit-scrollbar{display:none}
+ .subj .subj-grp,.subj .subj-steps ol{display:contents}
+ .subj .subj-group,.subj .subj-later{display:none}
+ .subj .subj-row{flex:none}
+ .subj .subj-row>button small{display:none!important}
+ .subj .subj-step{padding:16px 16px 18px}
+ .subj .subj-step.zoomed{padding:16px 16px 140px}
+ .subj .subj-step.zoomed .subj-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
+ @layer v2-controls{.subj .subj-row>button[data-subj-step]{width:auto!important;white-space:nowrap!important;box-shadow:inset 0 0 0 1px var(--line)!important}.subj .subj-row>button[data-subj-step].v2-current{box-shadow:inset 0 0 0 1px var(--c3-ink2)!important}}
+}

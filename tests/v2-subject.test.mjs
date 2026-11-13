@@ -237,6 +237,33 @@ test('six invented subjects at different stages each show exactly what subject.s
   assert.match(decodeURIComponent(w.location.hash),/step=have/);assert.match(decodeURIComponent(w.location.hash),/form=out:/);}
 });
 
+test('one page: every step has its own section, the current one answers as the open panel, the top line says where the subject stands, and a section opens to full size and folds back',{timeout:300000},async t=>{
+ const base=await server(t);
+ await fillDemo(base,{only:['the-first-cup']});
+ const id='demo-the-first-cup',standing=await standingOf(base,id);
+ const {w,doc}=await page(base,'#/subject/'+id);
+ await until(()=>doc.querySelector('[data-subj-panel] h2'));
+ const steps=standing.forms[0].steps.map(s=>s.id);
+ assert.deepEqual([...doc.querySelectorAll('[data-subj-sec]')].map(s=>s.dataset.subjSec),steps,'a section for every step, in order');
+ assert.deepEqual([...doc.querySelectorAll('[data-subj-sec] h2')].map(x=>x.textContent),standing.forms[0].steps.map(s=>s.name),'each says its own name');
+ assert.equal(doc.querySelectorAll('[data-subj-panel]').length,1,'one section is the current one');
+ assert.equal(doc.querySelector('[data-subj-panel]').dataset.subjSec,standing.next.step,'opened fresh, the current step is the one the command names next');
+ const glance=doc.querySelector('.subj-head [data-subj-glance]');
+ assert.match(glance.textContent,new RegExp(standing.forms[0].steps.filter(s=>s.state==='done').length+' of '),'the top line counts the steps done');
+ assert.equal(glance.querySelector('[data-subj-step]')?.dataset.subjStep,standing.next.step,'and offers the step that needs him next');
+ // Full size: the section fills the window, the page behind holds still, Escape folds it back with focus on its button.
+ const sec=doc.querySelector('[data-subj-sec="have"]');sec.querySelector('[data-subj-zoom]').click();
+ assert.ok(sec.classList.contains('zoomed'));assert.equal(doc.documentElement.style.overflow,'hidden');
+ assert.equal(sec.querySelector('[data-subj-zoom]').getAttribute('aria-pressed'),'true');assert.match(sec.querySelector('[data-subj-zoom]').textContent,/Back to the article/);
+ sec.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
+ assert.ok(!sec.classList.contains('zoomed'));assert.equal(doc.documentElement.style.overflow,'');
+ assert.equal(doc.activeElement,sec.querySelector('[data-subj-zoom]'),'focus goes back to the button that opened it');
+ // A step asked for from the top line becomes the current one, and the address keeps it for coming back.
+ glance.querySelector('[data-subj-step]').click();
+ assert.equal(doc.querySelector('[data-subj-panel]').dataset.subjSec,standing.next.step);
+ assert.match(decodeURIComponent(w.location.hash),new RegExp('step='+standing.next.step));
+});
+
 test('the page: opens a step on demand, every hand-off lands on its section with the subject and piece, a Carousel step opens the slide studio, changes re-ask only what they touch',{timeout:300000},async t=>{
  const base=await server(t);
  await fillDemo(base,{only:['shade-and-patience','straw-over-the-rows']});
@@ -268,7 +295,11 @@ test('the page: opens a step on demand, every hand-off lands on its section with
   if(s.state!=='unknown'&&!['yes','photos','posttext','slides','story','form'].includes(s.id)||s.id==='yes'||s.id==='photos')assert.ok(own.includes(s.section),s.id+' hands off to '+s.section+' among '+own);}
  assert.ok(['write','checkRun','outputs','audience','addMaterial','board','research','desk','media'].every(k=>handoffs.has(k)),[...handoffs].join());
  await until(()=>doc.querySelector('.subj-head [data-subj-step="dish"]'));
- assert.equal(doc.querySelector('.subj-head .subj-look')?.getAttribute('href'),'#/looks?look=teajia','the look chip opens Looks');
+ {const chip=doc.querySelector('.subj-head .subj-look');assert.equal(chip?.tagName,'BUTTON','the look is chosen on this page, so the chip is a button, not a link away');assert.match(chip.textContent,/Teajia look/);
+  chip.click();const dlg=await until(()=>doc.querySelector('dialog.subj-sheetdlg'));
+  assert.equal(dlg.querySelector('[data-subj-setlook][aria-pressed="true"]')?.dataset.subjSetlook,'teajia','the look in use is marked');
+  assert.equal(dlg.querySelector('[data-subj-lookedit]')?.getAttribute('href'),'#/looks?look=teajia','Looks is still one link away, for making and changing looks');
+  dlg.querySelector('[data-v2-close]').click();assert.match(decodeURIComponent(w.location.hash),/^#\/subject\//,'he is still on the subject');}
  // The Carousel: its pill opens its own steps; the slide studio opens from the slides step.
  carousel.click();
  assert.equal(doc.querySelector('.subj-form.on').dataset.subjForm,carousel.dataset.subjForm);
@@ -391,7 +422,7 @@ test('the subject shows where a recording is, from the real recordings; its ways
   assert.equal(calls.slice(before2).indexOf('/api/transcript-check/'+job.id)<calls.slice(before2).indexOf('/api/recordings/source'),true,'read first, then use');
   assert.equal(doc.querySelector('[data-subj-rec="use"]'),null,'once it is a source the button is gone');
   assert.match(doc.querySelector('.subj-have').textContent,/kept as a source/,'the recording says it is kept');
-  assert.equal([...doc.querySelectorAll('.subj-have li')].filter(l=>/Transcript of the shade talk/.test(l.textContent)).length,1,'one source, not two');
+  assert.equal([...doc.querySelectorAll('[data-subj-sec="have"] .subj-have li')].filter(l=>/Transcript of the shade talk/.test(l.textContent)).length,1,'one source, not two');
   delete w.stub['/api/study/material/attach'];delete w.stub['/api/study/research/brief'];
   assert.deepEqual((await show('saved',false)).slice(2),['Saved. Transcription is not set up on this machine.','']);
   // A refusal reaches him in plain words and nothing is lost.
