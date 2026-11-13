@@ -416,6 +416,19 @@ Small and not yet done:
 - The top bar's desk chips show an empty box where a photograph would go.
 - Drag by touch was not tried in a browser. The demo has no photographs, so a real cover was never seen.
 
+**Version three's Home (13 November, branch `claude/v3-home`).** Its own files (`public/v3/screens/home.js`,
+`home.css`), version two's behaviour in the approved look. Known and left:
+
+- The Capture line's wording with no subject open comes from the shared Capture sheet (`public/v2/shell/capture.js`),
+  which version two also uses. It belongs with Capture's redo.
+- A desk card with no picture has no cover block. A card whose picture arrives for the first time grows once; after
+  that the device remembers which desk subjects have one (`ar-v3-home-covers`) and keeps the room from first paint.
+- The remembered-cover path was checked only in jsdom tests: the demo has no subject with a cover photograph. Look
+  at it on real records.
+- In one desk row, cards with and without a picture put their names at different heights.
+- After Alt+Up on a desk card's next-step link, a repaint drops keyboard focus to the page. Version two does the same.
+- A real touch drag on a phone was not tried; Move up and Move down are always shown there.
+
 ### 4. Subject
 
 - Forms cannot be reordered: no record keeps a hand-set order of pieces. Needs a small back-end addition.
