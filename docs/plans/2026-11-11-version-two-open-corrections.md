@@ -170,6 +170,24 @@ Speak) and only sometimes records in the app. The words "stop a transcript" did 
 steps before it explained: a later stage should look at whether Confirm, "Use it for Check" and Stop can become
 fewer steps or say more plainly what they are for.
 
+### Stage 8, approved 13 November, not started: one press to confirm a transcript and use it for Check
+
+Adrian asked on 13 November for this part to be simple, with as few choices as possible, and safe, and said yes to
+this: pressing "Confirm this transcript" also does "Use it for Check" in the same press, so the separate second
+press disappears. Read `version-two-briefs/v2-12-capture-sources.md` and `v2-13-confirm-and-stop.md` first.
+
+What done looks like: on the subject page and on Check's held state, one press by him confirms the transcript and
+captures it for Check, and the row then reads "Used for Check" with "Stop using for Check"; both stay his alone
+(an assistant still gets 403 on each); if the confirm succeeds and the capture fails, the row says so plainly and
+offers the capture alone, never a silent half state; a transcript he stopped is not captured again by a later
+confirm unless he presses "Use for Check again"; material that is not a recording's transcript is unchanged; the
+walk presses once and still ends in a real result. Decide and have a second model review before building: whether
+this is one new human-only command or the screen calling the two existing ones in turn (the two calls are already
+reviewed; one command is atomic); whether "Use it for Check" stays for transcripts confirmed before this change.
+It is a visual change: before and after pictures for Adrian. Also in scope if small: saying more plainly on the
+row what Confirm and Stop are for, since "stop a transcript" made no sense to him without the steps explained.
+Later work he also said yes to, not part of stage 8: answers 4 and 5 above.
+
 **Open after stage 7**
 
 - Known limits, older than this stage: any caller that claims to be Adrian is believed (the app's own Origin with no
