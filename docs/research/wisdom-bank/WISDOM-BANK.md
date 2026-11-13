@@ -120,6 +120,8 @@ From the interview: you return "to find some way to use this information or use 
   - **Everything he reads stands on its own.** It makes sense on first reading without the source, in full natural literary English with something concrete in it, never compressed into abstract phrasing. Not in the first person: "It doesn't all have to be first person. Just self standing." Example of the style: "Help is not always given because someone needs it. Often it comes from the helper's own anxiety about what might go wrong. Help of that kind quietly takes something from the person receiving it: the chance to handle things themselves, and the sense of being trusted to."
   - **The connecting machinery stays behind the scenes.** Elements, kinds and fingerprints are hidden labels; they never dictate how the text reads, and the text is never bent to connect better.
 
+- **14 November 2026, each level only adds; a story or exact line opens.** On the talk's gem and cliff note: "it doesn't really read that well. The first part is kind of repeating the second part in some weird way." Offered three ways (telescope, story first, the source's own words first), he chose: "Go with 1, using 2 or 3 as the opener." So: each level adds only what the one before left out, never retelling it. Above the gem sits an opener: a short real story from the source, or its strongest exact line with its moment, when the source offers one. The Hudson example is redone this way.
+
 ## 4. What was made, and your verdict on each
 
 | Page | What it is | Your verdict |
