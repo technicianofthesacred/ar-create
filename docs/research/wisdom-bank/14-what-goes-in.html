@@ -1,0 +1,246 @@
+<title>What Goes In the Bank</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Literata:opsz,wght@7..72,400;7..72,500&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column; each part is a numbered step of one definition, with worked examples set on an inset surface */
+:root{
+  --bg:#f5f6f4; --surface:#ffffff; --fg:#1c2321; --muted:#5d6763; --line:#dbe0dd;
+  --accent:#2f6f62; --accent-soft:#e4efeb; --inset:#eef1ef; --warn:#8a5a14; --warn-soft:#f6ecd9;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --read:"Literata",Georgia,serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121615; --surface:#1a201e; --fg:#e4e9e7; --muted:#9aa6a1; --line:#2c3532;
+  --accent:#7cc4b2; --accent-soft:#1f302b; --inset:#222a27; --warn:#e2b56a; --warn-soft:#2d2518; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121615; --surface:#1a201e; --fg:#e4e9e7; --muted:#9aa6a1; --line:#2c3532;
+  --accent:#7cc4b2; --accent-soft:#1f302b; --inset:#222a27; --warn:#e2b56a; --warn-soft:#2d2518; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.65 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 72px}
+main{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:2rem;font-weight:600}
+h2{font-size:1.35rem;font-weight:600}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:0}
+ul,ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+section{display:flex;flex-direction:column;gap:14px}
+section.part{border-top:1px solid var(--line);padding-top:26px}
+.lead{font-size:1.1rem}
+.read{font-family:var(--read);font-size:1.04rem}
+.ex{background:var(--inset);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.ex .lab{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.kind{display:grid;grid-template-columns:140px minmax(0,1fr);gap:4px 18px;padding:14px 0;border-bottom:1px solid var(--line)}
+.kind:last-child{border-bottom:0}
+.kind .k{font-family:var(--display);font-weight:600}
+.kind .k small{display:block;font-family:var(--body);font-weight:400;color:var(--muted);font-size:.8rem}
+.kind .v{display:flex;flex-direction:column;gap:6px;min-width:0}
+@media (max-width:560px){.kind{grid-template-columns:minmax(0,1fr)}}
+.rec{font-size:.92rem;display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 14px}
+.rec dt{color:var(--muted)}
+.rec dd{margin:0}
+@media (max-width:560px){.rec{grid-template-columns:minmax(0,1fr)} .rec dt{margin-top:6px}}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:620px){.two{grid-template-columns:minmax(0,1fr)}}
+.mode{background:var(--surface);border:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:10px}
+.mode h3 small{display:block;font-family:var(--body);font-weight:400;color:var(--muted);font-size:.82rem;margin-top:2px}
+.note{background:var(--warn-soft);padding:12px 14px;font-size:.95rem}
+.note b{color:var(--warn)}
+.fig{overflow-x:auto}
+.fig svg{display:block;min-width:560px;width:100%;height:auto}
+.fig text{font-family:var(--body);fill:var(--fg)}
+.fig .mut{fill:var(--muted)}
+.fig .box{fill:var(--surface);stroke:var(--line)}
+.fig .acc{fill:var(--accent-soft);stroke:var(--accent)}
+.fig .ln{stroke:var(--muted);stroke-width:1;fill:none}
+.fig .lnA{stroke:var(--accent);stroke-width:1.4;fill:none;stroke-dasharray:4 4}
+a{color:var(--accent)}
+.small{font-size:.85rem;color:var(--muted)}
+ol.decide{gap:12px}
+</style>
+
+<main>
+<header style="display:flex;flex-direction:column;gap:12px">
+  <p class="eyebrow">Wisdom bank · foundations · 14 November 2026</p>
+  <h1>What goes in the bank, and how it is grouped</h1>
+  <p class="lead">Before anything is captured, this defines the pieces the bank is made of, how each is written, how you see them, and how they are grouped: by the bank on its own, and by your own suggestions.</p>
+</header>
+
+<section>
+  <h2>The whole idea</h2>
+  <p>Three jobs, kept apart so one never distorts the next.</p>
+  <ol>
+    <li><b>Taking in</b> writes clean signal: each source broken into pieces that say exactly what the source means, in plain words, with its exact words underneath.</li>
+    <li><b>The connector</b> (your program) finds where pieces meet across all sources, proposes groups and links, and checks the connections you suggest.</li>
+    <li><b>You</b> group, confirm, ask, study and write. Nothing counts as a link or a group until you say yes.</li>
+  </ol>
+</section>
+
+<section class="part">
+  <p class="eyebrow">Part 1</p>
+  <h2>The pieces: five kinds of unit</h2>
+  <p>Every source is broken into units. Each unit has one kind. The kind is stored with it so the connector can work properly; it is never shown as a heading in what you read.</p>
+  <p>The most important split is between <b>concepts</b> and <b>claims</b>. A concept is a thing or idea with a name. A claim is something a source says about concepts. Grouping happens mostly on concepts, because many sources talk about the same thing. Insight happens mostly on claims, because sources say different things about it. Two sources can share a concept and disagree; that is often where the interesting work is.</p>
+
+  <div>
+    <div class="kind">
+      <div class="k">Concept<small>a named thing or idea</small></div>
+      <div class="v">
+        <p>Held once in the whole bank. Every source that speaks of it points to it.</p>
+        <p class="small">Written: its name, the source's own term (and original-language term if there is one), and a plain description in neutral, everyday words that no single field owns.</p>
+        <div class="ex"><span class="lab">From the talk</span><p class="read">Helper trap. A repeating pattern in which one person keeps helping another who has not asked, and both end up resentful.</p></div>
+      </div>
+    </div>
+    <div class="kind">
+      <div class="k">Claim<small>what the source says is so</small></div>
+      <div class="v">
+        <p>The core of the bank. Each claim has the levels: gem, cliff note, full reading, exact words.</p>
+        <p class="small">Written: the levels, which concepts it is about, what kind of support it has (a lab finding, a traditional teaching, a personal account, or an opinion), and the source's own hedge such as "typically" or "most likely".</p>
+        <div class="ex"><span class="lab">From the talk</span><p class="read">Helping someone who has not asked is typically driven by fear of getting in trouble. The helping passes that anxiety to the person being helped, to carry for you.</p><p class="small">About: unasked help, fear of trouble. Support: personal account, and what the speaker has seen in people he works with. Hedge: typically.</p></div>
+      </div>
+    </div>
+    <div class="kind">
+      <div class="k">Practice<small>something you do</small></div>
+      <div class="v">
+        <p>Steps as the source gives them, in its order, with the claim it rests on.</p>
+        <div class="ex"><span class="lab">From the talk</span><p class="read">When you want to step in because you are scared of a consequence, notice it and own the fear. Do not act on it, and do not tell the other person what you are scared of, because that hands it to them too.</p></div>
+      </div>
+    </div>
+    <div class="kind">
+      <div class="k">Example<small>a story or case</small></div>
+      <div class="v">
+        <p>A short retelling of a story the source uses, tied to the claim it shows. Examples are what make an idea land.</p>
+        <div class="ex"><span class="lab">From the talk</span><p class="read">A man stressed through his whole vacation building a house, helping his wife. She is an architect, and had not asked for help.</p></div>
+      </div>
+    </div>
+    <div class="kind">
+      <div class="k">Open question<small>what the source leaves unresolved</small></div>
+      <div class="v">
+        <p>Only questions or tensions the source itself raises or leaves open. If it leaves none, none are recorded. These are fuel for research and writing.</p>
+      </div>
+    </div>
+  </div>
+
+  <p>The source itself is the sixth thing: it keeps its own gem, cliff note, summary and the full original, and every unit points back to the moment it came from.</p>
+
+  <div class="fig" role="img" aria-label="A source holds claims, practices and examples. Claims are about concepts. Concepts are shared across sources.">
+    <svg viewBox="0 0 640 230">
+      <rect class="box" x="10" y="20" width="270" height="190" rx="6"/>
+      <text x="26" y="44" font-weight="600" font-size="14">One source</text>
+      <rect class="box" x="26" y="60" width="110" height="40" rx="4"/><text x="81" y="85" font-size="13" text-anchor="middle">Claim</text>
+      <rect class="box" x="150" y="60" width="110" height="40" rx="4"/><text x="205" y="85" font-size="13" text-anchor="middle">Practice</text>
+      <rect class="box" x="26" y="120" width="110" height="40" rx="4"/><text x="81" y="145" font-size="13" text-anchor="middle">Example</text>
+      <rect class="box" x="150" y="120" width="110" height="40" rx="4"/><text x="205" y="145" font-size="13" text-anchor="middle">Open question</text>
+      <text x="26" y="192" font-size="12" class="mut">each with exact words and moment</text>
+      <rect class="acc" x="380" y="40" width="150" height="40" rx="4"/><text x="455" y="65" font-size="13" text-anchor="middle">Concept</text>
+      <rect class="acc" x="380" y="110" width="150" height="40" rx="4"/><text x="455" y="135" font-size="13" text-anchor="middle">Concept</text>
+      <rect class="box" x="560" y="40" width="70" height="40" rx="4"/><text x="595" y="65" font-size="12" text-anchor="middle" class="mut">source</text>
+      <rect class="box" x="560" y="110" width="70" height="40" rx="4"/><text x="595" y="135" font-size="12" text-anchor="middle" class="mut">source</text>
+      <path class="ln" d="M136 80 L380 60"/><path class="ln" d="M136 80 L380 130"/><path class="ln" d="M260 80 L380 130"/>
+      <path class="ln" d="M530 60 L560 60"/><path class="ln" d="M530 130 L560 130"/>
+      <text x="380" y="186" font-size="12" class="mut">a concept is held once and</text>
+      <text x="380" y="202" font-size="12" class="mut">shared by every source about it</text>
+    </svg>
+  </div>
+</section>
+
+<section class="part">
+  <p class="eyebrow">Part 2</p>
+  <h2>How each unit is written</h2>
+  <ul>
+    <li><b>It says the idea itself.</b> No "he says". The source is attached to every unit.</li>
+    <li><b>It keeps the source's meaning exactly.</b> Clean sentences, plain words, an example placed beside its point, a short explanation of a term: allowed. Advice the source did not give, a claim it did not make, a dropped hedge, a shifted emphasis: not allowed.</li>
+    <li><b>It is as long as it needs to be.</b> A gem is usually one or two sentences, never cut to fit.</li>
+    <li><b>Two descriptions of every concept.</b> The source's own words, and a plain neutral description. The plain one is what lets the connector notice that a meditation teacher's "the busy, self-talking mind" and a neuroscience paper's "default mode network" might describe the same thing, without anyone deciding in advance that they do.</li>
+    <li><b>The scale it describes.</b> Brain, body, inner experience, relationship, society, or cosmos. Many real bridges are one thing seen at two scales; many false ones mix scales.</li>
+    <li><b>Where it truly comes from.</b> For a text: tradition, original term, translator. For science: the study, year, and whether it has held up. Every unit gets a permanent ID and an exact citation, so anything you write can be cited.</li>
+  </ul>
+</section>
+
+<section class="part">
+  <p class="eyebrow">Part 3</p>
+  <h2>How you see it</h2>
+  <ul>
+    <li><b>A source reads top down:</b> its gem, then cliff note, then summary. Concepts in the summary are underlined and open in place.</li>
+    <li><b>A claim opens one level at a time:</b> gem, cliff note, full reading, exact words with the moment.</li>
+    <li><b>A concept shows its reach:</b> its plain description, then where it appears ("in 37 sources, 6 fields"), its strongest links, and the groups it sits in. This is where interconnection is felt at the surface, not hidden at the bottom.</li>
+    <li><b>Connections are plain rows</b>, each with one sentence of why, who proposed it, and whether you confirmed it.</li>
+    <li><b>Nothing is shaped toward you.</b> Your notes, interpretations and bridges are a separate layer, always marked as yours.</li>
+  </ul>
+</section>
+
+<section class="part">
+  <p class="eyebrow">Part 4</p>
+  <h2>The connections</h2>
+  <p>A small, fixed set of link kinds, so every link means something clear.</p>
+  <p><b>Inside one source</b>, recorded only when the source states them: leads to, is the way out of, is an example of, contrasts with.</p>
+  <p><b>Across sources</b>, proposed by the connector or by you:</p>
+  <ul>
+    <li><b>Same concept</b>: two sources speak of the same thing.</li>
+    <li><b>Same claim</b>, marked full or partial: they say the same thing about it.</li>
+    <li><b>Supports</b> or <b>contradicts</b>.</li>
+    <li><b>Same pattern in another field</b>: the same shape of idea in different subject matter.</li>
+    <li><b>Same thing at another scale</b>: for example inner experience and brain.</li>
+  </ul>
+  <p>Every link stores one sentence of why, who proposed it (the connector or you), its state (proposed, confirmed, declined), and the units that are its evidence.</p>
+</section>
+
+<section class="part">
+  <p class="eyebrow">Part 5</p>
+  <h2>Grouping, two ways</h2>
+  <p>Research on finding hidden connections in large bodies of writing names exactly these two. Don Swanson's 1986 finding that fish oil might help Raynaud's disease, later supported in trials, came from noticing that two bodies of papers shared middle concepts but had never been joined.</p>
+  <div class="two">
+    <div class="mode">
+      <h3>The bank groups on its own<small>"open discovery": start from anything, find what is there</small></h3>
+      <ul>
+        <li>Proposes groups and sub-groups from meaning, plain descriptions and links. One unit can sit in many groups.</li>
+        <li>Names each group in plain words, with a sentence on what ties it.</li>
+        <li>From any concept you choose, shows concepts two steps away that have never been joined directly: possible hidden links.</li>
+        <li>Shows things near in meaning but far apart in field.</li>
+        <li>Once you confirm a group, its name and place stay put. New units are placed into it; nothing is re-sorted behind your back.</li>
+      </ul>
+    </div>
+    <div class="mode">
+      <h3>You suggest, the bank finds the correlation<small>"closed discovery": you name both ends, it finds what joins them</small></h3>
+      <ul>
+        <li>You say "these two connect" or "these belong together", even if they seem ungroupable.</li>
+        <li>The bank returns a bridge report: the middle concepts they share, units that support the link, units that contradict it, what kind of support each side has, and what is missing.</li>
+        <li>It checks whether anyone has already made the connection.</li>
+        <li>It is saved as a hypothesis: open, supported, weak, or declined. It updates itself as new sources arrive.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note"><b>Why the writing rules matter here.</b> A distorted unit creates a false bridge. If taking in quietly bends a teaching toward a neuroscience idea, the bank will "discover" a link it planted itself. Faithful units with honest kinds of support are what make a discovery trustworthy.</div>
+</section>
+
+<section class="part">
+  <p class="eyebrow">Part 6</p>
+  <h2>What a bridge report looks like</h2>
+  <p>An outline only. The middle and the counts below are placeholders, not findings; nothing has been searched.</p>
+  <div class="ex">
+    <span class="lab">You suggest</span>
+    <p class="read">"Handing your fear to someone else" (from the talk) connects with how one person's anxiety spreads to another (a neuroscience topic).</p>
+    <span class="lab">The bank returns</span>
+    <dl class="rec">
+      <dt>Shared middle</dt><dd>[concepts both sides speak of]</dd>
+      <dt>Supports</dt><dd>[units, each with its kind: lab finding, teaching, account]</dd>
+      <dt>Contradicts</dt><dd>[units that cut against it]</dd>
+      <dt>Missing</dt><dd>[what no source in the bank covers yet]</dd>
+      <dt>Already done?</dt><dd>[outside writing that makes the same link]</dd>
+      <dt>State</dt><dd>Open hypothesis, until you mark it</dd>
+    </dl>
+  </div>
+</section>
+
+<section class="part">
+  <p class="eyebrow">Your call</p>
+  <h2>Three decisions before capture starts</h2>
+  <ol class="decide">
+    <li><b>Are these five kinds right?</b> Concept, claim, practice, example, open question. My recommendation: yes; they are the smallest set that keeps science, teaching and story apart without labelling what you read.</li>
+    <li><b>Should the plain neutral description of each concept be written at taking in?</b> My recommendation: yes. It is the one addition that makes cross-field matching work, and it does not change the source's meaning.</li>
+    <li><b>Should bridge reports also search outside the bank?</b> My recommendation: yes for "has this been done", bank only for the evidence, so your bank stays the record.</li>
+  </ol>
+</section>
+
+<p class="small">Grounding: the claim-with-evidence shape follows micropublications (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4530550/">Clark, Ciccarese and Goble, 2014</a>) and nanopublications, which store a statement with where it came from (<a href="https://arxiv.org/pdf/1809.06532">overview</a>). Open and closed discovery and Swanson's 1986 example: <a href="https://www.scitepress.org/Papers/2013/45463/45463.pdf">Boubekeur et al.</a>, <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4888806">Cameron et al.</a></p>
+</main>

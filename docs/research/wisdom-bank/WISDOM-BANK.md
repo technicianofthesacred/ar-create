@@ -113,6 +113,8 @@ From the interview: you return "to find some way to use this information or use 
   - **The connector is his program, shaped by him:** links across sources, clusters, inquiry, study and training. Bridges are proposed as hypotheses and confirmed by him.
   - **Discovery tools to plan for** (recommendation, the field is literature-based discovery, after Don Swanson's 1986 fish oil and Raynaud's finding): a hidden-link finder (A to B and B to C, with A to C never joined), a same-pattern finder across fields, a dial for things near in meaning but far in field, groups as experiments (what an unlikely group shares, lacks, and which sources might fill it), and a has-this-been-done check before writing.
 
+- **14 November 2026, define it before capturing, and two ways of grouping.** "It's really important before you start capturing anything the better we can define what it is that is being written, how it's being assimilated and presented to me, the better this can work for the grouping and clumping. Also we have the auto grouping and clumping, but we also have the self-suggestions of what things to link and then you find the correlation of course." Answered by [14](14-what-goes-in.html). Three decisions in it wait on him: the five kinds of unit, writing a plain neutral description of each concept at taking in, and whether bridge reports search outside the bank.
+
 ## 4. What was made, and your verdict on each
 
 | Page | What it is | Your verdict |
@@ -210,6 +212,7 @@ All on branch `claude/ar-create-ui-ux-review-71qso6`, in `docs/research/wisdom-b
 | `11-storage-and-clustering.md` | Where it is stored, and how AI forms clusters and sub-clusters (13 Nov) |
 | `12-interfaces-for-clusters.md` | Interfaces for taking in, finding and moving through clusters (13 Nov) |
 | `13-clusters-research-page.html` | The three notes above as one page |
+| `14-what-goes-in.html` | Foundations before capture: five kinds of unit (concept, claim, practice, example, open question), how each is written and shown, link kinds, grouping by the bank (open discovery) and by his suggestions (closed discovery, bridge reports); three decisions open (14 Nov). Page: https://claude.ai/artifact/FHgLTThr1if2rPGgSGQkh3 |
 | `screens/prior-art/` | Screenshots of the existing interfaces |
 
 The plans that briefed the work are `docs/plans/2026-11-11-09`, `-11`, `-12` and `-13`.
