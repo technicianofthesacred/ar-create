@@ -100,6 +100,11 @@ From the interview: you return "to find some way to use this information or use 
   - **Two kinds of thing have these levels.** A source (the whole talk): gem, cliff note, a summary that retells the whole talk in order, the original. An idea taken from it: gem, cliff note, a full reading of that one idea that also brings in what other sources say, the exact passages. The summary of a source names its ideas, and each opens in place, so it is the way between the whole and its parts.
   - **Interlinking matters more than "read more".** "I am interested in how this interlinks to thousands of things, not just read more type information." A gem reaches thousands of others through the same idea held across many sources, named links with a reason, and clusters; the screen shows the strongest few of each and a count.
 
+- **13 November 2026, the author's meaning first, unfiltered.** "Keep in mind we are trying to really understand the depths coming from the author in trying to be careful of the AI funneling it through what I want to hear that should happen after if I inquire this stuff but not before. It should be objective saving the information and the data rather than putting it through some weird filters trying to share what I want to hear about it." So:
+  - **The gem, cliff note and full reading or summary carry only the author's meaning**, in the author's order and terms, keeping the author's hedges, examples and emphasis. No advice added, nothing aimed at his interests, nothing softened or sharpened.
+  - **This replaces the earlier rule that a full reading brings in what other sources say.** Links to other sources, placement in his clusters, and what it means for him are a separate layer, made only when he asks, always marked as interpretation, never blended into the author's levels.
+  - The first Hudson page broke this in places (for example "something to test against your own life" was added, not said).
+
 ## 4. What was made, and your verdict on each
 
 | Page | What it is | Your verdict |
