@@ -15,7 +15,7 @@ import {projectMagazineMediaUsage} from '../runtime/services/magazine-media-usag
 import {createMagazinePortfolio} from '../runtime/services/magazine-portfolio.mjs';
 import {createExistingWorkReader} from '../runtime/services/review-existing-work.mjs';
 import {apply as register} from '../tools/magazine/register.mjs';
-import {treeHashes} from './helpers/magazine-fixture.mjs';
+import {treeHashes, ownChild, ownDir} from './helpers/magazine-fixture.mjs';
 
 const repo = path.resolve(import.meta.dirname, '..');
 const DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md';
@@ -67,10 +67,11 @@ async function startOwner(fixture,{initialDraft=null,endingPhotos=false,coverOpe
     'Workflow/3-Develop/DEV - River Potter (story).md':'---\ntype: DEV\nstory: River Potter\n---\n\nInvented independent sibling words.\n'
   }};
   const child = spawn(process.execPath, ['--input-type=module','--eval',ownerCode], {
-    cwd:repo, env:{PATH:process.env.PATH,HOME:process.env.HOME,TMPDIR:process.env.TMPDIR,
+    cwd:repo, env:{PATH:process.env.PATH,HOME:process.env.HOME,TMPDIR:process.env.TMPDIR,AR_FIXTURE_OWNER:'parent',
       AR_SYNTHETIC_OWNER:JSON.stringify(fixture || null), AR_SYNTHETIC_OPTIONS:JSON.stringify(options)},
     stdio:['ignore','ignore','pipe','ipc']
   });
+  ownChild(child);
   let log = '';
   child.stderr.on('data', chunk => { log = (log + chunk).slice(-6000); });
   const ready = await new Promise((resolve,reject) => {
@@ -89,8 +90,8 @@ async function stopOwner(owner) {
 }
 async function fixture(t,options) {
   let owner = await startOwner(undefined,options);
-  const f = owner.fixture;
-  t.after(async () => { await stopOwner(owner); fs.rmSync(f.dir,{recursive:true,force:true}); });
+  const f = owner.fixture, removed = ownDir(f.dir);
+  t.after(async () => { await stopOwner(owner); fs.rmSync(f.dir,{recursive:true,force:true}); removed(); });
   const registration = await register({mag:f.vault,files:f.files,data:f.data,verification:path.join(f.dir,'verification')});
   assert.equal(registration.applied,true); assert.equal(registration.identical,true);
   const publication = path.join(f.dir,'publication');

@@ -63,7 +63,10 @@
  // Keyboard: a "Skip to the page" link is the first Tab stop, and a control hidden by the look (clipped to 1px) is not a Tab stop.
  function keyboardAids(){
   if(!document.querySelector('.combined-skip')){const a=document.createElement('a');a.className='combined-skip';a.href='#workspace';a.textContent='Skip to the page';a.addEventListener('click',event=>{const page=document.getElementById('workspace');if(!page)return;event.preventDefault();page.setAttribute('tabindex','-1');page.focus({preventScroll:false});});document.body.prepend(a);}
-  const clipped=el=>{for(let x=el;x&&x!==document.body;x=x.parentElement){const c=getComputedStyle(x);if(c.clip!=='auto'&&c.position==='absolute'&&x.offsetWidth<=2&&x.offsetHeight<=2)return true;}return false;};
+  // Sizes decide first: only a box of 2px or less is asked for its computed style, so a repaint does not style every control and its ancestors.
+  // A page that is not laid out (no body width) measures every box as zero, so nothing can be judged clipped there and the scan is skipped.
+  if(!document.body.offsetWidth)return;
+  const clipped=el=>{for(let x=el;x&&x!==document.body;x=x.parentElement){if(!(x.offsetWidth<=2&&x.offsetHeight<=2))continue;const c=getComputedStyle(x);if(c.clip!=='auto'&&c.position==='absolute')return true;}return false;};
   for(const el of document.querySelectorAll('#workspace :is(a[href],button,input,select,textarea,summary,[tabindex]):not([tabindex="-1"]):not([disabled])')){if(clipped(el)){el.dataset.combinedUntabbed=el.getAttribute('tabindex')??'';el.setAttribute('tabindex','-1');}}
   for(const el of document.querySelectorAll('#workspace [data-combined-untabbed]')){if(!clipped(el)){const was=el.dataset.combinedUntabbed;if(was==='')el.removeAttribute('tabindex');else el.setAttribute('tabindex',was);delete el.dataset.combinedUntabbed;}}
  }
