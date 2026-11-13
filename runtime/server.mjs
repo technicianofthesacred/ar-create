@@ -368,9 +368,17 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask','first-flow.select','study.photos.select','study.human-direction.select','study-draft.open']);
   // Decisions whose reason belongs in the journal line itself (Adrian overriding the consent hold, taking a person off).
   const JOURNAL_REASONS=new Set(['consent.share.override','consent.people.remove']);
+  // The path the router will act on, so the journal reads the same spelling it does (the human-only gate checks every spelling, see gateSpellings):
+  // decoded, as routeRequest matches it, and URL-normalised under /transcription/, as the recordings router
+  // matches it (that folds `..`, `.` and backslashes). Null when the path cannot be decoded; the router refuses that.
+  function routedPath(request){
+   let pathname;try{pathname=decodeURIComponent((request.url||'/').split('?')[0]);}catch{return null;}
+   if(!pathname.startsWith('/transcription/'))return pathname;
+   try{return new URL(request.url,'http://local.invalid').pathname;}catch{return pathname;}
+  }
   function activityMeta(request,response,context){
    if(['GET','HEAD','OPTIONS'].includes(request.method)||!context)return null;
-   let pathname;try{pathname=decodeURIComponent((request.url||'/').split('?')[0]);}catch{return null;}
+   const pathname=routedPath(request);if(pathname===null)return null;
    const command=findCommand(commandList(),request.method,pathname);
    if(!command||command.readOnly||NOT_JOURNALED.has(command.name))return null;
    const input=request.arInput,result=response.arResult,query=new URL(request.url||'/','http://local.invalid').searchParams;

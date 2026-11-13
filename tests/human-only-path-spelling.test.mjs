@@ -1,4 +1,4 @@
-// The human-only gate, the journal and the router must all read the same path. A caller that spells the
+// The human-only gate, the journal and the router must all agree on the path. A caller that spells the
 // path differently (percent-encoding, an encoded slash, `..`, a backslash) reaches the same handler, so it
 // must meet the same refusal and leave the same journal line (review, 12 Nov 2026).
 // fetch() tidies paths before sending, so these requests go out through node:http with the path untouched.
@@ -50,13 +50,22 @@ for(const [plain,spelled] of SPELLINGS){
  });
 }
 
+test('confirming a transcript is refused to an agent however the path is spelled',async t=>{
+ const f=await setup(t),id=randomUUID();
+ for(const rawPath of [`/transcription/${id}/review`,`/transcription/x/../${id}/review`,`/transcription/${id}\\review`,`/transcription/./${id}/review`,`/transcription/${id}/../${id}/review`]){
+  const out=await f.post(rawPath,'agent:codex');
+  assert.equal(out.status,403,rawPath);assert.equal(out.body.error,'This decision is human-only; agent:codex may propose but not decide.');
+ }
+});
+
 test('a /transcription/ write is journaled under its command however the path is spelled',async t=>{
  const f=await setup(t),id=randomUUID();
- const paths=[`/transcription/${id}/review`,`/transcription/x/../${id}/review`,`/transcription/${id}\\review`,`/transcription/./${id}/review`];
+ // recover is open to agents, so these pass the gate; the journal must still see all four.
+ const paths=[`/transcription/${id}/recover`,`/transcription/x/../${id}/recover`,`/transcription/${id}\\recover`,`/transcription/./${id}/recover`];
  const statuses=[];for(const rawPath of paths)statuses.push((await f.post(rawPath,'agent:codex')).status);
  // All four reach the recordings router as the same route, so all four answer alike...
- assert.deepEqual(statuses,paths.map(()=>statuses[0]));
+ assert.notEqual(statuses[0],403);assert.deepEqual(statuses,paths.map(()=>statuses[0]));
  // ...and all four are in the journal under the transcription command, attributed to the caller.
- const lines=(await f.journal()).filter(line=>line.actor==='agent:codex'&&/transcription/.test(line.kind));
+ const lines=(await f.journal()).filter(line=>line.actor==='agent:codex'&&line.kind==='.transcription.id.action');
  assert.equal(lines.length,paths.length,JSON.stringify(lines.map(line=>line.kind)));
 });
