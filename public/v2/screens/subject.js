@@ -1,10 +1,11 @@
-/* A subject: its forms in order, the steps to the finish line, one step open with its tool.
+/* A subject: its forms in order, the steps to the finish line, and every step's tool in a section of its own, one under
+   another on one page: the side list jumps to a section and follows the page, and a section opens to the whole window.
    Two halves. The first is pure (it runs in a browser and under node --test, tests/v2-subject.test.mjs): the table of
    hand-offs to the existing workspace, how an answer of `subject.standing` is shown, which change concerns this
    subject, and the few things a tool needs worked out of records. The second half is the screen.
    Where the subject stands (the ring, the station, every form, every step, its state and what it waits for) comes ONLY
    from the command `subject.standing`, asked through one function, gather(). A tool reads its own records when its
-   step is opened, never before, and never a list of every subject. Nothing here keeps a record past the open page. */
+   section comes near the window, never before, and never a list of every subject. Nothing here keeps a record past the open page. */
 (function(root){
  'use strict';
 
@@ -466,7 +467,7 @@
   return `<div class="v2-page subj" data-subj>
    <header class="subj-head" data-subj-head><h1>&nbsp;</h1></header>
    <nav class="subj-forms" data-subj-forms aria-label="Forms, in order"><span class="subj-form none"><b>Reading</b></span></nav>
-   <div class="subj-work"><div class="subj-steps" data-subj-steps><p class="subj-quiet" role="status">Reading</p></div><section class="subj-step" data-subj-panel hidden></section></div>
+   <div class="subj-work"><div class="subj-steps" data-subj-steps><p class="subj-quiet" role="status">Reading</p></div><div class="subj-secs" data-subj-secs></div></div>
   </div>`;
  }
 
@@ -474,7 +475,7 @@
   const id=ctx.params.id,page=el.querySelector('.subj');
   // rec[k]: undefined = not asked yet (the tool says Reading); null = nothing to read; {__error} = could not be read.
   let back={};try{back=JSON.parse(root.sessionStorage.getItem('ar-v2-subject:'+id)||'{}')||{};}catch{}
-  const st={standing:null,form:ctx.query?.form||back.form||null,open:ctx.query?.step||back.step||null,rec:{},pend:{},drafts:{},sayLine:'',busy:false,frames:new Map(),last:{},look:new Map()};
+  const st={standing:null,form:ctx.query?.form||back.form||null,open:ctx.query?.step||back.step||null,rec:{},pend:{},drafts:{},sayLine:'',busy:false,frames:new Map(),last:{},look:new Map(),looks:[],seen:new Set(),zoom:null,hold:0,placed:false,came:!!(ctx.query?.step||back.step)};
   const phone=root.matchMedia?root.matchMedia('(max-width:850px)'):{matches:false};
   let timer=null,paintTimer=null;
   const $=sel=>page.querySelector(sel);
@@ -517,7 +518,6 @@
    clearTimeout(timer);
    timer=setTimeout(()=>{if(ctx.signal.aborted)return;for(const k of keys)ask(k,true);refresh();},200);
   });
-  phone.addEventListener?.('change',()=>placePanel());
 
   // ---------- drawing, in place ----------
   // With no form decided the list stops at Simmer: the rest appears when he says what it will be.
@@ -537,7 +537,8 @@
    swap('[data-subj-head]',head(s),'outer');
    swap('[data-subj-forms]',formRow(s,form),'outer');
    paintSteps(steps,form);
-   paintPanel(steps,form);
+   paintPanels(steps,form);
+   place();
   }
   /** Replace a part only when its markup changed, keeping focus where it was. */
   function swap(sel,html,how){
@@ -552,18 +553,19 @@
   function paintSteps(steps,form){
    const nav=$('[data-subj-steps]'),shape=JSON.stringify([form?.key||null,steps.map(x=>x.id),later(st.standing)]);
    if(nav.dataset.shape!==shape){
-    const panel=$('[data-subj-panel]');if(panel&&panel.parentElement!==$('.subj-work'))$('.subj-work').append(panel);
-    nav.dataset.shape=shape;nav.innerHTML=stepList(steps)+(later(st.standing)?'<p class="subj-later">The rest appears when you say what it will be.</p>':'');return;
-   }
-   for(const x of steps){
+    nav.dataset.shape=shape;nav.innerHTML=stepList(steps)+(later(st.standing)?'<p class="subj-later">The rest appears when you say what it will be.</p>':'');
+   }else for(const x of steps){
     const li=nav.querySelector(`.subj-row[data-step="${cssq(x.id)}"]`),v=viewOf(x),html=rowInner(v);
     if(li&&li.dataset.html!==html){
-     const focused=li.contains(document.activeElement),panel=li.querySelector(':scope>[data-subj-panel]');
+     const focused=li.contains(document.activeElement);
      li.dataset.state=v.state;li.dataset.html=html;li.querySelector(':scope>[data-subj-step]').outerHTML=html;
-     if(panel)li.append(panel);if(focused)li.querySelector(':scope>[data-subj-step]')?.focus({preventScroll:true});
+     if(focused)li.querySelector(':scope>[data-subj-step]')?.focus({preventScroll:true});
     }
     li?.toggleAttribute('data-open',x.id===st.open);
    }
+   // On a phone the list is a strip along the top: keep the current step in sight, without moving the page.
+   const on=nav.querySelector('.subj-row[data-open]');
+   if(on&&phone.matches&&nav.scrollWidth>nav.clientWidth)nav.scrollLeft=on.offsetLeft-(nav.clientWidth-on.clientWidth)/2;
   }
 
   const mag=()=>isMagazine(st.standing);
@@ -583,7 +585,7 @@
   const screenOfSection=(section,form)=>form&&form.kind==='article'&&(section==='read'||section==='check')?esc(v2.href(section+'/:id',{id},{piece:pieceFor(form)})):null;
   const lookName=lookId=>st.look.get(lookId)||String(lookId).replace(/^./,c=>c.toUpperCase());
   function head(s){
-   const look=s.look?`<a class="subj-look" href="${esc(v2.href('looks',{},{look:s.look}))}" title="Open this look in Looks"><i aria-hidden="true"></i>${esc(lookName(s.look))} look</a>`:`<a class="subj-look none" href="${esc(v2.href('looks'))}" title="Open Looks to see the looks you can choose from"><i aria-hidden="true"></i>Choose a look</a>`;
+   const look=`<button type="button" class="subj-look${s.look?'':' none'}" data-subj-look aria-haspopup="dialog" title="Choose the look here. Looks is where looks are made and changed"><i aria-hidden="true"></i>${s.look?esc(lookName(s.look))+' look':'Choose a look'}</button>`;
    const trail=['Subjects',...(s.folder||[])].join(' / ');
    const path=`<p class="subj-path" title="${esc(s.folder?.length?'This is a real folder on disk':'Subjects')}">${esc(trail)}</p>`;
    // The station stays for assistive technology; the sample shows it nowhere on this page.
@@ -598,7 +600,19 @@
    const chosen=isMag&&!!s.facts?.dish?.direction;
    const dir=!both?'':isMag&&!said?`<p class="subj-dir none"><span>${chosen?'A direction is chosen in the Magazine, the dish is not named':'No direction yet'}</span><a class="subj-link" data-subj-handoff="${chosen?'directionChange':'directionWrite'}" href="${handoffHref('direction',null)}" aria-label="${chosen?'See the direction':'Write the direction'} (opens the Magazine)">Open the Magazine in Advanced</a></p>`:said?`<p class="subj-dir"><span title="${esc(said)}">${esc(said)}</span>${change(HANDOFFS.directionChange.label,'directionChange','Change the direction')}</p>`
     :said===''&&!later(s)?`<p class="subj-dir none"><span>No direction yet</span>${change(HANDOFFS.directionWrite.label,'directionWrite','Write the direction')}</p>`:'';
-   return `<header class="subj-head" data-subj-head><h1 title="${esc(s.title)}">${esc(s.title)}</h1>${look}${path}${where}<span class="subj-sp"></span>${dir}</header>`;
+   return `<header class="subj-head" data-subj-head><h1 title="${esc(s.title)}">${esc(s.title)}</h1>${look}${path}${where}<span class="subj-sp"></span>${dir}${glance(s)}</header>`;
+  }
+  /** The whole subject in one line: what he has, how far it is, and the step that needs him next. */
+  function glance(s){
+   const f=s.facts||{},m=f.material,bits=[];
+   if(m)for(const [count,one] of [[m.recordings,'recording'],[m.notes,'note'],[m.links,'link'],[m.photos,'photograph']])if(count)bits.push(`<span><b>${count}</b> ${count===1?one:one+'s'}</span>`);
+   if(f.words?.count)bits.push(`<span><b>${Number(f.words.count).toLocaleString('en-GB')}</b> ${f.words.count===1?'word':'words'}</span>`);
+   const steps=current().steps.filter(x=>x.state!=='unknown'),done=steps.filter(x=>x.state==='done').length;
+   if(steps.length)bits.push(`<span><b>${done} of ${steps.length}</b> steps done</span>`);
+   if(s.asks)bits.push(`<a class="subj-link" href="#/">${plural(s.asks,'question')} waiting on you${icon('chev')}</a>`);
+   const nx=steps.find(x=>x.state==='flag')||steps.find(x=>x.state==='next');
+   if(nx)bits.push(`<button type="button" class="subj-link" data-subj-step="${esc(nx.id)}">Next: ${esc(nx.name)}${icon('chev')}</button>`);
+   return bits.length?`<p class="subj-glance" data-subj-glance>${bits.join('')}</p>`:'';
   }
   function formRow(s,form){
    // Forms cannot be reordered yet (no record keeps their order), so there is no drag grip; the number is their place.
@@ -613,35 +627,91 @@
     return `<section class="subj-grp"><h3 class="subj-group">${g}</h3><ol>${rows.map(x=>{const v=viewOf(x),html=rowInner(v);return `<li class="subj-row" data-step="${esc(x.id)}" data-state="${v.state}"${x.id===st.open?' data-open':''} data-html="${esc(html)}">${html}</li>`;}).join('')}</ol></section>`;}).join('');
   }
   const rowInner=v=>{const on=v.id===st.open;
-   return `<button type="button" data-subj-step="${esc(v.id)}" aria-expanded="${on}"${on?' class="v2-current"':''}>${v.mark?mark(v.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<b>${esc(v.name)}</b>${v.note?`<small title="${esc(v.note)}">${esc(v.note)}</small>`:''}</button>`;};
+   return `<button type="button" data-subj-step="${esc(v.id)}"${on?' aria-current="step" class="v2-current"':''}>${v.mark?mark(v.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<b>${esc(v.name)}</b>${v.note?`<small title="${esc(v.note)}">${esc(v.note)}</small>`:''}</button>`;};
 
   function paintMissing(error){
    page.innerHTML=`<header class="subj-head"><h1>This subject could not be found</h1></header><p class="subj-quiet">${esc(error?.message||'Nothing in the records has this name.')}</p><p><a class="v2-out" href="#/">Home${icon('right')}</a></p>`;
   }
 
-  // ---------- the open step ----------
-  function paintPanel(steps,form){
-   const panel=$('[data-subj-panel]');if(!panel)return;
-   const s=steps.find(x=>x.id===st.open);
-   if(!s){panel.hidden=true;st.last.panel='';return;}
-   const v=viewOf(s);
-   const quiet=s.id==='have'&&s.state==='next';
-   const html=`<header><p class="subj-label">${esc(s.group)}</p><h2 tabindex="-1">${esc(s.name)}</h2>${v.note&&!quiet?`<p class="subj-note" data-state="${v.state}">${esc(v.note)}</p>`:''}</header>${tool(s,form,steps)}${nextUp(s,form,steps)}`;
-   panel.hidden=false;
-   if(st.last.panel!==html){const back=panel.contains(document.activeElement)?keyOf(document.activeElement):null;st.last.panel=html;panel.innerHTML=html;paintFrames(panel);if(back)$(back)?.focus({preventScroll:true});}
-   placePanel();
+  // ---------- every step, one under another ----------
+  const secOf=sid=>sid?$(`[data-subj-sec="${cssq(sid)}"]`):null;
+  /** A step's records are read when its section comes near the window (at once where the browser cannot say). */
+  let watcher=null;
+  function watch(box){
+   watcher?.disconnect?.();watcher=null;
+   if(typeof root.IntersectionObserver!=='function')return;
+   watcher=new root.IntersectionObserver(list=>{let any=false;for(const x of list){const sid=x.target.dataset.subjSec;if(x.isIntersecting&&!st.seen.has(sid)){st.seen.add(sid);any=true;}}if(any)schedule();},{rootMargin:'600px 0px'});
+   for(const sec of box.children)watcher.observe(sec);
   }
-  /** On a phone the open step sits under its own row; on a computer, beside the list. One panel, moved, never two. */
-  function placePanel(){
-   const panel=$('[data-subj-panel]'),work=$('.subj-work');if(!panel||!work)return;
-   const open=$('.subj-row[data-open]');
-   if(phone.matches&&open){if(panel.parentElement!==open)open.append(panel);panel.classList.add('inline');}
-   else{if(panel.parentElement!==work)work.append(panel);panel.classList.remove('inline');}
+  function paintPanels(steps,form){
+   const box=$('[data-subj-secs]');if(!box)return;
+   const shape=JSON.stringify([form?.key||null,steps.map(x=>x.id)]);
+   if(box.dataset.shape!==shape){
+    box.dataset.shape=shape;for(const k of Object.keys(st.last))if(k.startsWith('panel:'))delete st.last[k];
+    if(st.zoom&&!steps.some(x=>x.id===st.zoom)){st.zoom=null;document.documentElement.style.overflow='';}
+    box.innerHTML=steps.map(x=>`<section class="subj-step" data-subj-sec="${esc(x.id)}"></section>`).join('');watch(box);
+   }
+   for(const s of steps){
+    const sec=secOf(s.id);if(!sec)continue;
+    if(!watcher||s.id===st.open)st.seen.add(s.id);
+    if(st.seen.has(s.id))need(s.id);
+    const v=viewOf(s),quiet=s.id==='have'&&s.state==='next',big=st.zoom===s.id;
+    const html=`<header><p class="subj-label">${esc(s.group)}</p><h2 tabindex="-1">${esc(s.name)}</h2>${v.note&&!quiet?`<p class="subj-note" data-state="${v.state}">${esc(v.note)}</p>`:''}<button type="button" class="v2-ghost subj-zoom" data-subj-zoom="${esc(s.id)}" aria-pressed="${big}">${big?'Back to the article':'Full size'}</button></header>${tool(s,form,steps)}`;
+    // The current step's section answers to [data-subj-panel], as the one open panel did.
+    sec.toggleAttribute('data-subj-panel',s.id===st.open);sec.classList.toggle('zoomed',big);
+    const key='panel:'+s.id;
+    if(st.last[key]!==html){const back=sec.contains(document.activeElement)?keyOf(document.activeElement):null;st.last[key]=html;sec.innerHTML=html;paintFrames(sec);if(back)$(back)?.focus({preventScroll:true});}
+   }
   }
-  function nextUp(s,form,steps){
-   if(s.state!=='done')return '';
-   const nx=(form?.next&&steps.find(x=>x.id===form.next.step&&x.state!=='unknown'))||steps.find(x=>x.state==='flag')||steps.find(x=>x.state==='next');
-   return nx&&nx.id!==s.id?`<footer class="subj-next"><span>${mark('done')}This step is done.</span><button type="button" class="pri" data-subj-step="${esc(nx.id)}">Next: ${esc(nx.name)}${icon('right')}</button></footer>`:'';
+  const calm=()=>!!root.matchMedia?.('(prefers-reduced-motion:reduce)').matches;
+  /** Bring a step's section to the top of the window. The side list holds still until the page has arrived. */
+  function goTo(sid,smooth=true){const sec=secOf(sid);if(!sec)return;st.hold=Date.now()+1500;sec.scrollIntoView?.({block:'start',behavior:smooth&&!calm()?'smooth':'auto'});}
+  /** Once, when he comes back to a step (the address or this tab remembers it), the page goes to it. A page opened fresh stays at the top. */
+  function place(){
+   if(st.placed||!st.standing)return;st.placed=true;
+   if(st.came&&st.open&&st.open!==current().steps[0]?.id)goTo(st.open,false);
+  }
+  /** The side list follows the page: the step whose section has reached the top of the window is the current one. */
+  let keep=null;
+  function spy(){
+   if(ctx.signal.aborted||st.zoom||Date.now()<st.hold)return;
+   const secs=[...page.querySelectorAll('[data-subj-sec]')];if(!secs.length)return;
+   const line=(parseFloat(root.getComputedStyle(document.documentElement).getPropertyValue('--v2-top'))||48)+140;
+   let now=secs[0];for(const s of secs)if(s.getBoundingClientRect().top<=line)now=s;
+   if(root.innerHeight+root.scrollY>=document.documentElement.scrollHeight-4)now=secs[secs.length-1];
+   const sid=now.dataset.subjSec;if(sid===st.open)return;
+   st.open=sid;clearTimeout(keep);keep=setTimeout(()=>{if(!ctx.signal.aborted)remember();},300);paintNow();
+  }
+  const arrived=()=>{st.hold=0;};
+  root.addEventListener('scroll',spy,{passive:true});root.addEventListener('scrollend',arrived);
+  ctx.signal.addEventListener('abort',()=>{root.removeEventListener('scroll',spy);root.removeEventListener('scrollend',arrived);clearTimeout(keep);watcher?.disconnect?.();document.documentElement.style.overflow='';});
+  /** Open one section to the whole window, or fold it back. The page behind does not move, so he lands where he was. */
+  function setZoom(sid){
+   const was=st.zoom;st.zoom=sid||null;document.documentElement.style.overflow=st.zoom?'hidden':'';// the page behind holds still
+   if(sid){st.open=sid;st.seen.add(sid);remember();}
+   paintNow();
+   const sec=secOf(sid||was);if(!sec)return;
+   if(sid){sec.scrollTop=0;sec.querySelector('h2')?.focus({preventScroll:true});}
+   else sec.querySelector('[data-subj-zoom]')?.focus({preventScroll:true});
+  }
+  /** Choose the look without leaving the page. A look is kept with a Carousel, so the choice is set on each of this subject's. */
+  function chooseLook(){
+   const s=st.standing;if(!s)return;
+   const plans=(s.forms||[]).filter(f=>f.kind==='instagram'),now=s.look||null,list=st.looks.filter(l=>l.drawable!==false);
+   const why=plans.length?`The look is kept with this subject's ${plans.length===1?'Carousel':'Carousels'}. You stay on this page.`:'A look is kept with a Carousel drawn in the slide studio, and this subject has none yet. Add a Carousel, then choose its look here.';
+   const rows=list.map(l=>`<button type="button" data-subj-setlook="${esc(l.id)}" aria-pressed="${l.id===now}"${plans.length?'':' disabled'}><b>${esc(l.name)}</b>${l.description?`<span>${esc(l.description)}</span>`:''}${l.id===now?'<em>In use</em>':''}</button>`).join('');
+   const body=`<p class="subj-quiet">${esc(why)}</p><div class="subj-kinds">${rows||'<p class="subj-quiet">The looks could not be read.</p>'}</div><p class="subj-lookmore"><a class="subj-link" data-subj-lookedit href="${esc(v2.href('looks',{},now?{look:now}:{}))}">Make and change looks in Looks${icon('chev')}</a></p>`;
+   const sheet=v2.ui.sheet({title:'Choose a look',body});sheet.el.classList.add('subj-sheetdlg');
+   ctx.signal.addEventListener('abort',()=>sheet.close(),{once:true});// leaving the page closes it
+   sheet.body.addEventListener('click',async e=>{
+    if(e.target.closest('[data-subj-lookedit]')){sheet.close();return;}
+    const b=e.target.closest('[data-subj-setlook]');if(!b||b.disabled||st.busy)return;
+    const look=b.dataset.subjSetlook;sheet.close();
+    await act(['planRecords'],async()=>{
+     for(const f of plans){const p=await v2.call('instagram.plan.get',{id:f.id});if(p?.look===look)continue;await v2.call('instagram.look',{id:f.id,...v2.expect(p),look});}
+     v2.ui.say(lookName(look)+' look chosen.',{tone:'good'});
+    });
+   });
   }
   /** A hand-off link, named in HANDOFFS so its label and its section cannot drift apart. */
   const out=(key,form,cls='subj-link')=>`<a class="${cls}" data-subj-handoff="${key}" href="${key==='write'?writeHref(form):screenHref(key,form)||handoffHref(HANDOFFS[key].section,form)}" title="${key==='write'&&form?.kind==='article'?'Opens Write':ownScreen(key,form)?'Opens '+SCREEN_OF[key][0].toUpperCase()+SCREEN_OF[key].slice(1):(mag()?'Opens Advanced. A story cannot be opened from a link there, so find it on its Magazine board':'Opens in '+where())}">${esc(ownScreen(key,form)&&SCREEN_LABEL[key]||said(HANDOFFS[key].label))}${cls==='subj-link'?icon('chev'):''}</a>`;
@@ -796,6 +866,7 @@
    const known=['tree','brief','planRecords'].every(k=>rec(k)!==undefined);
    const m=known?materialFrom({tree:rec('tree'),brief:rec('brief'),planRecords:Array.isArray(rec('planRecords'))?rec('planRecords'):[]},ids().projectId):null;
    const photos=m?m.items.filter(x=>x.kind==='photos'):[],rest=m?m.items.filter(x=>x.kind!=='photos'):[];
+   const capList=st.zoom==='have'?Infinity:11,capTray=st.zoom==='have'?Infinity:12;
    const KIND={recordings:'Recording',notes:'Your note',links:'Link'},IC={recordings:'mic',notes:'note',links:'note'};
    const jobs=ok(rec('recordings'))?rec('recordings'):null,byJob=new Map((jobs?.jobs||[]).map(j=>[j.sourceId,j])),done=new Set(registeredJobs(rec('tree'),rec('brief')));
    // A transcript kept as a source (by the button, or in Advanced) is itself part of what he has.
@@ -816,8 +887,8 @@
     const b=keptSure?cs.block():'';
     return confirmMarkup()+b;
    };
-   const list=rest.length?`<ul class="subj-have">${rest.slice(0,11).map(x=>`<li>${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${x.recordingId?'Transcript':KIND[x.kind]}</small>${where(x)}</li>`).join('')}${rest.length>11?`<li><small>and ${rest.length-11} more</small></li>`:''}</ul>`:'';
-   const tray=photos.length?`<div class="subj-tray">${photos.slice(0,12).map(x=>`<img src="/api/sources/blob?id=${encodeURIComponent(x.id)}" alt="${esc(x.title)}" loading="lazy">`).join('')}${photos.length>12?`<span>+${photos.length-12}</span>`:''}</div>`:'';
+   const list=rest.length?`<ul class="subj-have">${rest.slice(0,capList).map(x=>`<li>${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${x.recordingId?'Transcript':KIND[x.kind]}</small>${where(x)}</li>`).join('')}${rest.length>capList?`<li><small>and ${rest.length-capList} more. Full size shows them all.</small></li>`:''}</ul>`:'';
+   const tray=photos.length?`<div class="subj-tray">${photos.slice(0,capTray).map(x=>`<img src="/api/sources/blob?id=${encodeURIComponent(x.id)}" alt="${esc(x.title)}" loading="lazy">`).join('')}${photos.length>capTray?`<span>+${photos.length-capTray}</span>`:''}</div>`:'';
    const any=s.state==='done'||list||tray;
    if(!any)return (!known?reading():'')+ways();
    return (!known?reading():'')+list+csPanels()+tray+`<a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${handoffHref('material',null)}" title="${wayTip()}">${icon('plus')}Add a recording, note, link or photographs</a>`;
@@ -948,27 +1019,32 @@
      // Reading the proof (transcript-check.id) holds a writer lock only for the length of that one read and leaves the transcript's mapping in place; recordings.source (Adrian only) then keeps it as a source.
      act(['recordings','tree','brief'],async()=>{let kept;try{const check=await v2.call('transcript-check.id',{id:job});kept=await v2.call('recordings.source',{jobId:job,expected:check.expected});}catch(error){throw new Error(sourceRefusal(error));}await keepWithSubject(kept?.source?.id);v2.ui.say('The transcript is now one of your sources.',{tone:'good'});});return;}
     act(['recordings','tree'],async()=>{await v2.call('.transcription.id.action',{id:job,action});v2.ui.say(action==='start'?'The transcript is being made.':'Trying the transcript again.',{tone:'good'});});return;}
+   if(e.target.closest('[data-subj-look]')){e.preventDefault();chooseLook();return;}
+   const z=e.target.closest('[data-subj-zoom]');
+   if(z){e.preventDefault();setZoom(st.zoom===z.dataset.subjZoom?null:z.dataset.subjZoom);return;}
    const b=e.target.closest('[data-subj-step]');
-   if(b){e.preventDefault();openStep(b.dataset.subjStep);return;}
+   if(b){e.preventDefault();openStep(b.dataset.subjStep,b);return;}
    const f=e.target.closest('[data-subj-form]');
    if(f){chooseFormByKey(f.dataset.subjForm);return;}
    if(e.target.closest('[data-subj-add]'))addForm();
-   if(e.target.closest('[data-subj-dishedit]')){const b=ok(rec('board'))?rec('board'):null,n=b?.forming?.named,d=rec('direction');st.editDish=(typeof n==='string'?n:n?.text)||(ok(d)?adoptedRaw(d.body):'');st.last.panel='';paintNow();$('[data-subj-dishtext]')?.focus();}
-   if(e.target.closest('[data-subj-dishcancel]')){delete st.editDish;st.last.panel='';paintNow();}
+   if(e.target.closest('[data-subj-dishedit]')){const b=ok(rec('board'))?rec('board'):null,n=b?.forming?.named,d=rec('direction');st.editDish=(typeof n==='string'?n:n?.text)||(ok(d)?adoptedRaw(d.body):'');delete st.last['panel:dish'];paintNow();$('[data-subj-dishtext]')?.focus();}
+   if(e.target.closest('[data-subj-dishcancel]')){delete st.editDish;delete st.last['panel:dish'];paintNow();}
   });
-  function openStep(sid){
-   if(sid!==st.open)delete st.editDish;
-   st.open=sid;need(sid);remember();paintNow();
-   // Focus stays on the step he pressed; the open tool is the next thing in the tab order.
-   $(`.subj-row[data-step="${cssq(sid)}"]>[data-subj-step]`)?.focus({preventScroll:true});
-   if(phone.matches)$('[data-subj-panel]')?.scrollIntoView?.({block:'nearest'});
+  function openStep(sid,from=null){
+   const list=!!from?.closest?.('.subj-row');// asked now: painting replaces the row he pressed
+   if(st.zoom)setZoom(null);
+   st.open=sid;st.seen.add(sid);need(sid);remember();paintNow();
+   goTo(sid);
+   // From the side list, focus stays on the step he pressed. From anywhere else it goes to the section he asked for.
+   if(list)$(`.subj-row[data-step="${cssq(sid)}"]>[data-subj-step]`)?.focus({preventScroll:true});
+   else secOf(sid)?.querySelector('h2')?.focus({preventScroll:true});
   }
   /** He chose another form: its own next step opens (his act, so it may move the open step). */
   function chooseFormByKey(key){
    const f=(st.standing?.forms||[]).find(x=>x.key===key);if(!f)return;
    st.form=key;st.open=firstOpen(stepsOfForm(st.standing,f),f);if(st.open)need(st.open);remember();paintNow();$(`[data-subj-form="${cssq(key)}"]`)?.focus();
   }
-  page.addEventListener('keydown',e=>{if(e.key==='Escape'&&cf.job&&cf.state!=='busy'&&e.target.closest?.('[data-cs-confirm]')){e.preventDefault();e.stopPropagation();closeConfirm();}});
+  page.addEventListener('keydown',e=>{if(e.key==='Escape'&&st.zoom&&!(cf.job&&e.target.closest?.('[data-cs-confirm]'))){e.preventDefault();setZoom(null);return;}if(e.key==='Escape'&&cf.job&&cf.state!=='busy'&&e.target.closest?.('[data-cs-confirm]')){e.preventDefault();e.stopPropagation();closeConfirm();}});
   page.addEventListener('input',e=>{const t=e.target;if(t.dataset.csName){cf.names[t.dataset.csName]=t.value;return;}if(t.dataset.subjDraft)st.drafts[t.dataset.subjDraft]=t.value;if(t.matches('[data-subj-say]'))st.sayLine=t.value;if(t.matches('[data-subj-dishtext]'))st.editDish=t.value;});
   page.addEventListener('submit',async e=>{
    const form=e.target;e.preventDefault();if(st.busy)return;
@@ -980,7 +1056,7 @@
    if(form.matches('[data-subj-dishform]')){
     const text=(st.editDish||'').trim();
     if(!text){v2.ui.say('Say the dish first.',{tone:'warn'});return;}
-    await act(['board','direction'],async()=>{const b=await v2.call('simmer.board.get',{subject:id});await v2.call('simmer.dish',{subject:id,sentence:text,said:'typed',...v2.expect(b)});delete st.editDish;st.last.panel='';v2.ui.say('The dish is kept in your words.',{tone:'good'});});
+    await act(['board','direction'],async()=>{const b=await v2.call('simmer.board.get',{subject:id});await v2.call('simmer.dish',{subject:id,sentence:text,said:'typed',...v2.expect(b)});delete st.editDish;delete st.last['panel:dish'];v2.ui.say('The dish is kept in your words.',{tone:'good'});});
    }
    if(form.matches('[data-subj-sayform]')){
     const f=current().form,line=(st.sayLine||'').trim();if(f?.kind!=='instagram'||!line)return;
@@ -1033,7 +1109,7 @@
   }
 
   // First paint comes from the one command; the look's name and his direction sentence follow, each from one read.
-  call('looks',{}).then(r=>{if(!ok(r)||ctx.signal.aborted)return;st.look=new Map((r.looks||[]).map(l=>[l.id,l.name]));paintNow();});
+  call('looks',{}).then(r=>{if(!ok(r)||ctx.signal.aborted)return;st.looks=r.looks||[];st.look=new Map(st.looks.map(l=>[l.id,l.name]));paintNow();});
   ask('direction');ask('board');
   return refresh();
  }
