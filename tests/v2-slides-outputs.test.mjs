@@ -57,7 +57,7 @@ test('an Outputs carousel opens read only: the slide large, the strip, its real 
 test('the header names the subject and links back; one Open in Advanced lands on this piece', async () => {
  const {doc}=await mount({answers:ok});
  const back=doc.querySelector('.sl-back');
- assert.equal(back.textContent.trim(),'The lantern night');assert.ok(back.getAttribute('href').startsWith('#/subject/demo-lantern'));
+ assert.equal(back.textContent.trim(),'Back to The lantern night','Back says where it leads, as on every screen');assert.ok(back.getAttribute('href').startsWith('#/subject/demo-lantern'));
  const adv=[...doc.querySelectorAll('a')].filter(a=>/Open in Advanced/.test(a.textContent));
  assert.equal(adv.length,1);
  assert.equal(adv[0].getAttribute('href'),'/document-study/index.html?subject=demo-lantern&piece='+PIECE+'&section=arrange');

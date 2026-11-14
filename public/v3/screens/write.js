@@ -147,7 +147,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   // One line on a computer and two fixed lines on a phone, in every state: the way back (named after the subject), the
   // piece tabs, the Write | Read | Check segment, then `right` (the status place and the tools), which never wraps.
   return `<div class="wr-bar" data-wr-bar>
-    <a class="wr-back" href="${esc(v2.href('subject/:id',{id}))}" aria-label="Back to the subject" title="${esc(name?'Back to '+name:'Back to the subject')}">${icon('back')}<span>${esc(name||'The subject')}</span></a>
+    <a class="wr-back" href="${esc(v2.href('subject/:id',{id}))}" aria-label="Back to the subject" title="${esc(name?'Back to '+name:'Back to the subject')}">${icon('back')}<span>${esc(name?'Back to '+name:'Back to the subject')}</span></a>
     <nav class="wr-tabs" aria-label="Pieces of this subject">${forms.map(formTab).join('')}<a href="${esc(v2.href('subject/:id',{id}))}" aria-label="Add a piece on the subject page" title="Add a form on the subject page">${icon('plus')}</a></nav>
     <span class="wr-sep" aria-hidden="true"></span>
     <div class="wr-seg" role="group" aria-label="Write, Read or Check">${seg}</div>

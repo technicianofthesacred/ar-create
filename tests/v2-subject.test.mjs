@@ -237,7 +237,7 @@ test('six invented subjects at different stages each show exactly what subject.s
   assert.match(decodeURIComponent(w.location.hash),/step=have/);assert.match(decodeURIComponent(w.location.hash),/form=out:/);}
 });
 
-test('one page: every step has its own section, the current one answers as the open panel, the top line says where the subject stands, and a section opens to full size and folds back',{timeout:300000},async t=>{
+test('one page: every step has its own section, the current one answers as the open panel, the top line says where the subject stands, and a section opens to full size and folds back, and a thing he has opens where it is',{timeout:300000},async t=>{
  const base=await server(t);
  await fillDemo(base,{only:['the-first-cup']});
  const id='demo-the-first-cup',standing=await standingOf(base,id);
@@ -251,15 +251,25 @@ test('one page: every step has its own section, the current one answers as the o
  const glance=doc.querySelector('.subj-head [data-subj-glance]');
  assert.match(glance.textContent,new RegExp(standing.forms[0].steps.filter(s=>s.state==='done').length+' of '),'the top line counts the steps done');
  assert.equal(glance.querySelector('[data-subj-step]')?.dataset.subjStep,standing.next.step,'and offers the step that needs him next');
- // Full size: the section fills the window, the page behind holds still, Escape folds it back with focus on its button.
- const sec=doc.querySelector('[data-subj-sec="have"]');sec.querySelector('[data-subj-zoom]').click();
+ // Full size: pressing a section's heading fills the window, the page behind holds still, and its place in the page is kept.
+ const sec=doc.querySelector('[data-subj-sec="have"]');sec.querySelector(':scope>header').click();
  assert.ok(sec.classList.contains('zoomed'));assert.equal(doc.documentElement.style.overflow,'hidden');
- assert.equal(sec.querySelector('[data-subj-zoom]').getAttribute('aria-pressed'),'true');assert.match(sec.querySelector('[data-subj-zoom]').textContent,/Back to the article/);
+ assert.ok(doc.querySelector('[data-subj-hold]'),'its place in the page is held while it is open');
+ assert.match(sec.querySelector('.subj-back').textContent,new RegExp('^Back to '+standing.title),'the Back says where it leads');
+ assert.equal(sec.firstElementChild,sec.querySelector('.subj-back'),'and it comes first, top left');
  sec.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
- assert.ok(!sec.classList.contains('zoomed'));assert.equal(doc.documentElement.style.overflow,'');
- assert.equal(doc.activeElement,sec.querySelector('[data-subj-zoom]'),'focus goes back to the button that opened it');
+ assert.ok(!sec.classList.contains('zoomed'));assert.equal(doc.documentElement.style.overflow,'');assert.equal(doc.querySelector('[data-subj-hold]'),null);
+ sec.querySelector(':scope>header').click();sec.querySelector('.subj-back').click();assert.ok(!sec.classList.contains('zoomed'),'Back folds it too');
+ // A thing he has opens where it is: its words are read from the Library and shown in the section; he stays on the page.
+ const thing=await until(()=>sec.querySelector('.subj-have>li[data-subj-src]'));thing.click();
+ const reader=await until(()=>sec.querySelector('[data-subj-reader] .subj-readtext'));
+ assert.ok(reader.textContent.trim().length>0,'the words of the note are shown');assert.match(decodeURIComponent(w.location.hash),/^#\/subject\//);
+ sec.querySelector('[data-subj-readclose]').click();assert.equal(sec.querySelector('[data-subj-reader]'),null);
+ // Advanced is hidden for now: a step whose only tools were links there says its tool is not on this page yet.
+ const photos=doc.querySelector('[data-subj-sec="photos"]');
+ if(photos&&![...photos.querySelectorAll('a,button')].some(x=>!x.matches('[data-subj-zoom]')&&!(x.getAttribute('href')||'').startsWith('/document-study')))assert.ok(photos.querySelector('[data-subj-soon]'),'it says so plainly');
  // A step asked for from the top line becomes the current one, and the address keeps it for coming back.
- glance.querySelector('[data-subj-step]').click();
+ doc.querySelector('.subj-head [data-subj-glance] [data-subj-step]').click();// asked for afresh: the head is drawn again as its records arrive
  assert.equal(doc.querySelector('[data-subj-panel]').dataset.subjSec,standing.next.step);
  assert.match(decodeURIComponent(w.location.hash),new RegExp('step='+standing.next.step));
 });
