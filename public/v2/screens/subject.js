@@ -654,15 +654,59 @@
     // The current step's section answers to [data-subj-panel], as the one open panel did.
     sec.toggleAttribute('data-subj-panel',s.id===st.open);sec.classList.toggle('zoomed',big);
     const key='panel:'+s.id;
-    if(st.last[key]!==html){const backTo=sec.contains(document.activeElement)?keyOf(document.activeElement):null;st.last[key]=html;sec.innerHTML=html;paintFrames(sec);soon(sec);if(backTo)$(backTo)?.focus({preventScroll:true});}
+    if(st.last[key]!==html){const backTo=sec.contains(document.activeElement)?keyOf(document.activeElement):null;st.last[key]=html;sec.innerHTML=html;paintFrames(sec);embed(sec);soon(sec);if(backTo)$(backTo)?.focus({preventScroll:true});}
    }
   }
+  // ---------- tools brought over from the existing workspace, run on this page itself ----------
+  // A tool the existing workspace already has is not written twice: its own file is loaded when its step is on the page and
+  // it is put straight into the section (no frame, so one page, one scroll, the same colours). It keeps its own saving rules.
+  // `covers` names the hand-offs it stands in for, so the step no longer says those are missing.
+  const BORROWED={photos:{js:'/document-study/study-photos.js',css:'/document-study/study-photos.css',ready:()=>typeof root.mountPhotosStage==='function'}};
+  const loads=new Map();
+  function bring(kind){
+   const b=BORROWED[kind];if(b.ready())return Promise.resolve();
+   if(!loads.has(kind))loads.set(kind,new Promise((done,fail)=>{
+    if(b.css&&!document.querySelector(`link[href="${b.css}"]`)){const l=document.createElement('link');l.rel='stylesheet';l.href=b.css;document.head.append(l);}
+    const s=document.createElement('script');s.src=b.js;s.onload=()=>b.ready()?done():fail(new Error('The tool could not be started.'));s.onerror=()=>fail(new Error('The tool could not be loaded.'));document.head.append(s);
+   }));
+   return loads.get(kind);
+  }
+  const embeds=new Map();// kind|binding -> {node, instance}: the node is kept and put back when its section is drawn again
+  const borrowed=(kind,covers)=>!mag()&&ids().bindingId&&typeof document.createElement==='function'?`<div class="subj-embed" data-subj-embed="${kind}" data-subj-covers="${covers}"></div>`:'';
+  /** The borrowed tool asks by address; here every address is one of the app's named commands, asked through the page's own
+      client like everything else (the same actor, the same checks). An address with no command is refused, never fetched. */
+  const asMe=(url,input)=>{const [path,query]=String(url).split('?'),m=/^\/api\/study\/photos(\/[a-z-]+)?$/.exec(path);if(!m)return Promise.reject(new Error('That is not available on this page.'));
+   return v2.call('study.photos'+(m[1]||'').replace('/','.'),input||Object.fromEntries(new URLSearchParams(query||'')));};
+  function embed(sec){
+   for(const slot of sec.querySelectorAll('[data-subj-embed]')){
+    const kind=slot.dataset.subjEmbed,binding=ids().bindingId,key=kind+'|'+binding;let e=embeds.get(key);
+    if(e){e.node.dataset.subjCovers=slot.dataset.subjCovers;slot.replaceWith(e.node);continue;}
+    e={node:slot,instance:null};embeds.set(key,e);slot.innerHTML='<p class="subj-quiet" role="status">Reading</p>';
+    startPhotos(e,binding);
+   }
+  }
+  /** The photographs of this article: the collection the existing workspace keeps for it. Reading it changes nothing; the
+      collection is made only when he presses to start choosing. */
+  async function startPhotos(e,binding){
+   const say=html=>{if(!ctx.signal.aborted)e.node.innerHTML=html;};
+   const mountIt=async found=>{await bring('photos');if(ctx.signal.aborted)return;e.node.innerHTML='';e.instance=root.mountPhotosStage(e.node,{projectId:found.projectId,documentId:found.documentId,request:asMe});};
+   try{
+    const key='owned-draft:'+binding,found=await call('first-flow.binding',{projectKey:key});
+    if(ok(found)&&found.projectKey===key&&typeof found.projectId==='string'&&typeof found.documentId==='string'){await mountIt(found);return;}
+    say('<p class="subj-quiet">No photographs are chosen for this article yet.</p><div class="subj-actions"><button type="button" class="subj-btn pri" data-subj-startphotos>Choose photographs</button></div>');
+    e.node.addEventListener('click',async ev=>{const b=ev.target.closest('[data-subj-startphotos]');if(!b||b.disabled)return;b.disabled=true;
+     try{const made=await v2.call('study.photos.select',{bindingId:binding,parentStudyId:id});await mountIt(made);}
+     catch(error){b.disabled=false;v2.ui.say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});}});
+   }catch(error){say(`<p class="subj-quiet" role="alert">${esc(error?.message||'The photographs could not be read.')}</p>`);}
+  }
+  ctx.signal.addEventListener('abort',()=>{for(const e of embeds.values()){try{e.instance?.destroy?.();}catch{}}embeds.clear();});
   /** Advanced is hidden for now. A step whose only tools were links there says plainly that its tool is not on this page yet. */
   const toAdvanced=a=>(a.getAttribute('href')||'').startsWith('/document-study')&&!a.hasAttribute('data-subj-capture');
   function soon(sec){
    for(const box of sec.querySelectorAll('.subj-links,.subj-actions'))box.toggleAttribute('data-subj-empty',![...box.children].some(x=>!(x.tagName==='A'&&toAdvanced(x))));
    const body=[...sec.children].filter(x=>x.tagName!=='HEADER'&&!x.matches('.subj-back,[data-subj-empty]'));
-   const gone=[...new Set([...sec.querySelectorAll('a[href]')].filter(toAdvanced).map(x=>x.textContent.trim().replace(/ in Advanced$/,'')).filter(Boolean))];
+   const covered=new Set([...sec.querySelectorAll('[data-subj-covers]')].flatMap(x=>x.dataset.subjCovers.split(' ')));
+   const gone=[...new Set([...sec.querySelectorAll('a[href]')].filter(toAdvanced).filter(x=>!covered.has(x.dataset.subjHandoff)).map(x=>x.textContent.trim().replace(/ in Advanced$/,'')).filter(Boolean))];
    if(!body.length)sec.insertAdjacentHTML('beforeend','<p class="subj-quiet" data-subj-soon>This step has no tool on this page yet. It is being built here.</p>');
    // Nothing is hidden silently: what still lives only in Advanced is named, so a step never looks finished when it is not.
    else if(gone.length)sec.insertAdjacentHTML('beforeend',`<p class="subj-quiet" data-subj-soon>Not on this page yet: ${esc(gone.join(', '))}.</p>`);
@@ -858,7 +902,7 @@
     case 'dish':return toolDish(s,steps,form);
     case 'form':return waitsFor(s,steps)+`<div class="subj-actions"><button type="button" class="pri" data-subj-add>Add a form</button></div>`+links(own(s,form));
     case 'words':return toolWords(s,form);
-    case 'photos':return waitsFor(s,steps)+links(...(s.missing?[out('addPhotos',form)]:[]),out('media',form),out('arrange',form));
+    case 'photos':return waitsFor(s,steps)+borrowed('photos','media addPhotos')+links(...(s.missing?[out('addPhotos',form)]:[]),out('media',form),out('arrange',form));
     case 'check':return toolCheck(s,steps,form);
     case 'story':return toolStory(s,form);
     case 'slides':return form?.kind==='instagram'?toolSlides(s,form,steps):outputStudio(form)?toolOutputSlides(s,form):links(own(s,form));
@@ -1050,14 +1094,14 @@
    const src=e.target.closest('[data-subj-src]');
    if(src&&!e.target.closest('a,button,input,textarea,select,label')){e.preventDefault();openReader(src.closest('[data-subj-sec]')?.dataset.subjSec,src.dataset.subjSrc,src.dataset.title||'',src.dataset.kind||'');return;}
    const z=e.target.closest('[data-subj-zoom]');
-   if(z&&(z.tagName==='BUTTON'||!st.zoom)&&!e.target.closest('a,input,textarea,select,label')){e.preventDefault();setZoom(st.zoom===z.dataset.subjZoom?null:z.dataset.subjZoom);return;}
+   if(z&&(z.tagName==='BUTTON'||!st.zoom)&&!e.target.closest('a,input,textarea,select,label,[data-subj-embed]')){e.preventDefault();setZoom(st.zoom===z.dataset.subjZoom?null:z.dataset.subjZoom);return;}
    const b=e.target.closest('[data-subj-step]');
    if(b){e.preventDefault();openStep(b.dataset.subjStep,b);return;}
    const f=e.target.closest('[data-subj-form]');
    if(f){chooseFormByKey(f.dataset.subjForm);return;}
    if(e.target.closest('[data-subj-add]')){addForm();return;}
    const sec=e.target.closest('[data-subj-sec]');
-   if(sec&&!e.target.closest('a,button,input,textarea,select,label,summary,[data-subj-reader],[data-cs-confirm],[contenteditable]')&&!String(root.getSelection?.()||'')){
+   if(sec&&!e.target.closest('a,button,input,textarea,select,label,summary,[data-subj-reader],[data-subj-embed],[data-cs-confirm],[contenteditable]')&&!String(root.getSelection?.()||'')){
     const live=x=>!(x.tagName==='A'&&toAdvanced(x))&&!x.disabled&&!x.matches('[data-subj-zoom],[data-subj-readclose]');
     const row=e.target.closest('li,.subj-sheet,.subj-inset,.subj-one,.subj-frame,.subj-quote');
     const own=row&&sec.contains(row)?[...row.querySelectorAll('a[href],button')].find(live):null;

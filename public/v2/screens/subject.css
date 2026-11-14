@@ -343,3 +343,14 @@ dialog.subj-sheetdlg{width:min(560px,100%)}
 .subj .subj-back .v2-ic{width:16px;height:16px}
 /* Advanced is hidden for now: its links stay in the page for the record, out of sight. */
 .subj a[href^="/document-study"]:not([data-subj-capture]),.subj [data-subj-empty]{display:none}
+
+/* ---------- a tool brought over from the existing workspace, dressed as this page ---------- */
+.subj .subj-embed{min-width:0}
+.subj .subj-embed .study-photos{font:400 var(--v2-t14)/1.5 var(--ar-ui)}
+.subj .subj-embed .study-photos h2{font:600 var(--v2-t15)/1.3 var(--ar-ui)}
+.subj .subj-embed .study-photos h3{font:600 var(--v2-t13)/1.3 var(--ar-ui)}
+.subj .subj-embed .photo-header p,.subj .subj-embed .photo-status,.subj .subj-embed .photo-drop span{font-size:var(--v2-t12)}
+.subj .subj-embed .study-photos button{border-radius:8px}
+.subj .subj-embed .study-photos .photo-drop{border-radius:8px;border-color:var(--c3-line2);color:var(--dim)}
+.subj .subj-embed .photo-thumb.active{border-color:var(--c3-ink2)}
+.subj .subj-embed .study-photos .photo-thumb,.subj .subj-embed .study-photos .photo-thumb[aria-pressed="true"]{background:var(--c3-lift)!important;color:var(--ink)!important}
