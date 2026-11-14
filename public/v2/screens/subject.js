@@ -475,7 +475,7 @@
   const id=ctx.params.id,page=el.querySelector('.subj');
   // rec[k]: undefined = not asked yet (the tool says Reading); null = nothing to read; {__error} = could not be read.
   let back={};try{back=JSON.parse(root.sessionStorage.getItem('ar-v2-subject:'+id)||'{}')||{};}catch{}
-  const st={standing:null,form:ctx.query?.form||back.form||null,open:ctx.query?.step||back.step||null,rec:{},pend:{},drafts:{},sayLine:'',busy:false,frames:new Map(),last:{},look:new Map(),looks:[],seen:new Set(),zoom:null,hold:0,placed:false,came:!!(ctx.query?.step||back.step)};
+  const st={standing:null,form:ctx.query?.form||back.form||null,open:ctx.query?.step||back.step||null,rec:{},pend:{},drafts:{},sayLine:'',busy:false,frames:new Map(),last:{},look:new Map(),looks:[],zoom:null,zoomY:0,hold:0,placed:false,came:!!(ctx.query?.step||back.step),backY:Number.isFinite(back.y)?back.y:null,reader:null};
   const phone=root.matchMedia?root.matchMedia('(max-width:850px)'):{matches:false};
   let timer=null,paintTimer=null;
   const $=sel=>page.querySelector(sel);
@@ -484,7 +484,7 @@
   function remember(){
    const form=st.form,step=st.open;
    try{root.history.replaceState(root.history.state,'',v2.href('subject/:id',{id},{form,step}));}catch{}
-   try{root.sessionStorage.setItem(KEEP,JSON.stringify({form,step}));}catch{}
+   try{root.sessionStorage.setItem(KEEP,JSON.stringify({form,step,y:Math.round(root.scrollY||0)}));}catch{}
   }
   const ids=()=>({id,bindingId:st.standing?.facts?.bindingId||null,projectId:st.standing?.facts?.projectId||null});
 
@@ -635,33 +635,54 @@
 
   // ---------- every step, one under another ----------
   const secOf=sid=>sid?$(`[data-subj-sec="${cssq(sid)}"]`):null;
-  /** A step's records are read when its section comes near the window (at once where the browser cannot say). */
-  let watcher=null;
-  function watch(box){
-   watcher?.disconnect?.();watcher=null;
-   if(typeof root.IntersectionObserver!=='function')return;
-   watcher=new root.IntersectionObserver(list=>{let any=false;for(const x of list){const sid=x.target.dataset.subjSec;if(x.isIntersecting&&!st.seen.has(sid)){st.seen.add(sid);any=true;}}if(any)schedule();},{rootMargin:'600px 0px'});
-   for(const sec of box.children)watcher.observe(sec);
-  }
   function paintPanels(steps,form){
    const box=$('[data-subj-secs]');if(!box)return;
    const shape=JSON.stringify([form?.key||null,steps.map(x=>x.id)]);
    if(box.dataset.shape!==shape){
     box.dataset.shape=shape;for(const k of Object.keys(st.last))if(k.startsWith('panel:'))delete st.last[k];
     if(st.zoom&&!steps.some(x=>x.id===st.zoom)){st.zoom=null;document.documentElement.style.overflow='';}
-    box.innerHTML=steps.map(x=>`<section class="subj-step" data-subj-sec="${esc(x.id)}"></section>`).join('');watch(box);
+    box.innerHTML=steps.map(x=>`<section class="subj-step" data-subj-sec="${esc(x.id)}"></section>`).join('');
    }
+   const title=st.standing?.title||'the subject';
    for(const s of steps){
     const sec=secOf(s.id);if(!sec)continue;
-    if(!watcher||s.id===st.open)st.seen.add(s.id);
-    if(st.seen.has(s.id))need(s.id);
+    need(s.id);
     const v=viewOf(s),quiet=s.id==='have'&&s.state==='next',big=st.zoom===s.id;
-    const html=`<header><p class="subj-label">${esc(s.group)}</p><h2 tabindex="-1">${esc(s.name)}</h2>${v.note&&!quiet?`<p class="subj-note" data-state="${v.state}">${esc(v.note)}</p>`:''}<button type="button" class="v2-ghost subj-zoom" data-subj-zoom="${esc(s.id)}" aria-pressed="${big}">${big?'Back to the article':'Full size'}</button></header>${tool(s,form,steps)}`;
+    // The same Back as every other screen: top left, an arrow and where it leads.
+    const back=big?`<button type="button" class="v2-ghost subj-back" data-subj-zoom="${esc(s.id)}">${icon('back')}<span>Back to ${esc(title)}</span></button>`:'';
+    const html=`${back}<header data-subj-zoom="${esc(s.id)}"${big?'':' title="Open this at full size"'}><p class="subj-label">${esc(s.group)}</p><h2 tabindex="-1">${esc(s.name)}</h2>${v.note&&!quiet?`<p class="subj-note" data-state="${v.state}">${esc(v.note)}</p>`:''}</header>${tool(s,form,steps)}${readerOf(s.id)}`;
     // The current step's section answers to [data-subj-panel], as the one open panel did.
     sec.toggleAttribute('data-subj-panel',s.id===st.open);sec.classList.toggle('zoomed',big);
     const key='panel:'+s.id;
-    if(st.last[key]!==html){const back=sec.contains(document.activeElement)?keyOf(document.activeElement):null;st.last[key]=html;sec.innerHTML=html;paintFrames(sec);if(back)$(back)?.focus({preventScroll:true});}
+    if(st.last[key]!==html){const backTo=sec.contains(document.activeElement)?keyOf(document.activeElement):null;st.last[key]=html;sec.innerHTML=html;paintFrames(sec);soon(sec);if(backTo)$(backTo)?.focus({preventScroll:true});}
    }
+  }
+  /** Advanced is hidden for now. A step whose only tools were links there says plainly that its tool is not on this page yet. */
+  const toAdvanced=a=>(a.getAttribute('href')||'').startsWith('/document-study')&&!a.hasAttribute('data-subj-capture');
+  function soon(sec){
+   for(const box of sec.querySelectorAll('.subj-links,.subj-actions'))box.toggleAttribute('data-subj-empty',![...box.children].some(x=>!(x.tagName==='A'&&toAdvanced(x))));
+   const body=[...sec.children].filter(x=>x.tagName!=='HEADER'&&!x.matches('.subj-back,[data-subj-empty]'));
+   const gone=[...new Set([...sec.querySelectorAll('a[href]')].filter(toAdvanced).map(x=>x.textContent.trim().replace(/ in Advanced$/,'')).filter(Boolean))];
+   if(!body.length)sec.insertAdjacentHTML('beforeend','<p class="subj-quiet" data-subj-soon>This step has no tool on this page yet. It is being built here.</p>');
+   // Nothing is hidden silently: what still lives only in Advanced is named, so a step never looks finished when it is not.
+   else if(gone.length)sec.insertAdjacentHTML('beforeend',`<p class="subj-quiet" data-subj-soon>Not on this page yet: ${esc(gone.join(', '))}.</p>`);
+  }
+  /** One thing he has, opened where it is: a note or a transcript to read, a photograph at full width, a link to follow. */
+  function readerOf(sid){
+   const r=st.reader;if(!r||r.sec!==sid)return '';
+   const f=r.file,head=`<header><b>${esc(r.title||'Untitled')}</b><button type="button" class="v2-ghost" data-subj-readclose>Close</button></header>`;
+   let body='<p class="subj-quiet" role="status">Reading</p>';
+   if(r.kind==='photos')body=`<img src="/api/sources/blob?id=${encodeURIComponent(r.id)}" alt="${esc(r.title||'')}">`;
+   else if(f&&f.__error)body=`<p class="subj-quiet" role="alert">${esc(f.__error?.message||'This could not be read.')}</p>`;
+   else if(f){const text=String(f.text||f.body||'').trim(),url=/^https?:\/\//.test(f.url||'')?f.url:'';
+    body=(url?`<p><a class="subj-link" href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}${icon('chev')}</a></p>`:'')+(text?`<div class="subj-readtext">${text.split(/\n{2,}/).map(p=>`<p>${esc(p)}</p>`).join('')}</div>`:url?'':'<p class="subj-quiet">There are no words in this one.</p>');}
+   return `<article class="subj-reader" data-subj-reader tabindex="-1" aria-label="${esc(r.title||'Reading')}">${head}${body}</article>`;
+  }
+  function openReader(sec,id,title,kind){
+   if(st.reader?.id===id&&st.reader.sec===sec){st.reader=null;paintNow();return;}
+   const r=st.reader={sec,id,title,kind,file:null};paintNow();
+   secOf(sec)?.querySelector('[data-subj-reader]')?.scrollIntoView?.({block:'nearest',behavior:calm()?'auto':'smooth'});
+   if(kind!=='photos')call('sources.file.get',{id}).then(f=>{if(st.reader!==r||ctx.signal.aborted)return;r.file=f||{__error:{message:'This could not be read.'}};paintNow();});
   }
   const calm=()=>!!root.matchMedia?.('(prefers-reduced-motion:reduce)').matches;
   /** Bring a step's section to the top of the window. The side list holds still until the page has arrived. */
@@ -669,7 +690,11 @@
   /** Once, when he comes back to a step (the address or this tab remembers it), the page goes to it. A page opened fresh stays at the top. */
   function place(){
    if(st.placed||!st.standing)return;st.placed=true;
-   if(st.came&&st.open&&st.open!==current().steps[0]?.id)goTo(st.open,false);
+   if(!st.came)return;
+   const y=st.backY,go=()=>{if(ctx.signal.aborted||st.moved)return;st.hold=Date.now()+400;if(y!=null)root.scrollTo?.(0,y);else if(st.open&&st.open!==current().steps[0]?.id)secOf(st.open)?.scrollIntoView?.({block:'start',behavior:'auto'});};
+   // Again once the records are in, since the sections grow as they arrive; never after he has moved the page himself.
+   go();Promise.all(Object.values(st.pend)).then(()=>setTimeout(go,60));
+   for(const ev of ['wheel','touchmove','keydown','pointerdown'])root.addEventListener(ev,()=>{st.moved=true;},{once:true,passive:true,signal:ctx.signal});
   }
   /** The side list follows the page: the step whose section has reached the top of the window is the current one. */
   let keep=null;
@@ -678,21 +703,22 @@
    const secs=[...page.querySelectorAll('[data-subj-sec]')];if(!secs.length)return;
    const line=(parseFloat(root.getComputedStyle(document.documentElement).getPropertyValue('--v2-top'))||48)+140;
    let now=secs[0];for(const s of secs)if(s.getBoundingClientRect().top<=line)now=s;
-   if(root.innerHeight+root.scrollY>=document.documentElement.scrollHeight-4)now=secs[secs.length-1];
    const sid=now.dataset.subjSec;if(sid===st.open)return;
    st.open=sid;clearTimeout(keep);keep=setTimeout(()=>{if(!ctx.signal.aborted)remember();},300);paintNow();
   }
   const arrived=()=>{st.hold=0;};
   root.addEventListener('scroll',spy,{passive:true});root.addEventListener('scrollend',arrived);
-  ctx.signal.addEventListener('abort',()=>{root.removeEventListener('scroll',spy);root.removeEventListener('scrollend',arrived);clearTimeout(keep);watcher?.disconnect?.();document.documentElement.style.overflow='';});
+  ctx.signal.addEventListener('abort',()=>{root.removeEventListener('scroll',spy);root.removeEventListener('scrollend',arrived);clearTimeout(keep);document.documentElement.style.overflow='';});
   /** Open one section to the whole window, or fold it back. The page behind does not move, so he lands where he was. */
   function setZoom(sid){
-   const was=st.zoom;st.zoom=sid||null;document.documentElement.style.overflow=st.zoom?'hidden':'';// the page behind holds still
-   if(sid){st.open=sid;st.seen.add(sid);remember();}
+   const was=st.zoom,box=$('[data-subj-secs]');
+   if(sid&&!was){st.zoomY=root.scrollY||0;const sec=secOf(sid);if(sec){const hold=document.createElement('div');hold.className='subj-hold';hold.dataset.subjHold='';hold.style.height=sec.offsetHeight+'px';sec.before(hold);}}
+   st.zoom=sid||null;document.documentElement.style.overflow=st.zoom?'hidden':'';// the page behind holds still
+   if(sid){st.open=sid;remember();}
    paintNow();
-   const sec=secOf(sid||was);if(!sec)return;
-   if(sid){sec.scrollTop=0;sec.querySelector('h2')?.focus({preventScroll:true});}
-   else sec.querySelector('[data-subj-zoom]')?.focus({preventScroll:true});
+   const sec=secOf(sid||was);
+   if(!sid){box?.querySelector('[data-subj-hold]')?.remove();st.hold=Date.now()+400;root.scrollTo?.(0,st.zoomY);sec?.querySelector('h2')?.focus({preventScroll:true});return;}
+   if(sec){sec.scrollTop=0;sec.querySelector('h2')?.focus({preventScroll:true});}
   }
   /** Choose the look without leaving the page. A look is kept with a Carousel, so the choice is set on each of this subject's. */
   function chooseLook(){
@@ -887,8 +913,8 @@
     const b=keptSure?cs.block():'';
     return confirmMarkup()+b;
    };
-   const list=rest.length?`<ul class="subj-have">${rest.slice(0,capList).map(x=>`<li>${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${x.recordingId?'Transcript':KIND[x.kind]}</small>${where(x)}</li>`).join('')}${rest.length>capList?`<li><small>and ${rest.length-capList} more. Full size shows them all.</small></li>`:''}</ul>`:'';
-   const tray=photos.length?`<div class="subj-tray">${photos.slice(0,capTray).map(x=>`<img src="/api/sources/blob?id=${encodeURIComponent(x.id)}" alt="${esc(x.title)}" loading="lazy">`).join('')}${photos.length>capTray?`<span>+${photos.length-capTray}</span>`:''}</div>`:'';
+   const list=rest.length?`<ul class="subj-have">${rest.slice(0,capList).map(x=>`<li data-subj-src="${esc(x.id)}" data-title="${esc(x.title)}" data-kind="${x.kind}" tabindex="0" role="button">${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${x.recordingId?'Transcript':KIND[x.kind]}</small>${where(x)}</li>`).join('')}${rest.length>capList?`<li><small>and ${rest.length-capList} more. Full size shows them all.</small></li>`:''}</ul>`:'';
+   const tray=photos.length?`<div class="subj-tray">${photos.slice(0,capTray).map(x=>`<img data-subj-src="${esc(x.id)}" data-title="${esc(x.title)}" data-kind="photos" tabindex="0" role="button" src="/api/sources/blob?id=${encodeURIComponent(x.id)}" alt="${esc(x.title)}" loading="lazy">`).join('')}${photos.length>capTray?`<span>+${photos.length-capTray}</span>`:''}</div>`:'';
    const any=s.state==='done'||list||tray;
    if(!any)return (!known?reading():'')+ways();
    return (!known?reading():'')+list+csPanels()+tray+`<a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${handoffHref('material',null)}" title="${wayTip()}">${icon('plus')}Add a recording, note, link or photographs</a>`;
@@ -1020,20 +1046,32 @@
      act(['recordings','tree','brief'],async()=>{let kept;try{const check=await v2.call('transcript-check.id',{id:job});kept=await v2.call('recordings.source',{jobId:job,expected:check.expected});}catch(error){throw new Error(sourceRefusal(error));}await keepWithSubject(kept?.source?.id);v2.ui.say('The transcript is now one of your sources.',{tone:'good'});});return;}
     act(['recordings','tree'],async()=>{await v2.call('.transcription.id.action',{id:job,action});v2.ui.say(action==='start'?'The transcript is being made.':'Trying the transcript again.',{tone:'good'});});return;}
    if(e.target.closest('[data-subj-look]')){e.preventDefault();chooseLook();return;}
+   if(e.target.closest('[data-subj-readclose]')){e.preventDefault();const s=st.reader?.sec;st.reader=null;paintNow();secOf(s)?.querySelector('h2')?.focus({preventScroll:true});return;}
+   const src=e.target.closest('[data-subj-src]');
+   if(src&&!e.target.closest('a,button,input,textarea,select,label')){e.preventDefault();openReader(src.closest('[data-subj-sec]')?.dataset.subjSec,src.dataset.subjSrc,src.dataset.title||'',src.dataset.kind||'');return;}
    const z=e.target.closest('[data-subj-zoom]');
-   if(z){e.preventDefault();setZoom(st.zoom===z.dataset.subjZoom?null:z.dataset.subjZoom);return;}
+   if(z&&(z.tagName==='BUTTON'||!st.zoom)&&!e.target.closest('a,input,textarea,select,label')){e.preventDefault();setZoom(st.zoom===z.dataset.subjZoom?null:z.dataset.subjZoom);return;}
    const b=e.target.closest('[data-subj-step]');
    if(b){e.preventDefault();openStep(b.dataset.subjStep,b);return;}
    const f=e.target.closest('[data-subj-form]');
    if(f){chooseFormByKey(f.dataset.subjForm);return;}
-   if(e.target.closest('[data-subj-add]'))addForm();
+   if(e.target.closest('[data-subj-add]')){addForm();return;}
+   const sec=e.target.closest('[data-subj-sec]');
+   if(sec&&!e.target.closest('a,button,input,textarea,select,label,summary,[data-subj-reader],[data-cs-confirm],[contenteditable]')&&!String(root.getSelection?.()||'')){
+    const live=x=>!(x.tagName==='A'&&toAdvanced(x))&&!x.disabled&&!x.matches('[data-subj-zoom],[data-subj-readclose]');
+    const row=e.target.closest('li,.subj-sheet,.subj-inset,.subj-one,.subj-frame,.subj-quote');
+    const own=row&&sec.contains(row)?[...row.querySelectorAll('a[href],button')].find(live):null;
+    const way=own||[...sec.querySelectorAll(':scope>.subj-actions a[href],:scope>.subj-actions button,:scope>.subj-links a[href],:scope>.subj-links button,:scope>*>.subj-actions a[href],:scope>*>.subj-actions button')].find(live);
+    if(way&&row){e.preventDefault();way.click();return;}
+    if(!st.zoom){e.preventDefault();setZoom(sec.dataset.subjSec);return;}
+   }
    if(e.target.closest('[data-subj-dishedit]')){const b=ok(rec('board'))?rec('board'):null,n=b?.forming?.named,d=rec('direction');st.editDish=(typeof n==='string'?n:n?.text)||(ok(d)?adoptedRaw(d.body):'');delete st.last['panel:dish'];paintNow();$('[data-subj-dishtext]')?.focus();}
    if(e.target.closest('[data-subj-dishcancel]')){delete st.editDish;delete st.last['panel:dish'];paintNow();}
   });
   function openStep(sid,from=null){
    const list=!!from?.closest?.('.subj-row');// asked now: painting replaces the row he pressed
    if(st.zoom)setZoom(null);
-   st.open=sid;st.seen.add(sid);need(sid);remember();paintNow();
+   st.open=sid;need(sid);remember();paintNow();
    goTo(sid);
    // From the side list, focus stays on the step he pressed. From anywhere else it goes to the section he asked for.
    if(list)$(`.subj-row[data-step="${cssq(sid)}"]>[data-subj-step]`)?.focus({preventScroll:true});
@@ -1044,7 +1082,7 @@
    const f=(st.standing?.forms||[]).find(x=>x.key===key);if(!f)return;
    st.form=key;st.open=firstOpen(stepsOfForm(st.standing,f),f);if(st.open)need(st.open);remember();paintNow();$(`[data-subj-form="${cssq(key)}"]`)?.focus();
   }
-  page.addEventListener('keydown',e=>{if(e.key==='Escape'&&st.zoom&&!(cf.job&&e.target.closest?.('[data-cs-confirm]'))){e.preventDefault();setZoom(null);return;}if(e.key==='Escape'&&cf.job&&cf.state!=='busy'&&e.target.closest?.('[data-cs-confirm]')){e.preventDefault();e.stopPropagation();closeConfirm();}});
+  page.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches?.('[data-subj-src]')){e.preventDefault();e.target.click();return;}if(e.key==='Escape'&&st.reader&&e.target.closest?.('[data-subj-reader]')){e.preventDefault();e.stopPropagation();const s=st.reader.sec;st.reader=null;paintNow();secOf(s)?.querySelector('h2')?.focus({preventScroll:true});return;}if(e.key==='Escape'&&st.zoom&&!(cf.job&&e.target.closest?.('[data-cs-confirm]'))){e.preventDefault();setZoom(null);return;}if(e.key==='Escape'&&cf.job&&cf.state!=='busy'&&e.target.closest?.('[data-cs-confirm]')){e.preventDefault();e.stopPropagation();closeConfirm();}});
   page.addEventListener('input',e=>{const t=e.target;if(t.dataset.csName){cf.names[t.dataset.csName]=t.value;return;}if(t.dataset.subjDraft)st.drafts[t.dataset.subjDraft]=t.value;if(t.matches('[data-subj-say]'))st.sayLine=t.value;if(t.matches('[data-subj-dishtext]'))st.editDish=t.value;});
   page.addEventListener('submit',async e=>{
    const form=e.target;e.preventDefault();if(st.busy)return;

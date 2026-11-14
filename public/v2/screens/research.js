@@ -275,7 +275,7 @@
 </article>`;
  }
  v2.screen({id:'research-topic',route:'research/topic/:id',title:'Research topic',
-  render:()=>`<div class="rs-topic" data-rs-topic><div class="rs-bar"><a class="rs-back" href="${esc(v2.href('research'))}">${icon('back')}<span>Research</span></a><nav class="rs-tabs" aria-label="Topic" data-rs-tabs></nav><span class="rs-sp"></span><button type="button" class="rs-listen" data-rs-listen aria-label="Listen">${PLAY}<span>Listen</span></button></div><div class="rs-topic1" data-rs-body><p class="rs-meta rs-pad">Reading the topic…</p></div></div>`,
+  render:()=>`<div class="rs-topic" data-rs-topic><div class="rs-bar"><a class="rs-back" href="${esc(v2.href('research'))}">${icon('back')}<span>Back to Research</span></a><nav class="rs-tabs" aria-label="Topic" data-rs-tabs></nav><span class="rs-sp"></span><button type="button" class="rs-listen" data-rs-listen aria-label="Listen">${PLAY}<span>Listen</span></button></div><div class="rs-topic1" data-rs-body><p class="rs-meta rs-pad">Reading the topic…</p></div></div>`,
   async mount(el,ctx){
    const id=ctx.params.id,tab=['read','decide','sources'].includes(ctx.query.tab)?ctx.query.tab:'read';let t=null,groups=[];
    const paint=async()=>{
