@@ -122,6 +122,8 @@ From the interview: you return "to find some way to use this information or use 
 
 - **14 November 2026, each level only adds; a story or exact line opens.** On the talk's gem and cliff note: "it doesn't really read that well. The first part is kind of repeating the second part in some weird way." Offered three ways (telescope, story first, the source's own words first), he chose: "Go with 1, using 2 or 3 as the opener." So: each level adds only what the one before left out, never retelling it. Above the gem sits an opener: a short real story from the source, or its strongest exact line with its moment, when the source offers one. The Hudson example is redone this way.
 
+- **16 November 2026, cross-linking as a whole system.** "Do you feel like I should be using some tags here in order to help with the cross-linking? Have we really thought about how the crosslinking will happen?" then "I'm trying to build the system, not one option." The end-to-end design is now Part 5b of [14](14-what-goes-in.html): one shared index of controlled tags (themes with broader and narrower, fields, scales, named things), every unit tagged from it plus a meaning fingerprint, four match routes (shared themes, similar meaning, same named thing, two-step paths), the AI judging candidate pairs, his decisions and personal tags, groups grown from confirmed links, browsing every way, and upkeep as sources arrive.
+
 ## 4. What was made, and your verdict on each
 
 | Page | What it is | Your verdict |
