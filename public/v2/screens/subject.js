@@ -688,7 +688,9 @@
    return loads.get(kind);
   }
   const embeds=new Map();// kind|binding -> {node, instance}: the node is kept and put back when its section is drawn again
-  const borrowed=(kind,covers,piece='')=>!mag()&&ids().bindingId&&typeof document.createElement==='function'?`<div class="subj-embed" data-subj-embed="${kind}" data-subj-covers="${covers}"${piece?` data-piece="${esc(piece)}"`:''}></div>`:'';
+  // The photograph tools and the reader view work on a piece's own saved place, so they need the subject to have one.
+  const NEEDS_PLACE=new Set(['photos','arrange','audience']);
+  const borrowed=(kind,covers,piece='')=>!mag()&&(ids().bindingId||!NEEDS_PLACE.has(kind))&&typeof document.createElement==='function'?`<div class="subj-embed" data-subj-embed="${kind}" data-subj-covers="${covers}"${piece?` data-piece="${esc(piece)}"`:''}></div>`:'';
   /** The borrowed tool asks by address; here every address is one of the app's named commands, asked through the page's own
       client like everything else (the same actor, the same checks). An address with no command is refused, never fetched. */
   const asMe=(url,input)=>{const [path,query]=String(url).split('?'),m=/^\/api\/study\/photos(\/[a-z-]+)?$/.exec(path);if(!m)return Promise.reject(new Error('That is not available on this page.'));
@@ -698,7 +700,7 @@
     const kind=slot.dataset.subjEmbed,binding=ids().bindingId,piece=slot.dataset.piece||'',key=kind+'|'+binding+'|'+piece;let e=embeds.get(key);
     if(e){e.node.dataset.subjCovers=slot.dataset.subjCovers;slot.replaceWith(e.node);continue;}
     e={node:slot,instance:null};embeds.set(key,e);slot.innerHTML='<p class="subj-quiet" role="status">Reading</p>';
-    if(kind==='consent')startConsent(e);else if(kind==='arrange')startArrange(e,binding,piece);else if(kind==='audience')startAudience(e,binding,piece);else startPhotos(e,binding);
+    if(kind==='consent')startConsent(e);else if(kind==='source')startSource(e);else if(kind==='arrange')startArrange(e,binding,piece);else if(kind==='audience')startAudience(e,binding,piece);else startPhotos(e,binding);
    }
   }
   /** The photographs of this article: the collection the existing workspace keeps for it. Reading it changes nothing; the
@@ -757,6 +759,45 @@
      if(e.instance.pending)try{await e.instance.recoverPending();}catch(error){say(error?.message||'An earlier save could not be finished. Nothing was lost; it is kept on this device.');}
     }catch(error){b.disabled=false;b.textContent='Place photographs in the story';v2.ui.say(error?.message||'The layout could not be opened.',{tone:'bad'});}
    });
+  }
+  /** The whole conversation: the workspace's own reader of a kept conversation, with its speakers, its find, and its
+      corrections under its own saving rules. It is given this page, this subject and this page's client; it is asked for
+      only when he presses, because kept conversations are large. A conversation that is one of this subject's own sources
+      is opened first; otherwise the reader offers the kept conversations to choose from, as it does in the workspace. */
+  let sourceReader=null;
+  function startSource(e){
+   const idle=()=>{e.node.innerHTML='<div class="subj-actions"><button type="button" class="subj-btn" data-subj-startsource>Read a kept conversation</button></div>';};
+   idle();
+   e.node.addEventListener('click',async ev=>{
+    if(ev.target.closest('[data-subj-closesource]')){try{sourceReader?.closeContext();}catch{}idle();e.node.querySelector('button')?.focus({preventScroll:true});return;}
+    const b=ev.target.closest('[data-subj-startsource]');if(!b||b.disabled)return;b.disabled=true;b.textContent='Reading the conversation';
+    try{
+     actAsMe();
+     if(!document.querySelector('link[href="/document-study/source-imported.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/document-study/source-imported.css';document.head.append(l);}
+     // The reader's file starts itself on the workspace's own page; here it is started by hand, with this page's client.
+     if(!root.studyImportedSource)root.studyImportedSource=Object.freeze({startedBy:'subject'});
+     const [made,,tree,brief,plans]=await Promise.all([import('/document-study/source-imported.js'),routeMap(),ask('tree'),ask('brief'),ask('planRecords')]);if(ctx.signal.aborted)return;
+     const project=Object.freeze({id,title:st.standing?.title||'',name:st.standing?.title||''});
+     sourceReader||=made.installSourceReader({document,getProject:()=>project,fetch:viaCommands,observe:false});
+     const mine=new Set(materialFrom({tree,brief,planRecords:Array.isArray(plans)?plans:[]},ids().projectId).items.map(x=>x.id));
+     const bar=document.createElement('div');bar.className='subj-actions';bar.innerHTML='<button type="button" class="v2-ghost" data-subj-closesource>Close the conversation</button>';
+     const box=document.createElement('div');box.className='subj-convo';e.node.replaceChildren(bar,box);
+     sourceReader.openContext({container:box,project});await sourceReader.refresh();if(ctx.signal.aborted)return;
+     const sessions=sourceReader.getState().data?.sessions,own=Array.isArray(sessions)?sessions.find(s=>mine.has(s.sourceId)):null;
+     if(Array.isArray(sessions)&&!sessions.length){sourceReader.closeContext();idle();e.node.insertAdjacentHTML('beforeend','<p class="subj-quiet" data-subj-noconvo>No conversation is kept yet, so there is none to read.</p>');return;}
+     // The reader opens a conversation it is given and offers none itself, so the kept ones are listed here to choose from.
+     const pick=s=>sourceReader.selectSource({sourceId:s.sourceId,expectedSourceHash:s.sourceHash,expectedVersion:s.version});
+     const list=(Array.isArray(sessions)?sessions:[]).filter(s=>s&&typeof s.sourceId==='string');
+     if(list.length>1||!own){const chooser=document.createElement('ul');chooser.className='subj-list subj-convos';chooser.setAttribute('aria-label','Kept conversations');
+      chooser.innerHTML=list.map((s,i)=>`<li><button type="button" class="subj-link" data-subj-convo="${i}" aria-pressed="${s===own}">${esc(s.title||'Untitled conversation')}</button><small>${esc([s.date,mine.has(s.sourceId)?'one of this subject’s sources':''].filter(Boolean).join(' · '))}</small></li>`).join('');
+      chooser.addEventListener('click',async cv=>{const cb=cv.target.closest('[data-subj-convo]');if(!cb||cb.disabled)return;cv.stopPropagation();cb.disabled=true;
+       try{await pick(list[Number(cb.dataset.subjConvo)]);for(const x of chooser.querySelectorAll('[data-subj-convo]'))x.setAttribute('aria-pressed',String(x===cb));box.scrollIntoView?.({block:'nearest'});}
+       catch(error){v2.ui.say(error?.message||'That conversation could not be opened.',{tone:'bad'});}finally{cb.disabled=false;}});
+      bar.after(chooser);}
+     if(own)await pick(own);
+    }catch(error){idle();v2.ui.say(error?.message||'The conversation could not be opened.',{tone:'bad'});}
+   });
+   ctx.signal.addEventListener('abort',()=>{try{sourceReader?.dispose();}catch{}sourceReader=null;},{once:true});
   }
   /** The consent desk: comfortable sharing, accurate, the people in the piece and their consent, and the final yes. It is the
       workspace's own desk. That desk puts itself on its Share screen by looking for two things on the page: which subject is
@@ -1057,8 +1098,8 @@
    const list=rest.length?`<ul class="subj-have">${rest.slice(0,capList).map(x=>`<li data-subj-src="${esc(x.id)}" data-title="${esc(x.title)}" data-kind="${x.kind}" tabindex="0" role="button">${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${x.recordingId?'Transcript':KIND[x.kind]}</small>${where(x)}</li>`).join('')}${rest.length>capList?`<li><small>and ${rest.length-capList} more. Full size shows them all.</small></li>`:''}</ul>`:'';
    const tray=photos.length?`<div class="subj-tray">${photos.slice(0,capTray).map(x=>`<img data-subj-src="${esc(x.id)}" data-title="${esc(x.title)}" data-kind="photos" tabindex="0" role="button" src="/api/sources/blob?id=${encodeURIComponent(x.id)}" alt="${esc(x.title)}" loading="lazy">`).join('')}${photos.length>capTray?`<span>+${photos.length-capTray}</span>`:''}</div>`:'';
    const any=s.state==='done'||list||tray;
-   if(!any)return (!known?reading():'')+ways();
-   return (!known?reading():'')+list+csPanels()+tray+`<a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${handoffHref('material',null)}" title="${wayTip()}">${icon('plus')}Add a recording, note, link or photographs</a>`;
+   if(!any)return (!known?reading():'')+ways()+borrowed('source','readSources readTranscript');
+   return (!known?reading():'')+list+csPanels()+tray+borrowed('source','readSources readTranscript')+`<a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${handoffHref('material',null)}" title="${wayTip()}">${icon('plus')}Add a recording, note, link or photographs</a>`;
   }
   function toolTranscript(s,form){
    const plans=rec('planRecords'),flags=[];

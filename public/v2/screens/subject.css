@@ -362,3 +362,8 @@ dialog.subj-sheetdlg{width:min(560px,100%)}
 /* The consent desk sits in the step; once it is there, the step's own shorter list of the same people steps aside. */
 .subj .subj-desk{min-width:0}
 .subj .subj-step:has(.subj-desk .cd-desk)>.subj-people,.subj .subj-step:has(.subj-desk .cd-desk)>.subj-list{display:none}
+
+/* The borrowed conversation reader sits in the step at the width it is given. */
+.subj .subj-convo{min-width:0;max-width:100%}
+.subj .subj-convos{min-width:0}
+.subj .subj-convos [aria-pressed="true"]{text-decoration:underline;text-underline-offset:3px}
