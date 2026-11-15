@@ -663,6 +663,7 @@
   // `covers` names the hand-offs it stands in for, so the step no longer says those are missing.
   const BORROWED={photos:{js:'/document-study/study-photos.js',css:'/document-study/study-photos.css',ready:()=>typeof root.mountPhotosStage==='function'},
    simmer:{js:'/document-study/simmer.js',css:'/document-study/simmer.css',ready:()=>typeof root.arSimmer?.open==='function'},
+   consent:{js:'/document-study/consent-desk.js',css:'/document-study/consent-desk.css',ready:()=>typeof root.arConsentDesk?.load==='function'},
    arrange:{js:'/assets/study-output-canvas.js',css:'/assets/study-output-canvas.css',module:true,ready:()=>typeof root.ArStudyOutputHost?.mountStudyOutputHost==='function'}};
   /** The existing workspace's tools read who is acting from one place on the page; here it is this tab's own actor. */
   const actAsMe=()=>{if(!root.arCreateUiActor)root.arCreateUiActor=Object.freeze({actor:v2.actor()||'human:adrian',explicit:!v2.isHuman()});};
@@ -697,7 +698,7 @@
     const kind=slot.dataset.subjEmbed,binding=ids().bindingId,piece=slot.dataset.piece||'',key=kind+'|'+binding+'|'+piece;let e=embeds.get(key);
     if(e){e.node.dataset.subjCovers=slot.dataset.subjCovers;slot.replaceWith(e.node);continue;}
     e={node:slot,instance:null};embeds.set(key,e);slot.innerHTML='<p class="subj-quiet" role="status">Reading</p>';
-    if(kind==='arrange')startArrange(e,binding,piece);else if(kind==='audience')startAudience(e,binding,piece);else startPhotos(e,binding);
+    if(kind==='consent')startConsent(e);else if(kind==='arrange')startArrange(e,binding,piece);else if(kind==='audience')startAudience(e,binding,piece);else startPhotos(e,binding);
    }
   }
   /** The photographs of this article: the collection the existing workspace keeps for it. Reading it changes nothing; the
@@ -756,6 +757,24 @@
      if(e.instance.pending)try{await e.instance.recoverPending();}catch(error){say(error?.message||'An earlier save could not be finished. Nothing was lost; it is kept on this device.');}
     }catch(error){b.disabled=false;b.textContent='Place photographs in the story';v2.ui.say(error?.message||'The layout could not be opened.',{tone:'bad'});}
    });
+  }
+  /** The consent desk: comfortable sharing, accurate, the people in the piece and their consent, and the final yes. It is the
+      workspace's own desk. That desk puts itself on its Share screen by looking for two things on the page: which subject is
+      open at the Share stage, and the place the screen keeps for it. Here the step gives it both, and takes them away on leaving.
+      For anyone but Adrian it shows his decisions and offers none, by its own rule. */
+  function startConsent(e){
+   e.node.innerHTML='<p class="subj-quiet" role="status">Reading</p>';
+   (async()=>{
+    try{
+     actAsMe();
+     if(typeof root.current==='function'&&!root.current.subjectPage)throw new Error('The consent desk is already open elsewhere on this page.');
+     const open=Object.freeze({id,view:'record',viewedStage:11}),say=()=>open;say.subjectPage=true;root.current=say;
+     e.node.innerHTML='<div id="app" class="subj-desk"><div class="workspace"></div></div>';
+     await bring('consent');if(ctx.signal.aborted)return;
+     await root.arConsentDesk.load(id,{force:true});
+    }catch(error){if(!ctx.signal.aborted)e.node.innerHTML=`<p class="subj-quiet" role="alert">${esc(error?.message||'The consent desk could not be opened.')}</p>`;}
+   })();
+   ctx.signal.addEventListener('abort',()=>{if(root.current?.subjectPage)try{delete root.current;}catch{root.current=undefined;}e.node.replaceChildren();},{once:true});
   }
   /** The piece as readers will see it: the saved edition, read again each time he asks, drawn by the workspace's own reader.
       Looking changes nothing. The reader comes in the same large file as the layout editor, so it too loads when asked for. */
@@ -1121,12 +1140,12 @@
   }
   function toolYes(s,form){
    const y=ok(rec('desk'))?rec('desk'):null;
-   if(!y)return (rec('desk')===undefined?reading():'')+links(out('desk',form));
+   if(!y)return (rec('desk')===undefined?reading():'')+borrowed('consent','desk')+links(out('desk',form));
    const STATE={'not-asked':'Not asked','asked':'Asked','yes':'Said yes','yes-with-changes':'Said yes, with changes','no':'Said no'};
    const people=(y.people||[]).map(p=>{const state=p.consent?.state||'not-asked',draftable=state==='not-asked'&&!p.request;
     return `<li><div class="subj-person"><span><b>${esc(p.name)}</b><small>${esc((p.appears||[]).join(', '))}</small></span><em class="subj-by" data-state="${esc(state)}">${esc(p.request&&state==='not-asked'?'Request drafted':STATE[state]||state)}</em></div>${draftable?`<form class="subj-draft" data-subj-draftform="${esc(p.id)}"><label for="subj-draft-${esc(p.id)}">Draft the request to ${esc(p.name)}</label><textarea id="subj-draft-${esc(p.id)}" rows="3" data-subj-draft="${esc(p.id)}">${esc(st.drafts[p.id]||'')}</textarea><button type="submit">Save the draft</button></form>`:''}</li>`;}).join('');
    const reasons=(y.release?.reasons||[]).length&&!(y.people||[]).length?`<ul class="subj-list">${y.release.reasons.map(r=>`<li>${mark('todo')}<span>${esc(r)}</span></li>`).join('')}</ul>`:'';
-   return (people?`<ul class="subj-people">${people}</ul>`:'')+reasons+links(out('desk',form));
+   return borrowed('consent','desk')+(people?`<ul class="subj-people">${people}</ul>`:'')+reasons+links(out('desk',form));
   }
   /** Publish: what it waits for, each with Open, as the sample's two lines (here the steps this form really has). */
   function toolPublish(s,steps,form){

@@ -358,3 +358,7 @@ dialog.subj-sheetdlg{width:min(560px,100%)}
 /* The borrowed layout editor sits in the step at the width it is given. */
 .subj .subj-embed .subj-layout{min-width:0;max-width:100%;overflow-x:auto}
 .subj .subj-embed+.subj-embed{margin-top:4px}
+
+/* The consent desk sits in the step; once it is there, the step's own shorter list of the same people steps aside. */
+.subj .subj-desk{min-width:0}
+.subj .subj-step:has(.subj-desk .cd-desk)>.subj-people,.subj .subj-step:has(.subj-desk .cd-desk)>.subj-list{display:none}
