@@ -354,3 +354,7 @@ dialog.subj-sheetdlg{width:min(560px,100%)}
 .subj .subj-embed .study-photos .photo-drop{border-radius:8px;border-color:var(--c3-line2);color:var(--dim)}
 .subj .subj-embed .photo-thumb.active{border-color:var(--c3-ink2)}
 .subj .subj-embed .study-photos .photo-thumb,.subj .subj-embed .study-photos .photo-thumb[aria-pressed="true"]{background:var(--c3-lift)!important;color:var(--ink)!important}
+
+/* The borrowed layout editor sits in the step at the width it is given. */
+.subj .subj-embed .subj-layout{min-width:0;max-width:100%;overflow-x:auto}
+.subj .subj-embed+.subj-embed{margin-top:4px}

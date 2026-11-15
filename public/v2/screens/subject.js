@@ -662,7 +662,8 @@
   // it is put straight into the section (no frame, so one page, one scroll, the same colours). It keeps its own saving rules.
   // `covers` names the hand-offs it stands in for, so the step no longer says those are missing.
   const BORROWED={photos:{js:'/document-study/study-photos.js',css:'/document-study/study-photos.css',ready:()=>typeof root.mountPhotosStage==='function'},
-   simmer:{js:'/document-study/simmer.js',css:'/document-study/simmer.css',ready:()=>typeof root.arSimmer?.open==='function'}};
+   simmer:{js:'/document-study/simmer.js',css:'/document-study/simmer.css',ready:()=>typeof root.arSimmer?.open==='function'},
+   arrange:{js:'/assets/study-output-canvas.js',css:'/assets/study-output-canvas.css',module:true,ready:()=>typeof root.ArStudyOutputHost?.mountStudyOutputHost==='function'}};
   /** The existing workspace's tools read who is acting from one place on the page; here it is this tab's own actor. */
   const actAsMe=()=>{if(!root.arCreateUiActor)root.arCreateUiActor=Object.freeze({actor:v2.actor()||'human:adrian',explicit:!v2.isHuman()});};
   /** The Simmer board, whole, over this page. Leaving it comes back to the same place, and the step reads what changed. */
@@ -681,22 +682,22 @@
    const b=BORROWED[kind];if(b.ready())return Promise.resolve();
    if(!loads.has(kind))loads.set(kind,new Promise((done,fail)=>{
     if(b.css&&!document.querySelector(`link[href="${b.css}"]`)){const l=document.createElement('link');l.rel='stylesheet';l.href=b.css;document.head.append(l);}
-    const s=document.createElement('script');s.src=b.js;s.onload=()=>b.ready()?done():fail(new Error('The tool could not be started.'));s.onerror=()=>fail(new Error('The tool could not be loaded.'));document.head.append(s);
+    const s=document.createElement('script');if(b.module)s.type='module';s.src=b.js;s.onload=()=>b.ready()?done():fail(new Error('The tool could not be started.'));s.onerror=()=>fail(new Error('The tool could not be loaded.'));document.head.append(s);
    }));
    return loads.get(kind);
   }
   const embeds=new Map();// kind|binding -> {node, instance}: the node is kept and put back when its section is drawn again
-  const borrowed=(kind,covers)=>!mag()&&ids().bindingId&&typeof document.createElement==='function'?`<div class="subj-embed" data-subj-embed="${kind}" data-subj-covers="${covers}"></div>`:'';
+  const borrowed=(kind,covers,piece='')=>!mag()&&ids().bindingId&&typeof document.createElement==='function'?`<div class="subj-embed" data-subj-embed="${kind}" data-subj-covers="${covers}"${piece?` data-piece="${esc(piece)}"`:''}></div>`:'';
   /** The borrowed tool asks by address; here every address is one of the app's named commands, asked through the page's own
       client like everything else (the same actor, the same checks). An address with no command is refused, never fetched. */
   const asMe=(url,input)=>{const [path,query]=String(url).split('?'),m=/^\/api\/study\/photos(\/[a-z-]+)?$/.exec(path);if(!m)return Promise.reject(new Error('That is not available on this page.'));
    return v2.call('study.photos'+(m[1]||'').replace('/','.'),input||Object.fromEntries(new URLSearchParams(query||'')));};
   function embed(sec){
    for(const slot of sec.querySelectorAll('[data-subj-embed]')){
-    const kind=slot.dataset.subjEmbed,binding=ids().bindingId,key=kind+'|'+binding;let e=embeds.get(key);
+    const kind=slot.dataset.subjEmbed,binding=ids().bindingId,piece=slot.dataset.piece||'',key=kind+'|'+binding+'|'+piece;let e=embeds.get(key);
     if(e){e.node.dataset.subjCovers=slot.dataset.subjCovers;slot.replaceWith(e.node);continue;}
     e={node:slot,instance:null};embeds.set(key,e);slot.innerHTML='<p class="subj-quiet" role="status">Reading</p>';
-    startPhotos(e,binding);
+    if(kind==='arrange')startArrange(e,binding,piece);else startPhotos(e,binding);
    }
   }
   /** The photographs of this article: the collection the existing workspace keeps for it. Reading it changes nothing; the
@@ -713,7 +714,50 @@
      catch(error){b.disabled=false;v2.ui.say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});}});
    }catch(error){say(`<p class="subj-quiet" role="alert">${esc(error?.message||'The photographs could not be read.')}</p>`);}
   }
-  ctx.signal.addEventListener('abort',()=>{try{root.arSimmer?.close?.();}catch{}for(const e of embeds.values()){try{e.instance?.destroy?.();}catch{}}embeds.clear();});
+  /** The borrowed layout editor asks by address, with a method and a body. Every address is found in the app's own list of
+      commands and asked through this page's client (the same actor, the same checks); its answer goes back in the shape the
+      editor expects. An address with no command is answered Not found, never sent. */
+  let routes=null;
+  const routeMap=()=>routes||=v2.call('capabilities',{only:'commands'}).then(r=>new Map((r?.commands||[]).filter(c=>c&&typeof c.route==='string'&&!c.route.includes('{')).map(c=>[c.method+' '+c.route,c.name])));
+  const answer=(status,body)=>new root.Response(JSON.stringify(body??{}),{status,headers:{'Content-Type':'application/json'}});
+  async function viaCommands(url,init={}){
+   const u=new URL(url,root.location.origin),method=String(init.method||'GET').toUpperCase(),name=(await routeMap()).get(method+' '+u.pathname);
+   if(!name)return answer(404,{error:'That is not available on this page.'});
+   let body={};try{body=init.body?JSON.parse(init.body):{};}catch{return answer(400,{error:'That request could not be read.'});}
+   try{return answer(200,await v2.call(name,{...Object.fromEntries(u.searchParams),...body}));}
+   catch(error){return answer(error?.status||500,error?.body&&typeof error.body==='object'?error.body:{error:error?.message||'That could not be done. Nothing was changed.'});}
+  }
+  /** Layout edits not yet saved are kept on this device, one copy for each piece, and never written over by an older one. */
+  const KEPT='ar-v2-subject-layout:';
+  const kept=key=>{try{return JSON.parse(root.localStorage.getItem(KEPT+key)||'null')||{};}catch{throw new Error('The edits kept on this device cannot be read. Keep this window open.');}};
+  const keepIt=(key,value)=>{try{root.localStorage.setItem(KEPT+key,JSON.stringify(value));}catch{throw new Error('The edits could not be kept on this device. Keep this window open.');}};
+  /** Placing photographs in the story: the workspace's own layout editor for this Article, started when he asks for it (it is
+      a large file). Saving is its own, with its own rules; a save the app refuses is said in its own words. */
+  function startArrange(e,binding,piece){
+   const key=binding+'|'+piece,scope={parentStudyId:id,rootBindingId:binding};
+   e.node.innerHTML='<div class="subj-actions"><button type="button" class="subj-btn" data-subj-startarrange>Place photographs in the story</button></div>';
+   e.node.addEventListener('click',async ev=>{
+    const b=ev.target.closest('[data-subj-startarrange]');if(!b||b.disabled)return;b.disabled=true;b.textContent='Opening the layout';
+    try{
+     const [view]=await Promise.all([v2.call('study.outputs',scope),bring('arrange'),routeMap()]);if(ctx.signal.aborted)return;
+     if(!view?.photoScope?.projectId||!view.photoScope.documentId)throw new Error('This Article’s photographs are not connected yet. Choose photographs first.');
+     if(!(view.outputs||[]).some(o=>o.id===piece&&o.kind==='article'))throw new Error('This Article has no saved layout yet.');
+     const canvas=document.createElement('div');canvas.className='subj-layout';const alert=document.createElement('p');alert.className='subj-quiet';alert.setAttribute('role','alert');alert.hidden=true;
+     const say=text=>{alert.textContent=text;alert.hidden=!text;};
+     e.node.replaceChildren(alert,canvas);
+     e.instance=await root.ArStudyOutputHost.mountStudyOutputHost(canvas,{scope,selectedOutputId:piece,embeddedArrange:true,request:viaCommands,photoScope:view.photoScope,assetOrigin:root.location.origin,
+      studyDraft:{openBinding:()=>{throw new Error('The words are written in Write. Press The words on this page.');}},
+      readBrowserDraft:outputId=>kept(key).drafts?.[outputId]||null,
+      rememberBrowserDraft:(value,expectedToken,outputId)=>{const all=kept(key),drafts={...(all.drafts||{})};if((drafts[outputId]?.token??null)!==expectedToken)throw new Error('Newer edits are already kept on this device. Keep this window open and compare both copies.');if(value)drafts[outputId]=value;else delete drafts[outputId];keepIt(key,{...all,drafts});},
+      pendingRequest:kept(key).pending||null,rememberPending:pending=>{keepIt(key,{...kept(key),pending:pending||null});},
+      onError:error=>say(error?.message||'That could not be done. Nothing was changed.'),onShelf:()=>say('Other pieces are opened from their own tab at the top of this page.')});
+     if(ctx.signal.aborted){try{e.instance.destroy();}catch{}return;}
+     // A save that was cut short last time is finished, or said, before anything else is done.
+     if(e.instance.pending)try{await e.instance.recoverPending();}catch(error){say(error?.message||'An earlier save could not be finished. Nothing was lost; it is kept on this device.');}
+    }catch(error){b.disabled=false;b.textContent='Place photographs in the story';v2.ui.say(error?.message||'The layout could not be opened.',{tone:'bad'});}
+   });
+  }
+  ctx.signal.addEventListener('abort',()=>{try{root.arSimmer?.close?.();}catch{}for(const e of embeds.values()){const i=e.instance;if(!i)continue;try{Promise.resolve(i.flush?.()).catch(()=>{}).finally(()=>{try{i.destroy?.();}catch{}});}catch{}}embeds.clear();});
   /** Advanced is hidden for now. A step whose only tools were links there says plainly that its tool is not on this page yet. */
   const toAdvanced=a=>(a.getAttribute('href')||'').startsWith('/document-study')&&!a.hasAttribute('data-subj-capture');
   function soon(sec){
@@ -916,7 +960,7 @@
     case 'dish':return toolDish(s,steps,form);
     case 'form':return waitsFor(s,steps)+`<div class="subj-actions"><button type="button" class="pri" data-subj-add>Add a form</button></div>`+links(own(s,form));
     case 'words':return toolWords(s,form);
-    case 'photos':return waitsFor(s,steps)+borrowed('photos','media addPhotos')+links(...(s.missing?[out('addPhotos',form)]:[]),out('media',form),out('arrange',form));
+    case 'photos':return waitsFor(s,steps)+borrowed('photos','media addPhotos')+(form?.kind==='article'&&/^out:/.test(form.key||'')?borrowed('arrange','arrange',form.id):'')+links(...(s.missing?[out('addPhotos',form)]:[]),out('media',form),out('arrange',form));
     case 'check':return toolCheck(s,steps,form);
     case 'story':return toolStory(s,form);
     case 'slides':return form?.kind==='instagram'?toolSlides(s,form,steps):outputStudio(form)?toolOutputSlides(s,form):links(own(s,form));
