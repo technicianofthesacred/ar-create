@@ -697,7 +697,7 @@
     const kind=slot.dataset.subjEmbed,binding=ids().bindingId,piece=slot.dataset.piece||'',key=kind+'|'+binding+'|'+piece;let e=embeds.get(key);
     if(e){e.node.dataset.subjCovers=slot.dataset.subjCovers;slot.replaceWith(e.node);continue;}
     e={node:slot,instance:null};embeds.set(key,e);slot.innerHTML='<p class="subj-quiet" role="status">Reading</p>';
-    if(kind==='arrange')startArrange(e,binding,piece);else startPhotos(e,binding);
+    if(kind==='arrange')startArrange(e,binding,piece);else if(kind==='audience')startAudience(e,binding,piece);else startPhotos(e,binding);
    }
   }
   /** The photographs of this article: the collection the existing workspace keeps for it. Reading it changes nothing; the
@@ -756,6 +756,26 @@
      if(e.instance.pending)try{await e.instance.recoverPending();}catch(error){say(error?.message||'An earlier save could not be finished. Nothing was lost; it is kept on this device.');}
     }catch(error){b.disabled=false;b.textContent='Place photographs in the story';v2.ui.say(error?.message||'The layout could not be opened.',{tone:'bad'});}
    });
+  }
+  /** The piece as readers will see it: the saved edition, read again each time he asks, drawn by the workspace's own reader.
+      Looking changes nothing. The reader comes in the same large file as the layout editor, so it too loads when asked for. */
+  function startAudience(e,binding,piece){
+   const scope={parentStudyId:id,rootBindingId:binding};
+   const idle=label=>{e.node.innerHTML=`<div class="subj-actions"><button type="button" class="subj-btn" data-subj-startaudience>${label}</button></div>`;};
+   idle('See it as readers will');
+   e.node.addEventListener('click',async ev=>{
+    const b=ev.target.closest('[data-subj-startaudience]');if(!b||b.disabled)return;b.disabled=true;const label=b.textContent;b.textContent='Reading the saved edition';
+    try{
+     const [v]=await Promise.all([v2.call('study.outputs',{...scope,selectedOutputId:piece}),bring('arrange')]);if(ctx.signal.aborted)return;
+     if(v?.scope?.parentStudyId!==id||v.scope.rootBindingId!==binding||v.documentId!==binding||v.output?.id!==piece)throw new Error('The reader returned a different edition. Nothing is shown.');
+     if(!['article','carousel'].includes(v.output.kind)||typeof root.ArStudyOutputHost?.mountStudyAudience!=='function')throw new Error('This kind of piece has no reader view on this page yet.');
+     try{e.instance?.destroy?.();}catch{}e.instance=null;
+     const bar=document.createElement('div');bar.className='subj-actions';bar.innerHTML='<button type="button" class="v2-ghost" data-subj-startaudience>Read it again as it is now</button><button type="button" class="v2-ghost" data-subj-closeaudience>Close</button>';
+     const target=document.createElement('div');target.className='subj-reads';target.setAttribute('aria-label','As readers will see it');
+     e.node.replaceChildren(bar,target);e.instance=root.ArStudyOutputHost.mountStudyAudience(target,v);
+    }catch(error){b.disabled=false;b.textContent=label;v2.ui.say(error?.message||'The reader view could not be opened.',{tone:'bad'});}
+   });
+   e.node.addEventListener('click',ev=>{if(!ev.target.closest('[data-subj-closeaudience]'))return;try{e.instance?.destroy?.();}catch{}e.instance=null;idle('See it as readers will');e.node.querySelector('button')?.focus({preventScroll:true});});
   }
   ctx.signal.addEventListener('abort',()=>{try{root.arSimmer?.close?.();}catch{}for(const e of embeds.values()){const i=e.instance;if(!i)continue;try{Promise.resolve(i.flush?.()).catch(()=>{}).finally(()=>{try{i.destroy?.();}catch{}});}catch{}}embeds.clear();});
   /** Advanced is hidden for now. A step whose only tools were links there says plainly that its tool is not on this page yet. */
@@ -1113,7 +1133,8 @@
    const need=['yes','check','slides','posttext'].map(id=>steps.find(x=>x.id===id)).filter(Boolean);
    const rows=need.map(t=>{const tv=stepView(t);return `<li>${tv.mark?mark(tv.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<span>${esc(t.name)}</span><button type="button" class="subj-link" data-subj-step="${esc(t.id)}">Open${icon('chev')}</button></li>`;}).join('');
    const posting=['instagram','post'].includes(form?.kind)?`<p class="subj-quiet">Posting is not connected.</p>`:'';
-   return (rows?`<ul class="subj-waitl">${rows}</ul>`:'')+posting+links(out('outputs',form),out('audience',form));
+   const reader=/^out:/.test(form?.key||'')&&['article','carousel'].includes(form.kind)?borrowed('audience','audience',form.id):'';
+   return (rows?`<ul class="subj-waitl">${rows}</ul>`:'')+posting+reader+links(out('outputs',form),out('audience',form));
   }
 
   // ---------- the slides, drawn by the app's own renderer ----------
