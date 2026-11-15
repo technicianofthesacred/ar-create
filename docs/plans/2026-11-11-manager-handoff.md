@@ -1,5 +1,15 @@
 # Manager handoff, 11 November 2026
 
+## CLOSED, 15 November 2026
+
+This coordinating thread's work is finished. Nothing here is open, and nothing below this section is live; it is kept as the record of how the work ran.
+
+- **Released.** A release was cut on Adrian's Mac on 13 November: tag `v2026.11.13-pr253`, from the commit of pull request 253. It holds version three as the default with version two behind its link, version three's own Write and Home in the approved look, and the fix that stops Write discarding his words when two versions meet. Two small commits reached `main` afterwards (pull requests 255 and 256) and are not in the installed app.
+- **Threads.** Every thread this coordinator started is closed. At Adrian's word on 15 November the old version two line's stages 5, 6 and 7 and the cloud task "Make AR Create useful start to finish on the Mac" were closed too. One AR Create thread was left open on purpose, "Match human-only gate on the routed path", because it holds a question for him.
+- **Where to start next.** Version three: `docs/plans/2026-11-12-version-three-handoff.md` on `main`. The old version two line's next stage: `docs/plans/version-two-director-prompt.md` on `main`. The wisdom bank: `docs/research/wisdom-bank/WISDOM-BANK.md` on this branch, which Adrian has been extending from his Mac since 13 November.
+- **This branch** is the archive of the review, the plans and the wisdom bank papers. Pull request 233 was closed without merging. Adrian now pushes wisdom bank work to this branch himself, so fetch before writing to it.
+- **Not done, known, and nobody's yet:** one subject still has five source lists that disagree (the review's second root problem); Library and "Ask or find" do nothing; the rest of version three's screens, in the order of its handoff page.
+
 **If you are the coordinating thread and have just been compacted, read this file first. It is your memory.** It says who you are in this work, what is running, what is waiting, how the research keeps going, and how to stay cheap and sharp. Everything else is in the [plans index](2026-11-10-00-plans-from-the-review.md), the [review](../reviews/2026-11-10-use-and-interface-review.md) and the [wisdom bank synthesis](../research/wisdom-bank/03-synthesis.md).
 
 ## Your role
