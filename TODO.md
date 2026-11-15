@@ -31,6 +31,7 @@ Except the Magazine check, each of these runs in a fresh worktree against `npm r
 - [ ] Connecting more agent entry points or remote approval to his real data needs Adrian to ask for it. The earlier Claude and ChatGPT test used invented data and is closed.
 - [ ] Phone or VPS access, offline sync and restore, and access to large originals each need their own design and Adrian's agreement. Phone-width screenshots are not phone access.
 - [ ] Sending, sharing with recipients and publishing need Adrian's own consent answers and decision in the app.
+- [ ] Wisdom bank, design (not built): resume from `docs/research/wisdom-bank/WISDOM-BANK.md` and the foundations page `14-what-goes-in.html`. Next: draft the starting index of themes, fields and scales; then take in a second, very different source with the full rules and look at the links. Adrian has not yet confirmed the five kinds of unit.
 
 ## How to run the next task
 
