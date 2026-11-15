@@ -661,7 +661,21 @@
   // A tool the existing workspace already has is not written twice: its own file is loaded when its step is on the page and
   // it is put straight into the section (no frame, so one page, one scroll, the same colours). It keeps its own saving rules.
   // `covers` names the hand-offs it stands in for, so the step no longer says those are missing.
-  const BORROWED={photos:{js:'/document-study/study-photos.js',css:'/document-study/study-photos.css',ready:()=>typeof root.mountPhotosStage==='function'}};
+  const BORROWED={photos:{js:'/document-study/study-photos.js',css:'/document-study/study-photos.css',ready:()=>typeof root.mountPhotosStage==='function'},
+   simmer:{js:'/document-study/simmer.js',css:'/document-study/simmer.css',ready:()=>typeof root.arSimmer?.open==='function'}};
+  /** The existing workspace's tools read who is acting from one place on the page; here it is this tab's own actor. */
+  const actAsMe=()=>{if(!root.arCreateUiActor)root.arCreateUiActor=Object.freeze({actor:v2.actor()||'human:adrian',explicit:!v2.isHuman()});};
+  /** The Simmer board, whole, over this page. Leaving it comes back to the same place, and the step reads what changed. */
+  async function openSimmer(button){
+   if(button.disabled)return;button.disabled=true;
+   try{actAsMe();await bring('simmer');if(ctx.signal.aborted)return;
+    await root.arSimmer.open({subject:id,title:st.standing?.title||''});
+    const board=document.querySelector('dialog.simmer');
+    const after=()=>{if(ctx.signal.aborted)return;for(const k of ['board','direction'])ask(k,true);refresh();$('[data-subj-borrow="simmer"]')?.focus({preventScroll:true});};
+    if(board&&board.open)board.addEventListener('close',after,{once:true});else after();
+   }catch(error){v2.ui.say(error?.message||'The Simmer board could not be opened.',{tone:'bad'});}
+   finally{const b=$('[data-subj-borrow="simmer"]');if(b)b.disabled=false;}
+  }
   const loads=new Map();
   function bring(kind){
    const b=BORROWED[kind];if(b.ready())return Promise.resolve();
@@ -699,7 +713,7 @@
      catch(error){b.disabled=false;v2.ui.say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});}});
    }catch(error){say(`<p class="subj-quiet" role="alert">${esc(error?.message||'The photographs could not be read.')}</p>`);}
   }
-  ctx.signal.addEventListener('abort',()=>{for(const e of embeds.values()){try{e.instance?.destroy?.();}catch{}}embeds.clear();});
+  ctx.signal.addEventListener('abort',()=>{try{root.arSimmer?.close?.();}catch{}for(const e of embeds.values()){try{e.instance?.destroy?.();}catch{}}embeds.clear();});
   /** Advanced is hidden for now. A step whose only tools were links there says plainly that its tool is not on this page yet. */
   const toAdvanced=a=>(a.getAttribute('href')||'').startsWith('/document-study')&&!a.hasAttribute('data-subj-capture');
   function soon(sec){
@@ -1001,7 +1015,7 @@
    const right=dishes?`<section><p class="subj-label">It could be</p><ul class="subj-dishes">${dishes}</ul></section>`:'';
    const said=sentence||dir,editing=st.editDish!==undefined;
    const edit=editing?`<form class="subj-dishform" data-subj-dishform><label for="subj-dish">The dish, in your words</label><textarea id="subj-dish" rows="3" data-subj-dishtext>${esc(st.editDish)}</textarea><div class="subj-actions"><button type="submit" class="pri">Keep it</button><button type="button" class="v2-ghost" data-subj-dishcancel>Cancel</button></div></form>`
-    :`<p class="subj-label">The dish, in your words</p>${said?`<blockquote class="subj-quote big">${esc(said)}</blockquote>`:`<p class="subj-quiet">Not said yet.</p>`}<div class="subj-actions">${mag()?'':`<a class="subj-btn" data-subj-handoff="dishChange" href="${handoffHref('direction',form)}" title="Opens Direction in Advanced">Say it again</a>`}<button type="button" class="subj-btn" data-subj-dishedit>${said?'Edit':'Write it'}</button><span class="subj-sp"></span>${out('board',form,'subj-btn').replace('</a>',icon('right')+'</a>')}</div>`;
+    :`<p class="subj-label">The dish, in your words</p>${said?`<blockquote class="subj-quote big">${esc(said)}</blockquote>`:`<p class="subj-quiet">Not said yet.</p>`}<div class="subj-actions">${mag()?'':`<a class="subj-btn" data-subj-handoff="dishChange" href="${handoffHref('direction',form)}" title="Opens Direction in Advanced">Say it again</a>`}${mag()?'':'<button type="button" class="subj-btn pri" data-subj-borrow="simmer" data-subj-covers="board dishChange dishWrite">Open the Simmer board</button>'}<button type="button" class="subj-btn" data-subj-dishedit>${said?'Edit':'Write it'}</button><span class="subj-sp"></span>${out('board',form,'subj-btn').replace('</a>',icon('right')+'</a>')}</div>`;
    return (rec('board')===undefined?reading():'')+waitsFor(s,steps)+((left||right)?`<div class="subj-sim">${left?`<div>${left}</div>`:''}${right?`<div>${right}</div>`:''}</div>`:'')+`<div class="subj-named">${edit}</div>`;
   }
   function toolWords(s,form){
@@ -1012,8 +1026,8 @@
    return (rec('read')===undefined?reading():'')+(sheet||list?`<div class="subj-words">${sheet}<div>${list}</div></div>`:'')+`<div class="subj-actions"><a class="subj-btn pri" data-subj-handoff="write" href="${write}">${HANDOFFS.write.label}${icon('right')}</a>${blocks.length||mag()&&s.state!=='todo'?`<a class="subj-btn" data-subj-handoff="read" href="${screenHref('read',form)||handoffHref('read',form)}">${HANDOFFS.read.label}</a>`:''}</div>`;
   }
   function toolCheck(s,steps,form){
-   const c=ok(rec('check'))?rec('check'):null,list=(c?.issues||[]).slice(0,3).map(i=>i.message).filter(Boolean);
-   const rows=list.length?`<ul class="subj-list">${list.map(m=>`<li><span>${esc(m)}</span></li>`).join('')}</ul>`:'';
+   const c=ok(rec('check'))?rec('check'):null,all=(c?.issues||[]).map(i=>i.message).filter(Boolean),list=st.zoom==='check'?all:all.slice(0,3);
+   const rows=list.length?`<ul class="subj-list">${list.map(m=>`<li><span>${esc(m)}</span></li>`).join('')}${all.length>list.length?`<li><small>and ${all.length-list.length} more. Full size shows them all.</small></li>`:''}</ul>`:'';
    return waitsFor(s,steps)+rows+links(out(c?'checkOpen':'checkRun',form));
   }
   const planOf=form=>{const p=rec('planRecords');return form?.kind==='instagram'&&Array.isArray(p)?p.filter(ok).find(x=>x.id===form.id)||null:null;};
@@ -1091,6 +1105,8 @@
     act(['recordings','tree'],async()=>{await v2.call('.transcription.id.action',{id:job,action});v2.ui.say(action==='start'?'The transcript is being made.':'Trying the transcript again.',{tone:'good'});});return;}
    if(e.target.closest('[data-subj-look]')){e.preventDefault();chooseLook();return;}
    if(e.target.closest('[data-subj-readclose]')){e.preventDefault();const s=st.reader?.sec;st.reader=null;paintNow();secOf(s)?.querySelector('h2')?.focus({preventScroll:true});return;}
+   const bw=e.target.closest('[data-subj-borrow]');
+   if(bw){e.preventDefault();if(bw.dataset.subjBorrow==='simmer')openSimmer(bw);return;}
    const src=e.target.closest('[data-subj-src]');
    if(src&&!e.target.closest('a,button,input,textarea,select,label')){e.preventDefault();openReader(src.closest('[data-subj-sec]')?.dataset.subjSec,src.dataset.subjSrc,src.dataset.title||'',src.dataset.kind||'');return;}
    const z=e.target.closest('[data-subj-zoom]');
