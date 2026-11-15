@@ -1,0 +1,151 @@
+<title>Wisdom Bank Clusters</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column, a five-step pipeline strip, then one section per step */
+:root{
+  --bg:#f6f7f6; --surface:#ffffff; --fg:#1d2422; --muted:#5b6662; --line:#d9dfdc;
+  --accent:#2f6f62; --accent-soft:#e3efeb; --warn:#8a5a14; --warn-soft:#f6ecd9;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121615; --surface:#1a201e; --fg:#e4e9e7; --muted:#9aa6a1; --line:#2c3532;
+  --accent:#7cc4b2; --accent-soft:#1f302b; --warn:#e2b56a; --warn-soft:#2d2518; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121615; --surface:#1a201e; --fg:#e4e9e7; --muted:#9aa6a1; --line:#2c3532;
+  --accent:#7cc4b2; --accent-soft:#1f302b; --warn:#e2b56a; --warn-soft:#2d2518; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.65 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:2rem;font-weight:600}
+h2{font-size:1.35rem;font-weight:600}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:0}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+section{display:flex;flex-direction:column;gap:14px}
+.lead{font-size:1.1rem}
+.verdict{background:var(--accent-soft);border-left:3px solid var(--accent);padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.verdict ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.pipe{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.pipe a{display:flex;flex-direction:column;gap:2px;padding:10px 10px;background:var(--surface);border:1px solid var(--line);text-decoration:none;color:var(--fg)}
+.pipe a b{font-family:var(--display);font-weight:600;font-size:.95rem}
+.pipe a span{font-size:.75rem;color:var(--muted)}
+.pipe a:focus-visible,.pipe a:hover{border-color:var(--accent)}
+@media (max-width:560px){.pipe{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.step{border-top:1px solid var(--line);padding-top:24px}
+.row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 16px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .k{font-weight:600}
+.row .k small{display:block;font-weight:400;color:var(--muted);font-size:.78rem}
+@media (max-width:560px){.row{grid-template-columns:minmax(0,1fr)}}
+.gap{background:var(--warn-soft);color:var(--fg);padding:12px 14px;font-size:.95rem}
+.gap b{color:var(--warn)}
+a{color:var(--accent)}
+.note{font-size:.85rem;color:var(--muted)}
+ol.next{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+</style>
+
+<main>
+<header style="display:flex;flex-direction:column;gap:12px">
+  <p class="eyebrow">Wisdom bank · research · 13 November 2026</p>
+  <h1>Are people building this with AI?</h1>
+  <p class="lead">Yes, in pieces. Every piece of your bank exists somewhere as open code or a product. Nobody has put them together, and nobody does the three things that make the bank yours.</p>
+</header>
+
+<div class="verdict">
+  <h3>The three things nobody does</h3>
+  <ul>
+    <li><b>Exact quotes, checked.</b> Tools link an answer back to a chunk of the source. None checks that a quote appears word for word.</li>
+    <li><b>One idea in several clusters.</b> Every AI clustering tool puts each idea in exactly one group per level. Your "wu wei in tea and in meditation" is missing everywhere.</li>
+    <li><b>You confirm the clusters.</b> Some tools let a person merge duplicate names. None lets a person approve which cluster an idea belongs to.</li>
+  </ul>
+  <p>So: borrow the engines, build these three yourself. They are small compared with the engines, and they are the heart of the bank.</p>
+</div>
+
+<section>
+  <h2>The bank in five steps</h2>
+  <p>You described it as ingesting, then linking, then the interface for finding, viewing and moving through clusters. Here is what already exists for each step. Tap one to jump.</p>
+  <nav class="pipe" aria-label="Steps">
+    <a href="#ingest"><b>1 · Take in</b><span>YouTube, books, articles</span></a>
+    <a href="#distil"><b>2 · Distil</b><span>concepts at 3 depths</span></a>
+    <a href="#link"><b>3 · Link</b><span>across works</span></a>
+    <a href="#cluster"><b>4 · Cluster</b><span>and sub-clusters</span></a>
+    <a href="#move"><b>5 · Move through</b><span>find, view, zoom</span></a>
+  </nav>
+</section>
+
+<section class="step" id="ingest">
+  <p class="eyebrow">Step 1</p>
+  <h2>Take in a source</h2>
+  <p>The best example: <b>Heptabase's "Research a topic"</b>. You drop in YouTube links, whole playlists or PDFs and press start. It fetches the transcripts itself, lays everything out as cards on a fresh board, and opens a chat beside it whose answers link to the exact paragraph or video timestamp. A good answer becomes a card with one press.</p>
+  <div>
+    <div class="row"><div class="k">Copy<small>interface</small></div><div>Heptabase's one-button start and timestamp links. <a href="https://wiki.heptabase.com/work-with-ai">Heptabase AI</a></div></div>
+    <div class="row"><div class="k">Reuse<small>engine</small></div><div>CocoIndex has the clearest recipe for YouTube transcript to linked ideas. AR Create's Library already stores YouTube captions with their timings, so this step is mostly done.</div></div>
+  </div>
+</section>
+
+<section class="step" id="distil">
+  <p class="eyebrow">Step 2</p>
+  <h2>Distil into concepts, at three depths</h2>
+  <p><b>RAPTOR</b> is the closest idea to your depths. It groups passages, summarises each group, then summarises the summaries, building a tree from detail to overview. It is built for AI search, not for reading, so the summaries are not written for a person. Borrow the shape and write your three depths for you.</p>
+  <div>
+    <div class="row"><div class="k">RAPTOR<small>1,780 stars · MIT</small></div><div>Tree of summaries. Last updated September 2024, so take the idea, not the code. RAGFlow (94,000 stars) ships it as a switch. <a href="https://github.com/parthsarthi03/raptor">Repo</a></div></div>
+    <div class="row"><div class="k">Fabric<small>prompts</small></div><div>Its "extract wisdom" prompts are a good start for pulling out every concept.</div></div>
+    <div class="row"><div class="k">Quote check<small>build it</small></div><div>A few lines of ordinary code: the model returns a quote, the code confirms it is in the source word for word, or rejects it.</div></div>
+  </div>
+</section>
+
+<section class="step" id="link">
+  <p class="eyebrow">Step 3</p>
+  <h2>Link concepts across works</h2>
+  <p>This is what "knowledge graph RAG" projects do, and it is the busiest area of open source right now.</p>
+  <div>
+    <div class="row"><div class="k">LightRAG<small>40,700 stars · MIT</small></div><div>Most active. Finds ideas and their links across sources, keeps a link back to the source chunk, and has a screen for merging duplicates. Good as the engine that proposes links. Updated 12 Nov 2026. <a href="https://github.com/HKUDS/LightRAG">Repo</a></div></div>
+    <div class="row"><div class="k">Graphiti<small>32,800 stars · Apache</small></div><div>The best way of storing it: the source is never changed, every derived fact lists where it came from, and a fact that is later contradicted is closed with a date instead of deleted. Copy this design. <a href="https://github.com/getzep/graphiti">Repo</a></div></div>
+    <div class="row"><div class="k">sift-kg<small>small</small></div><div>The AI proposes "these are the same", each proposal waits as pending until you approve or decline it, with its reasoning shown. Copy this review screen.</div></div>
+  </div>
+</section>
+
+<section class="step" id="cluster">
+  <p class="eyebrow">Step 4</p>
+  <h2>Clusters and sub-clusters</h2>
+  <p>Two kinds of method exist. <b>Automatic grouping</b> (Microsoft GraphRAG, BERTopic) builds nested clusters and writes a report for each, but every idea lands in exactly one cluster. <b>AI-written category trees</b> (research such as TnT-LLM and TaxoAdapt) have a model propose named clusters and sub-clusters, and they can place one idea in several. The second fits you.</p>
+  <div>
+    <div class="row"><div class="k">GraphRAG<small>36,600 stars · MIT</small></div><div>Nested clusters with a written report at every level. Copy the report format for your cluster pages, not the engine. <a href="https://github.com/microsoft/graphrag">Repo</a></div></div>
+    <div class="row"><div class="k">BERTopic<small>8,000 stars · MIT</small></div><div>Sorts hundreds of thousands of items into a topic tree that you can rename and merge, and accepts topic names you give it. Good for sorting the pile of ideas that have no home yet.</div></div>
+  </div>
+  <div class="gap"><b>How clusters stay put.</b> Once you confirm a cluster, its name and place are permanent. New ideas are placed into confirmed clusters; nothing gets re-sorted behind your back. Every so often the AI proposes changes as a list you approve or decline.</div>
+</section>
+
+<section class="step" id="move">
+  <p class="eyebrow">Step 5</p>
+  <h2>Find, view and move through it</h2>
+  <p>Four interaction patterns worth copying, each from a real product.</p>
+  <div>
+    <div class="row"><div class="k">Grab, name, ask<small>Heptabase</small></div><div>Select some cards, press one key, and they become a named area. Its title stays readable when you zoom far out. You can ask the AI about only that area. One card can sit in any number of boards, and it shows "appears in 4 boards". <a href="https://wiki.heptabase.com/organize-knowledge-and-projects">Docs</a></div></div>
+    <div class="row"><div class="k">The swarm<small>Napkin</small></div><div>One idea sits in the middle and its relatives float around it. Tap one and it becomes the centre. An idea with two tags appears beside both families, so living in several clusters happens naturally. Suggested tags appear and you accept or dismiss them.</div></div>
+    <div class="row"><div class="k">Map names by zoom<small>Nomic, Embedding Atlas</small></div><div>Far out you see a few broad region names; zoom in and finer names appear, like a geographic map. In Nomic you tap a name to rename it and lasso a group to make a new cluster. Embedding Atlas does the map, but whether it lets you rename regions or make your own clusters is not confirmed. <a href="https://apple.github.io/embedding-atlas/">Embedding Atlas</a></div></div>
+    <div class="row"><div class="k">Source beside it<small>Elicit, NotebookLM</small></div><div>Tap any claim and the exact passage shows beside it, highlighted in the original. NotebookLM's mind map branches open and close in place.</div></div>
+  </div>
+  <div class="gap"><b>Still missing everywhere:</b> one surface that has nested clusters, one idea in several clusters, and a zoom from the whole down to a readable concept. Heptabase is closest, and it slows down past about 100 cards on one board.</div>
+</section>
+
+<section class="step">
+  <p class="eyebrow">Underneath</p>
+  <h2>Where it is stored</h2>
+  <p>One database file on your Mac (SQLite) with plain tables: works, exact passages, concepts, links, clusters, which cluster sits inside which (several parents allowed), and which concept is in which cluster with a state of proposed, confirmed or declined. Word search and meaning search live in the same file. A specialised graph database is not needed, because each link is one row with its reason. 300,000 ideas take roughly 1 GB, which a Mac handles easily. Cloudflare can later hold a copy for your phone.</p>
+  <p class="note">Kuzu, a graph database often recommended for this, was bought by Apple in October 2025 and its code archived, so avoid it.</p>
+</section>
+
+<section class="step">
+  <p class="eyebrow">Next</p>
+  <h2>The order to try it in</h2>
+  <ol class="next">
+    <li><b>Distil one real talk or book you choose</b> with exact quotes checked and three depths. This tests the heart of the bank. It needs you to name the work.</li>
+    <li><b>Have the AI propose clusters</b> from it, with one idea allowed in several, and you approve or decline each.</li>
+    <li><b>Look at it</b> as a Heptabase-style board and as a map that names regions by zoom, side by side, and pick one.</li>
+  </ol>
+  <p class="note">Sources: about 90 searches and page reads by three research agents on 13 November 2026. Star counts and dates come from GitHub on that day. Feature claims come from documentation and reviews, not from running the products. Full notes are kept with this research.</p>
+</section>
+</main>

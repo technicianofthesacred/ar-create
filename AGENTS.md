@@ -92,3 +92,5 @@ Before resuming work, read [CURRENT](docs/status/CURRENT.md) and [TODO](TODO.md)
 4. [docs/CAPABILITIES.md](docs/CAPABILITIES.md): generated list of commands and tools. [TODO.md](TODO.md): Delivery's public to-do list.
 
 Tests: `npm run setup`, `npm run build` (it generates runtime files the tests import, such as `runtime/article-codec.mjs`; without it about 200 tests fail with a missing module), then `npm test`. If setup fails because node-pty cannot download Node headers, point it at the local ones: `npm_config_nodedir="$(dirname "$(dirname "$(command -v node)")")" npm run setup`.
+
+@./THINKING.md
