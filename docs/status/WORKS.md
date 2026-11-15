@@ -1,7 +1,7 @@
 <!-- Hand-maintained current summary; gen-status.mjs supplies measured/release headers. Keep within 40 lines. -->
-## Current checkpoint, 10 November 2026
+## Current checkpoint, 13 November 2026
 
-The installed app is PR230: commit `af5350a974d5612ac1b3e373daea9979e8ad42cf`, tag `v2026.11.09-pr230`, checked running on 10 November. The test line above is the 21 focused source and HTTP checks run on that commit on 9 November, not a full-suite run and not Adrian's acceptance. Later documentation commits on `main` do not change the installed app.
+The installed app is version three's Home release: commit `2d02f5ee0e06f297820fbb92ebb67d9b267d4d30`, tag `v2026.11.13-pr253`, released on 13 November with no overrides after a green `ci` check on that commit, and confirmed by the installed CLI's `status`. Version three is the default front at `/v3/`, with version two and Advanced behind links. It is not a full-suite run on Adrian's records and not his acceptance. Real-record observations from that release (desk empty, so no cover card to see; one load shift of about 0.078 on desktop, none on the phone) are in [the open corrections](../plans/2026-11-11-version-two-open-corrections.md) under version three's Home.
 
 ## Completed and verified
 
