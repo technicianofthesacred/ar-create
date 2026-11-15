@@ -41,8 +41,10 @@ function retiredOwnedGroup(pid){
 }
 
 /** A completed render is distinct from Chrome shutdown. Own one isolated process
- * group, retain the 30s deadline, and never publish partial renderer output. */
-export function renderCarouselProcess(binary,args,file,{timeout=30_000,grace=250,signal:abortSignal}={}){
+ * group, retain the 30s deadline, and never publish partial renderer output.
+ * exitWait bounds how long a confirmed owned zombie group may take to deliver
+ * the exact child's exit event before its denied cleanup becomes the failure. */
+export function renderCarouselProcess(binary,args,file,{timeout=30_000,grace=250,exitWait=3000,signal:abortSignal}={}){
  if(abortSignal?.aborted)return Promise.reject(Error('Carousel render cancelled.'));
  if(fs.existsSync(file))return Promise.reject(Error('Render target must be a fresh child-owned file.'));
  return new Promise((resolve,reject)=>{
@@ -57,8 +59,17 @@ export function renderCarouselProcess(binary,args,file,{timeout=30_000,grace=250
   };
   const finish=error=>{
    failure=error||failure;if(settling)return;settling=true;clearTimeout(deadline);clearInterval(fileCheck);signal('SIGTERM');
-   setTimeout(()=>{signal('SIGKILL');if(retiredPermission&&!exited)failure??=retiredPermission;done=true;abortSignal?.removeEventListener('abort',cancel);child.stdout.destroy();child.stderr.destroy();failure?reject(failure):resolve({stdout,stderr});},grace);
+   setTimeout(()=>{
+    signal('SIGKILL');
+    // ps has just seen our child as a zombie, which means Node has not reaped
+    // it, so its exit event cannot have arrived yet. Wait a bounded time for
+    // that exact exit; without it the denied cleanup remains the failure.
+    if(retiredPermission&&!exited){awaitingExit=setTimeout(()=>{awaitingExit=null;failure??=retiredPermission;settle();},exitWait);return;}
+    settle();
+   },grace);
   };
+  let awaitingExit=null;
+  const settle=()=>{if(done)return;done=true;clearTimeout(awaitingExit);awaitingExit=null;abortSignal?.removeEventListener('abort',cancel);child.stdout.destroy();child.stderr.destroy();failure?reject(failure):resolve({stdout,stderr});};
   const inspect=()=>{
    if(settling||!/<html\b[\s\S]*<\/html>\s*$/i.test(stdout))return;
    const status=/data-export-status="([^"]+)"/.exec(stdout)?.[1];
@@ -76,7 +87,7 @@ export function renderCarouselProcess(binary,args,file,{timeout=30_000,grace=250
   // Chrome on macOS may encode our SIGTERM/SIGKILL as 128 + signal.
   // Once completion initiated shutdown, those codes describe cleanup, not
   // rendering. Other failures (including an exit before completion) still hold.
-  const recordExit=code=>{exited=true;if(code!==null&&code!==0&&!(settling&&[143,137].includes(code)))failure=Error('Carousel renderer failed with exit '+code+'.');};
+  const recordExit=code=>{exited=true;if(code!==null&&code!==0&&!(settling&&[143,137].includes(code)))failure=Error('Carousel renderer failed with exit '+code+'.');if(awaitingExit)settle();};
   child.on('error',finish);
   child.on('exit',recordExit);
   child.on('close',(code,reason)=>{if(done)return;if(settling){recordExit(code);return;}inspect();if(!settling)finish(Error('Carousel renderer stopped before a complete ready PNG.'+(lastInvalid?' '+lastInvalid.message:'')));});
