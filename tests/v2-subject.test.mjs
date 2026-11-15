@@ -584,10 +584,11 @@ test('two forms of one name are told apart by real fields only: the slide count 
  assert.deepEqual(S.tellApart(bare),['','Autumn']);
  assert.equal(S.pillView(bare[0],0,'').line,'Instagram');
  // Same slides, same day: the time made tells them apart.
- const same=S.tellApart([car('out:c1',{createdAt:'2026-10-03T08:15:00Z'}),car('out:c2',{createdAt:'2026-10-03T16:40:00Z'})]);
+ const local=(h,m,sec=0)=>new Date(2026,9,3,h,m,sec).toISOString(); // the screen shows the day in the reader's own time zone, so the test builds its times there too
+ const same=S.tellApart([car('out:c1',{createdAt:local(8,15)}),car('out:c2',{createdAt:local(16,40)})]);
  assert.notEqual(same[0],same[1]);assert.match(same[0],/^5 slides · made 3 Oct, \d\d:\d\d$/);
  // The same minute: the second.
- const close=S.tellApart([car('out:c1',{createdAt:'2026-10-03T08:15:10Z'}),car('out:c2',{createdAt:'2026-10-03T08:15:40Z'})]);
+ const close=S.tellApart([car('out:c1',{createdAt:local(8,15,10)}),car('out:c2',{createdAt:local(8,15,40)})]);
  assert.notEqual(close[0],close[1]);assert.match(close[0],/, \d\d:\d\d:\d\d$/);
 });
 
