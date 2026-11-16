@@ -12,11 +12,9 @@
 :root,:root[data-theme="light"]{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#5e6257;--line:#e2e0d8;--warm:#7a5a30;--rail:#f7f5ef;--green:#3f6146;
  --c3-ink2:#51564b;--c3-line2:#cfcdc3;--c3-lift:#f7f5ef;--c3-sel:#e9e4d7;--c3-good:#3f6146;--c3-warn:#94600f;--c3-bad:#a23b2a;--c3-pend:#f4e6c6;--c3-okbg:#e2ead9;--c3-sbt:rgba(122,90,48,.42);--c3-sbh:rgba(122,90,48,.7);--c3-shadow:0 18px 50px rgba(40,35,25,.18);
  --ar-ui:'AR Plus Jakarta Sans','Plus Jakarta Sans',system-ui,-apple-system,sans-serif;--ar-ui-muted:#5e6257;--ar-ui-focus:#7a5a30;--draft-active:#e9e4d7;--mrb-accent:#7a5a30;--rpb-accent:#7a5a30;--c3-t1:13px;--c3-t2:15px;--c3-r:8px}
-/* Dark is the "Sumi and matcha" tea tone (chosen 16 November 2026, compared in docs/design/tea-tones.html; the same
-   tone as the parts page, ui-kit/src/app.css): ink black with almost no cast, matcha green leading the signals. */
-:root[data-theme="dark"]{--bg:#0e0e0e;--paper:#161616;--ink:#ebeae6;--dim:#878680;--line:#252523;--warm:#b9a27a;--rail:#121212;--green:#8fa86a;
- --c3-ink2:#c2c1bb;--c3-line2:#353431;--c3-lift:#121212;--c3-sel:#242422;--c3-good:#8fa86a;--c3-warn:#c7a258;--c3-bad:#b8675c;--c3-pend:#332c1d;--c3-okbg:#20261a;--c3-sbt:rgba(185,162,122,.35);--c3-sbh:rgba(185,162,122,.65);--c3-shadow:0 18px 50px rgba(0,0,0,.6);
- --ar-ui-muted:#878680;--ar-ui-focus:#b9a27a;--draft-active:#242422;--mrb-accent:#b9a27a;--rpb-accent:#b9a27a}
+:root[data-theme="dark"]{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--green:#8fb08a;
+ --c3-ink2:#c3bdad;--c3-line2:#423e34;--c3-lift:#191813;--c3-sel:#2c2a22;--c3-good:#8fb08a;--c3-warn:#d9a95a;--c3-bad:#e08a74;--c3-pend:#423a23;--c3-okbg:#2b3326;--c3-sbt:rgba(191,169,140,.4);--c3-sbh:rgba(211,192,166,.7);--c3-shadow:0 18px 50px rgba(0,0,0,.55);
+ --ar-ui-muted:#a39e8e;--ar-ui-focus:#c9a874;--draft-active:#2c2a22;--mrb-accent:#c9a874;--rpb-accent:#c9a874}
 
 /* ---------- type and scrollbars ---------- */
 body{font-family:var(--ar-ui);-webkit-font-smoothing:antialiased;scrollbar-color:var(--c3-sbt) transparent}
@@ -215,7 +213,7 @@ body.c3-tabs #app #workspace button[data-current-check="run"]:not(:disabled){bac
 
 /* ================= Write = Read = Check: same paper, starts with the page (20 Oct) ================= */
 /* The writing surface had its own greenish paper and desk; it now uses the shared palette. */
-body.c3-tabs.draft-surface-active{--bg:#0e0e0e;--rail:#121212;--paper:#161616;--ink:#ebeae6;--dim:#878680;--line:#252523;--green:#8fa86a;--warm:#b9a27a;--draft-active:#242422;--draft-mark:color-mix(in srgb,#b9a27a 22%,transparent);--draft-note:#121212}
+body.c3-tabs.draft-surface-active{--bg:#141310;--rail:#191813;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--green:#8fb08a;--warm:#c9a874;--draft-active:#2c2a22;--draft-mark:color-mix(in srgb,#c9a874 22%,transparent);--draft-note:#191813}
 :root[data-theme="light"] body.c3-tabs.draft-surface-active{--bg:#efede6;--rail:#f7f5ef;--paper:#fffefb;--ink:#2d302a;--dim:#5e6257;--line:#e2e0d8;--green:#3f6146;--warm:#7a5a30;--draft-active:#e9e4d7;--draft-mark:color-mix(in srgb,#7a5a30 18%,transparent);--draft-note:#f7f5ef}
 body.c3-tabs #app .workspace>.draft-bar.c3-quiet{display:none!important}
 /* The same desk and the same first line of the page on Write, Read and Check. */
