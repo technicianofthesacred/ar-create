@@ -131,6 +131,9 @@
   try{await s.mount?.(el,ctx);}catch(error){console.error('Version three: the '+s.id+' screen could not finish opening.',error);}
  }
  const safe=(fn,fallback)=>{try{return fn();}catch{return fallback;}};
+ // coss ui's button look (window.coss, from /ui/kit/coss-classes.js). If that script did not load, the classes are
+ // empty and the control keeps the app's own look.
+ const coss=(o)=>safe(()=>window.coss.button(o),'');
 
  // ---------- the frame ----------
  // The band and the phone bar sit outside #v2-app, so version two's frame rules (shell.css) never reach them; the
@@ -144,12 +147,12 @@
  </nav>
  <nav class="v3-desk" data-v2-desk aria-label="On your desk" hidden></nav>
  <span class="v3-grow"></span>
- <button type="button" class="v3-q v3-wide" data-v2-ask aria-label="Find" title="Find a subject, or words in the Library">${icon('search')}<kbd>⌘K</kbd></button>
- <a class="v3-q v3-wide v3-needs" data-v2-needs href="#/" hidden><i aria-hidden="true"></i><span>Needs you · <b data-v2-needs-count>0</b></span></a>
- <button type="button" class="v3-q v3-wide" data-v2-capture>${icon('plus')}<span>Capture</span></button>
- <button type="button" class="v3-q v3-icon" data-v2-theme aria-label="Switch theme">${icon('sun')}</button>
- <a class="v3-q v3-other" data-v3-two href="${esc(versionTwo())}" title="The same place in version two">Version two</a>
- <a class="v3-q v3-other" data-v2-advanced href="${esc(advanced())}" title="The same place in the existing workspace">Advanced</a>
+ <button type="button" class="v3-wide ${coss({variant:'ghost',size:'sm'})}" data-v2-ask aria-label="Find" title="Find a subject, or words in the Library">${icon('search')}<kbd class="pointer-events-none inline-flex h-5 min-w-5 select-none items-center justify-center gap-1 rounded-[.25rem] bg-muted px-1 font-medium font-sans text-muted-foreground text-xs [&_svg:not([class*='size-'])]:size-3">⌘K</kbd></button>
+ <a class="v3-wide v3-needs ${coss({variant:'ghost',size:'sm'})}" data-v2-needs href="#/" hidden><i aria-hidden="true"></i><span>Needs you · <b data-v2-needs-count>0</b></span></a>
+ <button type="button" class="v3-wide ${coss({variant:'ghost',size:'sm'})}" data-v2-capture>${icon('plus')}<span>Capture</span></button>
+ <button type="button" class="${coss({variant:'ghost',size:'icon-sm'})}" data-v2-theme aria-label="Switch theme">${icon('sun')}</button>
+ <a class="v3-other ${coss({variant:'ghost',size:'sm'})}" data-v3-two href="${esc(versionTwo())}" title="The same place in version two">Version two</a>
+ <a class="v3-other ${coss({variant:'ghost',size:'sm'})}" data-v2-advanced href="${esc(advanced())}" title="The same place in the existing workspace">Advanced</a>
 </header>
 <div id="v2-app" class="v3-app">
  <div class="v2-messages" id="v2-messages" role="status" aria-live="polite"></div>
@@ -235,7 +238,7 @@
  function openFind(){
   if(findSheet?.el?.isConnected){findSheet.el.querySelector('[name=q]')?.focus();return findSheet;}
   const body=doc.createElement('div');
-  body.innerHTML=`<form class="v2-find" role="search"><div class="v2-find-box">${icon('search')}<input name="q" type="search" autocomplete="off" maxlength="256" aria-label="Find a subject, or words in the Library" placeholder="A subject, or words in the Library"><button class="pri" type="submit">Find</button></div><p class="v2-find-note">Finds subjects by their names and the exact words in your Library. It cannot answer questions yet.</p><div class="v2-find-out" data-v2-find-out aria-live="polite"></div></form>`;
+  body.innerHTML=`<form class="v2-find" role="search"><div class="v2-find-box">${icon('search')}<input name="q" type="search" autocomplete="off" maxlength="256" aria-label="Find a subject, or words in the Library" placeholder="A subject, or words in the Library"><button class="pri ${coss({variant:'default',size:'sm'})}" type="submit">Find</button></div><p class="v2-find-note">Finds subjects by their names and the exact words in your Library. It cannot answer questions yet.</p><div class="v2-find-out" data-v2-find-out aria-live="polite"></div></form>`;
   const sheet=P.sheet({title:'Find',body,onClose:()=>{findSheet=null;}});sheet.el.dataset.v2Find='';findSheet=sheet;
   const form=body.querySelector('form'),out=body.querySelector('[data-v2-find-out]'),input=form.elements.q;let run=0,subjects=null;
   body.addEventListener('click',e=>{if(e.target.closest('a'))sheet.close();});

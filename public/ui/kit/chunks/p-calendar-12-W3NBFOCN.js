@@ -1,0 +1,31 @@
+import"./chunk-DCANE7XH.js";var r=`"use client";
+
+import type { WeekNumberProps } from "@daypicker/react";
+import { useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
+
+export default function Particle() {
+  const [date, setDate] = useState<Date | undefined>(new Date());
+
+  return (
+    <Calendar
+      components={{
+        WeekNumber: ({ week, ...props }: WeekNumberProps) => {
+          return (
+            <th {...props}>
+              <span className="inline-flex size-(--cell-size) items-center justify-center">
+                {week.weekNumber}
+              </span>
+            </th>
+          );
+        },
+      }}
+      fixedWeeks
+      mode="single"
+      onSelect={setDate}
+      selected={date}
+      showWeekNumber
+    />
+  );
+}
+`;export{r as default};

@@ -1,0 +1,18 @@
+import"./chunk-DCANE7XH.js";var u=`import { SearchIcon } from "lucide-react";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+
+export default function Particle() {
+  return (
+    <InputGroup>
+      <InputGroupAddon>
+        <SearchIcon aria-hidden="true" />
+      </InputGroupAddon>
+      <InputGroupInput aria-label="Search" placeholder="Search" type="search" />
+    </InputGroup>
+  );
+}
+`;export{u as default};

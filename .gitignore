@@ -46,3 +46,6 @@ runtime/public/assets/study-output-canvas.js
 runtime/services/native-output-helpers.mjs
 runtime/services/native-output-owner.test.mjs
 runtime/services/render-helper.mjs
+
+# The parts page build writes this copy of coss ui's style file; ui-kit/build.mjs makes it.
+ui-kit/src/styles.build.css

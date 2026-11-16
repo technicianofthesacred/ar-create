@@ -1,0 +1,18 @@
+import"./chunk-DCANE7XH.js";var i=`import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipPopup,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+export default function Particle() {
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<Button variant="outline" />}>
+        Hover me
+      </TooltipTrigger>
+      <TooltipPopup>Helpful hint</TooltipPopup>
+    </Tooltip>
+  );
+}
+`;export{i as default};

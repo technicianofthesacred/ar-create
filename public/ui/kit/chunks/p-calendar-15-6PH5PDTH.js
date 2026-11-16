@@ -1,0 +1,29 @@
+import"./chunk-DCANE7XH.js";var n=`"use client";
+
+import { addDays } from "date-fns";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+
+export default function Particle() {
+  const today = new Date();
+  const selectedDay = addDays(today, -28);
+  const [month, setMonth] = useState(selectedDay);
+  const [date, setDate] = useState<Date | undefined>(selectedDay);
+
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <Calendar
+        mode="single"
+        month={month}
+        onMonthChange={setMonth}
+        onSelect={setDate}
+        selected={date}
+      />
+      <Button onClick={() => setMonth(today)} size="sm" variant="outline">
+        Current month
+      </Button>
+    </div>
+  );
+}
+`;export{n as default};

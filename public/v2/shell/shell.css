@@ -2,7 +2,7 @@
    files (/document-study/c3-theme.css and graphite-controls.css); this file adds only what version two needs.
    Six type sizes, no more: 12, 13, 14, 15, 18, 22. Lora only for spoken words (--v2-speech).
    This file is linked before graphite-controls.css so that the layer named here comes first: in that order a quiet
-   control (.v2-ghost) can set aside the Graphite button look, which otherwise wins over every plain button. */
+   control (.v2-ghost:not(.coss)) can set aside the Graphite button look, which otherwise wins over every plain button. */
 @layer v2-controls, graphite-controls;
 
 @font-face{font-family:'AR Atlas Lora';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/lora-400-normal-latin.woff2') format('woff2')}
@@ -25,17 +25,17 @@ body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--v2-t15)/1.5 v
 
 /* ---------- quiet controls (set aside the Graphite button look on purpose) ---------- */
 @layer v2-controls{
- button.v2-ghost{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;min-height:32px!important;height:auto!important;padding:0 10px!important;border:0!important;border-radius:6px!important;background:transparent!important;color:var(--c3-ink2)!important;font:500 var(--v2-t14)/1 var(--ar-ui)!important;white-space:nowrap!important;box-shadow:none!important;filter:none!important;background-clip:border-box!important}
- button.v2-ghost:not(:disabled):hover{background:var(--v2-sec)!important;color:var(--ink)!important}
- button.v2-ghost:disabled{opacity:.35!important}
+ button.v2-ghost:not(.coss){display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;min-height:32px!important;height:auto!important;padding:0 10px!important;border:0!important;border-radius:6px!important;background:transparent!important;color:var(--c3-ink2)!important;font:500 var(--v2-t14)/1 var(--ar-ui)!important;white-space:nowrap!important;box-shadow:none!important;filter:none!important;background-clip:border-box!important}
+ button.v2-ghost:not(.coss):not(:disabled):hover{background:var(--v2-sec)!important;color:var(--ink)!important}
+ button.v2-ghost:not(.coss):disabled{opacity:.35!important}
  button.v2-icon-btn{width:32px!important;padding:0!important}
- @media (max-width:850px),(pointer:coarse){button.v2-ghost{min-height:44px!important}button.v2-icon-btn{width:44px!important}}
- @media (max-width:850px){button.v2-ghost.v2-wide{display:none!important}}
- button.v2-ghost[hidden]{display:none!important}
- .v2-top button.v2-ghost{min-height:28px!important;padding:3px 10px!important;border:1px solid transparent!important;font:600 var(--v2-t13)/20px var(--ar-ui)!important;position:relative!important}
+ @media (max-width:850px),(pointer:coarse){button.v2-ghost:not(.coss){min-height:44px!important}button.v2-icon-btn{width:44px!important}}
+ @media (max-width:850px){button.v2-ghost:not(.coss).v2-wide{display:none!important}}
+ button.v2-ghost:not(.coss)[hidden]{display:none!important}
+ .v2-top button.v2-ghost:not(.coss){min-height:28px!important;padding:3px 10px!important;border:1px solid transparent!important;font:600 var(--v2-t13)/20px var(--ar-ui)!important;position:relative!important}
  .v2-top button.v2-icon-btn{width:auto!important}
- .v2-top button.v2-ghost::after{content:"";position:absolute;inset:-6px -2px}
- @media (max-width:850px),(pointer:coarse){.v2-top button.v2-ghost{min-height:32px!important}.v2-top button.v2-icon-btn{width:auto!important}}
+ .v2-top button.v2-ghost:not(.coss)::after{content:"";position:absolute;inset:-6px -2px}
+ @media (max-width:850px),(pointer:coarse){.v2-top button.v2-ghost:not(.coss){min-height:32px!important}.v2-top button.v2-icon-btn{width:auto!important}}
  button.v2-desk-more{flex:none!important;min-height:32px!important;padding:0 8px!important;font:500 var(--v2-t13)/1 var(--ar-ui)!important;color:var(--dim)!important}
 }
 

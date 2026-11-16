@@ -1,0 +1,1 @@
+import{c as i}from"./chunk-4OF52RTW.js";import{f as a,o as c}from"./chunk-VO325B7S.js";function g(t){let f=c(t),o=parseFloat(f.width)||0,s=parseFloat(f.height)||0,e=a(t),h=e?t.offsetWidth:o,r=e?t.offsetHeight:s;return(i(o)!==h||i(s)!==r)&&(o=h,s=r),{width:o,height:s}}export{g as a};

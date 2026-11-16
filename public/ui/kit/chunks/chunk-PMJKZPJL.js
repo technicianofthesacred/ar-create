@@ -1,0 +1,1 @@
+import{a as c}from"./chunk-TZORI5HO.js";import{c as s}from"./chunk-DCANE7XH.js";var r=s(c(),1);function n(e){let[t,u]=r.useState({current:e,previous:null});return Object.is(e,t.current)||u({current:e,previous:t.current}),t.previous}export{n as a};

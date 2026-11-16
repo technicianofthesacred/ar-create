@@ -1,0 +1,13 @@
+import"./chunk-DCANE7XH.js";var r=`import { Input } from "@/components/ui/input";
+
+export default function Particle() {
+  return (
+    <Input
+      aria-label="Enter text"
+      className="[--radius-lg:9999px] [--radius:9999px]"
+      placeholder="Enter text"
+      type="text"
+    />
+  );
+}
+`;export{r as default};

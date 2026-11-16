@@ -1,0 +1,1 @@
+import{b as n}from"./chunk-N53B4RPW.js";import{a as c}from"./chunk-XF67R45Z.js";var a=n.useInsertionEffect,r=a&&a!==n.useLayoutEffect?a:e=>e();function i(e){let t=c(o).current;return t.next=e,r(t.effect),t.trampoline}function o(){let e={next:void 0,callback:l,trampoline:(...t)=>e.callback?.(...t),effect:()=>{e.callback=e.next}};return e}function l(){}export{i as a};

@@ -1,0 +1,115 @@
+/* AR Create's layer over coss ui. styles.css is exactly what coss's install wrote (`shadcn add @coss/style`) and is
+   never edited by hand, so a later `shadcn add` can update it. Everything AR Create changes lives here, the way the
+   coss Styling guide says to customise: by setting the same colour names in the global stylesheet.
+
+   - Dark: AR Create's own warm brown. coss ui gives the shapes and interactions, not the colours.
+   - Light: AR Create's warm paper palette, written with coss's formulas (see-through edges, soft fills), so borders
+     and shadows keep the depth the Styling guide describes.
+   - The app switches theme with data-theme="dark"; coss uses a .dark class. Both work. */
+
+@import "./styles.build.css";
+
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-canvas: var(--canvas);
+  --font-sans: var(--ui-font);
+  --font-heading: var(--ui-font);
+}
+
+:root {
+  --canvas: #efede6;
+  --background: #fffefb;
+  --foreground: #2d302a;
+  --card: #fffefb;
+  --card-foreground: #2d302a;
+  --popover: #fffefb;
+  --popover-foreground: #2d302a;
+  --primary: #2d302a;
+  --primary-foreground: #fffefb;
+  --secondary: color-mix(in srgb, #2d302a 5%, transparent);
+  --secondary-foreground: #2d302a;
+  --muted: color-mix(in srgb, #2d302a 5%, transparent);
+  --muted-foreground: #5e6257;
+  --accent: color-mix(in srgb, #2d302a 5%, transparent);
+  --accent-foreground: #2d302a;
+  --border: color-mix(in srgb, #2d302a 10%, transparent);
+  --input: color-mix(in srgb, #2d302a 13%, transparent);
+  --ring: #7a5a30;
+  --destructive: #a23b2a;
+  --destructive-foreground: #8a2f20;
+  --success: #3f6146;
+  --success-foreground: #33503a;
+  --warning: #94600f;
+  --warning-foreground: #7a4f0c;
+  --info: #3d5a73;
+  --info-foreground: #2f4a61;
+  --sidebar: #efede6;
+  --sidebar-foreground: #5e6257;
+  --sidebar-accent: color-mix(in srgb, #2d302a 6%, transparent);
+  --sidebar-accent-foreground: #2d302a;
+  --sidebar-border: color-mix(in srgb, #2d302a 8%, transparent);
+  --brand: #7a5a30;
+  --brand-foreground: #fffefb;
+}
+
+/* Dark: AR Create's own warm brown (the app's dark palette, document-study/c3-theme.css), kept by Adrian on
+   16 November 2026. coss ui supplies the shapes, sizes and interactions; the colours are the app's. Repeated for
+   data-theme so the app's switch reaches it. The tea tones that were tried are in docs/design/tea-tones.html. */
+.dark, [data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #141310;
+  --background: #191813;
+  --foreground: #e7e1d3;
+  --card: #1d1b16;
+  --card-foreground: #e7e1d3;
+  --popover: #221f19;
+  --popover-foreground: #e7e1d3;
+  --primary: #e7e1d3;
+  --primary-foreground: #1d1b16;
+  --secondary: rgba(231, 225, 211, 0.05);
+  --secondary-foreground: #e7e1d3;
+  --muted: rgba(231, 225, 211, 0.05);
+  --muted-foreground: #a39e8e;
+  --accent: rgba(231, 225, 211, 0.06);
+  --accent-foreground: #e7e1d3;
+  --border: rgba(231, 225, 211, 0.08);
+  --input: rgba(231, 225, 211, 0.12);
+  --ring: #c9a874;
+  --destructive: #e08a74;
+  --destructive-foreground: #eca08c;
+  --success: #8fb08a;
+  --success-foreground: #a5c4a0;
+  --warning: #d9a95a;
+  --warning-foreground: #e4bb76;
+  --info: #8fb0cc;
+  --info-foreground: #a6c2da;
+  --sidebar: #141310;
+  --sidebar-foreground: #a39e8e;
+  --sidebar-primary: #e7e1d3;
+  --sidebar-primary-foreground: #1d1b16;
+  --sidebar-accent: rgba(231, 225, 211, 0.06);
+  --sidebar-accent-foreground: #e7e1d3;
+  --sidebar-border: rgba(231, 225, 211, 0.07);
+  --sidebar-ring: #c9a874;
+  --brand: #c9a874;
+  --brand-foreground: #1d1b16;
+}
+
+/* Fonts: coss's install wires Inter; AR Create's own face is Plus Jakarta Sans. The parts page can switch between
+   them so the two can be compared; the app's choice is set by --font-sans. */
+@font-face { font-family: 'AR Plus Jakarta Sans'; font-weight: 400; font-display: swap; src: url('/assets/fonts/plus-jakarta-sans-400-normal-latin.woff2') format('woff2'); }
+@font-face { font-family: 'AR Plus Jakarta Sans'; font-weight: 500; font-display: swap; src: url('/assets/fonts/plus-jakarta-sans-500-normal-latin.woff2') format('woff2'); }
+@font-face { font-family: 'AR Plus Jakarta Sans'; font-weight: 600 700; font-display: swap; src: url('/assets/fonts/plus-jakarta-sans-600-normal-latin.woff2') format('woff2'); }
+:root, [data-font="jakarta"] { --ui-font: 'AR Plus Jakarta Sans', system-ui, sans-serif; }
+[data-font="inter"] { --ui-font: 'Inter Variable', 'Inter', system-ui, sans-serif; }
+
+/* coss's base applies font-sans and font-mono together to html, which leaves the page in the mono face; the body is
+   set back to the sans face here. */
+html, body { font-family: var(--ui-font); }
+
+/* The Styling guide's Base UI setup: the body is positioned and the app root isolates, so popups always sit on top. */
+body { position: relative; margin: 0; }
+#root { isolation: isolate; position: relative; min-height: 100svh; }

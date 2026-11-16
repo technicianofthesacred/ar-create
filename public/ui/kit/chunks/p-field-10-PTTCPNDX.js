@@ -1,0 +1,21 @@
+import"./chunk-DCANE7XH.js";var t=`"use client";
+
+import {
+  Field,
+  FieldDescription,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Textarea } from "@/components/ui/textarea";
+
+export default function Particle() {
+  return (
+    <Field>
+      <FieldLabel>Bio</FieldLabel>
+      <Textarea maxLength={500} placeholder="Tell us about yourself\u2026" />
+      <FieldDescription>
+        Write a short bio. Maximum 500 characters.
+      </FieldDescription>
+    </Field>
+  );
+}
+`;export{t as default};

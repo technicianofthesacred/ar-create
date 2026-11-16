@@ -1,0 +1,1 @@
+import{a as l}from"./chunk-TZORI5HO.js";import{a as o}from"./chunk-OAR7Q7DL.js";import{c as t}from"./chunk-DCANE7XH.js";var r=t(l(),1),n=t(o(),1),s=r.forwardRef(function({href:e,prefetch:h,replace:i,scroll:m,...a},c){let p=typeof e=="string"?e:e.pathname??"#";return(0,n.jsx)("a",{ref:c,href:p,...a})}),L=s;export{L as a};

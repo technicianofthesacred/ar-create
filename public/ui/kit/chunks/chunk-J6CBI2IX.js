@@ -1,0 +1,1 @@
+import{a as n}from"./chunk-N53B4RPW.js";import{a as r}from"./chunk-XF67R45Z.js";function s(e){let t=r(f,e).current;return t.next=e,n(t.effect),t}function f(e){let t={current:e,next:e,effect:()=>{t.current=t.next}};return t}export{s as a};

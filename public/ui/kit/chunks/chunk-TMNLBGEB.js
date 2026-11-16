@@ -1,0 +1,1 @@
+import{j as r}from"./chunk-XF67R45Z.js";import{a as i}from"./chunk-TZORI5HO.js";import{c as s}from"./chunk-DCANE7XH.js";var o=s(i(),1);var N=o.forwardRef(function(e,a){let{className:c,render:l,orientation:t="horizontal",style:m,...n}=e;return r("div",e,{state:{orientation:t},ref:a,props:[{role:"separator","aria-orientation":t},n]})});export{N as a};

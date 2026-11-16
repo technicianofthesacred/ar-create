@@ -1,0 +1,1 @@
+import{a}from"./chunk-B6VXRE5Y.js";import"./chunk-ZEVUASME.js";import"./chunk-RW62Y46T.js";import"./chunk-XF67R45Z.js";import"./chunk-TZORI5HO.js";import{a as t}from"./chunk-OAR7Q7DL.js";import{c as e}from"./chunk-DCANE7XH.js";var r=e(t(),1);function d(){return(0,r.jsx)(a,{variant:"destructive",children:"Badge"})}export{d as default};

@@ -1,0 +1,1 @@
+import{b as s}from"./chunk-DCANE7XH.js";var i={};s(i,{endingStyle:()=>n,startingStyle:()=>t});var t="data-starting-style",n="data-ending-style";var r={[t]:""},e={[n]:""},o={transitionStatus(a){return a==="starting"?r:a==="ending"?e:null}};export{t as a,n as b,i as c,o as d};

@@ -1,0 +1,20 @@
+import"./chunk-DCANE7XH.js";var u=`import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "@/components/ui/number-field";
+
+export default function Particle() {
+  return (
+    <NumberField defaultValue={0}>
+      <NumberFieldGroup className="[--radius-lg:9999px] [--radius:9999px]">
+        <NumberFieldDecrement />
+        <NumberFieldInput aria-label="Quantity" />
+        <NumberFieldIncrement />
+      </NumberFieldGroup>
+    </NumberField>
+  );
+}
+`;export{u as default};
