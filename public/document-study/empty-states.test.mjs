@@ -31,7 +31,7 @@ test('an empty step shows the shape, the card and its steps, and hides only the 
 });
 test('card buttons press the real controls; a disabled control stays disabled with its own reason',()=>{
  const {w,d}=fixture(12);
- const btns=[...d.querySelectorAll('.c3-empty .ce-btn')];
+ const btns=[...d.querySelectorAll('.c3-empty [data-ce-act]')];
  assert.deepEqual(json(btns.map(b=>[b.textContent,b.disabled])),[['New article',false],['New carousel',true],['Open the draft',false]]);
  assert.equal(btns[1].title,'Open an owned working manuscript first');
  btns[0].click();btns[2].click();
@@ -113,7 +113,7 @@ test('every tool an empty card hides stays one quiet click away',()=>{
  const {d}=fixture(12);
  const ws=d.querySelector('.workspace');ws.insertAdjacentHTML('beforeend','<section class="mot-surface"><button>Continue creating</button></section>');d.defaultView.c3Empty.decorate();
  assert.ok(d.querySelector('.mot-surface').hasAttribute('data-c3-empty-hidden'));
- d.querySelector('.c3-empty [data-ce-anyway]').click();
+ const tools=d.querySelector('.c3-empty .ce-acts [data-ce-anyway]');assert.equal(tools.textContent,'Output tools');tools.click();
  assert.equal(d.querySelector('.mot-surface').hasAttribute('data-c3-empty-hidden'),false);
 });
 

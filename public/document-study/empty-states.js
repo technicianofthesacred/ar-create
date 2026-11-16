@@ -49,7 +49,8 @@
   const steps=s.steps.length?`<div class="ce-steps">${s.steps.map((t,i)=>`<span class="ce-step"><span class="ce-n">${i+1}</span>${esc(t)}</span>`).join('<span class="ce-arr" aria-hidden="true">→</span>')}</div>`:'';
   // Words come from the one piece state when it knows better than the step's generic copy (review F-08).
   const st=window.c3PieceState?.read?.(),c=(st&&s.copy?.(st))||{},title=c.title||s.title,text=c.text||s.text;
-  return `<div class="ce-card-wrap" role="region" aria-label="${esc(title)}"><div class="ce-icon">${icon(s.icon)}</div><div class="ce-copy"><h3>${esc(title)}</h3><p>${esc(text)}</p><div class="ce-acts">${primaryHTML(s)}${s.actions.map((a,i)=>[a,i]).filter(([a])=>!(st&&a[2])).map(([a,i])=>actionHTML(st?[a[0],a[1],false]:a,i)).join('')}</div>${steps}${s.compact?'':'<button type="button" class="ce-tools" data-ce-anyway>Show this step’s tools</button>'}</div></div>`;
+  const tools={1:'Material tools',2:'Source tools',3:'Research tools',4:'Direction tools',7:'Check tools',8:'Media tools',9:'Arrange tools',10:'Audience tools',12:'Output tools'}[stage()]||'Other actions';
+  return `<div class="ce-card-wrap" role="region" aria-label="${esc(title)}"><div class="ce-icon">${icon(s.icon)}</div><div class="ce-copy"><h3>${esc(title)}</h3><p>${esc(text)}</p><div class="ce-acts">${primaryHTML(s)}${s.actions.map((a,i)=>[a,i]).filter(([a])=>!(st&&a[2])).map(([a,i])=>actionHTML(st?[a[0],a[1],false]:a,i)).join('')}${s.compact?'':`<button type="button" class="ce-btn ce-tools" data-ce-anyway>${esc(tools)}</button>`}</div>${steps}</div></div>`;
  }
  let current_=null,revealed='';
  const KEEP='#c3-surface-bar,.c3-ctitle,.c3-ws-title,.c3-scope,#c3-next,#c3-records,.draft-bar,.topbar,.workbar,#work-context,.historicalToolbar,[role=alert],#c3-read-insp,#c3-insp-head,#margin,dialog,.flow-retained,details.oss-retained,.cd-desk,script,style';
