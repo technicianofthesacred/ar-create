@@ -150,7 +150,7 @@
  .sl .sl-ptabs button{flex:1;height:40px;min-height:40px;padding:0;border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;font:500 var(--v2-t13)/1 var(--ar-ui);color:var(--c3-ink2);text-align:center}
  .sl .sl-ptabs button[aria-pressed="true"]{color:var(--ink);font-weight:600!important;color:var(--ink)!important;border-bottom-color:var(--v2-br)!important}
  .sl .sl-try button{background:transparent!important;box-shadow:inset 0 0 0 1px var(--line)!important;color:var(--c3-ink2)!important}
- .sl .sl-seg button,.sl .sl-chips button,.sl .sl-ctl button,.sl .sl-cap button:not(.v2-icon-btn:not(.coss)),.sl .sl-bar>button{white-space:nowrap!important;max-width:100%!important}
+ .sl .sl-seg button,.sl .sl-chips button,.sl .sl-ctl button,.sl .sl-cap button:not(.v2-icon-btn),.sl .sl-bar>button{white-space:nowrap!important;max-width:100%!important}
  .sl .sl-thumb .v2-move button.v2-ghost{min-height:24px!important;width:28px!important;padding:0!important}
 }
 
