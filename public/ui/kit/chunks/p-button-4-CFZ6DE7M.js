@@ -1,0 +1,6 @@
+import"./chunk-DCANE7XH.js";var n=`import { Button } from "@/components/ui/button";
+
+export default function Particle() {
+  return <Button variant="destructive">Delete</Button>;
+}
+`;export{n as default};

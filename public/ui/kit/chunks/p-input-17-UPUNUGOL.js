@@ -1,0 +1,16 @@
+import"./chunk-DCANE7XH.js";var n=`import { useId } from "react";
+import { Input } from "@/components/ui/input";
+
+export default function Particle() {
+  const id = useId();
+  return (
+    <Input
+      className="read-only:bg-muted"
+      defaultValue="This is a read-only input"
+      id={id}
+      readOnly
+      type="text"
+    />
+  );
+}
+`;export{n as default};

@@ -1,0 +1,1 @@
+import{a as n}from"./chunk-TZORI5HO.js";import{c as t}from"./chunk-DCANE7XH.js";var e=t(n(),1),o=e.createContext(void 0),s={disableStyleElements:!1};function C(){return e.useContext(o)??s}export{C as a};

@@ -1,0 +1,112 @@
+/* AR Create's layer over coss ui. styles.css is exactly what coss's install wrote (`shadcn add @coss/style`) and is
+   never edited by hand, so a later `shadcn add` can update it. Everything AR Create changes lives here, the way the
+   coss Styling guide says to customise: by setting the same colour names in the global stylesheet.
+
+   - Dark: coss ui's own dark, unchanged. The only addition is brand, AR Create's warm accent.
+   - Light: AR Create's warm paper palette, written with coss's formulas (see-through edges, soft fills), so borders
+     and shadows keep the depth the Styling guide describes.
+   - The app switches theme with data-theme="dark"; coss uses a .dark class. Both work. */
+
+@import "./styles.build.css";
+
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-canvas: var(--canvas);
+  --font-sans: var(--ui-font);
+  --font-heading: var(--ui-font);
+}
+
+:root {
+  --canvas: #efede6;
+  --background: #fffefb;
+  --foreground: #2d302a;
+  --card: #fffefb;
+  --card-foreground: #2d302a;
+  --popover: #fffefb;
+  --popover-foreground: #2d302a;
+  --primary: #2d302a;
+  --primary-foreground: #fffefb;
+  --secondary: color-mix(in srgb, #2d302a 5%, transparent);
+  --secondary-foreground: #2d302a;
+  --muted: color-mix(in srgb, #2d302a 5%, transparent);
+  --muted-foreground: #5e6257;
+  --accent: color-mix(in srgb, #2d302a 5%, transparent);
+  --accent-foreground: #2d302a;
+  --border: color-mix(in srgb, #2d302a 10%, transparent);
+  --input: color-mix(in srgb, #2d302a 13%, transparent);
+  --ring: #7a5a30;
+  --destructive: #a23b2a;
+  --destructive-foreground: #8a2f20;
+  --success: #3f6146;
+  --success-foreground: #33503a;
+  --warning: #94600f;
+  --warning-foreground: #7a4f0c;
+  --info: #3d5a73;
+  --info-foreground: #2f4a61;
+  --sidebar: #efede6;
+  --sidebar-foreground: #5e6257;
+  --sidebar-accent: color-mix(in srgb, #2d302a 6%, transparent);
+  --sidebar-accent-foreground: #2d302a;
+  --sidebar-border: color-mix(in srgb, #2d302a 8%, transparent);
+  --brand: #7a5a30;
+  --brand-foreground: #fffefb;
+}
+
+/* coss ui's dark, as installed. Repeated for data-theme so the app's switch reaches it; values unchanged. */
+.dark, [data-theme="dark"] {
+  color-scheme: dark;
+  --destructive-foreground: var(--color-red-400);
+  --info: var(--color-blue-500);
+  --info-foreground: var(--color-blue-400);
+  --success: var(--color-emerald-500);
+  --success-foreground: var(--color-emerald-400);
+  --warning: var(--color-amber-500);
+  --warning-foreground: var(--color-amber-400);
+  --accent: --alpha(var(--color-white) / 4%);
+  --accent-foreground: var(--color-neutral-100);
+  --background: color-mix(in srgb, var(--color-neutral-950) 95%, var(--color-white));
+  --border: --alpha(var(--color-white) / 6%);
+  --card: color-mix(in srgb, var(--background) 98%, var(--color-white));
+  --card-foreground: var(--color-neutral-100);
+  --destructive: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
+  --foreground: var(--color-neutral-100);
+  --input: --alpha(var(--color-white) / 8%);
+  --muted: --alpha(var(--color-white) / 4%);
+  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-white));
+  --popover: color-mix(in srgb, var(--background) 98%, var(--color-white));
+  --popover-foreground: var(--color-neutral-100);
+  --primary: var(--color-neutral-100);
+  --primary-foreground: var(--color-neutral-800);
+  --ring: var(--color-neutral-500);
+  --secondary: --alpha(var(--color-white) / 4%);
+  --secondary-foreground: var(--color-neutral-100);
+  --sidebar: color-mix(in srgb, var(--color-neutral-950) 97%, var(--color-white));
+  --sidebar-accent: --alpha(var(--color-white) / 4%);
+  --sidebar-accent-foreground: var(--color-neutral-100);
+  --sidebar-border: --alpha(var(--color-white) / 5%);
+  --sidebar-foreground: color-mix(in srgb, var(--color-neutral-100) 64%, var(--sidebar));
+  --sidebar-primary: var(--color-neutral-100);
+  --sidebar-primary-foreground: var(--color-neutral-800);
+  --canvas: color-mix(in srgb, var(--color-neutral-950) 97%, var(--color-white));
+  --brand: #c9a874;
+  --brand-foreground: #1d1b16;
+}
+
+/* Fonts: coss's install wires Inter; AR Create's own face is Plus Jakarta Sans. The parts page can switch between
+   them so the two can be compared; the app's choice is set by --font-sans. */
+@font-face { font-family: 'AR Plus Jakarta Sans'; font-weight: 400; font-display: swap; src: url('/assets/fonts/plus-jakarta-sans-400-normal-latin.woff2') format('woff2'); }
+@font-face { font-family: 'AR Plus Jakarta Sans'; font-weight: 500; font-display: swap; src: url('/assets/fonts/plus-jakarta-sans-500-normal-latin.woff2') format('woff2'); }
+@font-face { font-family: 'AR Plus Jakarta Sans'; font-weight: 600 700; font-display: swap; src: url('/assets/fonts/plus-jakarta-sans-600-normal-latin.woff2') format('woff2'); }
+:root, [data-font="jakarta"] { --ui-font: 'AR Plus Jakarta Sans', system-ui, sans-serif; }
+[data-font="inter"] { --ui-font: 'Inter Variable', 'Inter', system-ui, sans-serif; }
+
+/* coss's base applies font-sans and font-mono together to html, which leaves the page in the mono face; the body is
+   set back to the sans face here. */
+html, body { font-family: var(--ui-font); }
+
+/* The Styling guide's Base UI setup: the body is positioned and the app root isolates, so popups always sit on top. */
+body { position: relative; margin: 0; }
+#root { isolation: isolate; position: relative; min-height: 100svh; }

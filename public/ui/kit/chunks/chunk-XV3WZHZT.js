@@ -1,0 +1,1 @@
+import{a as c}from"./chunk-VBLJFCHM.js";var f=new Map;function i(t,r){let n=JSON.stringify({locale:c(t),options:r}),e=f.get(n);if(e)return e;let o=new Intl.NumberFormat(t,r);return f.set(n,o),o}function a(t,r,n){return t==null?"":i(r,n).format(t)}export{i as a,a as b};

@@ -1,0 +1,26 @@
+import"./chunk-DCANE7XH.js";var i=`import { useId } from "react";
+import { Label } from "@/components/ui/label";
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "@/components/ui/number-field";
+
+export default function Particle() {
+  const id = useId();
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <Label htmlFor={id}>Quantity</Label>
+      <NumberField defaultValue={0} id={id}>
+        <NumberFieldGroup>
+          <NumberFieldDecrement />
+          <NumberFieldInput />
+          <NumberFieldIncrement />
+        </NumberFieldGroup>
+      </NumberField>
+    </div>
+  );
+}
+`;export{i as default};

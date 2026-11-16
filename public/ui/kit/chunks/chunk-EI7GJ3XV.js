@@ -1,0 +1,1 @@
+import{b as l}from"./chunk-VO325B7S.js";function f(o,i){let e=(i??l(o).getComputedStyle(o)).transform,r=0,n=0,a=1;if(e&&e!=="none"){let s=e.match(/matrix(?:3d)?\(([^)]+)\)/);if(s){let t=s[1].split(", ").map(parseFloat);t.length===6?(r=t[4],n=t[5],a=Math.sqrt(t[0]*t[0]+t[1]*t[1])):t.length===16&&(r=t[12],n=t[13],a=t[0])}}return{x:r,y:n,scale:a}}export{f as a};

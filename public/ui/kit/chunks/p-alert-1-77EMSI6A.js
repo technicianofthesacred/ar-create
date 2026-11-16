@@ -1,0 +1,1 @@
+import{a as i,b as l,c as o}from"./chunk-46YALTOB.js";import"./chunk-RW62Y46T.js";import{a as r}from"./chunk-OAR7Q7DL.js";import{c as t}from"./chunk-DCANE7XH.js";var e=t(r(),1);function p(){return(0,e.jsxs)(i,{children:[(0,e.jsx)(l,{children:"Heads up!"}),(0,e.jsx)(o,{children:(0,e.jsx)("p",{children:"Describe what can be done about it here."})})]})}export{p as default};

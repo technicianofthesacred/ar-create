@@ -1,0 +1,26 @@
+import"./chunk-DCANE7XH.js";var t=`import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@/components/ui/input-group";
+
+export default function Particle() {
+  return (
+    <InputGroup>
+      <InputGroupInput
+        aria-label="Enter your domain"
+        className="*:[input]:px-0!"
+        placeholder="coss"
+        type="text"
+      />
+      <InputGroupAddon>
+        <InputGroupText>https://</InputGroupText>
+      </InputGroupAddon>
+      <InputGroupAddon align="inline-end">
+        <InputGroupText>.com</InputGroupText>
+      </InputGroupAddon>
+    </InputGroup>
+  );
+}
+`;export{t as default};

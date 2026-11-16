@@ -1,0 +1,1 @@
+import{a as c}from"./chunk-PCQUSATJ.js";import{a as r}from"./chunk-N53B4RPW.js";import{a as s}from"./chunk-TZORI5HO.js";import{c as f}from"./chunk-DCANE7XH.js";var n=f(s(),1);function m(e,a){let t=n.useRef(e),o=c(a);r(()=>{t.current!==e&&o(t.current),t.current=e},[e,o])}export{m as a};

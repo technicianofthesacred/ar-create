@@ -1,0 +1,1 @@
+import{a as r}from"./chunk-ZEVUASME.js";import{h as e}from"./chunk-XF67R45Z.js";import{c as t}from"./chunk-OAR7Q7DL.js";function c({className:o,render:a,...m}){let l={className:t("inline-flex items-center gap-2 font-medium text-base/4.5 text-foreground sm:text-sm/4",o),"data-slot":"label"};return r({defaultTagName:"label",props:e(l,m),render:a})}export{c as a};

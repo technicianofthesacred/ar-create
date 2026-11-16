@@ -1,0 +1,1 @@
+import{a as r}from"./chunk-BTR2DP2J.js";import{e,f as o,j as s}from"./chunk-XF67R45Z.js";function P(t){let{render:d,className:E,style:R,state:m=o,props:p=e,refs:i=e,metadata:a,stateAttributesMapping:n,tag:f="div",...c}=t,{compositeProps:u,compositeRef:l}=r({metadata:a});return s(f,t,{state:m,ref:[l,...i],props:[u,...p,c],stateAttributesMapping:n})}export{P as a};

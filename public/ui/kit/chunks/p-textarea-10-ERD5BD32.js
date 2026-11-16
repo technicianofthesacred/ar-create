@@ -1,0 +1,16 @@
+import"./chunk-DCANE7XH.js";var t=`import { useId } from "react";
+import { Textarea } from "@/components/ui/textarea";
+
+export default function Particle() {
+  const id = useId();
+  return (
+    <Textarea
+      aria-label="Read-only text"
+      className="read-only:bg-muted"
+      defaultValue="This is a read-only textarea"
+      id={id}
+      readOnly
+    />
+  );
+}
+`;export{t as default};
