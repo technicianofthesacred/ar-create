@@ -84,13 +84,14 @@ jobs:
         id: test
         shell: bash
         env:
-          TEST_CONCURRENCY: ${{ runner.os == 'macOS' && '2' || '4' }}
           SHARD: ${{ matrix.shard }}/${{ needs.pick-runner.outputs.total }}
         run: |
           set -o pipefail
-          # The daily-driver Mac also runs real Chromium and JSDOM fixtures. Two files
-          # bound CPU/memory contention there; hosted Linux keeps its four-file lane.
-          npm test -- --test-concurrency="$TEST_CONCURRENCY" --test-shard="$SHARD" 2>&1 | tee "$RUNNER_TEMP/test-output.log"
+          # Same files as `npm test`, called directly because node only reads --test-* options
+          # placed BEFORE the file list; `npm test -- --flag` puts them after, where they are
+          # silently ignored. (The old `--test-concurrency` was ignored that way too, so every
+          # run used node's default concurrency; that default is kept here unchanged.)
+          node --test --test-shard="$SHARD" tests/*.test.mjs 2>&1 | tee "$RUNNER_TEMP/test-output.log"
 
       - name: Verify package
         if: ${{ matrix.shard == 1 && !cancelled() && steps.test.outcome != 'skipped' }}
