@@ -163,3 +163,10 @@
 .wr .wr-props .wr-note{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--c3-lift)}
 .wr .wr-dt-x{font:400 var(--v2-t14)/1.5 var(--ar-ui);color:var(--dim);overflow-wrap:anywhere;margin:0;padding-left:10px;border-left:2px solid var(--c3-line2)}
 .wr .wr-lock-why{margin:-16px 0 22px;font-size:var(--v2-t12)}
+
+/* Back says where it leads on every width: an arrow alone is too easy to miss (Adrian, 2026-11-14). */
+.wr .wr-back{min-width:0;flex:0 1 auto}
+.wr .wr-back span{display:inline-block;min-width:0;max-width:44vw;overflow:hidden;text-overflow:ellipsis}
+
+/* Advanced is hidden for now (Adrian, 2026-11-14): its links stay in the page, out of sight. */
+.wr a[href^="/document-study"]{display:none}

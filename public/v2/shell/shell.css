@@ -180,3 +180,6 @@ dialog.v2-sheet::backdrop{background:rgba(10,9,7,.45)}
 .v2-find-out li a:hover{background:var(--v2-sec)}
 .v2-find-out li small{font:400 var(--v2-t13)/1.4 var(--ar-ui);color:var(--dim)}
 .v2-find-out li b{font-weight:600}
+
+/* Advanced is hidden for now (Adrian, 2026-11-14): the link stays in the page, out of sight, until its better parts live here. */
+.v2-top .v2-advanced{display:none}

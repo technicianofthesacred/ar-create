@@ -274,3 +274,6 @@ html[data-brand] .rs-lay .rs-rl.on{box-shadow:inset 0 0 0 1px var(--v2-br)}
 .rs-lay .rs-g-m a.rs-gm:hover{background:var(--v2-sec)}
 
 @layer v2-controls{@media (max-width:850px){.rs-lay .rs-railin .rs-add{font-size:var(--v2-t14)!important;line-height:1!important}.rs-topic .rs-bar button.rs-listen{height:32px!important;min-height:32px!important;padding:3px 11px!important}}}
+
+/* Back says where it leads on every width (Adrian, 2026-11-14). */
+.rs-topic .rs-back span{display:flex}

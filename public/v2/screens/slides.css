@@ -173,3 +173,6 @@
 .sl .sl-rochip{display:none;font-size:var(--v2-t13);color:var(--c3-ink2);text-align:center;margin:0}
 .sl .sl-rochip b{color:var(--ink)}
 @media (max-width:850px){.sl .sl-rochip{display:block}}
+
+/* Advanced is hidden for now (Adrian, 2026-11-14): its links stay in the page, out of sight. */
+.sl a[href^="/document-study"]{display:none}
