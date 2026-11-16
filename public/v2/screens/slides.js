@@ -82,7 +82,7 @@
   const field=(label,text)=>'<div class="sl-f"><span class="sl-label">'+esc(label)+'</span><p class="sl-field">'+esc(text)+'</p></div>';
   function headHTML(){
    const n=slides.length,back=subjectHref(),name=stand?.title||'The subject';
-   return '<div class="sl-bar"><a class="sl-back" href="'+esc(back)+'" aria-label="Back to '+esc(name)+'">'+ic('back')+'<span>'+esc(name)+'</span></a><h1 class="sl-t">'+esc(title())+'</h1><span class="sl-n">Carousel · '+n+' slide'+(n===1?'':'s')+' · read only</span><span class="sl-sp"></span>'
+   return '<div class="sl-bar"><a class="sl-back" href="'+esc(back)+'" aria-label="Back to '+esc(name)+'">'+ic('back')+'<span>Back to '+esc(name)+'</span></a><h1 class="sl-t">'+esc(title())+'</h1><span class="sl-n">Carousel · '+n+' slide'+(n===1?'':'s')+' · read only</span><span class="sl-sp"></span>'
     +'<a class="sl-done" href="'+esc(advanced())+'">Open in Advanced</a></div>';
   }
   function stripHTML(){return slides.map((s,i)=>'<div class="sl-thumb" role="button" tabindex="0" data-n="'+i+'" aria-label="Slide '+(i+1)+'" aria-current="'+(i===sel)+'">'+FRM(i,cw(),'Slide '+(i+1))+'<span class="sl-tl">'+(i+1)+'</span></div>').join('');}
@@ -377,7 +377,7 @@
     const posts=accts.length?accts.map(acctBtn).join(''):a?.name?'<button type="button" aria-pressed="true">'+esc(a.name)+'</button>':'<span class="sl-one">No account posts this look yet</span>';
     // Back and Done return to the form and step he left: the Carousel form at The slides step (the studio is opened from there).
         const formKey='ig:'+plan.id,back=plan.subject?v2.href('subject/:id',{id:plan.subject},{form:formKey,step:'slides'}):'#/';
-    return '<div class="sl-bar"><a class="sl-back" href="'+esc(back)+'" aria-label="Back to the subject">'+ic('back')+'<span>The subject</span></a><h1 class="sl-t">Carousel</h1><span class="sl-n">'+fl+' slide'+(fl>1?'s':'')+(need>=0?' · slide '+(need+1)+' needs a photograph':'')+'</span><span class="sl-sp"></span>'
+    return '<div class="sl-bar"><a class="sl-back" href="'+esc(back)+'" aria-label="Back to the subject">'+ic('back')+'<span>Back to the subject</span></a><h1 class="sl-t">Carousel</h1><span class="sl-n">'+fl+' slide'+(fl>1?'s':'')+(need>=0?' · slide '+(need+1)+' needs a photograph':'')+'</span><span class="sl-sp"></span>'
      +'<div class="sl-seg sl-looks" role="group" aria-label="Look">'+pills+'</div><div class="sl-seg sl-acct" role="group" aria-label="Posts to"><em>Posts to</em>'+posts+'</div>'
      +'<button type="button" data-sl="mix" title="Give each slide a different layout that suits it">Mix the layouts</button><a class="sl-done" href="'+esc(back)+'">Done</a></div>'
      +'<div class="sl-looks2" role="group" aria-label="Look">'+chips+(accts.length>1?'<span class="sl-sp"></span>'+accts.map(acctBtn).join(''):'')+'</div>'

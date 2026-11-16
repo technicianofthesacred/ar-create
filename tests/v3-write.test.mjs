@@ -914,7 +914,7 @@ test('Write, Read and Check in version three share one bar: one band, one piece 
   const {doc}=await page({hash:`#/${mode}/s1?piece=o1`,answers});await settle(250);
   assert.equal(doc.querySelectorAll('.wr-bar').length,1,mode+': one piece bar');
   assert.equal(doc.querySelectorAll('.v3-band').length,1,mode+': one band');assert.equal(doc.querySelector('.v2-top'),null,mode+': no version two top bar');
-  assert.equal(doc.querySelector('.wr-bar .wr-back span').textContent,'Invented piece',mode+': the way back names the subject on every tab');
+  assert.equal(doc.querySelector('.wr-bar .wr-back span').textContent,'Back to Invented piece',mode+': the way back says Back and names the subject on every tab');
   assert.equal(doc.querySelector('.wr-bar .wr-seg [aria-current]').textContent.toLowerCase(),mode);
   assert.deepEqual([...doc.querySelectorAll('.wr-bar .wr-seg>*')].map(e=>e.textContent),['Write','Read','Check']);
   assert.equal(doc.querySelectorAll('.wr-bar .wr-tabs a[aria-current]').length,1,mode+': the piece tab');

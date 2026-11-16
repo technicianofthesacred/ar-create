@@ -190,7 +190,7 @@
   }
 
   // ---------- drawing ----------
-  const fallbackBar=()=>`<div class="wr-bar" data-wr-bar><a class="wr-back" href="${esc(v2.href('subject/:id',{id}))}" aria-label="Back to the subject">${icon('back')}<span>The subject</span></a><span class="wr-sp"></span></div>`;
+  const fallbackBar=()=>`<div class="wr-bar" data-wr-bar><a class="wr-back" href="${esc(v2.href('subject/:id',{id}))}" aria-label="Back to the subject">${icon('back')}<span>Back to the subject</span></a><span class="wr-sp"></span></div>`;
   function bar(){
    const status=stateLabel();
    const right=`<span class="wr-saved ck-bar" data-ck-bar>${esc(status)}</span>`;
