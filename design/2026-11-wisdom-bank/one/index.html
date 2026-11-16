@@ -1,0 +1,460 @@
+<title>Wisdom bank, one surface</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one surface that is dragged and zoomed. Works are full-width reading columns placed near what they share; things expand where they sit. */
+:root{
+  --bg:#eef0ec; --surf:#ffffff; --surf2:#f3f4f0; --ink:#1a1d1b; --dim:#666c68; --line:#d9dcd6; --warm:#a86a12; --warmbg:#f6ecd9;
+  --ui:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --cw:358px; --k:1; --k2:1;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111312;--surf:#1b1e1c;--surf2:#242825;--ink:#eceee9;--dim:#9aa19c;--line:#30342f;--warm:#e2aa4c;--warmbg:#352b12;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111312;--surf:#1b1e1c;--surf2:#242825;--ink:#eceee9;--dim:#9aa19c;--line:#30342f;--warm:#e2aa4c;--warmbg:#352b12;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font:15.5px/1.45 var(--ui);-webkit-text-size-adjust:100%;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;text-align:left;cursor:pointer}
+button:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+p{margin:0}
+.view{position:fixed;inset:0;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.world{position:absolute;left:0;top:0;transform-origin:0 0;width:max-content;padding:70px 16px 300px}
+.band{display:flex;gap:44px;align-items:flex-start;margin-bottom:180px}
+.colm{width:var(--cw);display:flex;flex-direction:column;gap:26px}
+.colm.wide{width:calc(var(--cw)*3 + 88px)}
+.rowof{display:grid;grid-template-columns:repeat(3,var(--cw));gap:26px 44px;align-items:start}
+/* a landmark: a big idea many works share */
+.lm{min-height:230px;display:flex;flex-direction:column;justify-content:flex-end}
+.lm>button{display:block;width:100%;font-size:calc(25px*var(--k));line-height:1.12;font-weight:680;letter-spacing:-.01em;padding:0 2px 6px;text-wrap:balance}
+.lm .sub{color:var(--dim);padding:0 2px;font-size:15px}
+.lm .tb{padding:8px 2px 0}
+/* a work */
+.work{background:var(--surf);border-radius:14px;position:relative;transition:opacity .25s}
+.work>header{padding:16px 14px 10px}
+.work h2{font-size:18px;line-height:1.2;margin:0 0 3px;font-weight:660}
+.work header p{color:var(--dim);font-size:13.5px}
+.far{position:absolute;inset:0 0 auto 0;padding:14px;font-size:calc(16px*var(--k2));line-height:1.15;font-weight:650;background:var(--surf);border-radius:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.isfar .far{opacity:1}
+.isfar .work>header{visibility:hidden}
+.parts{display:grid;grid-template-columns:repeat(3,var(--cw));gap:0 44px;margin:0 -0px}
+.work.big{background:none}
+.work.big>header{background:var(--surf);border-radius:14px;margin-bottom:14px;width:var(--cw)}
+.work.big .part{background:var(--surf);border-radius:14px;margin-bottom:26px}
+.ch{font-size:13.5px;font-weight:650;color:var(--dim);padding:16px 14px 4px}
+.tp.open{background:var(--surf2)}
+.row{display:flex;gap:11px;width:100%;padding:9px 14px;align-items:flex-start}
+.row>span:last-child{min-width:0}
+.tp.open>.row{font-size:18px;font-weight:660;line-height:1.25;padding-top:14px}
+.tp.open>.row .dot{margin-top:.42em}
+.dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--warm);margin-top:.48em}
+.dot.sh{box-shadow:0 0 0 2px var(--surf),0 0 0 3px var(--dim)}
+.tp.open .dot.sh{box-shadow:0 0 0 2px var(--surf2),0 0 0 3px var(--dim)}
+.tb{padding:0 14px 16px}
+.tb .k{color:var(--dim);font-size:13px;margin-bottom:4px}
+.tb .d{font-size:17px;line-height:1.5;margin-bottom:14px}
+.tb .rd p{font-size:16.5px;line-height:1.55;margin-bottom:12px}
+.tb h3{font-size:16.5px;font-weight:680;margin:26px 0 8px}
+.say{background:var(--bg);margin:6px -14px 4px;padding:14px;font-size:16.5px;line-height:1.5}
+.tb .rd p.who,.who{color:var(--dim);font-size:13px;line-height:1.4;margin:0 0 14px}
+.tb .rd p.say{margin:6px -14px 6px}
+.term{text-decoration:underline;text-decoration-color:var(--warm);text-underline-offset:3px;font-size:inherit}
+.act{display:flex;gap:22px;margin:2px 0 14px}
+.act button{font-weight:650;padding:6px 0}
+.lab{font-size:13px;color:var(--dim);margin:10px 0 0}
+.tie{display:flex;width:100%;gap:10px;padding:9px 0;align-items:center}
+.tie i{flex:none;width:22px;height:0;border-top:1.5px solid var(--warm)}
+.tie b{font-weight:600;min-width:0}
+.tie small{color:var(--dim);font-size:13px;display:block;font-weight:400}
+.marks{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center;color:var(--dim);font-size:13.5px;margin-top:12px}
+.marks button{padding:5px 0}
+.marks button[aria-pressed="true"]{color:var(--ink);font-weight:650}
+.res{display:inline-flex;gap:2px}
+.res button{width:22px;height:26px;position:relative}
+.res button::after{content:"";position:absolute;left:6px;top:8px;width:10px;height:10px;border-radius:50%;border:1.5px solid var(--warm)}
+.res button.f::after{background:var(--warm)}
+.mine{border:1px solid var(--warm);border-radius:10px;padding:9px 11px;margin:10px 0 0;font-size:15.5px}
+.mine small{display:block;color:var(--dim);font-size:12.5px}
+.more{color:var(--dim);font-size:13.5px;padding:2px 14px 14px}
+.rest{height:var(--h);margin:6px 14px 8px;background-image:radial-gradient(circle,var(--dim) 1.6px,transparent 2px);background-size:11px 11px;opacity:.38}
+/* lights: dim what is not lit, never remove it */
+.work.dimw{opacity:.22}
+.tp.dimt>.row{opacity:.3}
+.tp.hit>.row{background:var(--warmbg)}
+svg.ties{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+svg.ties line{stroke:var(--warm);stroke-width:1.5;vector-effect:non-scaling-stroke;opacity:.6}
+/* what floats */
+.trail{position:fixed;inset:0 0 auto 0;z-index:5;display:flex;flex-wrap:wrap;gap:1px 6px;align-items:center;min-height:44px;font-size:14px;background:color-mix(in srgb,var(--bg) 90%,transparent);
+  padding:calc(env(safe-area-inset-top,0px) + 8px) max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px))}
+.trail button{color:var(--dim);padding:3px 0}
+.trail button:last-of-type{color:var(--ink);font-weight:650}
+.trail span{color:var(--dim)}
+.trail em{font-style:normal;color:var(--dim);margin-left:auto;font-size:12.5px}
+.fl{position:fixed;z-index:6;bottom:calc(env(safe-area-inset-bottom,0px) + 14px)}
+.fl.l{left:max(14px,env(safe-area-inset-left,0px))}
+.fl.r{right:max(14px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;align-items:flex-end}
+.chip{background:var(--surf);border-radius:20px;box-shadow:0 1px 6px rgba(0,0,0,.16),0 0 0 1px var(--line);padding:9px 14px;font-size:14px}
+.mic{width:40px;height:40px;border-radius:50%;background:var(--surf);box-shadow:0 1px 6px rgba(0,0,0,.16),0 0 0 1px var(--line);display:grid;place-items:center}
+.mic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+.panel{background:var(--surf);border-radius:14px;box-shadow:0 4px 22px rgba(0,0,0,.22),0 0 0 1px var(--line);margin-bottom:10px;width:min(320px,calc(100vw - 28px));max-height:62vh;overflow:auto;padding:6px 0}
+.panel button.it{display:block;width:100%;padding:9px 16px}
+.panel button.it[aria-pressed="true"]{font-weight:680}
+.panel .lab{padding:0 16px;margin:10px 0 2px}
+.panel form{padding:8px 14px 4px}
+.panel input{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.panel .two{display:flex;flex-direction:column;padding:2px 16px 8px}
+.panel .two button{font-weight:650;padding:9px 0}
+.panel .note{padding:8px 16px;display:block;width:100%}
+.panel .note small{display:block;color:var(--dim);font-size:12.5px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="view" id="view"><div class="world" id="world"></div></div>
+<nav class="trail" id="trail" aria-label="Where you are"></nav>
+<div class="fl l"><div class="panel" id="lightp" hidden></div><button class="chip" id="lightb" aria-expanded="false">Light</button></div>
+<div class="fl r"><div class="panel" id="micp" hidden></div><button class="mic" id="micb" aria-label="Speak or type, from wherever you are" aria-expanded="false"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></div>
+
+<script>
+/* Everything here is invented sample content. No real person said any of it. */
+const COLS=['Contemplative teachings','Tea','Body and brain','Making things','Friends','Plants and land'];
+const KIND={I:'Idea',P:'Practice',S:'Step',B:'Belief'};
+const T={};
+const def=(id,k,r,n,d)=>{T[id]={id,k,r,n,d};return id};
+/* the talk, carried over from the first mock-ups */
+def('eth','P',3,'Kindness comes first','Before you take up this teaching, you treat people well. Without that, "nothing is wrong" becomes an excuse for doing harm.');
+def('stab','P',3,'Letting the mind settle','You cannot see clearly while your mind is stirred up, so the first practice is simply to let it go still.');
+def('shown','I',2,'Someone shows you','You do not work this out by thinking. Someone who knows you well points it out when you are ready to hear it.');
+def('ordinary','I',4,'The awareness you already have','What you are looking for is not a special state. It is the plain awareness that is already here, hearing and seeing.');
+def('feel','P',4,'Feeling everything fully','When a feeling comes, you let it be as big as it is. You do not manage it, fix it or explain it away.');
+def('whole','I',5,'You are already whole','Nothing has to be added to you, or to this moment, before it is complete.');
+def('bypass','I',2,'Using "it is all perfect" to avoid pain','Saying "everything is perfect" can be a way of hiding from pain, and that is the opposite of what the teaching means.');
+def('comp','I',3,'You become kinder','If you have really understood this, the people around you can tell, because you are easier to live with.');
+def('ret','I',3,'You lose it and come back','Nobody stays in this understanding. You notice it for a moment, lose it, and notice it again, and that returning is the practice.');
+/* the tea article */
+def('t1','S',2,'It starts as sun-dried leaf','Ripe pu\'er begins as the same rough, sun-dried green leaf that raw pu\'er is made from.');
+def('t2','S',5,'The leaf is dampened and piled','The leaf is wetted, heaped and covered, so that it heats up and ferments over several weeks.');
+def('t3','S',3,'The pile is turned by hand','Workers turn the heap again and again, so that it ferments evenly and does not overheat.');
+def('t4','S',3,'The tea rests before it is drunk','After fermenting, the tea is dried and left to rest until the heavy smell of the pile fades.');
+def('t5','B',2,'Some drinkers call ripe pu\'er a shortcut','Many drinkers believe slowly aged raw pu\'er is the finer tea, and see ripe pu\'er as a quick imitation of it.');
+/* the book of a hundred topics */
+const BOOK=[
+['Starting badly',[
+ ['I',4,'Everyone starts badly','Your first attempts at any skill will be poor, and that is what the start of learning looks like. It is not a sign that you lack talent.'],
+ ['P',3,'Begin before you feel ready','You start with the little you know, because the feeling of being ready only comes from having already begun.'],
+ ['P',2,'Choose one small thing to learn first','You pick a single small part of the skill and work on that alone, so that you can see yourself improve.'],
+ ['I',5,'Your taste is ahead of your hands','You can tell good work from bad long before you can make good work, and the gap between the two is why beginners feel discouraged.'],
+ ['B',2,'Talent is mostly early practice','The author believes that what people call talent is usually practice that began early and went unnoticed.'],
+ ['I',2,'Embarrassment is the cost of starting','Feeling foolish in front of others is the price of being a beginner, and people who can pay it learn faster.'],
+ ['P',1,'Keep your first attempts','You save your earliest work, because looking back at it later is the clearest proof that you have changed.'],
+ ['P',2,'Find someone one step ahead of you','You learn most easily from a person who was a beginner recently, because they still remember what confused them.'],
+ ['P',3,'Copy before you invent','You begin by copying good work closely, because copying teaches your hands what your eyes already admire.'],
+ ['I',2,'A beginner sees less','A beginner and an expert can look at the same piece of work, and the beginner will simply notice fewer things in it.'],
+ ['I',1,'Wanting it is not enough','A strong wish to be good does not make you good. Only the hours spent doing the thing do.']]],
+['Showing up',[
+ ['I',4,'A little every day beats a lot on Sunday','Short daily practice builds a skill faster than one long session a week, because the skill is refreshed before it fades.'],
+ ['P',3,'Same time, same place','You practise at a fixed hour in a fixed spot, so that starting no longer takes a decision.'],
+ ['P',1,'Set out your tools the night before','You lay everything out in advance, so that the next day you can begin within a minute of sitting down.'],
+ ['P',2,'Start with something easy','You open each session with something you can already do, so that your hands warm up before the hard part.'],
+ ['P',3,'Stop while it is still going well','You end the session before you are worn out, so that you want to come back tomorrow.'],
+ ['I',2,'Missing one day is nothing, missing two is a new habit','A single missed day does no harm, but a second day in a row is the start of not practising.'],
+ 'ret',
+ ['P',1,'Count the days you showed up','You keep a simple tally of the days you practised, because that is the one number you fully control.'],
+ ['I',3,'Dull days do the most work','The sessions that feel flat and ordinary are the ones that make the skill permanent.'],
+ ['I',3,'The wish to practise comes after you start','You rarely feel like practising beforehand. The wish to do it usually arrives a few minutes in.'],
+ ['P',2,'Protect the first hour','You give the skill the first clear hour of your day, before other people\'s needs arrive.']]],
+['Paying attention',[
+ 'stab',
+ ['I',4,'Slow is how you see','Doing a movement slowly lets you notice the parts of it that vanish at full speed.'],
+ ['P',2,'Watch one thing at a time','In each session you choose one thing to watch, such as your grip, and let everything else go unwatched.'],
+ ['P',3,'Notice the moment it goes wrong','You watch for the exact moment a movement fails, because that moment is the only part that needs practice.'],
+ ['I',3,'Attention tires before the body does','Your ability to notice runs out sooner than your strength, and practice after that point teaches mistakes.'],
+ ['P',2,'Look at the work, not at yourself','You keep your eyes on the thing you are making, and off the question of how good you are.'],
+ 'ordinary',
+ ['P',2,'Listen to the sound of the work','You use your ears as well as your eyes, because a tool that is working well sounds different from one that is not.'],
+ ['P',1,'Say aloud what you see','You describe what you notice in words, because putting it into words makes you notice more.'],
+ ['I',2,'Boredom means you stopped looking','When practice feels boring, it is usually because you have stopped noticing the details.'],
+ ['B',1,'One look at a phone ends the session','The author holds that a single glance at a phone breaks attention for the next twenty minutes.']]],
+['The body learns',[
+ ['I',4,'The hands learn slower than the head','Understanding how to do something takes minutes. Teaching your body to do it takes months.'],
+ ['I',4,'Sleep finishes the practice','What you practised today is fixed into memory while you sleep, so a short night undoes part of the work.'],
+ ['P',3,'Let go of tension first','You check your jaw, your shoulders and your grip, and loosen them, before you try to improve anything else.'],
+ ['P',2,'Breathe out on the hard part','You let your breath go at the difficult moment, because a held breath makes the hands stiff.'],
+ ['P',2,'Repeat it past the point of boredom','You repeat a movement after it already feels learned, because that is when it becomes automatic.'],
+ ['S',1,'Learn the small version first','You learn the smallest version of a movement before you make it larger or faster.'],
+ ['I',5,'Rest is part of the work','The pauses between efforts are when the body takes in what it has just done.'],
+ ['I',2,'An ache is telling you something','An ache tells you something about how you are holding yourself, and it should change what you do next.'],
+ ['P',1,'Give it to your weaker hand','You sometimes give the task to your weaker hand, because it shows you what your stronger hand does without thinking.'],
+ ['B',2,'A walk solves what the bench cannot','The author believes that a problem stuck at the workbench often comes loose during a walk.'],
+ ['I',2,'The body remembers after years away','A skill you learned well comes back quickly even after a long gap, because the body keeps it.']]],
+['Getting it wrong',[
+ ['I',4,'A mistake shows you where your edge is','Each error marks the exact limit of what you can do today, and that limit is where practice should happen.'],
+ ['P',3,'Work where you fail one time in five','You choose tasks you fail at about one time in five, because easier ones teach nothing and harder ones only frustrate you.'],
+ ['P',2,'Fix one fault at a time','You pick a single fault to correct and leave the others alone until that one is gone.'],
+ ['I',3,'Do not practise a mistake','Repeating a movement wrongly makes the wrong version permanent, so you slow down until you can do it right.'],
+ ['P',1,'Keep a list of what went wrong','After each session you write down what failed, so that tomorrow you know where to begin.'],
+ 'feel',
+ ['I',3,'The flat stretch is where it settles','Long stretches with no visible progress are when the skill is becoming steady underneath.'],
+ ['I',2,'You get worse before you get better','Changing a habit makes you clumsier for a while, because the old way is gone and the new one is not yet learned.'],
+ ['P',2,'Throw away the piece and keep the lesson','You let a failed piece go without regret once you can say what it taught you.'],
+ ['I',2,'Anger at yourself teaches nothing','Being harsh with yourself after an error uses up the attention you need to understand the error.'],
+ ['P',1,'Ask what the mistake was trying to do','You treat an error as an attempt at something, and ask what it was reaching for.']]],
+['Teachers',[
+ 'shown',
+ ['P',3,'Watch the hands, not the explanation','You learn more from watching what a skilled person does than from listening to how they describe it.'],
+ ['I',3,'A good teacher gives one correction','A good teacher sees ten faults and names only the one you can fix today.'],
+ ['P',2,'Ask to be corrected','You ask plainly to be told what is wrong, because most people are too polite to say it unasked.'],
+ ['P',2,'Do it their way first','You follow a teacher\'s method exactly before you change it, so that you know what you are changing.'],
+ ['I',1,'The teacher you need changes','The person who helped you begin is often not the person who can help you later, and moving on is normal.'],
+ ['B',2,'Books teach what, people teach how','The author believes a book can tell you what to do, but only a person beside you can show you how it feels.'],
+ ['P',4,'Teach it to find out what you know','You explain the skill to someone else, because the places where you stumble are the places you have not understood.'],
+ ['I',1,'Praise tells you little','Being told your work is good feels pleasant but gives you nothing to do next.'],
+ ['I',2,'Skilled people disagree','Skilled people often do the same thing in opposite ways, which shows there is more than one right way.'],
+ ['P',1,'Leave a teacher kindly','When you have outgrown a teacher you say thank you and go, without needing them to have been wrong.']]],
+['Tools and materials',[
+ ['I',3,'Know your material before you shape it','You spend time handling the raw material with no aim, so that you know how it behaves before you ask anything of it.'],
+ ['P',2,'Own few tools and know them well','You work with a small set of tools, so that each one becomes an extension of your hand.'],
+ ['P',3,'Keep the edge sharp','You sharpen before you start, because a dull tool makes you push, and pushing ruins control.'],
+ ['S',1,'Cleaning up is the last step of the work','You count clearing the bench as part of the session, so that the next one can begin at once.'],
+ ['I',4,'The material has a say','Wood, clay, leaf and words each resist in their own way, and good work goes with that instead of against it.'],
+ ['I',2,'Cheap material frees you to try','When the material costs little, you are willing to waste it, and waste is how you learn.'],
+ ['I',2,'A new tool will not fix an old habit','Buying better equipment feels like progress, but your habits come with you to the new tool.'],
+ ['P',1,'Put each tool back in its place','You return every tool to the same spot, so that your hand finds it without your eyes.'],
+ ['P',1,'Make one of your own tools','You make at least one tool yourself, because it teaches you what the tool is really for.'],
+ ['B',3,'Work made by hand shows the hand','The author believes that work made by hand carries small traces of the person, and that other people can feel them.'],
+ ['P',1,'Learn the names of things','You learn the proper word for each part and each movement, because you notice what you can name.']]],
+['Time',[
+ ['I',5,'Some things only time can do','Certain changes, in a skill as in a tea or a garden, happen only by waiting, and effort cannot make them faster.'],
+ ['I',3,'Ten years is normal','Becoming really good at something hard usually takes about ten years, and knowing this makes the slow start easier to bear.'],
+ ['I',2,'A skill has seasons','There are times for learning new things and times for repeating old ones, and each is right in its turn.'],
+ ['P',2,'Do the slow version','When there is a quick way and a slow way to make something, you choose the slow way while you are still learning.'],
+ ['P',3,'Finish things','You carry a piece through to the end even when you can see its faults, because finishing is its own skill.'],
+ ['P',1,'Come back to old work with new eyes','You look again at pieces from a year ago, because you can now see what you could not see then.'],
+ ['I',3,'Hurry shows in the work','Something made in a rush carries the rush in it, and people can see it.'],
+ ['I',1,'A deadline helps and harms','A fixed date gets the piece finished, and it also tempts you to stop looking closely.'],
+ ['P',2,'Let a piece rest before you judge it','You put finished work away for a few days, because you cannot see it clearly on the day you made it.'],
+ ['I',4,'What you repeat becomes you','Whatever you do every day, well or badly, slowly turns into the way you are.'],
+ ['B',2,'It is not too late to start','The author believes a person can begin a craft at any age and still reach real skill.']]],
+['When it becomes yours',[
+ ['I',3,'You stop thinking about your hands','A day comes when you notice you have been working for an hour without once thinking about how.'],
+ ['I',3,'Your own way appears when you stop trying for it','A personal way of working is not something you design. It is what remains when you stop imitating.'],
+ 'whole',
+ ['I',2,'Skill makes you patient with beginners','Once you know how long it took you, you stop being surprised at how long it takes anyone else.'],
+ ['P',1,'Break one rule on purpose','When you know why a rule exists, you break it once, deliberately, to see what it was protecting.'],
+ ['P',2,'Make it for one person','You make each piece with one particular person in mind, because work for everyone turns out to be for no one.'],
+ ['I',3,'The work shows you who you are','How you treat a difficult piece is how you treat difficulty everywhere, and the bench makes it visible.'],
+ ['P',2,'Give away what you make','You let finished pieces leave your hands, so that you keep making and do not start guarding.'],
+ ['P',1,'Keep one beginner\'s project going','You always keep one thing going that you are bad at, so that you remember what learning feels like.'],
+ ['P',3,'Pass it on','You show someone else how it is done, because a skill that is not handed on ends with you.'],
+ ['I',2,'Knowing when to stop is a skill too','Knowing that a piece is finished, and putting the tool down, is something you learn like everything else.'],
+ ['I',4,'It was never about being good','After years of practice you find that the daily doing was the point, and being good was only what kept you coming back.']]]
+];
+let bn=0;const BOOKCH=BOOK.map(([t,es])=>[t,es.map(e=>{bn++;return typeof e==='string'?e:def('b'+bn,...e)})]);
+const WORKS=[
+ {id:'ground',t:'The ground is already whole',who:'Ilse Varnholt',kind:'Talk, 48 minutes',c:0,ch:[['Before the teaching',['eth','stab','shown']],['The teaching',['ordinary','whole','feel']],['Living with it',['bypass','comp','ret']]]},
+ {id:'bowl',t:'Just this bowl',who:'Tomas Reuel',kind:'Talk, 22 minutes',c:0,n:6,sh:['whole','ret']},
+ {id:'hurts',t:'Sitting with what hurts',who:'Hanne Brückl',kind:'Book',c:0,n:64,sh:['feel','stab','bypass']},
+ {id:'short',t:'Short moments',who:'Anselm Dray',kind:'Talk, 31 minutes',c:0,n:8,sh:['ret','ordinary']},
+ {id:'letters',t:'Letters on kindness',who:'Hanne Brückl',kind:'Book',c:0,n:41,sh:['eth','comp']},
+ {id:'silence',t:'A week of silence',who:'Anselm Dray',kind:'Notebook',c:0,n:12,sh:['stab','b40']},
+ {id:'questions',t:'Questions after the retreat',who:'Ilse Varnholt',kind:'Talk, 40 minutes',c:0,n:14,sh:['shown','whole']},
+ {id:'cup',t:'The cracked cup',who:'Tomas Reuel',kind:'Article',c:0,n:5,sh:['whole','b71']},
+ {id:'walking',t:'Walking slowly',who:'Anselm Dray',kind:'Talk, 18 minutes',c:0,n:7,sh:['stab','b24']},
+ {id:'puer',t:'How ripe pu\'er is made',who:'Wen Dalby',kind:'Article',c:1,ch:[['How it is made',['t1','t2','t3','t4']],['What people believe',['t5','b78']]]},
+ {id:'factory',t:'Notes from a hillside factory',who:'Wen Dalby',kind:'Notebook',c:1,n:23,sh:['t2','t3','b78']},
+ {id:'water',t:'Water for tea',who:'Sorrel Aske',kind:'Book',c:1,n:58,sh:['stab','b67','b30']},
+ {id:'farmer',t:'An afternoon with a tea farmer',who:'Sorrel Aske',kind:'Conversation',c:1,n:11,sh:['t5','ordinary','b71']},
+ {id:'six',t:'Six kinds of tea',who:'Wen Dalby',kind:'Article',c:1,n:18,sh:['t1']},
+ {id:'pot',t:'The clay pot',who:'Sorrel Aske',kind:'Article',c:1,n:9,sh:['b76','b67']},
+ {id:'sleep',t:'Sleep and what we remember',who:'Ada Lindqvist',kind:'Paper',c:2,n:12,sh:['b35','b40']},
+ {id:'habits',t:'How habits form',who:'Corin Vasse',kind:'Book',c:2,n:72,sh:['b12','b13','b87']},
+ {id:'tired',t:'The tired mind',who:'Ada Lindqvist',kind:'Paper',c:2,n:9,sh:['b27','b33']},
+ {id:'breath',t:'Breath and the nerves',who:'Corin Vasse',kind:'Article',c:2,n:14,sh:['b37','b36']},
+ {id:'forget',t:'Why we forget',who:'Ada Lindqvist',kind:'Talk, 35 minutes',c:2,n:10,sh:['b35','b44']},
+ {id:'move',t:'Learning to move',who:'Jory Ettlin',kind:'Book',c:2,n:83,sh:['b34','b38','b48','b24']},
+ {id:'pain',t:'What an ache means',who:'Jory Ettlin',kind:'Article',c:2,n:11,sh:['b41']},
+ {id:'long',t:'The Long Apprenticeship',who:'Marit Solveen',kind:'Book',c:3,ch:BOOKCH},
+ {id:'potter',t:'A potter\'s year',who:'Edda Quill',kind:'Notebook',c:3,n:31,sh:['b71','b86','b53','b78']},
+ {id:'sharp',t:'On sharpening',who:'Halvard Moss',kind:'Article',c:3,n:6,sh:['b69']},
+ {id:'carpenter',t:'Letters to a young carpenter',who:'Halvard Moss',kind:'Book',c:3,n:44,sh:['b1','b9','b60','b79']},
+ {id:'byhand',t:'Why I write by hand',who:'Edda Quill',kind:'Essay',c:3,n:8,sh:['b76','b24']},
+ {id:'voice',t:'Voice note, 2 November',who:'Oisín Farrell',kind:'Voice note',c:4,n:4,sh:['feel']},
+ {id:'kitchen',t:'At the kitchen table, on teaching',who:'Oisín Farrell',kind:'Conversation',c:4,n:7,sh:['b63','b58']},
+ {id:'river',t:'A walk by the river',who:'Nell Abara',kind:'Conversation',c:4,n:5,sh:['b43']},
+ {id:'forty',t:'Starting again at forty',who:'Nell Abara',kind:'Conversation',c:4,n:6,sh:['b88','b2']},
+ {id:'after',t:'After the workshop',who:'Oisín Farrell',kind:'Conversation',c:4,n:9,sh:['b98','whole']},
+ {id:'garden',t:'A year in one garden',who:'Piers Tolland',kind:'Book',c:5,n:52,sh:['b78','b80']},
+ {id:'compost',t:'Compost',who:'Piers Tolland',kind:'Article',c:5,n:7,sh:['b78']},
+ {id:'pruning',t:'Pruning notes',who:'Runa Feld',kind:'Notebook',c:5,n:13,sh:['b69','b81']},
+ {id:'soil',t:'What the soil holds',who:'Runa Feld',kind:'Talk, 27 minutes',c:5,n:10,sh:['b71']}
+];
+const W={};WORKS.forEach(w=>{W[w.id]=w;w.ids=w.ch?w.ch.flatMap(c=>c[1]):w.sh;if(w.ch)w.n=w.ids.length;w.parts=w.ch||[[null,w.sh]]});
+const HOLD={};WORKS.forEach(w=>w.ids.forEach(id=>(HOLD[id]=HOLD[id]||[]).push(w)));
+const TOTAL=WORKS.reduce((a,w)=>a+w.n,0);
+
+/* a work can carry several subjects; a subject is a light, never a container */
+const SUBJ={bowl:[0,3],cup:[0,1],silence:[0,2],walking:[0,2],puer:[1,3],factory:[1,3],water:[1,0],farmer:[1,4,0],pot:[1,3],breath:[2,0],habits:[2,3],move:[2,3],long:[3,2,0],potter:[3,5],byhand:[3,2],voice:[4,0],kitchen:[4,3],river:[4,5],forty:[4,3],after:[4,0],garden:[5,3],pruning:[5,3],soil:[5,1]};
+WORKS.forEach(w=>w.s=SUBJ[w.id]||[w.c]);
+/* where things sit: under the big idea they share most. Three bands of three columns. */
+const BANDS=[[['whole',['ground','bowl','cup','questions','short','after']],['stab',['silence','walking','hurts','water','tired','breath']],['b78',['puer','factory','six','potter','garden','compost']]],
+ [['b87',['long','habits','carpenter','forty']]],
+ [['b40',['sleep','forget','move','pain']],['b71',['farmer','pot','soil','sharp','pruning','byhand']],['shown',['kitchen','letters','river','voice']]]];
+const V='Ilse Varnholt, The ground is already whole';
+const term=(id,t)=>`<button class="term" data-term="${id}">${t}</button>`;
+/* the medium reading: about three plain paragraphs */
+const MED={
+ whole:['This talk rests on one claim. What you are, underneath every mood and every problem, is already complete. She calls this your Buddha nature. You do not earn it by practising and you cannot lose it by failing.',
+  'From that comes the sentence the talk is named after: the ground is already whole. If what you are is complete, then the moment you are in is not a rough draft of some better moment. It includes the mess, the grief and the unfinished work, and it is still not missing anything.',
+  'She is careful about one word. Whole does not mean pleasant. It means nothing is left out.'],
+ b78:['Some changes cannot be pushed. A skill settling into your hands, a pile of tea leaf fermenting, a pot drying before it is fired: each takes the time it takes. Working harder in that stretch does not shorten it, and often spoils it.',
+  'The author says most beginners misread this waiting as being stuck, and add effort where the work needed patience. She learned to ask one question of any slow stretch: is this a part I do, or a part that time does? If it is time\'s part, her job is only to keep the conditions right and stay out of the way.',
+  'It changes what a good day looks like. On some days the right thing is to do your small amount and stop. The tea maker turns the pile and goes home. The change you are waiting for is happening, and it does not need you to watch it.'],
+ b40:['Rest is not time taken away from the work. It is one of the places where the work happens. The body and the mind take in what they have just done during the pause that follows, not during the effort itself.',
+  'So the author plans her pauses as carefully as her practice. A short stop between attempts. A proper break after an hour. A full night of sleep before she decides whether a session went well. She says the pause is finished when she wants to pick the tool up again, and not before.',
+  'People leave rest out because it does not look like anything. Nobody can see you getting better while you sit with a cup of tea. But practice without rest is like pouring water into a full cup: more goes in, and nothing more stays.'],
+ bypass:['The teaching that everything is already whole can be misused. Someone in pain can say "everything is perfect" as a way of not feeling the pain. It sounds like the teaching, but it is doing the opposite job: it shuts the feeling out instead of letting it in.',
+  'The speaker gives a simple way to tell the two apart. Check your body. If you are saying "it is all perfect" while your jaw is tight and your belly is clenched, you are using the words as a lid. The real version has room for the pain. You can feel all of it and still find that nothing is missing.',
+  'This matters because "everything is perfect" is the idea most likely to be picked up and repeated without the rest. On its own it can become an excuse not to feel, or not to care.']
+};
+/* the full reading, in his order. Only one topic has it in this sample. */
+const Q={a:['31:12','You keep waiting for the moment that will finally be good enough to rest in. I am telling you there is no such moment coming, because this is it. It was never missing anything.'],
+ b:['33:40','Whole does not mean pleasant. A cracked cup is a whole cracked cup.'],
+ c:['12:05','When you wash the bowl, the bowl is not on its way to being a cleaner bowl somewhere else. It is this bowl, wet, in your hands, and nothing is left out.','Tomas Reuel, Just this bowl'],
+ d:['36:20','If you say everything is perfect and your jaw is tight, you are using the words as a lid. Take the lid off. The view has room for the pain; the lid does not.']};
+const FULL={whole:[
+ ['What you do with it',['You stop waiting. Most of us live as if we will be allowed to rest once things improve. She asks you to notice that waiting, and to rest now, in the middle of things exactly as they are.',
+  'This does not mean you stop acting. You still mend what is broken, make the apology, do the work. What changes is where you act from. You act because something needs doing, not because you are incomplete until it is done.'],['a']],
+ ['How you embody it',['She gives three things to practise, and says the order matters.',
+  'First, '+term('eth','kindness in how you treat people')+'. Start with the smallest and dullest things, such as how you speak to someone who is serving you. Without this, "nothing is wrong" turns into an excuse.',
+  'Second, '+term('stab','a mind steady enough to look')+'. A few minutes each day of letting your attention settle, the way stirred water goes clear when you stop stirring.',
+  'Third, '+term('feel','letting feelings be their full size')+'. When grief or anger comes, you do not manage it. You feel all of it, and you find you are still here.'],[]],
+ ['Understanding it more deeply',['It is recognised, not believed. She says nobody argues themselves into this. '+term('shown','Someone points')+', or a moment opens, and you see that '+term('ordinary','the awareness you already have')+' is not lacking anything.',
+  'It comes and goes. Nobody stays in it. You notice it for a moment, lose it, and notice it again. She says '+term('ret','the coming back')+' is the practice, not a failure of it.',
+  'Another voice in your bank says the same thing in a different way. Tomas Reuel does not treat it as a view at all. For him it is in the hands: washing one bowl completely.'],['c']],
+ ['How it can be misunderstood',['This teaching can be misused. Someone in pain can say "everything is perfect" as a way of not feeling the pain. It sounds like the teaching, but it does the opposite job: it shuts the feeling out instead of letting it in. '+term('bypass','She names this directly')+'.',
+  'She gives a simple way to tell the two apart. Check your body. If you are saying "it is all perfect" while your jaw is tight and your belly is clenched, you are using the words as a lid. The real thing has room for the pain.',
+  'And she gives a check that does not depend on your own opinion of yourself: '+term('comp','are you easier to live with')+'? Ask the people at home.'],['d']]
+]};
+const STEPS=['Met it','Understand it','Practising it','Can teach it'];
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=s=>document.querySelector(s);
+const LV={},RES={},STEP={},NOTES=[];
+const res=id=>RES[id]??T[id].r;
+const subj=w=>w.s.map(i=>COLS[i]).join(' · ');
+const dot=id=>`<span class="dot${HOLD[id].length>1?' sh':''}" style="opacity:${.25+.15*res(id)}"></span>`;
+const say=q=>`<p class="say">${esc(q[1])}</p><p class="who">${q[0]} · ${esc(q[2]||V)} · Sample</p>`;
+function body(key,id,from){const t=T[id],lv=LV[key]||0,hs=HOLD[id].filter(w=>w.id!==from),deeper=lv===1&&MED[id]||lv===2&&FULL[id];
+ let h=`<p class="k">${KIND[t.k]}</p><p class="d">${esc(t.d)}</p>`;
+ if(lv>=2)h+='<div class="rd">'+(lv>=3?'<h3 style="margin-top:6px">What it is</h3>':'')+MED[id].map(p=>`<p>${p}</p>`).join('')+(lv>=3?say(Q.b)+FULL[id].map(([hd,ps,qs])=>`<h3>${hd}</h3>`+ps.map(p=>`<p>${p}</p>`).join('')+qs.map(q=>say(Q[q])).join('')).join('')+'<h3>The source</h3><p>The ground is already whole. A talk by Ilse Varnholt, 48 minutes. Sample: the talk and the speaker are invented.</p>':'')+'</div>';
+ if(deeper||lv>1)h+=`<div class="act">${deeper?`<button data-deep="1">Go deeper</button>`:''}${lv>1?`<button data-deep="-1">Fold back</button>`:''}</div>`;
+ NOTES.filter(n=>n.id===id).forEach(n=>h+=`<p class="mine">${esc(n.t)}<small>You, 11 November</small></p>`);
+ if(hs.length)h+=`<p class="lab">${from?'The same topic, in':'In'}</p>`+hs.map(w=>`<button class="tie" data-go="${w.id}:${id}"><i></i><b>${esc(w.t)}<small>${subj(w)}</small></b></button>`).join('');
+ h+=`<div class="marks"><span class="res" role="group" aria-label="How much this resonates">${[1,2,3,4,5].map(i=>`<button class="${i<=res(id)?'f':''}" data-res="${i}" aria-label="${i} of 5"></button>`).join('')}</span>${STEPS.map((s,i)=>`<button data-step="${i}" aria-pressed="${STEP[id]===i}">${s}</button>`).join('')}</div>`;
+ return `<div class="tb">${h}</div>`}
+function tpHTML(wid,id){const key=wid+':'+id,lv=LV[key]||0;
+ return `<div class="tp${lv?' open':''}" data-key="${key}" data-id="${id}"><button class="row" aria-expanded="${!!lv}">${dot(id)}<span>${esc(T[id].n)}</span></button>${lv?body(key,id,wid):''}</div>`}
+function lmHTML(id){const key='lm:'+id,lv=LV[key]||0;
+ return `<div class="lm tp${lv?' open':''}" data-key="${key}" data-id="${id}" data-lm><button aria-expanded="${!!lv}">${esc(T[id].n)}</button>${lv?body(key,id,null):`<p class="sub">${HOLD[id].length} works hold this</p>`}</div>`}
+function workHTML(w){const big=w.ch&&w.ch.length>3,head=`<header><h2>${esc(w.t)}</h2><p>${esc(w.who)} · ${w.kind} · ${w.n} topics</p><p>${subj(w)}</p></header><div class="far" aria-hidden="true">${esc(w.t)}</div>`;
+ const part=([t,ids])=>(t?`<p class="ch">${esc(t)}</p>`:'')+ids.map(id=>tpHTML(w.id,id)).join('');
+ const rest=w.n-w.ids.length;
+ return `<article class="work${big?' big':' snap'}" data-w="${w.id}">${head}${big?`<div class="parts">${w.parts.map(p=>`<div class="part snap">${part(p)}</div>`).join('')}</div>`:w.parts.map(part).join('')+(rest>0?`<div class="rest" style="--h:${Math.ceil(rest/30)*11}px"></div><p class="more">and ${rest} more topics, not written in this sample</p>`:'')}</article>`}
+const world=$('#world'),view=$('#view');
+world.innerHTML='<svg class="ties" aria-hidden="true"></svg>'+BANDS.map(b=>`<section class="band">${b.map(([lm,ws])=>{const wide=ws[0]==='long';
+ return `<div class="colm${wide?' wide':''}">${lmHTML(lm)}${wide?workHTML(W.long)+`<div class="rowof">${ws.slice(1).map(id=>workHTML(W[id])).join('')}</div>`:ws.map(id=>workHTML(W[id])).join('')}</div>`}).join('')}</section>`).join('');
+const svg=world.querySelector('svg');
+
+/* ---------- moving: drag, pinch, wheel, fly ---------- */
+let x=0,y=0,s=1,vw=0,vh=0,anim=0,active=null,light=null;
+const TOP=52,phone=()=>vw<700,maxS=()=>phone()?1:1.5;
+const fitS=()=>Math.min(.6,vw/(world.offsetWidth));
+function apply(){world.style.transform=`translate(${x}px,${y}px) scale(${s})`;
+ const r=document.documentElement.style;r.setProperty('--k',Math.max(1,Math.min(2.8,.8/s)));r.setProperty('--k2',Math.max(1,Math.min(2.6,.72/s)));
+ world.classList.toggle('isfar',s<.55);queueTrail()}
+function clamp(){const W_=world.offsetWidth*s,H_=world.offsetHeight*s;
+ x=W_<vw?(vw-W_)/2:Math.min(40,Math.max(vw-W_-40,x));y=Math.min(TOP,Math.max(vh*.5-H_,y))}
+function fly(tx,ty,ts,done){cancelAnimationFrame(anim);const fx=x,fy=y,fs=s,t0=performance.now(),still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+ const cx=vw/2,cy=vh/2,fwx=(cx-fx)/fs,fwy=(cy-fy)/fs,twx=(cx-tx)/ts,twy=(cy-ty)/ts;
+ const step=now=>{const t=still?1:Math.min(1,(now-t0)/460),e=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+  s=Math.exp(Math.log(fs)+(Math.log(ts)-Math.log(fs))*e);x=cx-(fwx+(twx-fwx)*e)*s;y=cy-(fwy+(twy-fwy)*e)*s;apply();
+  if(t<1)anim=requestAnimationFrame(step);else{x=tx;y=ty;s=ts;clamp();apply();done&&done()}};anim=requestAnimationFrame(step)}
+const wpos=el=>{const r=el.getBoundingClientRect(),w=world.getBoundingClientRect();return{x:(r.left-w.left)/s,y:(r.top-w.top)/s,w:r.width/s,h:r.height/s}};
+function flyTo(el,ts,topPad){ts=ts||(phone()?1:Math.max(1,Math.min(s,maxS())));const p=wpos(el),col=wpos(el.closest('.snap')||el.closest('.colm')||el);
+ const tx=phone()?16-col.x*ts:vw/2-(col.x+Math.min(col.w,420)/2)*ts;fly(tx,(topPad||TOP+10)-p.y*ts,ts)}
+function far(){const ts=fitS();fly((vw-world.offsetWidth*ts)/2,TOP,ts)}
+function snap(){if(!phone()||s<.82)return;const cx=(16-x)/s;let best=null,bd=1e9;world.querySelectorAll('.snap,.lm').forEach(el=>{const p=wpos(el);if(p.y*s+y>vh||(p.y+p.h)*s+y<0)return;const d=Math.abs(p.x-cx);if(d<bd){bd=d;best=p}});
+ if(best&&(Math.abs(16-best.x-x)>1||s!==1)){const cy=vh/2,wy=(cy-y)/s;fly(16-best.x,cy-wy,1)}}
+const pts=new Map();let moved=0,pd=0,lock=null,over=1,deepened=false,vx=0,vy=0,lt=0,drag=false;
+function zoomAt(px,py,f){const ns=Math.max(fitS()*.6,Math.min(maxS(),s*f));
+ if(s*f>maxS()){over*=f;if(over>1.22&&!deepened){deepened=true;const tp=document.elementFromPoint(px,py)?.closest('.tp');if(tp)deepen(tp,1,true)}}
+ const wx=(px-x)/s,wy=(py-y)/s;s=ns;x=px-wx*s;y=py-wy*s}
+view.addEventListener('pointerdown',e=>{cancelAnimationFrame(anim);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===1){moved=0;lock=null;over=1;deepened=false;vx=vy=0}pd=0;lt=performance.now();closePanels()});
+window.addEventListener('pointermove',e=>{const o=pts.get(e.pointerId);if(!o)return;const dx=e.clientX-o.x,dy=e.clientY-o.y;o.x=e.clientX;o.y=e.clientY;
+ if(pts.size===1){moved+=Math.abs(dx)+Math.abs(dy);if(moved<6)return;drag=true;
+  if(lock===null)lock=phone()&&s>.82&&Math.abs(dy)>=Math.abs(dx)*.8;
+  const now=performance.now(),dt=Math.max(1,now-lt);lt=now;if(!lock)x+=dx;y+=dy;vx=lock?0:dx/dt;vy=dy/dt}
+ else if(pts.size===2){const[a,b]=[...pts.values()],d=Math.hypot(a.x-b.x,a.y-b.y),mx=(a.x+b.x)/2,my=(a.y+b.y)/2;if(pd){zoomAt(mx,my,d/pd)}pd=d;moved=99;drag=true;x+=dx/2;y+=dy/2}
+ clamp();apply()});
+const up=e=>{if(!pts.delete(e.pointerId))return;pd=0;if(pts.size)return;if(!drag)return;
+ const glide=()=>{vx*=.94;vy*=.94;x+=vx*16;y+=vy*16;clamp();apply();if(Math.abs(vx)+Math.abs(vy)>.02)anim=requestAnimationFrame(glide);else snap()};
+ if(Math.abs(vx)+Math.abs(vy)>.15)anim=requestAnimationFrame(glide);else snap();setTimeout(()=>drag=false,0)};
+window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);
+view.addEventListener('click',e=>{if(drag){e.stopPropagation();e.preventDefault()}},true);
+let wover=1,wt=0;
+view.addEventListener('wheel',e=>{e.preventDefault();cancelAnimationFrame(anim);
+ if(e.ctrlKey||e.metaKey){const now=performance.now();if(now-wt>400){over=1;deepened=false}wt=now;zoomAt(e.clientX,e.clientY,Math.exp(-e.deltaY*.01))}else{x-=e.deltaX;y-=e.deltaY}clamp();apply()},{passive:false});
+
+/* ---------- expanding and contracting in place ---------- */
+function redraw(tp){const key=tp.dataset.key,id=tp.dataset.id,[a]=key.split(':');const t=document.createElement('template');t.innerHTML=a==='lm'?lmHTML(id):tpHTML(a,id);const n=t.content.firstChild;tp.replaceWith(n);applyLight();requestAnimationFrame(drawTies);return n}
+function deepen(tp,d,stay){const key=tp.dataset.key,id=tp.dataset.id,max=FULL[id]?3:MED[id]?2:1,lv=LV[key]||0,nv=Math.max(0,Math.min(max,lv+d));if(nv===lv)return tp;
+ LV[key]=nv;active=nv?key:(active===key?null:active);const n=redraw(tp);if(!stay&&nv>lv){const r=n.getBoundingClientRect();if(s<.82||r.top<TOP||r.top>vh*.55)flyTo(n,null,TOP+10)}return n}
+function go(wid,id){const key=wid+':'+id;let tp=world.querySelector(`[data-key="${key}"]`);if(!tp){tp=world.querySelector(`[data-w="${wid}"]`);if(tp)flyTo(tp);return}
+ if(!LV[key]){LV[key]=1;tp=redraw(tp)}active=key;drawTies();flyTo(tp,null,TOP+10)}
+function drawTies(){if(!active||!LV[active]){svg.innerHTML='';return}const from=world.querySelector(`[data-key="${active}"]`);if(!from){svg.innerHTML='';return}
+ const c=el=>{const p=wpos(el.querySelector('.dot')||el);return[p.x+p.w/2,p.y+p.h/2]},[ax,ay]=c(from);
+ svg.innerHTML=[...world.querySelectorAll(`.tp[data-id="${from.dataset.id}"]`)].filter(e=>e!==from&&!e.hasAttribute('data-lm')).map(e=>{const[bx,by]=c(e);return `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}"/>`}).join('')}
+world.addEventListener('click',e=>{const b=e.target.closest('button'),tp=e.target.closest('.tp'),wk=e.target.closest('.work');
+ if(s<.55){const el=tp&&tp.hasAttribute('data-lm')?tp:wk||tp;if(el)flyTo(el);return}
+ if(!b){return}const d=b.dataset;
+ if(d.go){const[w,id]=d.go.split(':');go(w,id)}
+ else if(d.term){const w=tp.dataset.key.split(':')[0];go(W[w]&&W[w].ids.includes(d.term)?w:HOLD[d.term][0].id,d.term)}
+ else if(d.deep)deepen(tp,+d.deep,+d.deep<0)
+ else if(d.res){RES[tp.dataset.id]=+d.res;redraw(tp)}
+ else if(d.step){STEP[tp.dataset.id]=STEP[tp.dataset.id]===+d.step?undefined:+d.step;redraw(tp)}
+ else if(tp&&(b.classList.contains('row')||b.parentNode===tp)){const lv=LV[tp.dataset.key]||0;deepen(tp,lv?-lv:1)}});
+
+/* ---------- where you are ---------- */
+let tq=0,focus={name:'the whole bank',id:null,w:null};
+function queueTrail(){if(!tq)tq=requestAnimationFrame(()=>{tq=0;const el=document.elementFromPoint(vw/2,TOP+(vh-TOP)*.3),wk=el&&el.closest&&el.closest('.work'),tp=el&&el.closest&&el.closest('.tp.open');
+ const parts=[['Everything','far']];if(wk&&s>=.45)parts.push([W[wk.dataset.w].t,'w:'+wk.dataset.w]);if(tp&&s>=.7)parts.push([T[tp.dataset.id].n,'t:'+tp.dataset.key]);
+ focus=tp&&s>=.7?{name:T[tp.dataset.id].n,id:tp.dataset.id,key:tp.dataset.key}:wk&&s>=.45?{name:W[wk.dataset.w].t,w:wk.dataset.w}:{name:'the whole bank'};
+ const h=parts.map(([t,k])=>`<button data-tr="${k}">${esc(t)}</button>`).join('<span>›</span>')+(parts.length===1?`<em>${WORKS.length} works · ${TOTAL} topics · Sample</em>`:'');
+ if($('#trail').dataset.h!==h){$('#trail').dataset.h=h;$('#trail').innerHTML=h}})}
+$('#trail').addEventListener('click',e=>{const k=e.target.closest('button')?.dataset.tr;if(!k)return;if(k==='far')far();else flyTo(world.querySelector(k[0]==='w'?`[data-w="${k.slice(2)}"]`:`[data-key="${k.slice(2)}"]`))});
+
+/* ---------- lights ---------- */
+function applyLight(){world.querySelectorAll('.work').forEach(el=>{const w=W[el.dataset.w];let on=true;
+  if(light){if(light.t==='s')on=w.s.includes(light.v);else on=w.ids.some(id=>lit(id))}el.classList.toggle('dimw',!on)});
+ world.querySelectorAll('.tp').forEach(el=>{const l=light&&light.t!=='s';el.classList.toggle('hit',!!l&&lit(el.dataset.id)&&!el.hasAttribute('data-lm'));el.classList.toggle('dimt',!!l&&!lit(el.dataset.id)&&!el.hasAttribute('data-lm'))})}
+const lit=id=>light.t==='k'?T[id].k===light.v:light.t==='r'?res(id)>=4:light.t==='q'?light.ids.has(id):true;
+const lightName=()=>!light?'Light':'Light: '+(light.t==='s'?COLS[light.v]:light.t==='k'?KIND[light.v]:light.t==='r'?'what resonates most':'"'+light.q+'"');
+function lightPanel(){const it=(t,v,l)=>`<button class="it" data-l="${t}:${v}" aria-pressed="${!!light&&light.t===t&&String(light.v)===String(v)}">${l}</button>`;
+ $('#lightp').innerHTML=`<button class="it" data-l="off" aria-pressed="${!light}">Everything, evenly</button><p class="lab">A subject</p>`+COLS.map((c,i)=>it('s',i,c)).join('')+'<p class="lab">A kind</p>'+Object.keys(KIND).map(k=>it('k',k,KIND[k])).join('')+'<p class="lab">Yours</p>'+it('r',1,'What resonates most')}
+function closePanels(){for(const[p,b]of[['#lightp','#lightb'],['#micp','#micb']]){$(p).hidden=true;$(b).setAttribute('aria-expanded','false')}}
+$('#lightb').addEventListener('click',()=>{const open=$('#lightp').hidden;closePanels();if(open){lightPanel();$('#lightp').hidden=false;$('#lightb').setAttribute('aria-expanded','true')}});
+$('#lightp').addEventListener('click',e=>{const l=e.target.closest('button')?.dataset.l;if(!l)return;if(l==='off')light=null;else{const[t,v]=l.split(':');light={t,v:t==='s'?+v:v}}applyLight();$('#lightb').textContent=lightName();closePanels()});
+
+/* ---------- voice, notes and expressing, from wherever he is ---------- */
+function micPanel(msg){$('#micp').innerHTML=`<p class="lab">On ${esc(focus.name)}</p><form id="sayf"><input id="sayi" placeholder="Say or type it" aria-label="Say or type it" autocomplete="off"></form>
+ <div class="two"><button data-do="note">Keep as my note here</button><button data-do="gather">Gather what the bank holds on this</button></div>${msg?`<p class="lab" style="margin-bottom:8px">${msg}</p>`:''}
+ ${NOTES.length?'<p class="lab">All your notes</p>'+NOTES.map((n,i)=>`<button class="note" data-n="${i}">${esc(n.t)}<small>On ${esc(n.on)} · 11 November</small></button>`).join(''):''}`}
+$('#micb').addEventListener('click',()=>{const open=$('#micp').hidden;closePanels();if(open){micPanel();$('#micp').hidden=false;$('#micb').setAttribute('aria-expanded','true')}});
+$('#micp').addEventListener('submit',e=>e.preventDefault());
+$('#micp').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const v=$('#sayi').value.trim();
+ if(b.dataset.n!=null){const n=NOTES[+b.dataset.n];closePanels();if(n.key){const[w,id]=n.key.split(':');w==='lm'?flyTo(world.querySelector(`[data-key="${n.key}"]`)):go(w,id)}else if(n.w)flyTo(world.querySelector(`[data-w="${n.w}"]`));return}
+ if(!v){$('#sayi').focus();return}
+ if(b.dataset.do==='note'){NOTES.unshift({t:v,on:focus.name,id:focus.id,key:focus.key,w:focus.w});if(focus.key){const tp=world.querySelector(`[data-key="${focus.key}"]`);if(tp)redraw(tp)}micPanel('Kept.')}
+ else{const words=v.toLowerCase().split(/[^a-z']+/).filter(w=>w.length>3),ids=new Set(Object.values(T).filter(t=>words.some(w=>(t.n+' '+t.d).toLowerCase().includes(w))).map(t=>t.id));
+  if(!ids.size){micPanel('Nothing in this sample uses those words. The real bank would match by meaning.');return}
+  light={t:'q',q:v,ids};applyLight();$('#lightb').textContent=lightName();closePanels();far()}});
+
+function size(){vw=innerWidth;vh=innerHeight;document.documentElement.style.setProperty('--cw',Math.max(280,Math.min(400,vw-32))+'px')}
+size();s=fitS();x=(vw-world.offsetWidth*s)/2;y=TOP;clamp();apply();
+addEventListener('resize',()=>{size();clamp();apply();drawTies()});
+</script>

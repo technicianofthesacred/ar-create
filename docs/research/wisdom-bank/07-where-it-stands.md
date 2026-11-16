@@ -1,0 +1,71 @@
+# Wisdom bank: where it stands
+
+**Set apart, not stopped.** On 11 November 2026 Adrian said: "Let's stay focused on the AR Create. The wisdom bank is a whole nother beast. It is a part of AR Create, but AR Create is the main thing I want to be building." And then: "I do wanna work on that, but it should be all on a separate thread. All in a separate place ... I was still working on that. I just want the focus to be getting AR create up and going."
+
+So the bank continues in one home thread of its own (branch `claude/wisdom-bank-home`), apart from the building of AR Create. Nothing here is built into the app.
+
+## What he has asked for since
+
+- **11 November 2026, research before building.** "I need you to send out an agent that goes on to the internet to really research this sort of thing that I'm creating before I reinvent the wheel. I really need to understand how people are doing it. This is not a new concept concept. And I need to learn from what's out there before we start building. You can have a whole new thread for that using the proper model." A separate research thread, "Wisdom bank: how others have built this", was started the same day. It writes its report to `08-how-others-do-it.md` on branch `claude/wisdom-bank-prior-art` and publishes it as a page for his phone. Nothing further is designed or built until he has read it.
+
+- **11 November 2026, connecting graphs with AI, and copying an existing interface.** "Yeah, not just all of this, but also the way that people connect these hive minds or knowledge graphs together. Especially with AI, a lot of people are trying to do this sort of thing. I have not been sold on your UI design yet. So I'm more looking at copying something out there and iterating it or making it better." So none of the interfaces drawn so far, the one surface included, is the starting point. The starting point is an existing interface he chooses from what the research finds, then improved. The research thread was told to add how knowledge graphs are joined together and worked on by AI, and to lead its report with three to five real interfaces he can try, with a recommendation.
+
+- **12 November 2026, on the research report ([08](08-how-others-do-it.md), on branch `claude/wisdom-bank-prior-art`) and its screenshots.** "Work flowy Does not seem correct embedding atlas. Seems very interesting. Safari Faria has some aspects of what we are building. You can maybe check it for some things to see if there's anything needed. And then notice Seems kind of like what we're building, it's just someone else building something so you can scan it for insight. Between those three plus what you've already discovered, I think we have a pretty interesting setup. I guess the main thing is if the embedding atlas would work for what we're trying to do. The looks cool, but it should be more interconnected. I think this is the closest fully developed thing. Built for large scale. So let's see how some of these would combine, but also do a bit of research on the embedding atlas and if it could actually be integrated somehow." (Voice transcription; the home thread reads "Safari Faria" as Sefaria and "notice" as Nodus. That reading is not his words.) So: WorkFlowy is out. Embedding Atlas is the leading base, on condition that it can be made more interconnected. Sefaria and Nodus are sources of ideas. The answer on Embedding Atlas is in [09](09-embedding-atlas.md).
+
+## What it is, in his words
+
+Read the section "Corrections since this page was written" at the top of [the concept](04-concept.md) first. It holds sixteen corrections, each in his own words, and they outrank everything else written about the bank. In short:
+
+- A talk, book or article is distilled into **all** its concepts, nothing pruned, and each concept is held once across the whole bank with the exact passages from every work that carries it.
+- It is "my educational system", "a hybridized reading guide", "this massive infinitely growing textbook of beliefs, connections, resonances, and truth", curated by what he finds relevant and not by an AI.
+- Every concept reads at three depths: one full plain sentence saying what it is; about three plain paragraphs; then a full reading (what it is, what you do with it, how you embody it, ways to understand it more deeply, how it can be misunderstood, then the passages and the source). "The highly consolidated thing only exists to pull me into a much deeper understanding."
+- It must be understood on first reading: "They feel like they are written for AI. The number one thing is that they are valuable to me."
+- His voice goes in anywhere, is kept visibly his, and all his notes live in one place.
+- It is one bank for every subject (spiritual teachings, neuroscience, tea), and a unit is not always an idea: Idea, Practice, Step, Belief.
+- It must hold hundreds of thousands of units, so "the zooming and the navigation and the zooming out and zooming in and honing in on things are the first and foremost".
+- The way to move: "a infinite zoom but with a strong structure everywhere". One surface. Things expand and contract in place. No nested pages, no pills, no Open button.
+- "It's not a list. Everything is always connected and interconnected ... I don't want categories and subcategories ... the main thing should be all together." Subjects are for organizing and filtering.
+- It lives inside version two's Research station, and a pathway is the same thing as a research topic.
+
+## What exists to look at
+
+| Page | What it is | Where he left it |
+|---|---|---|
+| [Concept](https://claude.ai/artifact/Y7S5fSmw9tdy8mdaxYD56S) | The idea in words, from his interview | Superseded in places by the sixteen corrections |
+| [First mock-ups](https://claude.ai/artifact/KyUE9ZY9bvArEynznJ5p1L), five passes | Screens at human scale: a work, a concept in three depths, the full reading, his voice, a notebook, a work on tea | He approved the plain voice, the medium view and the reading. He judged the navigation and the suggested interface "majorly flawed" |
+| [The huge map](https://claude.ai/artifact/23ou4as7hxG7DzVB2W6ALz) | An invented bank of 20,000 concepts and 2,000 works to zoom through, measured | "This looks like a subway map ... It's hard for me to understand how to navigate through these and what they really are." Zooming held at size; the lines and the generated wording did not land |
+| [One surface, first cut](https://claude.ai/artifact/GJE3u1woCZZtm7AfzL2fFg) | Everything together on one zoomable surface, 36 works, topics expanding in place, subjects as lights | **He has not reacted to it.** It is the nearest thing to his latest words and the place to start again |
+| [Maps others have built](https://claude.ai/artifact/EJBhUKWms2rnNZtJNgy5vt), [open source projects](https://claude.ai/artifact/9vdehN6aXhL1ccaodHUAph) | Surveys | For reference |
+
+The files are under `design/2026-11-wisdom-bank/` (`index.html`, `zoom/`, `one/`), each with a `HANDOFF.md` that records what was drawn, what was invented, the measurements, and his reactions in his words.
+
+## What was learned
+
+- **What landed:** the plain spoken voice; the three depths; the full reading in five parts; a work kept whole; a concept as a door to other works; zooming as the main gesture; subjects as lights and not boxes (offered to him, not yet confirmed).
+- **What failed:** compressed, clever labels; text cut to fit a card; frames that cost reading width; pills and sections; anything opening over the top or on another page; wandering coloured lines; a list of categories as the way in; generated filler anywhere he is likely to read.
+- **How the work went wrong:** one thread made pass after pass on the same page, each patching the last, far past the size at which it could rethink. Messages sent to a running thread arrived after it had published. Start from the problem in a fresh thread, with a complete brief.
+
+## What nobody has shown yet
+
+1. **Whether a real work can be distilled this well.** Every page uses invented content. The heart of the bank is an agent turning a real book or talk into concepts he understands at once, in three depths, with exact quotes. It has never been tried. It is the first thing to do when this resumes, and it needs him to name one work he knows well.
+2. **Whether an agent can judge "the same concept" across traditions.** The whole bank rests on that.
+3. **The one surface at real size.** The first cut holds 36 works as ordinary page text. The huge map shows zooming can hold at 20,000 concepts, but in a form he did not like. Joining the two is unsolved.
+4. **How a bank arranges itself.** Placement by what things share, stable enough that he learns where things are, has only been done by hand.
+5. **Finding by meaning.** Every page matches words only.
+6. **How it is stored.** No foundations note has been written.
+
+## How to pick it up again
+
+1. He says so. One fresh thread at a time.
+2. First his reaction to [the one surface](https://claude.ai/artifact/GJE3u1woCZZtm7AfzL2fFg), in his words.
+3. Then the distilling trial on a real work he names, on the lighter model, before more screens.
+4. Then the next pass of the surface from `design/2026-11-wisdom-bank/one/`, with a brief like [plan 13](../../plans/2026-11-11-13-wisdom-bank-one-page-brief.md) rewritten around his reaction.
+5. Then the foundations note, then building inside version two's Research station.
+
+## What the AR Create build needs to know meanwhile
+
+Version two's Research station keeps its topics and groups of sources as they are and does not build a unit for one idea. It should avoid anything that would stop a research topic from later holding an ordered list of such units. The version two director was told this on 11 November.
+
+## Questions still with Adrian, for when it resumes
+
+His lens in a few sentences. How books reach the bank. Friends' ideas and their consent. The name on the screen. Whether "a subject is a light, not a box" is what he means.

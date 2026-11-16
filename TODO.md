@@ -1,12 +1,12 @@
 # AR Create: remaining work
 
-Reconciled 10 November 2026. [CURRENT](docs/status/CURRENT.md) is the status authority; [release reconciliation](docs/status/RELEASES-2026-11.md) records completed releases and their proof. Delivery picks which item runs next and merges the result. Earlier assignments are kept in the [6 November checklist](docs/history/delivery-checkpoint-2026-11-06.md). The codes at the end of each item (C01, S05) point into the [section briefs](docs/product/sections/README.md); use them to find the brief, not in reports to Adrian.
+Reconciled 10 November 2026; installed release refreshed 13 November 2026 (version three's Home, tag `v2026.11.13-pr253`, see [WORKS](docs/status/WORKS.md)). [CURRENT](docs/status/CURRENT.md) is the status authority; [release reconciliation](docs/status/RELEASES-2026-11.md) records completed releases and their proof. Delivery picks which item runs next and merges the result. Earlier assignments are kept in the [6 November checklist](docs/history/delivery-checkpoint-2026-11-06.md). The codes at the end of each item (C01, S05) point into the [section briefs](docs/product/sections/README.md); use them to find the brief, not in reports to Adrian.
 
 ## Next useful checkpoint
 
 | Work | State and next owner | Finished when |
 |---|---|---|
-| Review the generated Article (C01/C04, S05/S06) | **Waiting for Adrian.** The first live Article was generated on installed PR230 and its proposal was still waiting on 10 November. Leave the review and his two live tabs at 8841 alone. | Adrian reads or rewrites it and chooses Finish or another action. Agents never accept or save his prose. |
+| Review the generated Article (C01/C04, S05/S06) | **Waiting for Adrian.** The first live Article was generated on installed PR230 and its proposal was still waiting on 10 November. The app has since been released twice (13 November); the proposal was not re-read in that release check. Leave the review and his two live tabs at 8841 alone. | Adrian reads or rewrites it and chooses Finish or another action. Agents never accept or save his prose. |
 | Real Article to its own Carousel (C01/C04/C06, S05/S06/S10) | **After Adrian's review, when he asks for it.** Delivery assigns who builds it. | On the accepted real Article: direct edits, save, reopen, exact Undo where allowed, and a separate Carousel created and reopened, with the Article, its sources and sibling pieces unchanged. Already shown on invented data. |
 | Whole editorial journey and output fidelity (C01 to C06, S01 to S12) | **Open.** Delivery picks one piece and edition. | Detours to Source, Research and Direction return to the same writing; Media, Arrange, Check and the downloaded Article and Carousel match the chosen saved edition, consent holds still apply, and publication stays a separate step. |
 
@@ -31,6 +31,7 @@ Except the Magazine check, each of these runs in a fresh worktree against `npm r
 - [ ] Connecting more agent entry points or remote approval to his real data needs Adrian to ask for it. The earlier Claude and ChatGPT test used invented data and is closed.
 - [ ] Phone or VPS access, offline sync and restore, and access to large originals each need their own design and Adrian's agreement. Phone-width screenshots are not phone access.
 - [ ] Sending, sharing with recipients and publishing need Adrian's own consent answers and decision in the app.
+- [ ] Wisdom bank, design (not built): resume from `docs/research/wisdom-bank/WISDOM-BANK.md` and the foundations page `14-what-goes-in.html`. Next: draft the starting index of themes, fields and scales; then take in a second, very different source with the full rules and look at the links. Adrian has not yet confirmed the five kinds of unit.
 
 ## How to run the next task
 

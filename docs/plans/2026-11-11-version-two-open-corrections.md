@@ -453,6 +453,19 @@ Small and not yet done:
   that the device remembers which desk subjects have one (`ar-v3-home-covers`) and keeps the room from first paint.
 - The remembered-cover path was checked only in jsdom tests: the demo has no subject with a cover photograph. Look
   at it on real records.
+
+**On real records, 13 November, after version three's Home was released into the installed app.** Measured at
+1440 and 390 wide, light and dark, through `/v3/index.html?reviewActor=agent:claude-code`, with a layout-shift
+observer from first paint.
+
+- A desk card with a cover picture could not be seen: the desk is empty on his real records ("Nothing on your desk
+  yet"), so there is no desk card at all, with or without a picture. All 14 subjects in Everything show the grey
+  placeholder square in Rows; none has a cover photograph there either. The remembered-cover path is still unseen
+  on anything but jsdom. It needs one real subject on the desk with a photograph.
+- The page shifts once on a desktop load: about 0.078 cumulative layout shift, almost all of it the Everything
+  section (`h3-all`) moving down between 0.4 and 2 seconds after load as the content above it fills in. A second,
+  negligible shift (0.0003) comes from the top bar. On the phone nothing shifted (0.0). The Home finished reading in
+  about 2.5 seconds in every case. No sideways scroll at either width.
 - In one desk row, cards with and without a picture put their names at different heights.
 - After Alt+Up on a desk card's next-step link, a repaint drops keyboard focus to the page. Version two does the same.
 - A real touch drag on a phone was not tried; Move up and Move down are always shown there.

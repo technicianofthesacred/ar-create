@@ -1,10 +1,11 @@
-/* A subject: its forms in order, the steps to the finish line, one step open with its tool.
+/* A subject: its forms in order, the steps to the finish line, and every step's tool in a section of its own, one under
+   another on one page: the side list jumps to a section and follows the page, and a section opens to the whole window.
    Two halves. The first is pure (it runs in a browser and under node --test, tests/v2-subject.test.mjs): the table of
    hand-offs to the existing workspace, how an answer of `subject.standing` is shown, which change concerns this
    subject, and the few things a tool needs worked out of records. The second half is the screen.
    Where the subject stands (the ring, the station, every form, every step, its state and what it waits for) comes ONLY
    from the command `subject.standing`, asked through one function, gather(). A tool reads its own records when its
-   step is opened, never before, and never a list of every subject. Nothing here keeps a record past the open page. */
+   section comes near the window, never before, and never a list of every subject. Nothing here keeps a record past the open page. */
 (function(root){
  'use strict';
 
@@ -466,7 +467,7 @@
   return `<div class="v2-page subj" data-subj>
    <header class="subj-head" data-subj-head><h1>&nbsp;</h1></header>
    <nav class="subj-forms" data-subj-forms aria-label="Forms, in order"><span class="subj-form none"><b>Reading</b></span></nav>
-   <div class="subj-work"><div class="subj-steps" data-subj-steps><p class="subj-quiet" role="status">Reading</p></div><section class="subj-step" data-subj-panel hidden></section></div>
+   <div class="subj-work"><div class="subj-steps" data-subj-steps><p class="subj-quiet" role="status">Reading</p></div><div class="subj-secs" data-subj-secs></div></div>
   </div>`;
  }
 
@@ -474,7 +475,7 @@
   const id=ctx.params.id,page=el.querySelector('.subj');
   // rec[k]: undefined = not asked yet (the tool says Reading); null = nothing to read; {__error} = could not be read.
   let back={};try{back=JSON.parse(root.sessionStorage.getItem('ar-v2-subject:'+id)||'{}')||{};}catch{}
-  const st={standing:null,form:ctx.query?.form||back.form||null,open:ctx.query?.step||back.step||null,rec:{},pend:{},drafts:{},sayLine:'',busy:false,frames:new Map(),last:{},look:new Map()};
+  const st={standing:null,form:ctx.query?.form||back.form||null,open:ctx.query?.step||back.step||null,rec:{},pend:{},drafts:{},sayLine:'',busy:false,frames:new Map(),last:{},look:new Map(),looks:[],zoom:null,zoomY:0,hold:0,placed:false,came:!!(ctx.query?.step||back.step),backY:Number.isFinite(back.y)?back.y:null,reader:null};
   const phone=root.matchMedia?root.matchMedia('(max-width:850px)'):{matches:false};
   let timer=null,paintTimer=null;
   const $=sel=>page.querySelector(sel);
@@ -483,7 +484,7 @@
   function remember(){
    const form=st.form,step=st.open;
    try{root.history.replaceState(root.history.state,'',v2.href('subject/:id',{id},{form,step}));}catch{}
-   try{root.sessionStorage.setItem(KEEP,JSON.stringify({form,step}));}catch{}
+   try{root.sessionStorage.setItem(KEEP,JSON.stringify({form,step,y:Math.round(root.scrollY||0)}));}catch{}
   }
   const ids=()=>({id,bindingId:st.standing?.facts?.bindingId||null,projectId:st.standing?.facts?.projectId||null});
 
@@ -517,7 +518,6 @@
    clearTimeout(timer);
    timer=setTimeout(()=>{if(ctx.signal.aborted)return;for(const k of keys)ask(k,true);refresh();},200);
   });
-  phone.addEventListener?.('change',()=>placePanel());
 
   // ---------- drawing, in place ----------
   // With no form decided the list stops at Simmer: the rest appears when he says what it will be.
@@ -537,7 +537,8 @@
    swap('[data-subj-head]',head(s),'outer');
    swap('[data-subj-forms]',formRow(s,form),'outer');
    paintSteps(steps,form);
-   paintPanel(steps,form);
+   paintPanels(steps,form);
+   place();
   }
   /** Replace a part only when its markup changed, keeping focus where it was. */
   function swap(sel,html,how){
@@ -552,18 +553,19 @@
   function paintSteps(steps,form){
    const nav=$('[data-subj-steps]'),shape=JSON.stringify([form?.key||null,steps.map(x=>x.id),later(st.standing)]);
    if(nav.dataset.shape!==shape){
-    const panel=$('[data-subj-panel]');if(panel&&panel.parentElement!==$('.subj-work'))$('.subj-work').append(panel);
-    nav.dataset.shape=shape;nav.innerHTML=stepList(steps)+(later(st.standing)?'<p class="subj-later">The rest appears when you say what it will be.</p>':'');return;
-   }
-   for(const x of steps){
+    nav.dataset.shape=shape;nav.innerHTML=stepList(steps)+(later(st.standing)?'<p class="subj-later">The rest appears when you say what it will be.</p>':'');
+   }else for(const x of steps){
     const li=nav.querySelector(`.subj-row[data-step="${cssq(x.id)}"]`),v=viewOf(x),html=rowInner(v);
     if(li&&li.dataset.html!==html){
-     const focused=li.contains(document.activeElement),panel=li.querySelector(':scope>[data-subj-panel]');
+     const focused=li.contains(document.activeElement);
      li.dataset.state=v.state;li.dataset.html=html;li.querySelector(':scope>[data-subj-step]').outerHTML=html;
-     if(panel)li.append(panel);if(focused)li.querySelector(':scope>[data-subj-step]')?.focus({preventScroll:true});
+     if(focused)li.querySelector(':scope>[data-subj-step]')?.focus({preventScroll:true});
     }
     li?.toggleAttribute('data-open',x.id===st.open);
    }
+   // On a phone the list is a strip along the top: keep the current step in sight, without moving the page.
+   const on=nav.querySelector('.subj-row[data-open]');
+   if(on&&phone.matches&&nav.scrollWidth>nav.clientWidth)nav.scrollLeft=on.offsetLeft-(nav.clientWidth-on.clientWidth)/2;
   }
 
   const mag=()=>isMagazine(st.standing);
@@ -583,7 +585,7 @@
   const screenOfSection=(section,form)=>form&&form.kind==='article'&&(section==='read'||section==='check')?esc(v2.href(section+'/:id',{id},{piece:pieceFor(form)})):null;
   const lookName=lookId=>st.look.get(lookId)||String(lookId).replace(/^./,c=>c.toUpperCase());
   function head(s){
-   const look=s.look?`<a class="subj-look" href="${esc(v2.href('looks',{},{look:s.look}))}" title="Open this look in Looks"><i aria-hidden="true"></i>${esc(lookName(s.look))} look</a>`:`<a class="subj-look none" href="${esc(v2.href('looks'))}" title="Open Looks to see the looks you can choose from"><i aria-hidden="true"></i>Choose a look</a>`;
+   const look=`<button type="button" class="subj-look${s.look?'':' none'}" data-subj-look aria-haspopup="dialog" title="Choose the look here. Looks is where looks are made and changed"><i aria-hidden="true"></i>${s.look?esc(lookName(s.look))+' look':'Choose a look'}</button>`;
    const trail=['Subjects',...(s.folder||[])].join(' / ');
    const path=`<p class="subj-path" title="${esc(s.folder?.length?'This is a real folder on disk':'Subjects')}">${esc(trail)}</p>`;
    // The station stays for assistive technology; the sample shows it nowhere on this page.
@@ -598,7 +600,19 @@
    const chosen=isMag&&!!s.facts?.dish?.direction;
    const dir=!both?'':isMag&&!said?`<p class="subj-dir none"><span>${chosen?'A direction is chosen in the Magazine, the dish is not named':'No direction yet'}</span><a class="subj-link" data-subj-handoff="${chosen?'directionChange':'directionWrite'}" href="${handoffHref('direction',null)}" aria-label="${chosen?'See the direction':'Write the direction'} (opens the Magazine)">Open the Magazine in Advanced</a></p>`:said?`<p class="subj-dir"><span title="${esc(said)}">${esc(said)}</span>${change(HANDOFFS.directionChange.label,'directionChange','Change the direction')}</p>`
     :said===''&&!later(s)?`<p class="subj-dir none"><span>No direction yet</span>${change(HANDOFFS.directionWrite.label,'directionWrite','Write the direction')}</p>`:'';
-   return `<header class="subj-head" data-subj-head><h1 title="${esc(s.title)}">${esc(s.title)}</h1>${look}${path}${where}<span class="subj-sp"></span>${dir}</header>`;
+   return `<header class="subj-head" data-subj-head><h1 title="${esc(s.title)}">${esc(s.title)}</h1>${look}${path}${where}<span class="subj-sp"></span>${dir}${glance(s)}</header>`;
+  }
+  /** The whole subject in one line: what he has, how far it is, and the step that needs him next. */
+  function glance(s){
+   const f=s.facts||{},m=f.material,bits=[];
+   if(m)for(const [count,one] of [[m.recordings,'recording'],[m.notes,'note'],[m.links,'link'],[m.photos,'photograph']])if(count)bits.push(`<span><b>${count}</b> ${count===1?one:one+'s'}</span>`);
+   if(f.words?.count)bits.push(`<span><b>${Number(f.words.count).toLocaleString('en-GB')}</b> ${f.words.count===1?'word':'words'}</span>`);
+   const steps=current().steps.filter(x=>x.state!=='unknown'),done=steps.filter(x=>x.state==='done').length;
+   if(steps.length)bits.push(`<span><b>${done} of ${steps.length}</b> steps done</span>`);
+   if(s.asks)bits.push(`<a class="subj-link" href="#/">${plural(s.asks,'question')} waiting on you${icon('chev')}</a>`);
+   const nx=steps.find(x=>x.state==='flag')||steps.find(x=>x.state==='next');
+   if(nx)bits.push(`<button type="button" class="subj-link" data-subj-step="${esc(nx.id)}">Next: ${esc(nx.name)}${icon('chev')}</button>`);
+   return bits.length?`<p class="subj-glance" data-subj-glance>${bits.join('')}</p>`:'';
   }
   function formRow(s,form){
    // Forms cannot be reordered yet (no record keeps their order), so there is no drag grip; the number is their place.
@@ -613,35 +627,299 @@
     return `<section class="subj-grp"><h3 class="subj-group">${g}</h3><ol>${rows.map(x=>{const v=viewOf(x),html=rowInner(v);return `<li class="subj-row" data-step="${esc(x.id)}" data-state="${v.state}"${x.id===st.open?' data-open':''} data-html="${esc(html)}">${html}</li>`;}).join('')}</ol></section>`;}).join('');
   }
   const rowInner=v=>{const on=v.id===st.open;
-   return `<button type="button" data-subj-step="${esc(v.id)}" aria-expanded="${on}"${on?' class="v2-current"':''}>${v.mark?mark(v.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<b>${esc(v.name)}</b>${v.note?`<small title="${esc(v.note)}">${esc(v.note)}</small>`:''}</button>`;};
+   return `<button type="button" data-subj-step="${esc(v.id)}"${on?' aria-current="step" class="v2-current"':''}>${v.mark?mark(v.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<b>${esc(v.name)}</b>${v.note?`<small title="${esc(v.note)}">${esc(v.note)}</small>`:''}</button>`;};
 
   function paintMissing(error){
    page.innerHTML=`<header class="subj-head"><h1>This subject could not be found</h1></header><p class="subj-quiet">${esc(error?.message||'Nothing in the records has this name.')}</p><p><a class="v2-out" href="#/">Home${icon('right')}</a></p>`;
   }
 
-  // ---------- the open step ----------
-  function paintPanel(steps,form){
-   const panel=$('[data-subj-panel]');if(!panel)return;
-   const s=steps.find(x=>x.id===st.open);
-   if(!s){panel.hidden=true;st.last.panel='';return;}
-   const v=viewOf(s);
-   const quiet=s.id==='have'&&s.state==='next';
-   const html=`<header><p class="subj-label">${esc(s.group)}</p><h2 tabindex="-1">${esc(s.name)}</h2>${v.note&&!quiet?`<p class="subj-note" data-state="${v.state}">${esc(v.note)}</p>`:''}</header>${tool(s,form,steps)}${nextUp(s,form,steps)}`;
-   panel.hidden=false;
-   if(st.last.panel!==html){const back=panel.contains(document.activeElement)?keyOf(document.activeElement):null;st.last.panel=html;panel.innerHTML=html;paintFrames(panel);if(back)$(back)?.focus({preventScroll:true});}
-   placePanel();
+  // ---------- every step, one under another ----------
+  const secOf=sid=>sid?$(`[data-subj-sec="${cssq(sid)}"]`):null;
+  function paintPanels(steps,form){
+   const box=$('[data-subj-secs]');if(!box)return;
+   const shape=JSON.stringify([form?.key||null,steps.map(x=>x.id)]);
+   if(box.dataset.shape!==shape){
+    box.dataset.shape=shape;for(const k of Object.keys(st.last))if(k.startsWith('panel:'))delete st.last[k];
+    if(st.zoom&&!steps.some(x=>x.id===st.zoom)){st.zoom=null;document.documentElement.style.overflow='';}
+    box.innerHTML=steps.map(x=>`<section class="subj-step" data-subj-sec="${esc(x.id)}"></section>`).join('');
+   }
+   const title=st.standing?.title||'the subject';
+   for(const s of steps){
+    const sec=secOf(s.id);if(!sec)continue;
+    need(s.id);
+    const v=viewOf(s),quiet=s.id==='have'&&s.state==='next',big=st.zoom===s.id;
+    // The same Back as every other screen: top left, an arrow and where it leads.
+    const back=big?`<button type="button" class="v2-ghost subj-back" data-subj-zoom="${esc(s.id)}">${icon('back')}<span>Back to ${esc(title)}</span></button>`:'';
+    const html=`${back}<header data-subj-zoom="${esc(s.id)}"${big?'':' title="Open this at full size"'}><p class="subj-label">${esc(s.group)}</p><h2 tabindex="-1">${esc(s.name)}</h2>${v.note&&!quiet?`<p class="subj-note" data-state="${v.state}">${esc(v.note)}</p>`:''}</header>${tool(s,form,steps)}${readerOf(s.id)}`;
+    // The current step's section answers to [data-subj-panel], as the one open panel did.
+    sec.toggleAttribute('data-subj-panel',s.id===st.open);sec.classList.toggle('zoomed',big);
+    const key='panel:'+s.id;
+    if(st.last[key]!==html){const backTo=sec.contains(document.activeElement)?keyOf(document.activeElement):null;st.last[key]=html;sec.innerHTML=html;paintFrames(sec);embed(sec);soon(sec);if(backTo)$(backTo)?.focus({preventScroll:true});}
+   }
   }
-  /** On a phone the open step sits under its own row; on a computer, beside the list. One panel, moved, never two. */
-  function placePanel(){
-   const panel=$('[data-subj-panel]'),work=$('.subj-work');if(!panel||!work)return;
-   const open=$('.subj-row[data-open]');
-   if(phone.matches&&open){if(panel.parentElement!==open)open.append(panel);panel.classList.add('inline');}
-   else{if(panel.parentElement!==work)work.append(panel);panel.classList.remove('inline');}
+  // ---------- tools brought over from the existing workspace, run on this page itself ----------
+  // A tool the existing workspace already has is not written twice: its own file is loaded when its step is on the page and
+  // it is put straight into the section (no frame, so one page, one scroll, the same colours). It keeps its own saving rules.
+  // `covers` names the hand-offs it stands in for, so the step no longer says those are missing.
+  const BORROWED={photos:{js:'/document-study/study-photos.js',css:'/document-study/study-photos.css',ready:()=>typeof root.mountPhotosStage==='function'},
+   simmer:{js:'/document-study/simmer.js',css:'/document-study/simmer.css',ready:()=>typeof root.arSimmer?.open==='function'},
+   consent:{js:'/document-study/consent-desk.js',css:'/document-study/consent-desk.css',ready:()=>typeof root.arConsentDesk?.load==='function'},
+   arrange:{js:'/assets/study-output-canvas.js',css:'/assets/study-output-canvas.css',module:true,ready:()=>typeof root.ArStudyOutputHost?.mountStudyOutputHost==='function'}};
+  /** The existing workspace's tools read who is acting from one place on the page; here it is this tab's own actor. */
+  const actAsMe=()=>{if(!root.arCreateUiActor)root.arCreateUiActor=Object.freeze({actor:v2.actor()||'human:adrian',explicit:!v2.isHuman()});};
+  /** The Simmer board, whole, over this page. Leaving it comes back to the same place, and the step reads what changed. */
+  async function openSimmer(button){
+   if(button.disabled)return;button.disabled=true;
+   try{actAsMe();await bring('simmer');if(ctx.signal.aborted)return;
+    await root.arSimmer.open({subject:id,title:st.standing?.title||''});
+    const board=document.querySelector('dialog.simmer');
+    const after=()=>{if(ctx.signal.aborted)return;for(const k of ['board','direction'])ask(k,true);refresh();$('[data-subj-borrow="simmer"]')?.focus({preventScroll:true});};
+    if(board&&board.open)board.addEventListener('close',after,{once:true});else after();
+   }catch(error){v2.ui.say(error?.message||'The Simmer board could not be opened.',{tone:'bad'});}
+   finally{const b=$('[data-subj-borrow="simmer"]');if(b)b.disabled=false;}
   }
-  function nextUp(s,form,steps){
-   if(s.state!=='done')return '';
-   const nx=(form?.next&&steps.find(x=>x.id===form.next.step&&x.state!=='unknown'))||steps.find(x=>x.state==='flag')||steps.find(x=>x.state==='next');
-   return nx&&nx.id!==s.id?`<footer class="subj-next"><span>${mark('done')}This step is done.</span><button type="button" class="pri" data-subj-step="${esc(nx.id)}">Next: ${esc(nx.name)}${icon('right')}</button></footer>`:'';
+  const loads=new Map();
+  function bring(kind){
+   const b=BORROWED[kind];if(b.ready())return Promise.resolve();
+   if(!loads.has(kind))loads.set(kind,new Promise((done,fail)=>{
+    if(b.css&&!document.querySelector(`link[href="${b.css}"]`)){const l=document.createElement('link');l.rel='stylesheet';l.href=b.css;document.head.append(l);}
+    const s=document.createElement('script');if(b.module)s.type='module';s.src=b.js;s.onload=()=>b.ready()?done():fail(new Error('The tool could not be started.'));s.onerror=()=>fail(new Error('The tool could not be loaded.'));document.head.append(s);
+   }));
+   return loads.get(kind);
+  }
+  const embeds=new Map();// kind|binding -> {node, instance}: the node is kept and put back when its section is drawn again
+  // The photograph tools and the reader view work on a piece's own saved place, so they need the subject to have one.
+  const NEEDS_PLACE=new Set(['photos','arrange','audience']);
+  const borrowed=(kind,covers,piece='')=>!mag()&&(ids().bindingId||!NEEDS_PLACE.has(kind))&&typeof document.createElement==='function'?`<div class="subj-embed" data-subj-embed="${kind}" data-subj-covers="${covers}"${piece?` data-piece="${esc(piece)}"`:''}></div>`:'';
+  /** The borrowed tool asks by address; here every address is one of the app's named commands, asked through the page's own
+      client like everything else (the same actor, the same checks). An address with no command is refused, never fetched. */
+  const asMe=(url,input)=>{const [path,query]=String(url).split('?'),m=/^\/api\/study\/photos(\/[a-z-]+)?$/.exec(path);if(!m)return Promise.reject(new Error('That is not available on this page.'));
+   return v2.call('study.photos'+(m[1]||'').replace('/','.'),input||Object.fromEntries(new URLSearchParams(query||'')));};
+  function embed(sec){
+   for(const slot of sec.querySelectorAll('[data-subj-embed]')){
+    const kind=slot.dataset.subjEmbed,binding=ids().bindingId,piece=slot.dataset.piece||'',key=kind+'|'+binding+'|'+piece;let e=embeds.get(key);
+    if(e){e.node.dataset.subjCovers=slot.dataset.subjCovers;slot.replaceWith(e.node);continue;}
+    e={node:slot,instance:null};embeds.set(key,e);slot.innerHTML='<p class="subj-quiet" role="status">Reading</p>';
+    if(kind==='consent')startConsent(e);else if(kind==='source')startSource(e);else if(kind==='arrange')startArrange(e,binding,piece);else if(kind==='audience')startAudience(e,binding,piece);else startPhotos(e,binding);
+   }
+  }
+  /** The photographs of this article: the collection the existing workspace keeps for it. Reading it changes nothing; the
+      collection is made only when he presses to start choosing. */
+  async function startPhotos(e,binding){
+   const say=html=>{if(!ctx.signal.aborted)e.node.innerHTML=html;};
+   const mountIt=async found=>{await bring('photos');if(ctx.signal.aborted)return;e.node.innerHTML='';e.instance=root.mountPhotosStage(e.node,{projectId:found.projectId,documentId:found.documentId,request:asMe});};
+   try{
+    const key='owned-draft:'+binding,found=await call('first-flow.binding',{projectKey:key});
+    if(ok(found)&&found.projectKey===key&&typeof found.projectId==='string'&&typeof found.documentId==='string'){await mountIt(found);return;}
+    say('<p class="subj-quiet">No photographs are chosen for this article yet.</p><div class="subj-actions"><button type="button" class="subj-btn pri" data-subj-startphotos>Choose photographs</button></div>');
+    e.node.addEventListener('click',async ev=>{const b=ev.target.closest('[data-subj-startphotos]');if(!b||b.disabled)return;b.disabled=true;
+     try{const made=await v2.call('study.photos.select',{bindingId:binding,parentStudyId:id});await mountIt(made);}
+     catch(error){b.disabled=false;v2.ui.say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});}});
+   }catch(error){say(`<p class="subj-quiet" role="alert">${esc(error?.message||'The photographs could not be read.')}</p>`);}
+  }
+  /** The borrowed layout editor asks by address, with a method and a body. Every address is found in the app's own list of
+      commands and asked through this page's client (the same actor, the same checks); its answer goes back in the shape the
+      editor expects. An address with no command is answered Not found, never sent. */
+  let routes=null;
+  const routeMap=()=>routes||=v2.call('capabilities',{only:'commands'}).then(r=>new Map((r?.commands||[]).filter(c=>c&&typeof c.route==='string'&&!c.route.includes('{')).map(c=>[c.method+' '+c.route,c.name])));
+  const answer=(status,body)=>new root.Response(JSON.stringify(body??{}),{status,headers:{'Content-Type':'application/json'}});
+  async function viaCommands(url,init={}){
+   const u=new URL(url,root.location.origin),method=String(init.method||'GET').toUpperCase(),name=(await routeMap()).get(method+' '+u.pathname);
+   if(!name)return answer(404,{error:'That is not available on this page.'});
+   let body={};try{body=init.body?JSON.parse(init.body):{};}catch{return answer(400,{error:'That request could not be read.'});}
+   try{return answer(200,await v2.call(name,{...Object.fromEntries(u.searchParams),...body}));}
+   catch(error){return answer(error?.status||500,error?.body&&typeof error.body==='object'?error.body:{error:error?.message||'That could not be done. Nothing was changed.'});}
+  }
+  /** Layout edits not yet saved are kept on this device, one copy for each piece, and never written over by an older one. */
+  const KEPT='ar-v2-subject-layout:';
+  const kept=key=>{try{return JSON.parse(root.localStorage.getItem(KEPT+key)||'null')||{};}catch{throw new Error('The edits kept on this device cannot be read. Keep this window open.');}};
+  const keepIt=(key,value)=>{try{root.localStorage.setItem(KEPT+key,JSON.stringify(value));}catch{throw new Error('The edits could not be kept on this device. Keep this window open.');}};
+  /** Placing photographs in the story: the workspace's own layout editor for this Article, started when he asks for it (it is
+      a large file). Saving is its own, with its own rules; a save the app refuses is said in its own words. */
+  function startArrange(e,binding,piece){
+   const key=binding+'|'+piece,scope={parentStudyId:id,rootBindingId:binding};
+   e.node.innerHTML='<div class="subj-actions"><button type="button" class="subj-btn" data-subj-startarrange>Place photographs in the story</button></div>';
+   e.node.addEventListener('click',async ev=>{
+    const b=ev.target.closest('[data-subj-startarrange]');if(!b||b.disabled)return;b.disabled=true;b.textContent='Opening the layout';
+    try{
+     const [view]=await Promise.all([v2.call('study.outputs',scope),bring('arrange'),routeMap()]);if(ctx.signal.aborted)return;
+     if(!view?.photoScope?.projectId||!view.photoScope.documentId)throw new Error('This Article’s photographs are not connected yet. Choose photographs first.');
+     if(!(view.outputs||[]).some(o=>o.id===piece&&o.kind==='article'))throw new Error('This Article has no saved layout yet.');
+     const canvas=document.createElement('div');canvas.className='subj-layout';const alert=document.createElement('p');alert.className='subj-quiet';alert.setAttribute('role','alert');alert.hidden=true;
+     const say=text=>{alert.textContent=text;alert.hidden=!text;};
+     e.node.replaceChildren(alert,canvas);
+     e.instance=await root.ArStudyOutputHost.mountStudyOutputHost(canvas,{scope,selectedOutputId:piece,embeddedArrange:true,request:viaCommands,photoScope:view.photoScope,assetOrigin:root.location.origin,
+      studyDraft:{openBinding:()=>{throw new Error('The words are written in Write. Press The words on this page.');}},
+      readBrowserDraft:outputId=>kept(key).drafts?.[outputId]||null,
+      rememberBrowserDraft:(value,expectedToken,outputId)=>{const all=kept(key),drafts={...(all.drafts||{})};if((drafts[outputId]?.token??null)!==expectedToken)throw new Error('Newer edits are already kept on this device. Keep this window open and compare both copies.');if(value)drafts[outputId]=value;else delete drafts[outputId];keepIt(key,{...all,drafts});},
+      pendingRequest:kept(key).pending||null,rememberPending:pending=>{keepIt(key,{...kept(key),pending:pending||null});},
+      onError:error=>say(error?.message||'That could not be done. Nothing was changed.'),onShelf:()=>say('Other pieces are opened from their own tab at the top of this page.')});
+     if(ctx.signal.aborted){try{e.instance.destroy();}catch{}return;}
+     // A save that was cut short last time is finished, or said, before anything else is done.
+     if(e.instance.pending)try{await e.instance.recoverPending();}catch(error){say(error?.message||'An earlier save could not be finished. Nothing was lost; it is kept on this device.');}
+    }catch(error){b.disabled=false;b.textContent='Place photographs in the story';v2.ui.say(error?.message||'The layout could not be opened.',{tone:'bad'});}
+   });
+  }
+  /** The whole conversation: the workspace's own reader of a kept conversation, with its speakers, its find, and its
+      corrections under its own saving rules. It is given this page, this subject and this page's client; it is asked for
+      only when he presses, because kept conversations are large. A conversation that is one of this subject's own sources
+      is opened first; otherwise the reader offers the kept conversations to choose from, as it does in the workspace. */
+  let sourceReader=null;
+  function startSource(e){
+   const idle=()=>{e.node.innerHTML='<div class="subj-actions"><button type="button" class="subj-btn" data-subj-startsource>Read a kept conversation</button></div>';};
+   idle();
+   e.node.addEventListener('click',async ev=>{
+    if(ev.target.closest('[data-subj-closesource]')){try{sourceReader?.closeContext();}catch{}idle();e.node.querySelector('button')?.focus({preventScroll:true});return;}
+    const b=ev.target.closest('[data-subj-startsource]');if(!b||b.disabled)return;b.disabled=true;b.textContent='Reading the conversation';
+    try{
+     actAsMe();
+     if(!document.querySelector('link[href="/document-study/source-imported.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/document-study/source-imported.css';document.head.append(l);}
+     // The reader's file starts itself on the workspace's own page; here it is started by hand, with this page's client.
+     if(!root.studyImportedSource)root.studyImportedSource=Object.freeze({startedBy:'subject'});
+     const [made,,tree,brief,plans]=await Promise.all([import('/document-study/source-imported.js'),routeMap(),ask('tree'),ask('brief'),ask('planRecords')]);if(ctx.signal.aborted)return;
+     const project=Object.freeze({id,title:st.standing?.title||'',name:st.standing?.title||''});
+     sourceReader||=made.installSourceReader({document,getProject:()=>project,fetch:viaCommands,observe:false});
+     const mine=new Set(materialFrom({tree,brief,planRecords:Array.isArray(plans)?plans:[]},ids().projectId).items.map(x=>x.id));
+     const bar=document.createElement('div');bar.className='subj-actions';bar.innerHTML='<button type="button" class="v2-ghost" data-subj-closesource>Close the conversation</button>';
+     const box=document.createElement('div');box.className='subj-convo';e.node.replaceChildren(bar,box);
+     sourceReader.openContext({container:box,project});await sourceReader.refresh();if(ctx.signal.aborted)return;
+     const sessions=sourceReader.getState().data?.sessions,own=Array.isArray(sessions)?sessions.find(s=>mine.has(s.sourceId)):null;
+     if(Array.isArray(sessions)&&!sessions.length){sourceReader.closeContext();idle();e.node.insertAdjacentHTML('beforeend','<p class="subj-quiet" data-subj-noconvo>No conversation is kept yet, so there is none to read.</p>');return;}
+     // The reader opens a conversation it is given and offers none itself, so the kept ones are listed here to choose from.
+     const pick=s=>sourceReader.selectSource({sourceId:s.sourceId,expectedSourceHash:s.sourceHash,expectedVersion:s.version});
+     const list=(Array.isArray(sessions)?sessions:[]).filter(s=>s&&typeof s.sourceId==='string');
+     if(list.length>1||!own){const chooser=document.createElement('ul');chooser.className='subj-list subj-convos';chooser.setAttribute('aria-label','Kept conversations');
+      chooser.innerHTML=list.map((s,i)=>`<li><button type="button" class="subj-link" data-subj-convo="${i}" aria-pressed="${s===own}">${esc(s.title||'Untitled conversation')}</button><small>${esc([s.date,mine.has(s.sourceId)?'one of this subject’s sources':''].filter(Boolean).join(' · '))}</small></li>`).join('');
+      chooser.addEventListener('click',async cv=>{const cb=cv.target.closest('[data-subj-convo]');if(!cb||cb.disabled)return;cv.stopPropagation();cb.disabled=true;
+       try{await pick(list[Number(cb.dataset.subjConvo)]);for(const x of chooser.querySelectorAll('[data-subj-convo]'))x.setAttribute('aria-pressed',String(x===cb));box.scrollIntoView?.({block:'nearest'});}
+       catch(error){v2.ui.say(error?.message||'That conversation could not be opened.',{tone:'bad'});}finally{cb.disabled=false;}});
+      bar.after(chooser);}
+     if(own)await pick(own);
+    }catch(error){idle();v2.ui.say(error?.message||'The conversation could not be opened.',{tone:'bad'});}
+   });
+   ctx.signal.addEventListener('abort',()=>{try{sourceReader?.dispose();}catch{}sourceReader=null;},{once:true});
+  }
+  /** The consent desk: comfortable sharing, accurate, the people in the piece and their consent, and the final yes. It is the
+      workspace's own desk. That desk puts itself on its Share screen by looking for two things on the page: which subject is
+      open at the Share stage, and the place the screen keeps for it. Here the step gives it both, and takes them away on leaving.
+      For anyone but Adrian it shows his decisions and offers none, by its own rule. */
+  function startConsent(e){
+   e.node.innerHTML='<p class="subj-quiet" role="status">Reading</p>';
+   (async()=>{
+    try{
+     actAsMe();
+     if(typeof root.current==='function'&&!root.current.subjectPage)throw new Error('The consent desk is already open elsewhere on this page.');
+     const open=Object.freeze({id,view:'record',viewedStage:11}),say=()=>open;say.subjectPage=true;root.current=say;
+     e.node.innerHTML='<div id="app" class="subj-desk"><div class="workspace"></div></div>';
+     await bring('consent');if(ctx.signal.aborted)return;
+     await root.arConsentDesk.load(id,{force:true});
+    }catch(error){if(!ctx.signal.aborted)e.node.innerHTML=`<p class="subj-quiet" role="alert">${esc(error?.message||'The consent desk could not be opened.')}</p>`;}
+   })();
+   ctx.signal.addEventListener('abort',()=>{if(root.current?.subjectPage)try{delete root.current;}catch{root.current=undefined;}e.node.replaceChildren();},{once:true});
+  }
+  /** The piece as readers will see it: the saved edition, read again each time he asks, drawn by the workspace's own reader.
+      Looking changes nothing. The reader comes in the same large file as the layout editor, so it too loads when asked for. */
+  function startAudience(e,binding,piece){
+   const scope={parentStudyId:id,rootBindingId:binding};
+   const idle=label=>{e.node.innerHTML=`<div class="subj-actions"><button type="button" class="subj-btn" data-subj-startaudience>${label}</button></div>`;};
+   idle('See it as readers will');
+   e.node.addEventListener('click',async ev=>{
+    const b=ev.target.closest('[data-subj-startaudience]');if(!b||b.disabled)return;b.disabled=true;const label=b.textContent;b.textContent='Reading the saved edition';
+    try{
+     const [v]=await Promise.all([v2.call('study.outputs',{...scope,selectedOutputId:piece}),bring('arrange')]);if(ctx.signal.aborted)return;
+     if(v?.scope?.parentStudyId!==id||v.scope.rootBindingId!==binding||v.documentId!==binding||v.output?.id!==piece)throw new Error('The reader returned a different edition. Nothing is shown.');
+     if(!['article','carousel'].includes(v.output.kind)||typeof root.ArStudyOutputHost?.mountStudyAudience!=='function')throw new Error('This kind of piece has no reader view on this page yet.');
+     try{e.instance?.destroy?.();}catch{}e.instance=null;
+     const bar=document.createElement('div');bar.className='subj-actions';bar.innerHTML='<button type="button" class="v2-ghost" data-subj-startaudience>Read it again as it is now</button><button type="button" class="v2-ghost" data-subj-closeaudience>Close</button>';
+     const target=document.createElement('div');target.className='subj-reads';target.setAttribute('aria-label','As readers will see it');
+     e.node.replaceChildren(bar,target);e.instance=root.ArStudyOutputHost.mountStudyAudience(target,v);
+    }catch(error){b.disabled=false;b.textContent=label;v2.ui.say(error?.message||'The reader view could not be opened.',{tone:'bad'});}
+   });
+   e.node.addEventListener('click',ev=>{if(!ev.target.closest('[data-subj-closeaudience]'))return;try{e.instance?.destroy?.();}catch{}e.instance=null;idle('See it as readers will');e.node.querySelector('button')?.focus({preventScroll:true});});
+  }
+  ctx.signal.addEventListener('abort',()=>{try{root.arSimmer?.close?.();}catch{}for(const e of embeds.values()){const i=e.instance;if(!i)continue;try{Promise.resolve(i.flush?.()).catch(()=>{}).finally(()=>{try{i.destroy?.();}catch{}});}catch{}}embeds.clear();});
+  /** Advanced is hidden for now. A step whose only tools were links there says plainly that its tool is not on this page yet. */
+  const toAdvanced=a=>(a.getAttribute('href')||'').startsWith('/document-study')&&!a.hasAttribute('data-subj-capture');
+  function soon(sec){
+   for(const box of sec.querySelectorAll('.subj-links,.subj-actions'))box.toggleAttribute('data-subj-empty',![...box.children].some(x=>!(x.tagName==='A'&&toAdvanced(x))));
+   const body=[...sec.children].filter(x=>x.tagName!=='HEADER'&&!x.matches('.subj-back,[data-subj-empty]'));
+   const covered=new Set([...sec.querySelectorAll('[data-subj-covers]')].flatMap(x=>x.dataset.subjCovers.split(' ')));
+   const gone=[...new Set([...sec.querySelectorAll('a[href]')].filter(toAdvanced).filter(x=>!covered.has(x.dataset.subjHandoff)).map(x=>x.textContent.trim().replace(/ in Advanced$/,'')).filter(Boolean))];
+   if(!body.length)sec.insertAdjacentHTML('beforeend','<p class="subj-quiet" data-subj-soon>This step has no tool on this page yet. It is being built here.</p>');
+   // Nothing is hidden silently: what still lives only in Advanced is named, so a step never looks finished when it is not.
+   else if(gone.length)sec.insertAdjacentHTML('beforeend',`<p class="subj-quiet" data-subj-soon>Not on this page yet: ${esc(gone.join(', '))}.</p>`);
+  }
+  /** One thing he has, opened where it is: a note or a transcript to read, a photograph at full width, a link to follow. */
+  function readerOf(sid){
+   const r=st.reader;if(!r||r.sec!==sid)return '';
+   const f=r.file,head=`<header><b>${esc(r.title||'Untitled')}</b><button type="button" class="v2-ghost" data-subj-readclose>Close</button></header>`;
+   let body='<p class="subj-quiet" role="status">Reading</p>';
+   if(r.kind==='photos')body=`<img src="/api/sources/blob?id=${encodeURIComponent(r.id)}" alt="${esc(r.title||'')}">`;
+   else if(f&&f.__error)body=`<p class="subj-quiet" role="alert">${esc(f.__error?.message||'This could not be read.')}</p>`;
+   else if(f){const text=String(f.text||f.body||'').trim(),url=/^https?:\/\//.test(f.url||'')?f.url:'';
+    body=(url?`<p><a class="subj-link" href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}${icon('chev')}</a></p>`:'')+(text?`<div class="subj-readtext">${text.split(/\n{2,}/).map(p=>`<p>${esc(p)}</p>`).join('')}</div>`:url?'':'<p class="subj-quiet">There are no words in this one.</p>');}
+   return `<article class="subj-reader" data-subj-reader tabindex="-1" aria-label="${esc(r.title||'Reading')}">${head}${body}</article>`;
+  }
+  function openReader(sec,id,title,kind){
+   if(st.reader?.id===id&&st.reader.sec===sec){st.reader=null;paintNow();return;}
+   const r=st.reader={sec,id,title,kind,file:null};paintNow();
+   secOf(sec)?.querySelector('[data-subj-reader]')?.scrollIntoView?.({block:'nearest',behavior:calm()?'auto':'smooth'});
+   if(kind!=='photos')call('sources.file.get',{id}).then(f=>{if(st.reader!==r||ctx.signal.aborted)return;r.file=f||{__error:{message:'This could not be read.'}};paintNow();});
+  }
+  const calm=()=>!!root.matchMedia?.('(prefers-reduced-motion:reduce)').matches;
+  /** Bring a step's section to the top of the window. The side list holds still until the page has arrived. */
+  function goTo(sid,smooth=true){const sec=secOf(sid);if(!sec)return;st.hold=Date.now()+1500;sec.scrollIntoView?.({block:'start',behavior:smooth&&!calm()?'smooth':'auto'});}
+  /** Once, when he comes back to a step (the address or this tab remembers it), the page goes to it. A page opened fresh stays at the top. */
+  function place(){
+   if(st.placed||!st.standing)return;st.placed=true;
+   if(!st.came)return;
+   const y=st.backY,go=()=>{if(ctx.signal.aborted||st.moved)return;st.hold=Date.now()+400;if(y!=null)root.scrollTo?.(0,y);else if(st.open&&st.open!==current().steps[0]?.id)secOf(st.open)?.scrollIntoView?.({block:'start',behavior:'auto'});};
+   // Again once the records are in, since the sections grow as they arrive; never after he has moved the page himself.
+   go();Promise.all(Object.values(st.pend)).then(()=>setTimeout(go,60));
+   for(const ev of ['wheel','touchmove','keydown','pointerdown'])root.addEventListener(ev,()=>{st.moved=true;},{once:true,passive:true,signal:ctx.signal});
+  }
+  /** The side list follows the page: the step whose section has reached the top of the window is the current one. */
+  let keep=null;
+  function spy(){
+   if(ctx.signal.aborted||st.zoom||Date.now()<st.hold)return;
+   const secs=[...page.querySelectorAll('[data-subj-sec]')];if(!secs.length)return;
+   const line=(parseFloat(root.getComputedStyle(document.documentElement).getPropertyValue('--v2-top'))||48)+140;
+   let now=secs[0];for(const s of secs)if(s.getBoundingClientRect().top<=line)now=s;
+   const sid=now.dataset.subjSec;if(sid===st.open)return;
+   st.open=sid;clearTimeout(keep);keep=setTimeout(()=>{if(!ctx.signal.aborted)remember();},300);paintNow();
+  }
+  const arrived=()=>{st.hold=0;};
+  root.addEventListener('scroll',spy,{passive:true});root.addEventListener('scrollend',arrived);
+  ctx.signal.addEventListener('abort',()=>{root.removeEventListener('scroll',spy);root.removeEventListener('scrollend',arrived);clearTimeout(keep);document.documentElement.style.overflow='';});
+  /** Open one section to the whole window, or fold it back. The page behind does not move, so he lands where he was. */
+  function setZoom(sid){
+   const was=st.zoom,box=$('[data-subj-secs]');
+   if(sid&&!was){st.zoomY=root.scrollY||0;const sec=secOf(sid);if(sec){const hold=document.createElement('div');hold.className='subj-hold';hold.dataset.subjHold='';hold.style.height=sec.offsetHeight+'px';sec.before(hold);}}
+   st.zoom=sid||null;document.documentElement.style.overflow=st.zoom?'hidden':'';// the page behind holds still
+   if(sid){st.open=sid;remember();}
+   paintNow();
+   const sec=secOf(sid||was);
+   if(!sid){box?.querySelector('[data-subj-hold]')?.remove();st.hold=Date.now()+400;root.scrollTo?.(0,st.zoomY);sec?.querySelector('h2')?.focus({preventScroll:true});return;}
+   if(sec){sec.scrollTop=0;sec.querySelector('h2')?.focus({preventScroll:true});}
+  }
+  /** Choose the look without leaving the page. A look is kept with a Carousel, so the choice is set on each of this subject's. */
+  function chooseLook(){
+   const s=st.standing;if(!s)return;
+   const plans=(s.forms||[]).filter(f=>f.kind==='instagram'),now=s.look||null,list=st.looks.filter(l=>l.drawable!==false);
+   const why=plans.length?`The look is kept with this subject's ${plans.length===1?'Carousel':'Carousels'}. You stay on this page.`:'A look is kept with a Carousel drawn in the slide studio, and this subject has none yet. Add a Carousel, then choose its look here.';
+   const rows=list.map(l=>`<button type="button" data-subj-setlook="${esc(l.id)}" aria-pressed="${l.id===now}"${plans.length?'':' disabled'}><b>${esc(l.name)}</b>${l.description?`<span>${esc(l.description)}</span>`:''}${l.id===now?'<em>In use</em>':''}</button>`).join('');
+   const body=`<p class="subj-quiet">${esc(why)}</p><div class="subj-kinds">${rows||'<p class="subj-quiet">The looks could not be read.</p>'}</div><p class="subj-lookmore"><a class="subj-link" data-subj-lookedit href="${esc(v2.href('looks',{},now?{look:now}:{}))}">Make and change looks in Looks${icon('chev')}</a></p>`;
+   const sheet=v2.ui.sheet({title:'Choose a look',body});sheet.el.classList.add('subj-sheetdlg');
+   ctx.signal.addEventListener('abort',()=>sheet.close(),{once:true});// leaving the page closes it
+   sheet.body.addEventListener('click',async e=>{
+    if(e.target.closest('[data-subj-lookedit]')){sheet.close();return;}
+    const b=e.target.closest('[data-subj-setlook]');if(!b||b.disabled||st.busy)return;
+    const look=b.dataset.subjSetlook;sheet.close();
+    await act(['planRecords'],async()=>{
+     for(const f of plans){const p=await v2.call('instagram.plan.get',{id:f.id});if(p?.look===look)continue;await v2.call('instagram.look',{id:f.id,...v2.expect(p),look});}
+     v2.ui.say(lookName(look)+' look chosen.',{tone:'good'});
+    });
+   });
   }
   /** A hand-off link, named in HANDOFFS so its label and its section cannot drift apart. */
   const out=(key,form,cls='subj-link')=>`<a class="${cls}" data-subj-handoff="${key}" href="${key==='write'?writeHref(form):screenHref(key,form)||handoffHref(HANDOFFS[key].section,form)}" title="${key==='write'&&form?.kind==='article'?'Opens Write':ownScreen(key,form)?'Opens '+SCREEN_OF[key][0].toUpperCase()+SCREEN_OF[key].slice(1):(mag()?'Opens Advanced. A story cannot be opened from a link there, so find it on its Magazine board':'Opens in '+where())}">${esc(ownScreen(key,form)&&SCREEN_LABEL[key]||said(HANDOFFS[key].label))}${cls==='subj-link'?icon('chev'):''}</a>`;
@@ -762,7 +1040,7 @@
     case 'dish':return toolDish(s,steps,form);
     case 'form':return waitsFor(s,steps)+`<div class="subj-actions"><button type="button" class="pri" data-subj-add>Add a form</button></div>`+links(own(s,form));
     case 'words':return toolWords(s,form);
-    case 'photos':return waitsFor(s,steps)+links(...(s.missing?[out('addPhotos',form)]:[]),out('media',form),out('arrange',form));
+    case 'photos':return waitsFor(s,steps)+borrowed('photos','media addPhotos')+(form?.kind==='article'&&/^out:/.test(form.key||'')?borrowed('arrange','arrange',form.id):'')+links(...(s.missing?[out('addPhotos',form)]:[]),out('media',form),out('arrange',form));
     case 'check':return toolCheck(s,steps,form);
     case 'story':return toolStory(s,form);
     case 'slides':return form?.kind==='instagram'?toolSlides(s,form,steps):outputStudio(form)?toolOutputSlides(s,form):links(own(s,form));
@@ -796,6 +1074,7 @@
    const known=['tree','brief','planRecords'].every(k=>rec(k)!==undefined);
    const m=known?materialFrom({tree:rec('tree'),brief:rec('brief'),planRecords:Array.isArray(rec('planRecords'))?rec('planRecords'):[]},ids().projectId):null;
    const photos=m?m.items.filter(x=>x.kind==='photos'):[],rest=m?m.items.filter(x=>x.kind!=='photos'):[];
+   const capList=st.zoom==='have'?Infinity:11,capTray=st.zoom==='have'?Infinity:12;
    const KIND={recordings:'Recording',notes:'Your note',links:'Link'},IC={recordings:'mic',notes:'note',links:'note'};
    const jobs=ok(rec('recordings'))?rec('recordings'):null,byJob=new Map((jobs?.jobs||[]).map(j=>[j.sourceId,j])),done=new Set(registeredJobs(rec('tree'),rec('brief')));
    // A transcript kept as a source (by the button, or in Advanced) is itself part of what he has.
@@ -816,11 +1095,11 @@
     const b=keptSure?cs.block():'';
     return confirmMarkup()+b;
    };
-   const list=rest.length?`<ul class="subj-have">${rest.slice(0,11).map(x=>`<li>${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${x.recordingId?'Transcript':KIND[x.kind]}</small>${where(x)}</li>`).join('')}${rest.length>11?`<li><small>and ${rest.length-11} more</small></li>`:''}</ul>`:'';
-   const tray=photos.length?`<div class="subj-tray">${photos.slice(0,12).map(x=>`<img src="/api/sources/blob?id=${encodeURIComponent(x.id)}" alt="${esc(x.title)}" loading="lazy">`).join('')}${photos.length>12?`<span>+${photos.length-12}</span>`:''}</div>`:'';
+   const list=rest.length?`<ul class="subj-have">${rest.slice(0,capList).map(x=>`<li data-subj-src="${esc(x.id)}" data-title="${esc(x.title)}" data-kind="${x.kind}" tabindex="0" role="button">${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${x.recordingId?'Transcript':KIND[x.kind]}</small>${where(x)}</li>`).join('')}${rest.length>capList?`<li><small>and ${rest.length-capList} more. Full size shows them all.</small></li>`:''}</ul>`:'';
+   const tray=photos.length?`<div class="subj-tray">${photos.slice(0,capTray).map(x=>`<img data-subj-src="${esc(x.id)}" data-title="${esc(x.title)}" data-kind="photos" tabindex="0" role="button" src="/api/sources/blob?id=${encodeURIComponent(x.id)}" alt="${esc(x.title)}" loading="lazy">`).join('')}${photos.length>capTray?`<span>+${photos.length-capTray}</span>`:''}</div>`:'';
    const any=s.state==='done'||list||tray;
-   if(!any)return (!known?reading():'')+ways();
-   return (!known?reading():'')+list+csPanels()+tray+`<a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${handoffHref('material',null)}" title="${wayTip()}">${icon('plus')}Add a recording, note, link or photographs</a>`;
+   if(!any)return (!known?reading():'')+ways()+borrowed('source','readSources readTranscript');
+   return (!known?reading():'')+list+csPanels()+tray+borrowed('source','readSources readTranscript')+`<a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${handoffHref('material',null)}" title="${wayTip()}">${icon('plus')}Add a recording, note, link or photographs</a>`;
   }
   function toolTranscript(s,form){
    const plans=rec('planRecords'),flags=[];
@@ -860,7 +1139,7 @@
    const right=dishes?`<section><p class="subj-label">It could be</p><ul class="subj-dishes">${dishes}</ul></section>`:'';
    const said=sentence||dir,editing=st.editDish!==undefined;
    const edit=editing?`<form class="subj-dishform" data-subj-dishform><label for="subj-dish">The dish, in your words</label><textarea id="subj-dish" rows="3" data-subj-dishtext>${esc(st.editDish)}</textarea><div class="subj-actions"><button type="submit" class="pri">Keep it</button><button type="button" class="v2-ghost" data-subj-dishcancel>Cancel</button></div></form>`
-    :`<p class="subj-label">The dish, in your words</p>${said?`<blockquote class="subj-quote big">${esc(said)}</blockquote>`:`<p class="subj-quiet">Not said yet.</p>`}<div class="subj-actions">${mag()?'':`<a class="subj-btn" data-subj-handoff="dishChange" href="${handoffHref('direction',form)}" title="Opens Direction in Advanced">Say it again</a>`}<button type="button" class="subj-btn" data-subj-dishedit>${said?'Edit':'Write it'}</button><span class="subj-sp"></span>${out('board',form,'subj-btn').replace('</a>',icon('right')+'</a>')}</div>`;
+    :`<p class="subj-label">The dish, in your words</p>${said?`<blockquote class="subj-quote big">${esc(said)}</blockquote>`:`<p class="subj-quiet">Not said yet.</p>`}<div class="subj-actions">${mag()?'':`<a class="subj-btn" data-subj-handoff="dishChange" href="${handoffHref('direction',form)}" title="Opens Direction in Advanced">Say it again</a>`}${mag()?'':'<button type="button" class="subj-btn pri" data-subj-borrow="simmer" data-subj-covers="board dishChange dishWrite">Open the Simmer board</button>'}<button type="button" class="subj-btn" data-subj-dishedit>${said?'Edit':'Write it'}</button><span class="subj-sp"></span>${out('board',form,'subj-btn').replace('</a>',icon('right')+'</a>')}</div>`;
    return (rec('board')===undefined?reading():'')+waitsFor(s,steps)+((left||right)?`<div class="subj-sim">${left?`<div>${left}</div>`:''}${right?`<div>${right}</div>`:''}</div>`:'')+`<div class="subj-named">${edit}</div>`;
   }
   function toolWords(s,form){
@@ -871,8 +1150,8 @@
    return (rec('read')===undefined?reading():'')+(sheet||list?`<div class="subj-words">${sheet}<div>${list}</div></div>`:'')+`<div class="subj-actions"><a class="subj-btn pri" data-subj-handoff="write" href="${write}">${HANDOFFS.write.label}${icon('right')}</a>${blocks.length||mag()&&s.state!=='todo'?`<a class="subj-btn" data-subj-handoff="read" href="${screenHref('read',form)||handoffHref('read',form)}">${HANDOFFS.read.label}</a>`:''}</div>`;
   }
   function toolCheck(s,steps,form){
-   const c=ok(rec('check'))?rec('check'):null,list=(c?.issues||[]).slice(0,3).map(i=>i.message).filter(Boolean);
-   const rows=list.length?`<ul class="subj-list">${list.map(m=>`<li><span>${esc(m)}</span></li>`).join('')}</ul>`:'';
+   const c=ok(rec('check'))?rec('check'):null,all=(c?.issues||[]).map(i=>i.message).filter(Boolean),list=st.zoom==='check'?all:all.slice(0,3);
+   const rows=list.length?`<ul class="subj-list">${list.map(m=>`<li><span>${esc(m)}</span></li>`).join('')}${all.length>list.length?`<li><small>and ${all.length-list.length} more. Full size shows them all.</small></li>`:''}</ul>`:'';
    return waitsFor(s,steps)+rows+links(out(c?'checkOpen':'checkRun',form));
   }
   const planOf=form=>{const p=rec('planRecords');return form?.kind==='instagram'&&Array.isArray(p)?p.filter(ok).find(x=>x.id===form.id)||null:null;};
@@ -902,19 +1181,20 @@
   }
   function toolYes(s,form){
    const y=ok(rec('desk'))?rec('desk'):null;
-   if(!y)return (rec('desk')===undefined?reading():'')+links(out('desk',form));
+   if(!y)return (rec('desk')===undefined?reading():'')+borrowed('consent','desk')+links(out('desk',form));
    const STATE={'not-asked':'Not asked','asked':'Asked','yes':'Said yes','yes-with-changes':'Said yes, with changes','no':'Said no'};
    const people=(y.people||[]).map(p=>{const state=p.consent?.state||'not-asked',draftable=state==='not-asked'&&!p.request;
     return `<li><div class="subj-person"><span><b>${esc(p.name)}</b><small>${esc((p.appears||[]).join(', '))}</small></span><em class="subj-by" data-state="${esc(state)}">${esc(p.request&&state==='not-asked'?'Request drafted':STATE[state]||state)}</em></div>${draftable?`<form class="subj-draft" data-subj-draftform="${esc(p.id)}"><label for="subj-draft-${esc(p.id)}">Draft the request to ${esc(p.name)}</label><textarea id="subj-draft-${esc(p.id)}" rows="3" data-subj-draft="${esc(p.id)}">${esc(st.drafts[p.id]||'')}</textarea><button type="submit">Save the draft</button></form>`:''}</li>`;}).join('');
    const reasons=(y.release?.reasons||[]).length&&!(y.people||[]).length?`<ul class="subj-list">${y.release.reasons.map(r=>`<li>${mark('todo')}<span>${esc(r)}</span></li>`).join('')}</ul>`:'';
-   return (people?`<ul class="subj-people">${people}</ul>`:'')+reasons+links(out('desk',form));
+   return borrowed('consent','desk')+(people?`<ul class="subj-people">${people}</ul>`:'')+reasons+links(out('desk',form));
   }
   /** Publish: what it waits for, each with Open, as the sample's two lines (here the steps this form really has). */
   function toolPublish(s,steps,form){
    const need=['yes','check','slides','posttext'].map(id=>steps.find(x=>x.id===id)).filter(Boolean);
    const rows=need.map(t=>{const tv=stepView(t);return `<li>${tv.mark?mark(tv.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<span>${esc(t.name)}</span><button type="button" class="subj-link" data-subj-step="${esc(t.id)}">Open${icon('chev')}</button></li>`;}).join('');
    const posting=['instagram','post'].includes(form?.kind)?`<p class="subj-quiet">Posting is not connected.</p>`:'';
-   return (rows?`<ul class="subj-waitl">${rows}</ul>`:'')+posting+links(out('outputs',form),out('audience',form));
+   const reader=/^out:/.test(form?.key||'')&&['article','carousel'].includes(form.kind)?borrowed('audience','audience',form.id):'';
+   return (rows?`<ul class="subj-waitl">${rows}</ul>`:'')+posting+reader+links(out('outputs',form),out('audience',form));
   }
 
   // ---------- the slides, drawn by the app's own renderer ----------
@@ -948,27 +1228,46 @@
      // Reading the proof (transcript-check.id) holds a writer lock only for the length of that one read and leaves the transcript's mapping in place; recordings.source (Adrian only) then keeps it as a source.
      act(['recordings','tree','brief'],async()=>{let kept;try{const check=await v2.call('transcript-check.id',{id:job});kept=await v2.call('recordings.source',{jobId:job,expected:check.expected});}catch(error){throw new Error(sourceRefusal(error));}await keepWithSubject(kept?.source?.id);v2.ui.say('The transcript is now one of your sources.',{tone:'good'});});return;}
     act(['recordings','tree'],async()=>{await v2.call('.transcription.id.action',{id:job,action});v2.ui.say(action==='start'?'The transcript is being made.':'Trying the transcript again.',{tone:'good'});});return;}
+   if(e.target.closest('[data-subj-look]')){e.preventDefault();chooseLook();return;}
+   if(e.target.closest('[data-subj-readclose]')){e.preventDefault();const s=st.reader?.sec;st.reader=null;paintNow();secOf(s)?.querySelector('h2')?.focus({preventScroll:true});return;}
+   const bw=e.target.closest('[data-subj-borrow]');
+   if(bw){e.preventDefault();if(bw.dataset.subjBorrow==='simmer')openSimmer(bw);return;}
+   const src=e.target.closest('[data-subj-src]');
+   if(src&&!e.target.closest('a,button,input,textarea,select,label')){e.preventDefault();openReader(src.closest('[data-subj-sec]')?.dataset.subjSec,src.dataset.subjSrc,src.dataset.title||'',src.dataset.kind||'');return;}
+   const z=e.target.closest('[data-subj-zoom]');
+   if(z&&(z.tagName==='BUTTON'||!st.zoom)&&!e.target.closest('a,input,textarea,select,label,[data-subj-embed]')){e.preventDefault();setZoom(st.zoom===z.dataset.subjZoom?null:z.dataset.subjZoom);return;}
    const b=e.target.closest('[data-subj-step]');
-   if(b){e.preventDefault();openStep(b.dataset.subjStep);return;}
+   if(b){e.preventDefault();openStep(b.dataset.subjStep,b);return;}
    const f=e.target.closest('[data-subj-form]');
    if(f){chooseFormByKey(f.dataset.subjForm);return;}
-   if(e.target.closest('[data-subj-add]'))addForm();
-   if(e.target.closest('[data-subj-dishedit]')){const b=ok(rec('board'))?rec('board'):null,n=b?.forming?.named,d=rec('direction');st.editDish=(typeof n==='string'?n:n?.text)||(ok(d)?adoptedRaw(d.body):'');st.last.panel='';paintNow();$('[data-subj-dishtext]')?.focus();}
-   if(e.target.closest('[data-subj-dishcancel]')){delete st.editDish;st.last.panel='';paintNow();}
+   if(e.target.closest('[data-subj-add]')){addForm();return;}
+   const sec=e.target.closest('[data-subj-sec]');
+   if(sec&&!e.target.closest('a,button,input,textarea,select,label,summary,[data-subj-reader],[data-subj-embed],[data-cs-confirm],[contenteditable]')&&!String(root.getSelection?.()||'')){
+    const live=x=>!(x.tagName==='A'&&toAdvanced(x))&&!x.disabled&&!x.matches('[data-subj-zoom],[data-subj-readclose]');
+    const row=e.target.closest('li,.subj-sheet,.subj-inset,.subj-one,.subj-frame,.subj-quote');
+    const own=row&&sec.contains(row)?[...row.querySelectorAll('a[href],button')].find(live):null;
+    const way=own||[...sec.querySelectorAll(':scope>.subj-actions a[href],:scope>.subj-actions button,:scope>.subj-links a[href],:scope>.subj-links button,:scope>*>.subj-actions a[href],:scope>*>.subj-actions button')].find(live);
+    if(way&&row){e.preventDefault();way.click();return;}
+    if(!st.zoom){e.preventDefault();setZoom(sec.dataset.subjSec);return;}
+   }
+   if(e.target.closest('[data-subj-dishedit]')){const b=ok(rec('board'))?rec('board'):null,n=b?.forming?.named,d=rec('direction');st.editDish=(typeof n==='string'?n:n?.text)||(ok(d)?adoptedRaw(d.body):'');delete st.last['panel:dish'];paintNow();$('[data-subj-dishtext]')?.focus();}
+   if(e.target.closest('[data-subj-dishcancel]')){delete st.editDish;delete st.last['panel:dish'];paintNow();}
   });
-  function openStep(sid){
-   if(sid!==st.open)delete st.editDish;
+  function openStep(sid,from=null){
+   const list=!!from?.closest?.('.subj-row');// asked now: painting replaces the row he pressed
+   if(st.zoom)setZoom(null);
    st.open=sid;need(sid);remember();paintNow();
-   // Focus stays on the step he pressed; the open tool is the next thing in the tab order.
-   $(`.subj-row[data-step="${cssq(sid)}"]>[data-subj-step]`)?.focus({preventScroll:true});
-   if(phone.matches)$('[data-subj-panel]')?.scrollIntoView?.({block:'nearest'});
+   goTo(sid);
+   // From the side list, focus stays on the step he pressed. From anywhere else it goes to the section he asked for.
+   if(list)$(`.subj-row[data-step="${cssq(sid)}"]>[data-subj-step]`)?.focus({preventScroll:true});
+   else secOf(sid)?.querySelector('h2')?.focus({preventScroll:true});
   }
   /** He chose another form: its own next step opens (his act, so it may move the open step). */
   function chooseFormByKey(key){
    const f=(st.standing?.forms||[]).find(x=>x.key===key);if(!f)return;
    st.form=key;st.open=firstOpen(stepsOfForm(st.standing,f),f);if(st.open)need(st.open);remember();paintNow();$(`[data-subj-form="${cssq(key)}"]`)?.focus();
   }
-  page.addEventListener('keydown',e=>{if(e.key==='Escape'&&cf.job&&cf.state!=='busy'&&e.target.closest?.('[data-cs-confirm]')){e.preventDefault();e.stopPropagation();closeConfirm();}});
+  page.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches?.('[data-subj-src]')){e.preventDefault();e.target.click();return;}if(e.key==='Escape'&&st.reader&&e.target.closest?.('[data-subj-reader]')){e.preventDefault();e.stopPropagation();const s=st.reader.sec;st.reader=null;paintNow();secOf(s)?.querySelector('h2')?.focus({preventScroll:true});return;}if(e.key==='Escape'&&st.zoom&&!(cf.job&&e.target.closest?.('[data-cs-confirm]'))){e.preventDefault();setZoom(null);return;}if(e.key==='Escape'&&cf.job&&cf.state!=='busy'&&e.target.closest?.('[data-cs-confirm]')){e.preventDefault();e.stopPropagation();closeConfirm();}});
   page.addEventListener('input',e=>{const t=e.target;if(t.dataset.csName){cf.names[t.dataset.csName]=t.value;return;}if(t.dataset.subjDraft)st.drafts[t.dataset.subjDraft]=t.value;if(t.matches('[data-subj-say]'))st.sayLine=t.value;if(t.matches('[data-subj-dishtext]'))st.editDish=t.value;});
   page.addEventListener('submit',async e=>{
    const form=e.target;e.preventDefault();if(st.busy)return;
@@ -980,7 +1279,7 @@
    if(form.matches('[data-subj-dishform]')){
     const text=(st.editDish||'').trim();
     if(!text){v2.ui.say('Say the dish first.',{tone:'warn'});return;}
-    await act(['board','direction'],async()=>{const b=await v2.call('simmer.board.get',{subject:id});await v2.call('simmer.dish',{subject:id,sentence:text,said:'typed',...v2.expect(b)});delete st.editDish;st.last.panel='';v2.ui.say('The dish is kept in your words.',{tone:'good'});});
+    await act(['board','direction'],async()=>{const b=await v2.call('simmer.board.get',{subject:id});await v2.call('simmer.dish',{subject:id,sentence:text,said:'typed',...v2.expect(b)});delete st.editDish;delete st.last['panel:dish'];v2.ui.say('The dish is kept in your words.',{tone:'good'});});
    }
    if(form.matches('[data-subj-sayform]')){
     const f=current().form,line=(st.sayLine||'').trim();if(f?.kind!=='instagram'||!line)return;
@@ -1033,7 +1332,7 @@
   }
 
   // First paint comes from the one command; the look's name and his direction sentence follow, each from one read.
-  call('looks',{}).then(r=>{if(!ok(r)||ctx.signal.aborted)return;st.look=new Map((r.looks||[]).map(l=>[l.id,l.name]));paintNow();});
+  call('looks',{}).then(r=>{if(!ok(r)||ctx.signal.aborted)return;st.looks=r.looks||[];st.look=new Map(st.looks.map(l=>[l.id,l.name]));paintNow();});
   ask('direction');ask('board');
   return refresh();
  }

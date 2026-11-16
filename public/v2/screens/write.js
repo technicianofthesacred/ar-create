@@ -139,7 +139,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   };
   const seg=MODES.map(([m,label])=>m===at?`<span aria-current="true">${label}</span>`:`<a href="${esc(v2.href(m+'/:id',{id},{piece:piece||undefined}))}">${label}</a>`).join('');
   return `<div class="wr-bar" data-wr-bar>
-    <a class="wr-back" href="${esc(v2.href('subject/:id',{id}))}" aria-label="Back to the subject">${icon('back')}<span>The subject</span></a>
+    <a class="wr-back" href="${esc(v2.href('subject/:id',{id}))}" aria-label="Back to the subject">${icon('back')}<span>Back to the subject</span></a>
     <nav class="wr-tabs" aria-label="Pieces of this subject">${forms.map(formTab).join('')}<a href="${esc(v2.href('subject/:id',{id}))}" aria-label="Add a piece on the subject page" title="Add a form on the subject page">${icon('plus')}</a></nav>
     <div class="wr-seg" role="group" aria-label="Write, Read or Check">${seg}</div>
     <span class="wr-sp"></span>
