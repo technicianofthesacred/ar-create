@@ -55,8 +55,9 @@ jobs:
     name: tests ${{ matrix.shard }} of ${{ needs.pick-runner.outputs.total }}
     needs: pick-runner
     runs-on: ${{ fromJSON(needs.pick-runner.outputs.runs_on) }}
-    # 25 minutes on either kind of runner. The Mac takes about 10-14 minutes for the whole suite.
-    timeout-minutes: 25
+    # The Mac runs the whole suite two files at a time: 19-20 minutes in three runs on 16 November,
+    # so it gets 35. Each GitHub-hosted part took 4-9 minutes, so 25 is ample there.
+    timeout-minutes: ${{ needs.pick-runner.outputs.total == '1' && 35 || 25 }}
     strategy:
       # Every part reports its own failures, so one run shows the whole list.
       fail-fast: false
