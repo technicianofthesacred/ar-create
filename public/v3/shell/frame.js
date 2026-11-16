@@ -238,7 +238,7 @@
  function openFind(){
   if(findSheet?.el?.isConnected){findSheet.el.querySelector('[name=q]')?.focus();return findSheet;}
   const body=doc.createElement('div');
-  body.innerHTML=`<form class="v2-find" role="search"><div class="v2-find-box">${icon('search')}<input name="q" type="search" autocomplete="off" maxlength="256" aria-label="Find a subject, or words in the Library" placeholder="A subject, or words in the Library"><button class="pri" type="submit">Find</button></div><p class="v2-find-note">Finds subjects by their names and the exact words in your Library. It cannot answer questions yet.</p><div class="v2-find-out" data-v2-find-out aria-live="polite"></div></form>`;
+  body.innerHTML=`<form class="v2-find" role="search"><div class="v2-find-box">${icon('search')}<input name="q" type="search" autocomplete="off" maxlength="256" aria-label="Find a subject, or words in the Library" placeholder="A subject, or words in the Library"><button class="pri ${coss({variant:'default',size:'sm'})}" type="submit">Find</button></div><p class="v2-find-note">Finds subjects by their names and the exact words in your Library. It cannot answer questions yet.</p><div class="v2-find-out" data-v2-find-out aria-live="polite"></div></form>`;
   const sheet=P.sheet({title:'Find',body,onClose:()=>{findSheet=null;}});sheet.el.dataset.v2Find='';findSheet=sheet;
   const form=body.querySelector('form'),out=body.querySelector('[data-v2-find-out]'),input=form.elements.q;let run=0,subjects=null;
   body.addEventListener('click',e=>{if(e.target.closest('a'))sheet.close();});

@@ -111,3 +111,41 @@
 .coss svg { display: block; flex-shrink: 0; }
 /* The app hides controls with the hidden attribute; coss's display rules must not undo that. */
 .coss[hidden] { display: none !important; }
+
+/* Focus, the coss way, across version three (Adrian, 16 November 2026: the hard bright outline was too loud).
+   The app drew a 2px solid line in the main text colour around whatever had focus, from about 80 separate rules.
+   One rule replaces them all: a soft ring in a quiet tone, slightly apart from the control, like coss's
+   focus-visible ring. The ID in the selector outranks every older rule, so none has to be edited. Only keyboard
+   focus and text fields show it; a mouse click on a button shows nothing, as before. */
+:root { --focus-ring: color-mix(in srgb, var(--ink) 28%, transparent); --focus-glow: color-mix(in srgb, var(--ink) 10%, transparent); }
+/* Inside the v2-controls layer: the app declares it first, so its important rules outrank every later sheet; here
+   the ID in each selector then outranks the older rules in the same layer. */
+@layer v2-controls {
+:is(#v2-app, #v3-frame, dialog.v2-sheet) :focus-visible {
+  outline: 2px solid var(--focus-ring) !important;
+  outline-offset: 2px !important;
+}
+/* Text fields and the boxes that wrap them: coss's input focus, an edge in the quiet tone and a soft glow. */
+:is(#v2-app, #v3-frame, dialog.v2-sheet) :is(input, textarea, select):focus-visible {
+  outline: none !important;
+  border-color: var(--focus-ring) !important;
+  box-shadow: 0 0 0 3px var(--focus-glow) !important;
+}
+:is(#v2-app, #v3-frame, dialog.v2-sheet) :is(.h3-find, .v2-find-box, .ui-group):focus-within {
+  outline: none !important;
+  border-color: var(--focus-ring) !important;
+  box-shadow: 0 0 0 3px var(--focus-glow) !important;
+}
+:is(#v2-app, #v3-frame, dialog.v2-sheet) :is(.h3-find, .v2-find-box) :is(input, textarea):focus-visible {
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* The current item in a list (the subject page's steps, the chosen form): coss marks it with a soft filled
+   background and slightly heavier text, never a bright ring. */
+:is(#v2-app, #v3-frame) .subj button.v2-current { box-shadow: none !important; background: color-mix(in srgb, var(--ink) 7%, transparent) !important; }
+:is(#v2-app, #v3-frame) .subj-form.on { border-color: color-mix(in srgb, var(--ink) 14%, transparent) !important; background: color-mix(in srgb, var(--ink) 5%, transparent) !important; }
+/* Pop-up sheets (New subject, Find): coss's dialog backdrop, dimmed and softly blurred, and its quiet edge. */
+dialog.v2-sheet { border-color: color-mix(in srgb, var(--ink) 10%, transparent) !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .25), 0 4px 6px -4px rgba(0, 0, 0, .2) !important; }
+dialog.v2-sheet::backdrop { background: rgba(10, 9, 7, .45) !important; backdrop-filter: blur(4px); }
+}
