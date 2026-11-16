@@ -164,4 +164,8 @@ dialog.v2-sheet::backdrop { background: rgba(10, 9, 7, .45) !important; backdrop
 /* The chosen chip in a row of choices (Looks' brand pills): coss's selected segment, a soft raised fill and a quiet
    edge, instead of a ring in the accent colour. */
 :is(#v2-app, #v3-frame) .lk .lk-pills button[aria-pressed="true"] { background: color-mix(in srgb, var(--ink) 9%, transparent) !important; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 14%, transparent) !important; }
+
+/* Looks' pair of actions under a brand ("Change it by talking", "Open the folder"): coss's button-group spacing, so
+   the pair stays on one line in the side column. */
+:is(#v2-app, #v3-frame) .lk .lk-row { gap: 4px !important; }
 }
