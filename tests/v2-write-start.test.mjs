@@ -35,7 +35,7 @@ async function newSubject(base){
  assert.equal(r.status,200);
  return id;
 }
-async function livePage(base,id,{search='',slowSave=0,slowCreate=0,failCreate=false,createStatus=409,query=''}={}){
+async function livePage(base,id,{search='',slowSave=0,slowCreate=0,beforeCreate,failCreate=false,createStatus=409,query=''}={}){
  const html=read('public/v2/index.html');
  const dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:base+'/v2/index.html'+search+'#/write/'+id+query,runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,calls=[];windows.push(w);
@@ -44,7 +44,7 @@ async function livePage(base,id,{search='',slowSave=0,slowCreate=0,failCreate=fa
  w.HTMLDialogElement.prototype.showModal||=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close||=function(){this.removeAttribute('open');};
  w.fetch=async(input,options={})=>{
   const u=new URL(String(input),w.location.href),method=options.method||'GET',entry={path:u.pathname,method,body:options.body?JSON.parse(options.body):null,status:0};calls.push(entry);
-  if(u.pathname==='/api/study/outputs/create'){if(slowCreate)await settle(slowCreate);if(failCreate){entry.status=createStatus;return {ok:false,status:createStatus,text:async()=>JSON.stringify({error:createStatus===403?'Only Adrian can do this.':'This changed since it was opened here. Invented refusal.'})};}}
+  if(u.pathname==='/api/study/outputs/create'){if(beforeCreate)await beforeCreate();if(slowCreate)await settle(slowCreate);if(failCreate){entry.status=createStatus;return {ok:false,status:createStatus,text:async()=>JSON.stringify({error:createStatus===403?'Only Adrian can do this.':'This changed since it was opened here. Invented refusal.'})};}}
   const r=await fetch(base+u.pathname+u.search,{method,headers:{...options.headers,...(method!=='GET'?{Origin:base}:{})},body:options.body});
   const text=await r.text();entry.status=r.status;
   if(slowSave&&u.pathname==='/api/study-draft/save')await settle(slowSave);
@@ -183,19 +183,27 @@ test('typing steadily across the moment the Article is made loses no letter: the
 
 test('when another tab made the Article first, this tab opens it at once with no message',{timeout:90000},async()=>{
  const {base}=await theWorld(),id=await newSubject(base);
- const pg=await livePage(base,id,{slowSave:0,slowCreate:1200});
+ const {promise:otherTabCommitted,resolve:releaseCreate}=Promise.withResolvers();
+ const pg=await livePage(base,id,{beforeCreate:()=>otherTabCommitted});
  const box=pg.doc.querySelector('textarea.wr-ed');
- type(pg.w,box,'Words from the first tab.');
- await until(()=>pg.calls.some(c=>c.path==='/api/study-draft/save'&&c.status===200)&&savedLine(pg.doc)==='Starting the Article',20000);
- // the other tab makes it while this one waits
- const binding=(await getJSON(base,'/api/subject/standing?parentStudyId='+id)).facts.bindingId,sc={rootBindingId:binding,parentStudyId:id};
- const native=await getJSON(base,`/api/study-draft/read?bindingId=${binding}&parentStudyId=${id}`),outs=await getJSON(base,`/api/study/outputs?rootBindingId=${binding}&parentStudyId=${id}`);
- const r=await fetch(base+'/api/study/outputs/create',{method:'POST',headers:{'content-type':'application/json',Origin:base},body:JSON.stringify({...sc,operationId:crypto.randomUUID(),kind:'article',sourceBindingId:binding,expectedNative:native.expected,expectedOutput:outs.expectedOutput})});
- assert.equal(r.status,200);
+ let winningPiece;
+ const createCalls=()=>pg.calls.filter(c=>c.path==='/api/study/outputs/create');
+ try{
+  type(pg.w,box,'Words from the first tab.');
+  // The first tab has read the old revisions and sent its create. Hold that
+  // request until the other tab has actually committed, even on a busy host.
+  await until(()=>pg.calls.some(c=>c.path==='/api/study-draft/save'&&c.status===200)&&savedLine(pg.doc)==='Starting the Article'&&createCalls()[0]?.status===0,20000);
+  const binding=(await getJSON(base,'/api/subject/standing?parentStudyId='+id)).facts.bindingId,sc={rootBindingId:binding,parentStudyId:id};
+  const native=await getJSON(base,`/api/study-draft/read?bindingId=${binding}&parentStudyId=${id}`),outs=await getJSON(base,`/api/study/outputs?rootBindingId=${binding}&parentStudyId=${id}`);
+  const r=await fetch(base+'/api/study/outputs/create',{method:'POST',headers:{'content-type':'application/json',Origin:base},body:JSON.stringify({...sc,operationId:crypto.randomUUID(),kind:'article',sourceBindingId:binding,expectedNative:native.expected,expectedOutput:outs.expectedOutput})});
+  assert.equal(r.status,200);
+  winningPiece=(await r.json()).view.output.id;
+ }finally{releaseCreate();}
  await until(()=>/[?&]piece=/.test(pg.w.location.hash),10000);
+ assert.equal(new URLSearchParams(pg.w.location.hash.split('?')[1]).get('piece'),winningPiece,'opens the other tab’s Article');
  assert.deepEqual(pg.said,[],'no message');
  assert.equal((await articlesOf(base,id)).length,1);
- assert.equal(pg.calls.filter(c=>c.path==='/api/study/outputs/create').length<=1,true);
+ assert.equal(createCalls().length,1,'the out-of-date create was tried only once');
 });
 
 test('a refused create is said once, the words stay saved, and the retries are quiet; it succeeds when the server accepts',{timeout:90000},async()=>{
