@@ -85,13 +85,18 @@ jobs:
         shell: bash
         env:
           SHARD: ${{ matrix.shard }}/${{ needs.pick-runner.outputs.total }}
+          # The daily-driver Mac also runs real Chromium, servers and JSDOM fixtures. At node's
+          # default (9 files at once on its 10 cores) 24 of 28 Mac runs between 8 and 16 November
+          # failed, each on a different heavy test ("workspace is offline", "did not mount"),
+          # while the same suite passed on GitHub's machine. Two files at once bounds that
+          # contention. Hosted Linux keeps node's default.
+          CONCURRENCY: ${{ runner.os == 'macOS' && '--test-concurrency=2' || '' }}
         run: |
           set -o pipefail
           # Same files as `npm test`, called directly because node only reads --test-* options
           # placed BEFORE the file list; `npm test -- --flag` puts them after, where they are
-          # silently ignored. (The old `--test-concurrency` was ignored that way too, so every
-          # run used node's default concurrency; that default is kept here unchanged.)
-          node --test --test-shard="$SHARD" tests/*.test.mjs 2>&1 | tee "$RUNNER_TEMP/test-output.log"
+          # silently ignored.
+          node --test $CONCURRENCY --test-shard="$SHARD" tests/*.test.mjs 2>&1 | tee "$RUNNER_TEMP/test-output.log"
 
       - name: Verify package
         if: ${{ matrix.shard == 1 && !cancelled() && steps.test.outcome != 'skipped' }}
