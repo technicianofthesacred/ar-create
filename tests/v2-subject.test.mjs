@@ -166,14 +166,24 @@ async function server(t){
 async function page(base,hash,{patch=t=>t,stubs={}}={}){
  const html=fs.readFileSync(path.join(repo,'public/v2/index.html'),'utf8');
  const dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:base+'/v2/index.html'+hash,runScripts:'outside-only',pretendToBeVisual:true});
- const w=dom.window,sources=[],calls=[];windows.push(w);
+ const w=dom.window,sources=[],calls=[],pending=new Set();windows.push(w);
+ const track=promise=>{pending.add(promise);promise.then(()=>pending.delete(promise),()=>pending.delete(promise));return promise;};
+ const drainReads=async()=>{
+  let checkpoint=-1,quiet=0;
+  await until(()=>{
+   if(pending.size||checkpoint!==calls.length)quiet=0;
+   else quiet++;
+   checkpoint=calls.length;
+   return quiet===4;
+  });
+ };
  w.EventSource=class{constructor(u){this.url=u;this.l={};sources.push(this);}addEventListener(t,f){(this.l[t]||=[]).push(f);}close(){}emit(t,data){for(const f of this.l[t]||[])f({data:JSON.stringify(data)});}};
  w.stub=stubs;
- w.fetch=async(input,options={})=>{const u=new URL(String(input),w.location.href);calls.push(u.pathname);if(w.stub[u.pathname]){const v=w.stub[u.pathname];const r=typeof v==='function'?v(options):v;return {ok:r.status<400,status:r.status,text:async()=>JSON.stringify(r.body)};}const r=await fetch(base+u.pathname+u.search,{method:options.method||'GET',headers:{...options.headers,...(options.method&&options.method!=='GET'?{Origin:base}:{})},body:options.body});return {ok:r.ok,status:r.status,text:()=>r.text()};};
+ w.fetch=(input,options={})=>track((async()=>{const u=new URL(String(input),w.location.href);calls.push(u.pathname);if(w.stub[u.pathname]){const v=w.stub[u.pathname];const r=typeof v==='function'?v(options):v;return {ok:r.status<400,status:r.status,text:()=>track(Promise.resolve(JSON.stringify(r.body)))};}const r=await fetch(base+u.pathname+u.search,{method:options.method||'GET',headers:{...options.headers,...(options.method&&options.method!=='GET'?{Origin:base}:{})},body:options.body});return {ok:r.ok,status:r.status,text:()=>track(r.text())};})());
  w.HTMLDialogElement.prototype.showModal||=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close||=function(){this.removeAttribute('open');};
  for(const src of [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1]))w.eval(patch(fs.readFileSync(src.startsWith('/')?path.join(repo,'public',src):path.join(repo,'public/v2',src),'utf8'),src));
  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
- return {w,doc:w.document,sources,calls};
+ return {w,doc:w.document,sources,calls,drainReads};
 }
 const until=async(check,ms=20000)=>{const end=Date.now()+ms;for(;;){const v=check();if(v)return v;if(Date.now()>end)throw new Error('timed out');await new Promise(r=>setTimeout(r,25));}};
 // An Article's Write, Read and Check open version two's own screens; every other hand-off opens a section of Advanced.
@@ -279,7 +289,7 @@ test('the page: opens a step on demand, every hand-off lands on its section with
  await fillDemo(base,{only:['shade-and-patience','straw-over-the-rows']});
  const plan=(await seedInstagramDemo(base));
  const id='demo-straw-over-the-rows',standing=await standingOf(base,id);
- const {w,doc,sources,calls}=await page(base,'#/subject/'+id);
+ const {w,doc,sources,calls,drainReads}=await page(base,'#/subject/'+id);
  await until(()=>doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
  const pill=doc.querySelector('button.subj-form[data-subj-form^="out:"]'),carousel=doc.querySelector('button.subj-form[data-subj-form^="ig:"]');
  assert.match(pill.getAttribute('aria-label'),/^First: Article for the magazine, \d of \d steps done$/);
@@ -323,12 +333,14 @@ test('the page: opens a step on demand, every hand-off lands on its section with
  assert.deepEqual(post,[['Write in Advanced','write'],['Read in Advanced','read'],['Check in Advanced','check']],'a Carousel reaches Write, Read and Check from a real step');
  // The open step never moves by itself: a change arrives, the standing is asked again, the open step stays.
  doc.querySelector('.subj-row[data-step="yes"]>[data-subj-step]').click();
- await new Promise(r=>setTimeout(r,300));
+ // Facts' brief, topic and inquiry reads belong to the earlier step visit.
+ // Wait for the whole request chain before attributing reads to the event.
+ await drainReads();
  const before=calls.length,es=sources[0];
  es.emit('hello',{bootId:'b',cursor:1});
  es.emit('change',{cursor:2,bootId:'b',kind:'consent.people.record',scope:{kind:'project',id}});
  await until(()=>mine(calls.slice(before)).includes('/api/subject/standing'));
- await new Promise(r=>setTimeout(r,400));
+ await drainReads();
  assert.deepEqual(mine(calls.slice(before)).sort(),['/api/consent/desk','/api/subject/standing'],'the standing and the desk only');
  assert.equal(doc.querySelector('[data-subj-panel] h2').textContent,'Your yes','the open step stays where he put it');
  const mark=calls.length;es.emit('change',{cursor:3,bootId:'b',kind:'consent.people.record',scope:{kind:'project',id:'demo-shade-and-patience'}});

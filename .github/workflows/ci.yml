@@ -16,8 +16,8 @@ permissions:
   contents: read
 
 jobs:
-  # Run on Adrian's Mac (self-hosted runner labelled mac-ci) when it is online and idle, so the
-  # run spends no GitHub minutes; otherwise fall back to ubuntu-latest. GitHub has no built-in
+  # Queue trusted runs on Adrian's Mac (mac-ci) while it is online, even when it is busy.
+  # Fork PRs and offline/error cases fall back to ubuntu-latest. GitHub has no built-in
   # fallback, and the default token cannot list runners, so this reads RUNNER_STATUS_TOKEN
   # (fine-grained, Administration: read). With no token set, every run goes to ubuntu-latest.
   #
@@ -35,13 +35,14 @@ jobs:
       - id: pick
         env:
           TOKEN: ${{ secrets.RUNNER_STATUS_TOKEN }}
+          CAN_USE_SELF_HOSTED: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
         run: |
           choice='"ubuntu-latest"'
-          if [ -n "$TOKEN" ]; then
-            idle=$(curl -fsS -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+          if [ "$CAN_USE_SELF_HOSTED" = true ] && [ -n "$TOKEN" ]; then
+            online=$(curl -fsS --max-time 15 -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/${{ github.repository }}/actions/runners" \
-              | jq '[.runners[] | select(.status == "online" and .busy == false and any(.labels[]; .name == "mac-ci"))] | length' || echo 0)
-            [ "${idle:-0}" -gt 0 ] && choice='["self-hosted","mac-ci"]'
+              | jq '[.runners[] | select(.status == "online" and any(.labels[]; .name == "mac-ci"))] | length' || echo 0)
+            [ "${online:-0}" -gt 0 ] && choice='["self-hosted","mac-ci"]'
           fi
           if [ "$choice" = '"ubuntu-latest"' ]; then shards='[1,2,3,4]'; total=4; else shards='[1]'; total=1; fi
           echo "runs_on=$choice" >> "$GITHUB_OUTPUT"
@@ -121,19 +122,28 @@ jobs:
     name: ci
     needs: [pick-runner, tests]
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    # Use hosted capacity to report failures even when the Mac is unavailable.
+    runs-on: ${{ fromJSON(needs.tests.result == 'success' && needs.pick-runner.outputs.runs_on || '"ubuntu-latest"') }}
     timeout-minutes: 3
     steps:
+      - name: Create a fresh summary directory
+        id: summaries
+        run: |
+          directory="$(mktemp -d "$RUNNER_TEMP/ar-create-ci.XXXXXX")"
+          echo "directory=$directory" >> "$GITHUB_OUTPUT"
+
       - uses: actions/download-artifact@v4
         continue-on-error: true
         with:
           pattern: ci-summary-*
-          path: summaries
+          path: ${{ steps.summaries.outputs.directory }}/summaries
 
       - name: Merge summaries
         env:
           TOTAL: ${{ needs.pick-runner.outputs.total }}
+          DIRECTORY: ${{ steps.summaries.outputs.directory }}
         run: |
+          cd "$DIRECTORY"
           mkdir -p out
           files=$(ls summaries/*/ci-summary.json 2>/dev/null || true)
           if [ -n "$files" ]; then
@@ -150,10 +160,16 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ci-summary
-          path: out/ci-summary.json
+          path: ${{ steps.summaries.outputs.directory }}/out/ci-summary.json
           retention-days: 30
 
       - name: Result
         run: |
           echo "Test parts: ${{ needs.tests.result }}"
           [ "${{ needs.tests.result }}" = "success" ]
+
+      - name: Remove temporary summaries
+        if: always() && steps.summaries.outputs.directory != ''
+        env:
+          DIRECTORY: ${{ steps.summaries.outputs.directory }}
+        run: rm -rf -- "$DIRECTORY"
