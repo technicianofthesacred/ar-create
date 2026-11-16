@@ -6,7 +6,7 @@ switches, badges, alerts, cards, tabs, menus, dialogs, tables, progress, loading
 - **Shapes** come from coss ui (coss.com/ui, MIT, built by the Cal.com team), translated to plain CSS in `ui.css`
   so any screen can use them today without Tailwind or a build step. Every class starts with `ui-`, so nothing
   reaches an existing screen until that screen opts in.
-- **Colours** live only in `tokens.css`. Dark is copied from coss ui's own dark mode (measured on coss.com/ui, 16 November 2026), keeping only AR Create's warm brand accent. They live, under coss ui's own names (background, foreground, primary, muted, border,
+- **Colours** live only in `tokens.css`. Dark is copied from coss ui's own dark mode (measured on coss.com/ui, 16 November 2026), keeping only AR Create's warm brand accent. They use coss ui's own names (background, foreground, primary, muted, border,
   input, ring, destructive, success, warning, info) plus two of AR Create's: `canvas` (the page) and `brand` (the
   warm accent, only for what needs Adrian). A brand or screen with different colours overrides these names and keeps
   every shape.
