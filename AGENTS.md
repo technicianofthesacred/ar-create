@@ -42,6 +42,17 @@ Long tasks are expected to run to the end. Keep going until the task's finish cr
 
 Stop early only when every remaining step is a deliberate blocker.
 
+## “Merge when ready” — standing instruction, 16 November 2026
+
+When Adrian says **“merge when ready”**, he authorizes opening or updating the task's pull request and enabling GitHub auto-merge. Complete the agreed work, review the final diff and run proportionate local checks once; push the reviewed commit and open a ready PR against `main` (or mark the existing PR ready). This completes the session's merge handoff once GitHub has accepted it; CI does not need to finish during the session.
+
+1. Confirm the PR targets `main`, its head is the reviewed commit, repository auto-merge is enabled, and `main` requires the `ci` check. Preserve that requirement; never use `--admin` or bypass a failing check.
+2. Enable auto-merge: `gh pr merge <PR> --repo technicianofthesacred/ar-create --auto --squash --match-head-commit <reviewed-SHA>`. If checks have already passed, GitHub may merge immediately.
+3. Read the PR once with `gh pr view <PR> --repo technicianofthesacred/ar-create --json url,state,headRefOid,autoMergeRequest,mergedAt,statusCheckRollup`. Confirm the expected head and a non-null `autoMergeRequest`, or an already merged state. Confirm CI has been registered for the candidate; the PR and its checks are the durable status and resumption path.
+4. Once confirmed, report **“Auto-merge enabled; GitHub will merge when required checks pass”** with the PR link, and leave. Do not poll CI, run `gh pr checks --watch`, keep an agent waiting, or create a model-powered watcher. Say “merged” only when GitHub confirms it. A failed check keeps the PR open; report an observed failure or inability to enable auto-merge rather than claiming a successful handoff. On a later follow-up, read the saved PR status once and address any concrete blocker.
+
+This authorizes source integration only. Installing or releasing the app to its home remains a separate action requiring its own authorization and release proof.
+
 # Communicating clearly
 
 Adrian judges work by eye, from a live link or a screenshot, not from code, diffs or test counts. Write reports for someone who did not watch you work:
