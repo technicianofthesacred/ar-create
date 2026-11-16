@@ -39,8 +39,17 @@ if (!changed.length) { console.log('Nothing changed from ' + baseRef + '; no tes
 
 const allTests = fs.readdirSync('tests').filter(f => f.endsWith('.test.mjs')).map(f => 'tests/' + f).sort();
 
-// A dependency or install change can reach anything, so it gets the whole suite.
-const whole = changed.filter(f => /(^|\/)package(-lock)?\.json$/.test(f));
+// A dependency or install change can reach anything, so it gets the whole suite. A package.json
+// edit that leaves its dependency lists alone (a new npm script, say) does not.
+const depsOf = text => { try { const j = JSON.parse(text); return JSON.stringify([j.dependencies, j.devDependencies, j.optionalDependencies, j.overrides, j.engines]); } catch { return null; } };
+const whole = changed.filter(f => {
+  if (/(^|\/)package-lock\.json$/.test(f)) return true;
+  if (!/(^|\/)package\.json$/.test(f)) return false;
+  let before = null;
+  try { before = execFileSync('git', ['show', `${base}:${f}`], {encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore']}); } catch {}
+  const now = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : null;
+  return before === null || now === null || depsOf(before) !== depsOf(now);
+});
 
 // Local import graph: relative specifiers in static imports, re-exports and literal dynamic imports.
 const importRe = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*)['"](\.{1,2}\/[^'"]+)['"]/g;
@@ -80,7 +89,9 @@ if (whole.length) {
 } else {
   picked = allTests.filter(test => {
     const reach = closure(test);
-    for (const file of changed) {
+    // A package.json that reached here changed only scripts or metadata; hundreds of tests
+    // mention "package.json" by name, so it would otherwise pick most of the suite.
+    for (const file of changed.filter(f => !/(^|\/)package\.json$/.test(f))) {
       if (reach.has(file)) { why.set(test, file); return true; }
       for (const f of reach) if (named(read(f).strings, file)) { why.set(test, file); return true; }
     }
