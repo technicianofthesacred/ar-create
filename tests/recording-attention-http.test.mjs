@@ -68,7 +68,8 @@ test('legacy defaulted asks use current recording work and cannot approve throug
  words.items.push({key:'low-confidence:earlier',kind:'low-confidence',word:'earlier',sentence:'The studio opened at dawn.',segmentIndex:0,start:0,end:1,status:'kept',answer:{choice:'keep',by:'human:adrian',at:new Date().toISOString(),operationId:randomUUID()}});
  fs.writeFileSync(wordsFile,JSON.stringify(words));
  const savedAsks=fs.readFileSync(asksFile),savedWords=fs.readFileSync(wordsFile),savedTranscript=fs.readFileSync(path.join(real.output,'transcript.json'));
- const get=async route=>(await (await fetch(url+route)).json());
+ // JSDOM can run past the loopback server's idle deadline before the next POST.
+ const get=async route=>(await (await fetch(url+route,{headers:{Connection:'close'}})).json());
  const owner=await get('/api/words/check?jobId='+real.id);assert.equal(owner.open,1);
  const feed=await get('/api/needs-you?status=all');assert.equal(feed.asks.length,1);
  const card=feed.asks[0];assert.equal(card.status,'open','pending domain work is presented for review even after a legacy queue default');
