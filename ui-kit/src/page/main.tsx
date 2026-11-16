@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ToastProvider, AnchoredToastProvider } from "@/components/ui/toast";
 import { examples } from "./examples.gen";
 import type { Example } from "./types";
+import { Mock } from "./mock";
 
 const parts = [...new Set(examples.map((e) => e.part))];
 const byPart = (part: string) => examples.filter((e) => e.part === part);
@@ -153,6 +154,10 @@ function App() {
   React.useEffect(() => { document.documentElement.dataset.theme = theme; document.documentElement.classList.toggle("dark", theme === "dark"); keep("ui-theme", theme); }, [theme]);
   React.useEffect(() => { document.documentElement.dataset.font = font; keep("ui-font", font); }, [font]);
   const part = parts.includes(route) ? route : "";
+  const mock = route.startsWith("mock/") ? route.slice(5) : "";
+
+  // ?bare=1 shows a mock screen on its own, full width, as the app would.
+  if (mock && new URLSearchParams(location.search).get("bare")) return <Mock which={mock} />;
 
   return (
     <div className="min-h-svh bg-canvas text-foreground">
@@ -168,7 +173,13 @@ function App() {
         <nav aria-label="Parts" className="border-b p-4 lg:sticky lg:top-15 lg:h-[calc(100svh-60px)] lg:overflow-auto lg:border-b-0">
           <p className="hidden h-7 items-center px-2 font-medium text-xs lg:flex">Overview</p>
           <ul className="mb-2 flex flex-wrap gap-0.5 lg:flex-col">
-            <li><a href="#/" aria-current={part ? undefined : "page"} className="flex h-8 items-center rounded-lg px-2 text-muted-foreground text-sm hover:bg-accent hover:text-foreground aria-[current]:bg-accent aria-[current]:font-medium aria-[current]:text-foreground lg:pl-3.5">Every part</a></li>
+            <li><a href="#/" aria-current={part || mock ? undefined : "page"} className="flex h-8 items-center rounded-lg px-2 text-muted-foreground text-sm hover:bg-accent hover:text-foreground aria-[current]:bg-accent aria-[current]:font-medium aria-[current]:text-foreground lg:pl-3.5">Every part</a></li>
+          </ul>
+          <p className="hidden h-7 items-center px-2 font-medium text-xs lg:flex">AR Create with coss parts</p>
+          <ul className="mb-2 flex flex-wrap gap-0.5 lg:flex-col">
+            {[["mock/home", "Home"], ["mock/subject", "A subject"]].map(([h, l]) => (
+              <li key={h}><a href={`#/${h}`} aria-current={route === h ? "page" : undefined} className="flex h-8 items-center rounded-lg px-2 text-muted-foreground text-sm hover:bg-accent hover:text-foreground aria-[current]:bg-accent aria-[current]:font-medium aria-[current]:text-foreground lg:pl-3.5">{l}</a></li>
+            ))}
           </ul>
           <p className="hidden h-7 items-center px-2 font-medium text-xs lg:flex">Parts</p>
           <ul className="flex flex-wrap gap-0.5 lg:flex-col">
@@ -183,7 +194,7 @@ function App() {
         </nav>
         <div className="min-w-0 lg:pr-4 lg:pb-4">
           <main className="min-w-0 border-x-0 bg-card px-4 py-8 sm:px-8 sm:py-10 lg:rounded-b-2xl lg:border lg:border-t-0 lg:shadow-lg/5">
-            <div className="mx-auto max-w-3xl">{part ? <PartPage part={part} /> : <Overview />}</div>
+            {mock ? <div className="-mx-4 -my-8 overflow-hidden sm:-mx-8 sm:-my-10 lg:rounded-b-2xl"><Mock which={mock} /></div> : <div className="mx-auto max-w-3xl">{part ? <PartPage part={part} /> : <Overview />}</div>}
           </main>
         </div>
       </div>

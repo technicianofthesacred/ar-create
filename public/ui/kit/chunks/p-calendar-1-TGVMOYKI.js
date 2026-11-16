@@ -1,1 +1,0 @@
-"use client";import{B as a}from"./chunk-6JA2G4G5.js";import"./chunk-PTBMBLQM.js";import{a as l}from"./chunk-TZORI5HO.js";import{a as t}from"./chunk-OAR7Q7DL.js";import{c as e}from"./chunk-DCANE7XH.js";var n=e(l(),1);var o=e(t(),1);function r(){let[c,d]=n.useState(new Date);return(0,o.jsx)(a,{mode:"single",onSelect:d,selected:c})}export{r as default};

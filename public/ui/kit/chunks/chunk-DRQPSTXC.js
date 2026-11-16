@@ -1,1 +1,0 @@
-import{X as a}from"./chunk-PTBMBLQM.js";import{a as e,c as t}from"./chunk-OAR7Q7DL.js";import{c as o}from"./chunk-DCANE7XH.js";var r=o(e(),1);function i({className:n,...p}){return(0,r.jsx)(a,{"aria-label":"Loading",className:t("animate-spin",n),role:"status",...p})}export{i as a};
