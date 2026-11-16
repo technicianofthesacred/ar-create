@@ -1,4 +1,4 @@
-# One lane: a clean setup, build, test and package check on every PR to main.
+# A clean setup, build, test and package check on every PR to main.
 # GitHub Actions minutes are a metered free-plan service: PRs to main only (never on push),
 # one run per ref at a time (a new push cancels the old run), npm cached, hard timeout.
 name: ci
@@ -20,11 +20,17 @@ jobs:
   # run spends no GitHub minutes; otherwise fall back to ubuntu-latest. GitHub has no built-in
   # fallback, and the default token cannot list runners, so this reads RUNNER_STATUS_TOKEN
   # (fine-grained, Administration: read). With no token set, every run goes to ubuntu-latest.
+  #
+  # The Mac runs the whole suite as one part (about 10 minutes). On ubuntu-latest the suite took
+  # about 21 minutes and 10 of 16 runs between 8 and 16 November hit the time limit, so there it
+  # is split into four parts that run at the same time (about 6 minutes each).
   pick-runner:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     outputs:
       runs_on: ${{ steps.pick.outputs.runs_on }}
+      shards: ${{ steps.pick.outputs.shards }}
+      total: ${{ steps.pick.outputs.total }}
     steps:
       - id: pick
         env:
@@ -37,18 +43,25 @@ jobs:
               | jq '[.runners[] | select(.status == "online" and .busy == false and any(.labels[]; .name == "mac-ci"))] | length' || echo 0)
             [ "${idle:-0}" -gt 0 ] && choice='["self-hosted","mac-ci"]'
           fi
+          if [ "$choice" = '"ubuntu-latest"' ]; then shards='[1,2,3,4]'; total=4; else shards='[1]'; total=1; fi
           echo "runs_on=$choice" >> "$GITHUB_OUTPUT"
-          echo "Running on: $choice"
+          echo "shards=$shards" >> "$GITHUB_OUTPUT"
+          echo "total=$total" >> "$GITHUB_OUTPUT"
+          echo "Running on: $choice in $total part(s)"
 
-  test:
-    # The release script reads a check run named `ci` on the commit it installs (scripts/lib/release-gates.mjs).
-    name: ci
+  tests:
+    # Not named `ci`: the release script and branch protection read the `ci` job below, which
+    # passes only when every part passes (scripts/lib/release-gates.mjs matches names starting `ci`).
+    name: tests ${{ matrix.shard }} of ${{ needs.pick-runner.outputs.total }}
     needs: pick-runner
     runs-on: ${{ fromJSON(needs.pick-runner.outputs.runs_on) }}
-    # 25 minutes on either kind of runner. The Mac takes about 14 minutes for the tests alone. GitHub-hosted runners
-    # are metered and used to be held to 15, but the suite no longer finishes there in 15, so every run that fell back
-    # to them while the Mac was offline was cancelled mid-test (Adrian's decision of 13 November to allow 25).
+    # 25 minutes on either kind of runner. The Mac takes about 10-14 minutes for the whole suite.
     timeout-minutes: 25
+    strategy:
+      # Every part reports its own failures, so one run shows the whole list.
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.pick-runner.outputs.shards) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -71,15 +84,17 @@ jobs:
         id: test
         shell: bash
         env:
-          TEST_CONCURRENCY: ${{ runner.os == 'macOS' && '2' || '4' }}
+          SHARD: ${{ matrix.shard }}/${{ needs.pick-runner.outputs.total }}
         run: |
           set -o pipefail
-          # The daily-driver Mac also runs real Chromium and JSDOM fixtures. Two files
-          # bound CPU/memory contention there; hosted Linux keeps its four-file lane.
-          npm test -- --test-concurrency="$TEST_CONCURRENCY" 2>&1 | tee "$RUNNER_TEMP/test-output.log"
+          # Same files as `npm test`, called directly because node only reads --test-* options
+          # placed BEFORE the file list; `npm test -- --flag` puts them after, where they are
+          # silently ignored. (The old `--test-concurrency` was ignored that way too, so every
+          # run used node's default concurrency; that default is kept here unchanged.)
+          node --test --test-shard="$SHARD" tests/*.test.mjs 2>&1 | tee "$RUNNER_TEMP/test-output.log"
 
       - name: Verify package
-        if: ${{ !cancelled() && steps.test.outcome != 'skipped' }}
+        if: ${{ matrix.shard == 1 && !cancelled() && steps.test.outcome != 'skipped' }}
         run: npm run verify:package
 
       - name: Summary
@@ -90,6 +105,49 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: ci-summary
+          name: ci-summary-${{ matrix.shard }}
           path: ${{ runner.temp }}/ci-summary.json
           retention-days: 30
+
+  ci:
+    # The one result everything reads: branch protection requires a check named `ci`, and the
+    # release script installs only a commit whose newest `ci` check succeeded.
+    name: ci
+    needs: [pick-runner, tests]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: ci-summary-*
+          path: summaries
+
+      - name: Merge summaries
+        env:
+          TOTAL: ${{ needs.pick-runner.outputs.total }}
+        run: |
+          mkdir -p out
+          files=$(ls summaries/*/ci-summary.json 2>/dev/null || true)
+          if [ -n "$files" ]; then
+            # A part that did not finish has null counts; then the whole run's counts are null.
+            jq -s --argjson total "${TOTAL:-0}" '
+              def sum(k): if (length < $total or any(.[]; .[k] == null)) then null else (map(.[k]) | add) end;
+              {tests: sum("tests"), pass: sum("pass"), fail: sum("fail"), skipped: sum("skipped"),
+               sha: .[0].sha, at: (now | todate), parts: length}' $files > out/ci-summary.json
+          else
+            echo '{"tests":null,"pass":null,"fail":null,"skipped":null,"parts":0}' > out/ci-summary.json
+          fi
+          cat out/ci-summary.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-summary
+          path: out/ci-summary.json
+          retention-days: 30
+
+      - name: Result
+        run: |
+          echo "Test parts: ${{ needs.tests.result }}"
+          [ "${{ needs.tests.result }}" = "success" ]
