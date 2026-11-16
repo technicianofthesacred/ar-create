@@ -44,13 +44,16 @@ export async function createPhotoHTTPFixture(){
   await http(lookup,undefined,{reviewRequest:true});await http(inspect,undefined,{reviewRequest:true});await http(nativeRead,undefined,{reviewRequest:true});
   const url=`http://127.0.0.1:${reviewPort}/document-study/index.html?`+new URLSearchParams({reviewWorkspace:target.workspaceId,reviewBinding:bindingId,reviewStage:'8'}),protectedRoots=[dataDir,vault,files,fixturesDir];
   let receipt={schema:'ar-create.synthetic-photo-http-proof.v1',synthetic:true,pid:process.pid,sourceRevision:process.env.AR_CREATE_PROOF_SOURCE_REVISION||null,sourceHashes:Object.fromEntries(['runtime/services/study-photos.mjs','runtime/commands.mjs','runtime/server.mjs','scripts/review-connection.mjs','public/document-study/folder-browser.js','public/document-study/photos-stage.js','public/document-study/study-photos.js','public/document-study/media-usage.js','public/document-study/output-connection.js'].map(file=>[file,sha(fs.readFileSync(path.join(root,file)))])),home,dataDir,fixturesDir,control,receiptFile,baselineFile,requestLog,protectedRoots,ownerURL:`http://127.0.0.1:${ownerPort}`,reviewURL:`http://127.0.0.1:${reviewPort}`,url,inspect,absentInspect,lookup,nativeRead,inspectInput,workspaceId:target.workspaceId,bindingId,parentStudyId,physical,sourceId,articleOutputId:article.view.output.id,siblingOutputId:sibling.view.output.id,expectedDraftHash:saved.expected.workflow.draft,caption:photos.photos[0].caption,credit:photos.photos[0].credit};
+  let servedScripts=new Map();
   const checkUIBoot=async()=>{
    const base=`http://127.0.0.1:${reviewPort}`,entry=await fetch(base+'/document-study/index.html');if(!entry.ok)throw Error('The real review entry HTML is unavailable.');const html=await entry.text(),sources=[...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)].map(m=>new URL(m[1],base+'/document-study/index.html'));
    if(!html.includes('id="app"')||sources.length<20)throw Error('The maintained native app entry scripts are incomplete.');
-   const scripts=new Map();for(const source of sources){if(source.origin!==base)throw Error('Synthetic boot may not load external scripts.');const response=await fetch(source);if(!response.ok)throw Error('Required native UI script unavailable: '+source.pathname+' ('+response.status+').');scripts.set(source.pathname,await response.text());}
-   const context={window:{}};vm.createContext(context);vm.runInContext(scripts.get('/document-study/package-config.js'),context);vm.runInContext(scripts.get('/document-study/synthetic-study-data.js'),context);const projects=vm.runInContext('AR_CREATE_SYNTHETIC_PROJECTS',context);
+   const scripts=new Map();for(const source of sources){if(source.origin!==base)throw Error('Synthetic boot may not load external scripts.');const response=await fetch(source);if(!response.ok)throw Error('Required native UI script unavailable: '+source.pathname+' ('+response.status+').');scripts.set(source.href,Buffer.from(await response.arrayBuffer()));}
+   const script=name=>scripts.get(new URL('/document-study/'+name,base).href);
+   const context={window:{}};vm.createContext(context);vm.runInContext(script('package-config.js').toString('utf8'),context);vm.runInContext(script('synthetic-study-data.js').toString('utf8'),context);const projects=vm.runInContext('AR_CREATE_SYNTHETIC_PROJECTS',context);
    if(!Array.isArray(projects)||projects[0]?.id!==parentStudyId||projects[0].collectionBindingId!==created.binding.id||projects[0].blocks.length!==0)throw Error('The served bootstrap does not contain its exact invented parent metadata.');
-   if(!scripts.has('/document-study/study.js')||!scripts.has('/document-study/draft-flow.js')||!scripts.has('/document-study/photos-stage.js'))throw Error('The actual native application modules are missing.');
+   if(!script('study.js')||!script('draft-flow.js')||!script('photos-stage.js'))throw Error('The actual native application modules are missing.');
+   servedScripts=scripts;
    return {scriptCount:scripts.size,parentStudyId:projects[0].id,emptyBootstrapBlocks:true};
   };
   const checkDOMBoot=async()=>{
@@ -67,6 +70,13 @@ export async function createPhotoHTTPFixture(){
    class BrowserResources extends ResourceLoader{
     fetch(url,options){
      if(!options.element)return super.fetch(url,options);
+     // Exercise the exact scripts received from this origin above without a
+     // second burst of static HTTP requests. Owner reads still use real HTTP.
+     if(options.element.localName==='script'&&servedScripts.has(url)){
+      const response=Promise.resolve(servedScripts.get(url));
+      response.abort=()=>{};
+      return response;
+     }
      let request,cancelled=false;
      const response=new Promise((resolve,reject)=>{
       const start=()=>{if(cancelled){const error=Error('Fixture resource cancelled');error.isAbortError=true;reject(error);return;}activeResources++;
@@ -91,8 +101,12 @@ export async function createPhotoHTTPFixture(){
     };w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});w.structuredClone=structuredClone;w.CSS={escape:s=>s};w.crypto.randomUUID=randomUUID;w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};w.HTMLElement.prototype.scrollIntoView=function(){};}});
     // Load the full maintained module graph under bounded shared-host contention.
     const end=Date.now()+30000;while(Date.now()<end){if(w.document.readyState==='complete'&&w.studyDraft?.currentBinding?.()?.id===bindingId&&w.document.querySelector('[data-caption]')?.value===receipt.caption&&w.eval('current().viewedStage')===8)break;if(errors.length)throw Error('Native DOM boot failed: '+errors.join('; '));await tick();}
-    assert.equal(w.document.readyState,'complete','All maintained modules finish loading.');
-    if(w.studyDraft?.currentBinding?.()?.id!==bindingId||w.document.querySelector('[data-caption]')?.value!==receipt.caption||w.eval('current().viewedStage')!==8)throw Error('The real native photo editor did not mount its exact saved part/details.');
+    const opening=w.document.querySelector('[data-review-startup]');
+    const diagnostic=JSON.stringify({openingStep:opening?.dataset.reviewOpeningStep,failureStage:opening?.dataset.reviewFailureStage,failureReason:opening?.dataset.reviewFailureReason,pendingHTTP:pending.size,activeResources,queuedResources:resourceQueue.length});
+    assert.equal(w.document.readyState,'complete','All maintained modules finish loading. '+diagnostic);
+    assert.equal(w.studyDraft?.currentBinding?.()?.id,bindingId,'The exact saved part is open. '+diagnostic);
+    assert.equal(w.eval('current().viewedStage'),8,'The saved Media stage is open. '+diagnostic);
+    assert.equal(w.document.querySelector('[data-caption]')?.value,receipt.caption,'The exact saved photo details are mounted. '+diagnostic);
     assert.deepEqual(errors,[],'Native DOM boot errors.');
     proof={mounted:true,stage:8,bindingId,caption:w.document.querySelector('[data-caption]').value};
     // Begin an actual owner read immediately before pagehide. Its body and
