@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tea tones</title>
+<style>
+ @font-face{font-family:J;font-weight:400 700;src:url('../../runtime/public/assets/fonts/plus-jakarta-sans-400-normal-latin.woff2') format('woff2')}
+ @font-face{font-family:J;font-weight:600 700;src:url('../../runtime/public/assets/fonts/plus-jakarta-sans-600-normal-latin.woff2') format('woff2')}
+ body{margin:0;background:#0c0c0b;color:#eee;font:400 14px/1.5 J,system-ui,sans-serif;padding:24px}
+ h1{margin:0 0 4px;font:600 20px/1.3 J,sans-serif}
+ .lead{margin:0 0 20px;color:#999;font-size:13px}
+ .cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+ @media (max-width:1100px){.cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
+ @media (max-width:600px){body{padding:16px}.cols{grid-template-columns:1fr}}
+ .col{background:var(--canvas);border-radius:16px;padding:16px;color:var(--fg);border:1px solid rgba(255,255,255,.06)}
+ .col h2{margin:0;font:600 16px/1.3 J,sans-serif}
+ .col .sub{margin:2px 0 14px;color:var(--muted);font-size:12px}
+ .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 -1px 0 rgba(255,255,255,.05) inset}
+ .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+ .btn{height:32px;padding:0 11px;border-radius:10px;border:1px solid transparent;font:500 13px/1 J,sans-serif;display:inline-flex;align-items:center;color:var(--fg);background:transparent}
+ .p{background:var(--primary);color:var(--primary-fg);box-shadow:inset 0 1px 0 rgba(255,255,255,.16)}
+ .b{background:var(--brand);color:var(--brand-fg);box-shadow:inset 0 1px 0 rgba(255,255,255,.16)}
+ .o{background:rgba(255,255,255,.025);border-color:var(--input)}
+ .d{background:var(--err);color:#fff}
+ .badge{height:18px;padding:0 5px;border-radius:6px;font:500 11px/18px J,sans-serif}
+ .s{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok-fg)}
+ .w{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn-fg)}
+ .e{background:color-mix(in srgb,var(--err) 16%,transparent);color:var(--err-fg)}
+ .i{background:color-mix(in srgb,var(--info) 16%,transparent);color:var(--info-fg)}
+ .alert{border-radius:14px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--t) 32%,transparent);background:color-mix(in srgb,var(--t) 4%,transparent);font-size:12px}
+ .alert b{display:block;font-weight:500;font-size:13px;color:var(--tf)}
+ .alert span{color:var(--muted)}
+ .field{height:32px;border-radius:10px;border:1px solid var(--input);background:rgba(255,255,255,.025);display:flex;align-items:center;padding:0 11px;color:var(--muted);font-size:13px}
+ .track{height:6px;border-radius:9px;background:var(--input);overflow:hidden}.track i{display:block;height:100%;width:64%;background:var(--ok)}
+ .sw{display:flex;align-items:center;justify-content:space-between;font-size:13px}
+ .switch{width:30px;height:18px;border-radius:9px;background:var(--primary);position:relative}.switch:after{content:"";position:absolute;right:1px;top:1px;width:16px;height:16px;border-radius:50%;background:var(--card)}
+ .chips{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:12px}
+ .chips i{height:22px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+ .title{font:600 15px/1.2 J,sans-serif}
+ .q{color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<h1>Tea tones for dark mode</h1>
+<p class="lead">The same colours in every column (green, amber, red, blue, the warm accent), each step quieter and warmer. The left column is what the parts page uses now.</p>
+<div class="cols">
+
+ <div class="col" style="--canvas:#111111;--card:#191919;--fg:#f5f5f5;--muted:#818181;--border:rgba(255,255,255,.06);--input:rgba(255,255,255,.08);--primary:#f5f5f5;--primary-fg:#262626;--brand:#c9a874;--brand-fg:#1d1b16;--ok:#00bc7d;--ok-fg:#00d492;--warn:#fe9a00;--warn-fg:#ffb900;--err:#fb414a;--err-fg:#ff6467;--info:#2b7fff;--info-fg:#50a2ff">
+  <h2>Now</h2><p class="sub">coss ui's own dark: neutral grey, bright signals</p>
+  <div class="card"></div>
+ </div>
+
+ <div class="col" style="--canvas:#121110;--card:#1a1917;--fg:#efebe4;--muted:#8d8880;--border:rgba(255,250,240,.06);--input:rgba(255,250,240,.085);--primary:#efebe4;--primary-fg:#24221e;--brand:#c4a676;--brand-fg:#1d1b16;--ok:#6fa67f;--ok-fg:#8cc09a;--warn:#d4a04f;--warn-fg:#e2b86e;--err:#d0665a;--err-fg:#e48678;--info:#6c93b8;--info-fg:#8eb0cf">
+  <h2>Sencha</h2><p class="sub">Light step: greys warmed a touch, signals softened</p>
+  <div class="card"></div>
+ </div>
+
+ <div class="col" style="--canvas:#13110e;--card:#1b1814;--fg:#ece5d8;--muted:#8f877a;--border:rgba(255,240,215,.065);--input:rgba(255,240,215,.09);--primary:#ece5d8;--primary-fg:#26221c;--brand:#c2a06c;--brand-fg:#1d1b16;--ok:#7f9a6a;--ok-fg:#a0b88a;--warn:#c4964f;--warn-fg:#d8b076;--err:#b8644f;--err-fg:#d38670;--info:#6d8a9c;--info-fg:#91aabb">
+  <h2>Oolong</h2><p class="sub">Middle step: warm brown greys, signals like dried leaves</p>
+  <div class="card"></div>
+ </div>
+
+ <div class="col" style="--canvas:#14110d;--card:#1c1813;--fg:#e6dccb;--muted:#8e8371;--border:rgba(255,230,195,.07);--input:rgba(255,230,195,.1);--primary:#e6dccb;--primary-fg:#27211a;--brand:#b99561;--brand-fg:#1a1611;--ok:#8a9670;--ok-fg:#a8b28d;--warn:#b38a55;--warn-fg:#cba77a;--err:#a35f4c;--err-fg:#c3826d;--info:#71828b;--info-fg:#97a6ad">
+  <h2>Hojicha</h2><p class="sub">Deepest step: roasted, close tones, the quietest signals</p>
+  <div class="card"></div>
+ </div>
+
+</div>
+<template id="t">
+  <div><div class="title">The tea teacher</div><div class="q">Magazine story, Teajia</div></div>
+  <div class="row"><span class="btn p">Publish</span><span class="btn b">Review now</span><span class="btn o">Preview</span><span class="btn d">Delete</span></div>
+  <div class="row"><span class="badge s">Published</span><span class="badge w">Check facts</span><span class="badge e">Failed</span><span class="badge i">3 sources</span></div>
+  <div class="field">Name the story</div>
+  <div class="alert" style="--t:var(--ok);--tf:var(--ok-fg)"><b>Published to Teajia</b><span>Live at teajia.com/tea-teacher.</span></div>
+  <div class="alert" style="--t:var(--warn);--tf:var(--warn-fg)"><b>Three facts are not checked yet</b><span>The story can be read but not published.</span></div>
+  <div class="alert" style="--t:var(--err);--tf:var(--err-fg)"><b>The carousel did not export</b><span>Chrome closed before the last slide.</span></div>
+  <div class="alert" style="--t:var(--info);--tf:var(--info-fg)"><b>A new recording arrived</b><span>From the phone, 14 minutes.</span></div>
+  <div class="sw">Show sources<span class="switch"></span></div>
+  <div><div class="q" style="margin-bottom:6px">Transcribing 64%</div><div class="track"><i></i></div></div>
+  <div class="chips"><i style="background:var(--canvas)"></i><i style="background:var(--card)"></i><i style="background:var(--muted)"></i><i style="background:var(--brand)"></i><i style="background:var(--ok)"></i><i style="background:var(--warn)"></i><i style="background:var(--err)"></i><i style="background:var(--info)"></i></div>
+</template>
+<script>for(const c of document.querySelectorAll('.card'))c.innerHTML=document.getElementById('t').innerHTML</script>
+</body>
+</html>

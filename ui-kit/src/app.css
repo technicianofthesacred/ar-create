@@ -2,7 +2,7 @@
    never edited by hand, so a later `shadcn add` can update it. Everything AR Create changes lives here, the way the
    coss Styling guide says to customise: by setting the same colour names in the global stylesheet.
 
-   - Dark: coss ui's own dark, unchanged. The only addition is brand, AR Create's warm accent.
+   - Dark: coss ui's dark in the "Sencha" tea tone: same shape and colours, one step quieter and warmer.
    - Light: AR Create's warm paper palette, written with coss's formulas (see-through edges, soft fills), so borders
      and shadows keep the depth the Styling guide describes.
    - The app switches theme with data-theme="dark"; coss uses a .dark class. Both work. */
@@ -55,43 +55,46 @@
   --brand-foreground: #fffefb;
 }
 
-/* coss ui's dark, as installed. Repeated for data-theme so the app's switch reaches it; values unchanged. */
+/* Dark: "Sencha", chosen by Adrian on 16 November 2026. coss ui's dark, kept in its shape and in the same colours,
+   one step quieter and warmer: greys warmed a touch, signals softened toward tea. Repeated for data-theme so the
+   app's switch reaches it. */
 .dark, [data-theme="dark"] {
   color-scheme: dark;
-  --destructive-foreground: var(--color-red-400);
-  --info: var(--color-blue-500);
-  --info-foreground: var(--color-blue-400);
-  --success: var(--color-emerald-500);
-  --success-foreground: var(--color-emerald-400);
-  --warning: var(--color-amber-500);
-  --warning-foreground: var(--color-amber-400);
-  --accent: --alpha(var(--color-white) / 4%);
-  --accent-foreground: var(--color-neutral-100);
-  --background: color-mix(in srgb, var(--color-neutral-950) 95%, var(--color-white));
-  --border: --alpha(var(--color-white) / 6%);
-  --card: color-mix(in srgb, var(--background) 98%, var(--color-white));
-  --card-foreground: var(--color-neutral-100);
-  --destructive: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
-  --foreground: var(--color-neutral-100);
-  --input: --alpha(var(--color-white) / 8%);
-  --muted: --alpha(var(--color-white) / 4%);
-  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-white));
-  --popover: color-mix(in srgb, var(--background) 98%, var(--color-white));
-  --popover-foreground: var(--color-neutral-100);
-  --primary: var(--color-neutral-100);
-  --primary-foreground: var(--color-neutral-800);
-  --ring: var(--color-neutral-500);
-  --secondary: --alpha(var(--color-white) / 4%);
-  --secondary-foreground: var(--color-neutral-100);
-  --sidebar: color-mix(in srgb, var(--color-neutral-950) 97%, var(--color-white));
-  --sidebar-accent: --alpha(var(--color-white) / 4%);
-  --sidebar-accent-foreground: var(--color-neutral-100);
-  --sidebar-border: --alpha(var(--color-white) / 5%);
-  --sidebar-foreground: color-mix(in srgb, var(--color-neutral-100) 64%, var(--sidebar));
-  --sidebar-primary: var(--color-neutral-100);
-  --sidebar-primary-foreground: var(--color-neutral-800);
-  --canvas: color-mix(in srgb, var(--color-neutral-950) 97%, var(--color-white));
-  --brand: #c9a874;
+  --canvas: #121110;
+  --background: #151413;
+  --foreground: #efebe4;
+  --card: #1a1917;
+  --card-foreground: #efebe4;
+  --popover: #1d1c1a;
+  --popover-foreground: #efebe4;
+  --primary: #efebe4;
+  --primary-foreground: #24221e;
+  --secondary: rgba(255, 250, 240, 0.04);
+  --secondary-foreground: #efebe4;
+  --muted: rgba(255, 250, 240, 0.04);
+  --muted-foreground: #8d8880;
+  --accent: rgba(255, 250, 240, 0.04);
+  --accent-foreground: #efebe4;
+  --border: rgba(255, 250, 240, 0.06);
+  --input: rgba(255, 250, 240, 0.085);
+  --ring: #7d776e;
+  --destructive: #d0665a;
+  --destructive-foreground: #e48678;
+  --success: #6fa67f;
+  --success-foreground: #8cc09a;
+  --warning: #d4a04f;
+  --warning-foreground: #e2b86e;
+  --info: #6c93b8;
+  --info-foreground: #8eb0cf;
+  --sidebar: #121110;
+  --sidebar-foreground: color-mix(in srgb, #efebe4 64%, #121110);
+  --sidebar-primary: #efebe4;
+  --sidebar-primary-foreground: #24221e;
+  --sidebar-accent: rgba(255, 250, 240, 0.04);
+  --sidebar-accent-foreground: #efebe4;
+  --sidebar-border: rgba(255, 250, 240, 0.05);
+  --sidebar-ring: #7d776e;
+  --brand: #c4a676;
   --brand-foreground: #1d1b16;
 }
 
