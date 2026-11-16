@@ -10,8 +10,8 @@
  body{margin:0;background:#0c0c0b;color:#eee;font:400 14px/1.5 J,system-ui,sans-serif;padding:24px}
  h1{margin:0 0 4px;font:600 20px/1.3 J,sans-serif}
  .lead{margin:0 0 20px;color:#999;font-size:13px}
- .cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
- @media (max-width:1100px){.cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
+ .cols{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+ @media (max-width:1400px){.cols{grid-template-columns:repeat(3,minmax(0,1fr))}}@media (max-width:900px){.cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
  @media (max-width:600px){body{padding:16px}.cols{grid-template-columns:1fr}}
  .col{background:var(--canvas);border-radius:16px;padding:16px;color:var(--fg);border:1px solid rgba(255,255,255,.06)}
  .col h2{margin:0;font:600 16px/1.3 J,sans-serif}
@@ -43,26 +43,30 @@
 </head>
 <body>
 <h1>Tea tones for dark mode</h1>
-<p class="lead">The same colours in every column (green, amber, red, blue, the warm accent), each step quieter and warmer. The left column is what the parts page uses now.</p>
+<p class="lead">Sencha is what the parts page uses now. Beside it, four more tea tones: the same colours every time (green, amber, red, blue, the warm accent), each with its own character.</p>
 <div class="cols">
-
- <div class="col" style="--canvas:#111111;--card:#191919;--fg:#f5f5f5;--muted:#818181;--border:rgba(255,255,255,.06);--input:rgba(255,255,255,.08);--primary:#f5f5f5;--primary-fg:#262626;--brand:#c9a874;--brand-fg:#1d1b16;--ok:#00bc7d;--ok-fg:#00d492;--warn:#fe9a00;--warn-fg:#ffb900;--err:#fb414a;--err-fg:#ff6467;--info:#2b7fff;--info-fg:#50a2ff">
-  <h2>Now</h2><p class="sub">coss ui's own dark: neutral grey, bright signals</p>
+ <div class="col" style="--canvas:#121110;--card:#1a1917;--fg:#efebe4;--muted:#8d8880;--border:rgba(255,250,240,0.06);--input:rgba(255,250,240,0.085);--primary:#efebe4;--primary-fg:#24221e;--brand:#c4a676;--brand-fg:#1d1b16;--ok:#6fa67f;--ok-fg:#8cc09a;--warn:#d4a04f;--warn-fg:#e2b86e;--err:#d0665a;--err-fg:#e48678;--info:#6c93b8;--info-fg:#8eb0cf">
+  <h2>Sencha</h2><p class="sub">Live now. Greys warmed a touch, signals softened</p>
   <div class="card"></div>
  </div>
 
- <div class="col" style="--canvas:#121110;--card:#1a1917;--fg:#efebe4;--muted:#8d8880;--border:rgba(255,250,240,.06);--input:rgba(255,250,240,.085);--primary:#efebe4;--primary-fg:#24221e;--brand:#c4a676;--brand-fg:#1d1b16;--ok:#6fa67f;--ok-fg:#8cc09a;--warn:#d4a04f;--warn-fg:#e2b86e;--err:#d0665a;--err-fg:#e48678;--info:#6c93b8;--info-fg:#8eb0cf">
-  <h2>Sencha</h2><p class="sub">Light step: greys warmed a touch, signals softened</p>
+ <div class="col" style="--canvas:#0f1210;--card:#161a17;--fg:#e8ece6;--muted:#858d86;--border:rgba(230,255,235,0.06);--input:rgba(230,255,235,0.085);--primary:#e8ece6;--primary-fg:#1d221e;--brand:#c2a878;--brand-fg:#1d1b16;--ok:#5e9e7c;--ok-fg:#7fbb9a;--warn:#c9a35a;--warn-fg:#dcbb7c;--err:#c26b5c;--err-fg:#d98b7c;--info:#6a92a6;--info-fg:#8db0c2">
+  <h2>Gyokuro</h2><p class="sub">Shade-grown green. Cool green-black greys, jade signals</p>
   <div class="card"></div>
  </div>
 
- <div class="col" style="--canvas:#13110e;--card:#1b1814;--fg:#ece5d8;--muted:#8f877a;--border:rgba(255,240,215,.065);--input:rgba(255,240,215,.09);--primary:#ece5d8;--primary-fg:#26221c;--brand:#c2a06c;--brand-fg:#1d1b16;--ok:#7f9a6a;--ok-fg:#a0b88a;--warn:#c4964f;--warn-fg:#d8b076;--err:#b8644f;--err-fg:#d38670;--info:#6d8a9c;--info-fg:#91aabb">
-  <h2>Oolong</h2><p class="sub">Middle step: warm brown greys, signals like dried leaves</p>
+ <div class="col" style="--canvas:#140f0d;--card:#1c1613;--fg:#ece2d9;--muted:#928378;--border:rgba(255,225,205,0.065);--input:rgba(255,225,205,0.09);--primary:#ece2d9;--primary-fg:#261d18;--brand:#c99a6a;--brand-fg:#1d1b16;--ok:#7d9468;--ok-fg:#9cb187;--warn:#c08a4a;--warn-fg:#d6a56f;--err:#a8534a;--err-fg:#c8766b;--info:#6f8494;--info-fg:#93a6b4">
+  <h2>Pu-erh</h2><p class="sub">Aged and earthy. Red-brown greys, deep wine for errors</p>
   <div class="card"></div>
  </div>
 
- <div class="col" style="--canvas:#14110d;--card:#1c1813;--fg:#e6dccb;--muted:#8e8371;--border:rgba(255,230,195,.07);--input:rgba(255,230,195,.1);--primary:#e6dccb;--primary-fg:#27211a;--brand:#b99561;--brand-fg:#1a1611;--ok:#8a9670;--ok-fg:#a8b28d;--warn:#b38a55;--warn-fg:#cba77a;--err:#a35f4c;--err-fg:#c3826d;--info:#71828b;--info-fg:#97a6ad">
-  <h2>Hojicha</h2><p class="sub">Deepest step: roasted, close tones, the quietest signals</p>
+ <div class="col" style="--canvas:#0e0e0e;--card:#161616;--fg:#ebeae6;--muted:#878680;--border:rgba(255,255,250,0.06);--input:rgba(255,255,250,0.08);--primary:#ebeae6;--primary-fg:#1e1e1c;--brand:#b9a27a;--brand-fg:#1d1b16;--ok:#8fa86a;--ok-fg:#a9c088;--warn:#c7a258;--warn-fg:#d9b97c;--err:#b8675c;--err-fg:#d0877d;--info:#7790a3;--info-fg:#99afc0">
+  <h2>Sumi and matcha</h2><p class="sub">Ink black, nearly neutral. Matcha green leads the signals</p>
+  <div class="card"></div>
+ </div>
+
+ <div class="col" style="--canvas:#161615;--card:#1e1e1c;--fg:#f2efe8;--muted:#9a968d;--border:rgba(255,252,245,0.07);--input:rgba(255,252,245,0.1);--primary:#f2efe8;--primary-fg:#262522;--brand:#d2bb8f;--brand-fg:#1d1b16;--ok:#8db39a;--ok-fg:#a8c9b3;--warn:#d8b77a;--warn-fg:#e6cb98;--err:#d08b80;--err-fg:#e2a399;--info:#8fa9c0;--info-fg:#abc2d6">
+  <h2>Silver needle</h2><p class="sub">White tea. Lighter silvery greys, pale champagne signals</p>
   <div class="card"></div>
  </div>
 

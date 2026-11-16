@@ -2,7 +2,7 @@
    never edited by hand, so a later `shadcn add` can update it. Everything AR Create changes lives here, the way the
    coss Styling guide says to customise: by setting the same colour names in the global stylesheet.
 
-   - Dark: coss ui's dark in the "Sencha" tea tone: same shape and colours, one step quieter and warmer.
+   - Dark: coss ui's dark in the "Sumi and matcha" tea tone: ink black, matcha green leading, same shape and colours.
    - Light: AR Create's warm paper palette, written with coss's formulas (see-through edges, soft fills), so borders
      and shadows keep the depth the Styling guide describes.
    - The app switches theme with data-theme="dark"; coss uses a .dark class. Both work. */
@@ -55,46 +55,46 @@
   --brand-foreground: #fffefb;
 }
 
-/* Dark: "Sencha", chosen by Adrian on 16 November 2026. coss ui's dark, kept in its shape and in the same colours,
-   one step quieter and warmer: greys warmed a touch, signals softened toward tea. Repeated for data-theme so the
-   app's switch reaches it. */
+/* Dark: "Sumi and matcha", chosen by Adrian on 16 November 2026 from the tones in docs/design/tea-tones.html. coss ui's
+   dark in its shape and in the same colours: near-black ink with almost no cast, matcha green leading the signals,
+   amber, red and blue softened. Repeated for data-theme so the app's switch reaches it. */
 .dark, [data-theme="dark"] {
   color-scheme: dark;
-  --canvas: #121110;
-  --background: #151413;
-  --foreground: #efebe4;
-  --card: #1a1917;
-  --card-foreground: #efebe4;
-  --popover: #1d1c1a;
-  --popover-foreground: #efebe4;
-  --primary: #efebe4;
-  --primary-foreground: #24221e;
-  --secondary: rgba(255, 250, 240, 0.04);
-  --secondary-foreground: #efebe4;
-  --muted: rgba(255, 250, 240, 0.04);
-  --muted-foreground: #8d8880;
-  --accent: rgba(255, 250, 240, 0.04);
-  --accent-foreground: #efebe4;
-  --border: rgba(255, 250, 240, 0.06);
-  --input: rgba(255, 250, 240, 0.085);
-  --ring: #7d776e;
-  --destructive: #d0665a;
-  --destructive-foreground: #e48678;
-  --success: #6fa67f;
-  --success-foreground: #8cc09a;
-  --warning: #d4a04f;
-  --warning-foreground: #e2b86e;
-  --info: #6c93b8;
-  --info-foreground: #8eb0cf;
-  --sidebar: #121110;
-  --sidebar-foreground: color-mix(in srgb, #efebe4 64%, #121110);
-  --sidebar-primary: #efebe4;
-  --sidebar-primary-foreground: #24221e;
-  --sidebar-accent: rgba(255, 250, 240, 0.04);
-  --sidebar-accent-foreground: #efebe4;
-  --sidebar-border: rgba(255, 250, 240, 0.05);
-  --sidebar-ring: #7d776e;
-  --brand: #c4a676;
+  --canvas: #0e0e0e;
+  --background: #121212;
+  --foreground: #ebeae6;
+  --card: #161616;
+  --card-foreground: #ebeae6;
+  --popover: #1a1a19;
+  --popover-foreground: #ebeae6;
+  --primary: #ebeae6;
+  --primary-foreground: #1e1e1c;
+  --secondary: rgba(255, 255, 250, 0.04);
+  --secondary-foreground: #ebeae6;
+  --muted: rgba(255, 255, 250, 0.04);
+  --muted-foreground: #878680;
+  --accent: rgba(255, 255, 250, 0.04);
+  --accent-foreground: #ebeae6;
+  --border: rgba(255, 255, 250, 0.06);
+  --input: rgba(255, 255, 250, 0.08);
+  --ring: #77766f;
+  --destructive: #b8675c;
+  --destructive-foreground: #d0877d;
+  --success: #8fa86a;
+  --success-foreground: #a9c088;
+  --warning: #c7a258;
+  --warning-foreground: #d9b97c;
+  --info: #7790a3;
+  --info-foreground: #99afc0;
+  --sidebar: #0e0e0e;
+  --sidebar-foreground: color-mix(in srgb, #ebeae6 64%, #0e0e0e);
+  --sidebar-primary: #ebeae6;
+  --sidebar-primary-foreground: #1e1e1c;
+  --sidebar-accent: rgba(255, 255, 250, 0.04);
+  --sidebar-accent-foreground: #ebeae6;
+  --sidebar-border: rgba(255, 255, 250, 0.05);
+  --sidebar-ring: #77766f;
+  --brand: #b9a27a;
   --brand-foreground: #1d1b16;
 }
 

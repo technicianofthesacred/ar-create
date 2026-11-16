@@ -12,7 +12,7 @@ colours. Open it on the demo: `npm run demo`, then http://127.0.0.1:8854/ui/inde
   for the 530 examples. To update or add one, run the same command again in `ui-kit/`.
 - **Colours** follow coss's Styling guide: set the same names in the global stylesheet. `ui-kit/src/styles.css` is
   exactly what coss's install wrote; AR Create's changes live only in `ui-kit/src/app.css`. Dark is coss's dark in the
-  "Sencha" tea tone (same colours, one step quieter and warmer; the three tones compared are in
+  "Sumi and matcha" tea tone (ink black, matcha green leading, same colours; the tones compared are in
   `docs/design/tea-tones.html`), plus AR Create's warm `brand`. Light is AR Create's paper palette written with coss's formulas.
 - **Base UI setup** from the Styling guide: the body is positioned and the app root isolates, so popups sit on top.
 - **Fonts**: coss's install wires Inter; AR Create's face is Plus Jakarta Sans. The page has a switch to compare
