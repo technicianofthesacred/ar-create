@@ -3,6 +3,11 @@
    calls once for each open page with the page's shared state (W). Names it needs from the other files are reached through W. */
 (function(v2){
  'use strict';
+ // coss ui's button look (window.coss, from /ui/kit/coss-classes.js) where version three loads it: primary for the
+ // main action, outline for ordinary ones, ghost for quiet and icon buttons. Version two does not load the script, so
+ // there the classes are empty and every button keeps its own look.
+ const coss=o=>{try{return window.coss.button(o);}catch{return '';}};
+ const CP=coss({variant:'default',size:'sm'}),CB=coss({variant:'outline',size:'sm'}),CQ=coss({variant:'ghost',size:'sm'}),CI=coss({variant:'ghost',size:'icon-sm'});
  const root=window,doc=document;
  v2.shared['write-margin']=function(W){
   const {esc,icon,uuid,flat,proposalView}=W.lib;
@@ -73,8 +78,8 @@
     // A read-through is read as a whole: he changes any words that are not his, or marks a paragraph Not me, and what he leaves
     // alone counts as read (the existing workspace's own account). A plain suggestion goes in exactly as it stands, so its
     // button says that, in the existing workspace's own words: Accept and Reject.
-    const buttons=p.reads?`<div class="wr-row-btns"><button type="button" class="pri" data-act="finish" data-id="${esc(p.id)}">Rewrite it as mine</button><button type="button" class="v2-ghost" data-act="leave" data-id="${esc(p.id)}">Not me</button></div>`
-     :`<div class="wr-row-btns"><button type="button" class="pri" data-act="accept" data-id="${esc(p.id)}">Accept</button><button type="button" class="v2-ghost" data-act="reject" data-id="${esc(p.id)}">Reject</button></div>`;
+    const buttons=p.reads?`<div class="wr-row-btns"><button type="button" class="${CP} pri" data-act="finish" data-id="${esc(p.id)}">Rewrite it as mine</button><button type="button" class="${CQ} v2-ghost" data-act="leave" data-id="${esc(p.id)}">Not me</button></div>`
+     :`<div class="wr-row-btns"><button type="button" class="${CP} pri" data-act="accept" data-id="${esc(p.id)}">Accept</button><button type="button" class="${CQ} v2-ghost" data-act="reject" data-id="${esc(p.id)}">Reject</button></div>`;
     const how=p.reads?'Shown dim'+many+'. Change any words that are not yours, or use Not me'+(p.replacements.length>1?' under a paragraph':'')+' to leave it out. What you leave alone counts as read, and becomes yours when you press Rewrite it as mine.'
      :'Shown dim'+many+'. If you accept, they go in exactly as they stand. They stay dim until you do.';
     return `<div class="wr-note" data-prop="${esc(p.id)}">${head}${asked}<p class="wr-dim">${esc(how)}</p>${buttons}</div>`;

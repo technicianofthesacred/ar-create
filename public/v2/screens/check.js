@@ -8,6 +8,11 @@
    with .ck. */
 (function(v2){
  'use strict';
+ // coss ui's button look (window.coss, from /ui/kit/coss-classes.js) where version three loads it: primary for the
+ // main action, outline for ordinary ones, ghost for quiet and icon buttons. Version two does not load the script, so
+ // there the classes are empty and every button keeps its own look.
+ const coss=o=>{try{return window.coss.button(o);}catch{return '';}};
+ const CP=coss({variant:'default',size:'sm'}),CB=coss({variant:'outline',size:'sm'}),CQ=coss({variant:'ghost',size:'sm'}),CI=coss({variant:'ghost',size:'icon-sm'});
  const {esc,icon}=v2.ui,root=window,doc=document;
  const uuid=()=>root.V2Client.uuid();
 
@@ -251,7 +256,7 @@
     const line=st.busy?'Your words are not changed.':empty?'Nothing is written yet. Write some words, then check them here.':!m?'Press Check saved draft.':current()?'Covers the saved words as they are now.':'The saved words changed since this check. Check the saved draft again.';
     const q=m?.quotes,counts=q?(q.passages?`${q.found} of ${q.passages} quoted passages found in the captured transcript`:'No quoted passages to check'):'';
     const rows=m?`<dl class="ck-results"><div><dt>Quotes</dt><dd>${esc(counts)}${q&&q.narration?`<small>${esc(q.narration+(q.narration===1?' paragraph has':' paragraphs have')+' no quotation marks and are left unchecked.')}</small>`:''}</dd></div><div><dt>Splits</dt><dd>${esc(m.splits?.ok===false?'Possible split, review':'No split detected')}</dd></div></dl>`:'';
-    const list=finds.map(({n,f,onPage})=>`<li class="ck-find" data-find="${n}"><div class="ck-find-h"><strong>${esc(f.title)}</strong>${onPage?`<button type="button" class="v2-ghost" data-ck="go" data-n="${n}" aria-pressed="${st.hit?.n===n}">Show in the words</button>`:''}</div><p>${esc(f.action)}</p>${f.words?`<blockquote>${esc(f.words)}</blockquote>`:''}${onPage?'':'<p class="ck-dim">The check could not point to one place in the draft.</p>'}</li>`).join('');
+    const list=finds.map(({n,f,onPage})=>`<li class="ck-find" data-find="${n}"><div class="ck-find-h"><strong>${esc(f.title)}</strong>${onPage?`<button type="button" class="${CQ} v2-ghost" data-ck="go" data-n="${n}" aria-pressed="${st.hit?.n===n}">Show in the words</button>`:''}</div><p>${esc(f.action)}</p>${f.words?`<blockquote>${esc(f.words)}</blockquote>`:''}${onPage?'':'<p class="ck-dim">The check could not point to one place in the draft.</p>'}</li>`).join('');
     const sourceNote=finds.some(x=>x.f.words)?`<div class="ck-src">${v2.ui.notBuilt('Viewing the captured source beside a finding.',{advanced:{subject:id,piece:piece(),section:'check'}})}</div>`:'';
     const none=m&&!st.busy&&!finds.length?'No findings from these named mechanical checks. Editorial review remains separate.':'';
     const src=m?.source?.path?`Checked against ${m.source.path.split('/').pop()}.`:m?'No captured transcript is attached to this story, so quotes could not be compared.':'';
@@ -259,7 +264,7 @@
     box.innerHTML=`<h2 id="ck-h-run">Check this piece</h2>
      <div class="ck-state" data-kind="${esc(tone)}" role="status"><strong>${esc(label)}</strong><span>${esc(line)}</span></div>
      ${deviceWords()?'<p class="ck-note" role="status">You have unsaved words in Write on this device. A check covers the saved draft only.</p>':''}
-     <div class="ck-btns"><button type="button" class="pri" data-ck="run"${st.busy||empty||!st.read?' disabled':''}>${st.busy?'Checking':m?'Check saved draft again':'Check saved draft'}</button>${empty?`<a class="wr-btn" href="${esc(writeHref())}">Go to Write</a>`:''}</div>
+     <div class="ck-btns"><button type="button" class="${CP} pri" data-ck="run"${st.busy||empty||!st.read?' disabled':''}>${st.busy?'Checking':m?'Check saved draft again':'Check saved draft'}</button>${empty?`<a class="wr-btn" href="${esc(writeHref())}">Go to Write</a>`:''}</div>
      ${st.error?`<p class="ck-bad" role="alert">${esc(st.error)}</p>`:''}
      ${rows}${list?`<ol class="ck-finds" aria-label="Findings">${list}</ol>`:none?`<p class="ck-dim" data-ck-empty>${esc(none)}</p>`:''}
      ${sourceNote}
@@ -279,7 +284,7 @@
     const stale=c&&!cur&&!held;
     const quotes=c?(()=>{const n=quoteCounts(c.quote),said=outcome(c.quote,'quote');return said+(n&&c.quote?.status==='failed'?': '+n.found+' of '+n.of+' quoted passages matched the captured source':n&&n.found?': '+n.found+' of '+n.of+' quoted passages matched':'');})():'';
     const rows=c?`<dl class="ck-results"><div><dt>Quotes</dt><dd>${esc(quotes)}${reason(c.quote)?`<small>${esc(reason(c.quote))}</small>`:''}</dd></div><div><dt>Splits</dt><dd>${esc(outcome(c.split,'split'))}${reason(c.split)?`<small>${esc(reason(c.split))}</small>`:''}</dd></div></dl>`:'';
-    const list=finds.map(({n,f,issue,onPage,old})=>`<li class="ck-find" data-find="${n}"${old?' data-old="true"':''}><div class="ck-find-h"><strong>${esc(f.title)}</strong>${old?'<span class="ck-pill">From the older check</span>':''}${onPage?`<button type="button" class="v2-ghost" data-ck="go" data-n="${n}" aria-pressed="${st.hit?.n===n}">Show in the words</button>`:''}</div><p>${esc(f.action)}</p>${f.words?`<blockquote>${esc(f.words)}</blockquote>`:''}${onPage?'':`<p class="ck-dim">${esc(old?'Recheck the current revision to locate this finding.':locatorNote(issue.locator?.reason)||'No unique passage jump is available. The words are on the page; compare them there.')}</p>`}</li>`).join('');
+    const list=finds.map(({n,f,issue,onPage,old})=>`<li class="ck-find" data-find="${n}"${old?' data-old="true"':''}><div class="ck-find-h"><strong>${esc(f.title)}</strong>${old?'<span class="ck-pill">From the older check</span>':''}${onPage?`<button type="button" class="${CQ} v2-ghost" data-ck="go" data-n="${n}" aria-pressed="${st.hit?.n===n}">Show in the words</button>`:''}</div><p>${esc(f.action)}</p>${f.words?`<blockquote>${esc(f.words)}</blockquote>`:''}${onPage?'':`<p class="ck-dim">${esc(old?'Recheck the current revision to locate this finding.':locatorNote(issue.locator?.reason)||'No unique passage jump is available. The words are on the page; compare them there.')}</p>`}</li>`).join('');
     const sourceNote=finds.some(x=>x.f.words&&!x.old)?`<div class="ck-src">${v2.ui.notBuilt('Viewing the captured source beside a finding.',{advanced:{subject:id,piece:piece(),section:'check'}})}</div>`:'';
     const empty0=c&&!st.busy&&!finds.length?(cur&&c.status==='checked'?'No findings recorded by these named mechanical checks. Editorial review remains separate.':'No current findings to show. Run or recheck the saved revision before treating the manuscript as checked.'):'';
     const proof=c?`<details class="ck-proof"${st.proofOpen?' open':''}><summary data-ck="proof">Check details and saved proof</summary>${cs&&!mainBlock&&st.proofOpen?cs.block({noCapture:true}):''}<p>${esc(c.staleReason||'')}</p><p>Meaning, narration, bracket intent, independent editorial review, blind reading and rating are not verified. No editorial approval was granted.</p><p class="ck-dim">${esc('Saved '+whenLabel(c.finishedAt||c.createdAt))}${c.checkId?esc(' · receipt '+String(c.checkId).slice(0,8)):''}</p>${c.checkId?`<p>${esc('Receipt '+c.checkId)}</p>`:''}<p>${esc('Draft SHA-256: '+(c.proof?.draftHash??''))}</p>${(c.proof?.sources||[]).map(x=>`<p>${esc((x.role||'')+' '+(x.id||'')+' · SHA-256 '+(x.hash||''))}</p>`).join('')}<h3>Quote output</h3><pre>${esc(c.quote?.output||c.quote?.reason||'No completed output.')}</pre><h3>Split output</h3><pre>${esc(c.split?.output||c.split?.reason||'No completed output.')}</pre></details>`:'';
@@ -288,7 +293,7 @@
      ${why&&!st.busy?`<p class="ck-why">${esc(why)}</p>`:''}
      ${mainBlock?cs.block({back:v2.href('subject/:id',{id})}):''}
      ${deviceWords()?'<p class="ck-note" role="status">You have unsaved words in Write on this device. A check covers the saved draft only.</p>':''}
-     <div class="ck-btns"><button type="button" class="pri" data-ck="run"${st.busy||empty||!st.read?' disabled':''}>${st.busy?'Checking':c?'Check saved draft again':'Check saved draft'}</button>${stale||st.error||st.receiptNote?'<button type="button" class="v2-ghost" data-ck="reload">Load current saved draft</button>':''}${empty?`<a class="wr-btn" href="${esc(writeHref())}">Go to Write</a>`:''}</div>
+     <div class="ck-btns"><button type="button" class="${CP} pri" data-ck="run"${st.busy||empty||!st.read?' disabled':''}>${st.busy?'Checking':c?'Check saved draft again':'Check saved draft'}</button>${stale||st.error||st.receiptNote?'<button type="button" class="'+CQ+' v2-ghost" data-ck="reload">Load current saved draft</button>':''}${empty?`<a class="wr-btn" href="${esc(writeHref())}">Go to Write</a>`:''}</div>
      ${st.error?`<p class="ck-bad" role="alert">${esc(st.error)}</p>`:''}${st.receiptNote?`<p class="ck-bad" role="alert">${esc(st.receiptNote)}</p>`:''}
      ${rows}${c&&c.error?`<p class="ck-bad">${esc(c.error)}</p>`:''}
      ${list?`<ol class="ck-finds" aria-label="Findings">${list}</ol>`:empty0?`<p class="ck-dim" data-ck-empty>${esc(empty0)}</p>`:''}
@@ -398,7 +403,7 @@
    const box=$('[data-ck-dec]');if(!box)return;
    keepFocus(box,()=>{
     const d=st.dec,report=d.report;
-    const head=`<div class="ck-dec-h"><h2 id="ck-h-dec">Decisions in this piece</h2>${decisionsPossible()?'<button type="button" class="v2-ghost" data-ck="decisions">Reload decisions</button>':''}</div>`;
+    const head=`<div class="ck-dec-h"><h2 id="ck-h-dec">Decisions in this piece</h2>${decisionsPossible()?'<button type="button" class="${CQ} v2-ghost" data-ck="decisions">Reload decisions</button>':''}</div>`;
     if(st.story){box.innerHTML=head+`<p class="ck-dim">Decisions are read from a subject’s own pages. They do not answer for a Magazine story yet.</p>`+v2.ui.notBuilt('Decisions recorded against a Magazine story.',{advanced:{subject:id,piece:piece(),section:'check'}});return;}
     if(d.state==='none'||d.state==='idle'){box.innerHTML=head+`<p class="ck-dim">${esc(decisionsPossible()?'Reading saved words and decisions.':'Decisions are read for the saved words of an Article that Check can open. They are not available for this piece.')}</p>`;return;}
     if(d.state==='reading'){box.innerHTML=head+'<p class="ck-dim" role="status">Reading saved words and decisions.</p>';return;}
@@ -410,7 +415,7 @@
      const canReview=!!(nav.recordedParagraph?.paragraphId&&record?.selectionBlockHash&&record?.text&&nav.passages?.length);
      const note=nav.source?.sourceId?'Opens the source record; an exact passage jump is unavailable.':(nav.passages?.length||nav.recordedParagraph)?(canReview?'The recorded paragraph is verified again before it is shown.':'An exact passage route is unavailable. Compare the recorded words on the page.'):'';
      const text=f.code==='source-support-unassessed'?`${record?.selectedSourceCount??0} selected source passages in this snapshot. Claim support and meaning remain unassessed.`:f.message;
-     return `<li class="ck-dec" data-finding="${esc(f.id)}"><div class="ck-find-h"><strong>${esc(DECISION_TITLES[f.code]||'Needs review')}</strong><span class="ck-pill">${esc(f.assessment==='mechanical'?'Literal finding':'Unassessed')}</span></div>${words?`<blockquote>${esc(words)}</blockquote>`:''}${record?.reason?`<p>${esc('Recorded reason: '+record.reason)}</p>`:''}${record?.decisionRole==='stand-in'?'<p class="ck-dim" data-ck-standin>Synthetic test decision</p>':''}<p>${esc(text)}</p>${note?`<p class="ck-dim">${esc(note)}</p>`:''}${canReview?`<div class="ck-btns"><button type="button" class="v2-ghost" data-ck="passage" data-n="${esc(f.id)}">Review passage</button></div>`:''}${nav.source?.sourceId?`<div class="ck-src">${v2.ui.notBuilt('Opening the source record beside the finding.',{advanced:{subject:id,piece:piece(),section:'source'}})}</div>`:''}</li>`;
+     return `<li class="ck-dec" data-finding="${esc(f.id)}"><div class="ck-find-h"><strong>${esc(DECISION_TITLES[f.code]||'Needs review')}</strong><span class="ck-pill">${esc(f.assessment==='mechanical'?'Literal finding':'Unassessed')}</span></div>${words?`<blockquote>${esc(words)}</blockquote>`:''}${record?.reason?`<p>${esc('Recorded reason: '+record.reason)}</p>`:''}${record?.decisionRole==='stand-in'?'<p class="ck-dim" data-ck-standin>Synthetic test decision</p>':''}<p>${esc(text)}</p>${note?`<p class="ck-dim">${esc(note)}</p>`:''}${canReview?`<div class="ck-btns"><button type="button" class="${CQ} v2-ghost" data-ck="passage" data-n="${esc(f.id)}">Review passage</button></div>`:''}${nav.source?.sourceId?`<div class="ck-src">${v2.ui.notBuilt('Opening the source record beside the finding.',{advanced:{subject:id,piece:piece(),section:'source'}})}</div>`:''}</li>`;
     }).join('');
     box.innerHTML=head+`<p class="ck-dim" role="status">${esc(status)}</p><p class="ck-dim">Saved Article, current saved words.</p>${d.msg?`<p class="ck-note" role="status">${esc(d.msg)}</p>`:''}<ul class="ck-decs">${rows}</ul><p class="ck-dim">Saved wording only. Literal comparisons do not assess meaning, factual support, voice or consent. This is not wording or publication approval.</p>`;
    });
@@ -452,7 +457,7 @@
    const box=$('[data-ck-truth]');if(!box)return;
    keepFocus(box,()=>{
     const t=st.truth,d=t.desk,head='<h2 id="ck-h-truth">Truth and consent</h2>';
-    if(t.state==='error'||(t.state==='ready'&&!d)){box.innerHTML=head+`<p class="ck-bad" role="alert">${esc(t.note||'The claims and people for this piece could not be read.')}</p><div class="ck-btns"><button type="button" class="v2-ghost" data-ck="truth">Read them again</button></div>`;return;}
+    if(t.state==='error'||(t.state==='ready'&&!d)){box.innerHTML=head+`<p class="ck-bad" role="alert">${esc(t.note||'The claims and people for this piece could not be read.')}</p><div class="ck-btns"><button type="button" class="${CQ} v2-ghost" data-ck="truth">Read them again</button></div>`;return;}
     if(!d){box.innerHTML=head+'<p class="ck-dim" role="status">Reading the claims and people for this piece…</p>';return;}
     const s=d.summary||{},order={doubtful:0,unsourced:1,sourced:2};
     const counts=s.claims?`${s.claims} ${s.claims===1?'claim':'claims'} · ${s.sourced} sourced${s.unsourced?' · '+s.unsourced+' with no source':''}${s.doubtful?' · '+s.doubtful+' doubtful':''}${s.quotesDiffering?' · '+s.quotesDiffering+' quote'+(s.quotesDiffering===1?'':'s')+' differ from the source':''}`:'';

@@ -28,14 +28,14 @@ body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--v2-t15)/1.5 v
  button.v2-ghost:not(.coss){display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;min-height:32px!important;height:auto!important;padding:0 10px!important;border:0!important;border-radius:6px!important;background:transparent!important;color:var(--c3-ink2)!important;font:500 var(--v2-t14)/1 var(--ar-ui)!important;white-space:nowrap!important;box-shadow:none!important;filter:none!important;background-clip:border-box!important}
  button.v2-ghost:not(.coss):not(:disabled):hover{background:var(--v2-sec)!important;color:var(--ink)!important}
  button.v2-ghost:not(.coss):disabled{opacity:.35!important}
- button.v2-icon-btn{width:32px!important;padding:0!important}
- @media (max-width:850px),(pointer:coarse){button.v2-ghost:not(.coss){min-height:44px!important}button.v2-icon-btn{width:44px!important}}
+ button.v2-icon-btn:not(.coss){width:32px!important;padding:0!important}
+ @media (max-width:850px),(pointer:coarse){button.v2-ghost:not(.coss){min-height:44px!important}button.v2-icon-btn:not(.coss){width:44px!important}}
  @media (max-width:850px){button.v2-ghost:not(.coss).v2-wide{display:none!important}}
  button.v2-ghost:not(.coss)[hidden]{display:none!important}
  .v2-top button.v2-ghost:not(.coss){min-height:28px!important;padding:3px 10px!important;border:1px solid transparent!important;font:600 var(--v2-t13)/20px var(--ar-ui)!important;position:relative!important}
- .v2-top button.v2-icon-btn{width:auto!important}
+ .v2-top button.v2-icon-btn:not(.coss){width:auto!important}
  .v2-top button.v2-ghost:not(.coss)::after{content:"";position:absolute;inset:-6px -2px}
- @media (max-width:850px),(pointer:coarse){.v2-top button.v2-ghost:not(.coss){min-height:32px!important}.v2-top button.v2-icon-btn{width:auto!important}}
+ @media (max-width:850px),(pointer:coarse){.v2-top button.v2-ghost:not(.coss){min-height:32px!important}.v2-top button.v2-icon-btn:not(.coss){width:auto!important}}
  button.v2-desk-more{flex:none!important;min-height:32px!important;padding:0 8px!important;font:500 var(--v2-t13)/1 var(--ar-ui)!important;color:var(--dim)!important}
 }
 

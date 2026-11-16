@@ -4,6 +4,11 @@
    themselves are drawn by the app's own renderer in frames, scaled to fit. His words are never written here. */
 (function(v2){
  'use strict';
+ // coss ui's button look (window.coss, from /ui/kit/coss-classes.js) where version three loads it: primary for the
+ // main action, outline for ordinary ones, ghost for quiet and icon buttons. Version two does not load the script, so
+ // there the classes are empty and every button keeps its own look.
+ const coss=o=>{try{return window.coss.button(o);}catch{return '';}};
+ const CP=coss({variant:'default',size:'sm'}),CB=coss({variant:'outline',size:'sm'}),CQ=coss({variant:'ghost',size:'sm'}),CI=coss({variant:'ghost',size:'icon-sm'});
  const esc=v2.ui.esc,ic=v2.ui.icon,FORMAT='carousel',W=1080,H=1350;
  const ROLE={cover:'Cover',inner:'Inner',close:'Close'},BRANDS=['teajia','art','mandala-codes'];
  const lookName=id=>String(id||'').split('-').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
@@ -89,7 +94,7 @@
   function stageHTML(){
    return '<p class="sl-rochip" role="note"><b>Read only.</b> Changing it is done in Advanced.</p><div class="sl-big sl-swipe" style="aspect-ratio:'+W+'/'+H+'"><iframe sandbox="allow-same-origin" class="sl-first" data-slide="big" title="Slide, large" tabindex="-1"></iframe></div>'
     +'<div class="sl-cap"><span class="sl-capt" data-cap aria-live="polite"></span><span class="sl-sp"></span>'
-    +'<button type="button" class="v2-ghost v2-icon-btn" data-sl="prev" aria-label="Previous slide">'+ic('back')+'</button><button type="button" class="v2-ghost v2-icon-btn" data-sl="next" aria-label="Next slide">'+ic('right')+'</button></div>';
+    +'<button type="button" class="'+CI+' v2-ghost v2-icon-btn" data-sl="prev" aria-label="Previous slide">'+ic('back')+'</button><button type="button" class="'+CI+' v2-ghost v2-icon-btn" data-sl="next" aria-label="Next slide">'+ic('right')+'</button></div>';
   }
   function panelHTML(){
    const s=slides[sel]||{},pl=Array.isArray(out.placements)?out.placements.length:0,ph=Array.isArray(s.photos)?s.photos.filter(p=>p&&p.src).length:0;
@@ -295,7 +300,7 @@
     await writeFrames(frames().map((f,i)=>i===sel?{...f,photos:f.photos.map((p,j)=>j===slot?next:p)}:f),'Slide '+(sel+1)+': the crop of place '+(slot+1)+' moved.');
    }
    function makeSheet(){
-    const sh=v2.ui.sheet({title:'Make a new layout',body:'<p>It would be drawn inside the '+esc(lookName(lookId()))+' look: its colours, type, logo and rules.</p><p class="sl-dim">Drawing a layout from words is not built yet. For now an assistant adds one as a proposal: it appears under Proposed by assistants in Layout, and you accept or turn it down. You can also keep this slide as a template.</p><p class="sl-row"><button type="button" class="pri" data-make="save">Save this slide as a template</button><button type="button" data-make="close">Close</button></p>'});
+    const sh=v2.ui.sheet({title:'Make a new layout',body:'<p>It would be drawn inside the '+esc(lookName(lookId()))+' look: its colours, type, logo and rules.</p><p class="sl-dim">Drawing a layout from words is not built yet. For now an assistant adds one as a proposal: it appears under Proposed by assistants in Layout, and you accept or turn it down. You can also keep this slide as a template.</p><p class="sl-row"><button type="button" class="'+CP+' pri" data-make="save">Save this slide as a template</button><button type="button" data-make="close">Close</button></p>'});
     sh.body.addEventListener('click',e=>{const b=e.target.closest('[data-make]');if(!b)return;sh.close();if(b.dataset.make==='save'){saveOpen=true;paint();root.querySelector('[data-sl-form="savet"] [name="name"]')?.focus();}});
    }
    const savePlaced=(list,msg)=>act('instagram.placed',{format:FORMAT,slide:sel+1,placed:list},msg);
@@ -386,7 +391,7 @@
    const codesList=()=>offered().map(g=>g.items[0]?.code).filter(Boolean).slice(0,9);
    function sayHTML(){
     const n=said,codes=codesList();
-    return '<form class="sl-say" data-sl-form="say"><button type="button" class="v2-ghost v2-icon-btn" data-sl="speak" aria-label="Speak">'+ic('ask')+'</button><input name="say" maxlength="400" autocomplete="off" value="'+esc(sayText)+'" placeholder="Say or type it: use '+esc(codes.length?codes.slice(0,6).join(', '):'C1, 2 and 5')+'" aria-label="Tell the studio which layouts to use" title="Slide 1 takes the first code, slide 2 the next. A letter carries on: C1, 2 and 5 is C1, C2 and C5."><button type="submit" class="pri">Build</button></form>'
+    return '<form class="sl-say" data-sl-form="say"><button type="button" class="'+CI+' v2-ghost v2-icon-btn" data-sl="speak" aria-label="Speak">'+ic('ask')+'</button><input name="say" maxlength="400" autocomplete="off" value="'+esc(sayText)+'" placeholder="Say or type it: use '+esc(codes.length?codes.slice(0,6).join(', '):'C1, 2 and 5')+'" aria-label="Tell the studio which layouts to use" title="Slide 1 takes the first code, slide 2 the next. A letter carries on: C1, 2 and 5 is C1, C2 and C5."><button type="submit" class="'+CP+' pri">Build</button></form>'
      +(codes.length?'<div class="sl-try"><span>Try</span><button type="button" data-sl="try" data-text="'+esc(codes.join(', '))+'">'+esc(codes.join(', '))+'</button></div>':'')
      +(n?'<div class="sl-said" role="status">'+(n.done?'<p class="sl-ok">'+esc(n.done)+'</p>':'')+(n.missed?'<p class="sl-bad">'+esc(n.missed)+'</p>':'')+'</div>':'');
    }
@@ -400,14 +405,14 @@
     const code=t?.rowLetter&&nextCodes[t.rowLetter];
     return '<div class="sl-big" style="aspect-ratio:'+W+'/'+H+'"><iframe class="sl-first" title="Slide '+(sel+1)+', large" data-src="'+esc(renderSrc(sel))+'" tabindex="-1"></iframe><div class="sl-over">'+boxes+'</div></div>'
      +'<div class="sl-cap"><span class="sl-capt"><b>'+(sel+1)+' · '+esc(ROLE[fr.role]||'Inner')+'</b> · '+(t?'<b class="sl-code">'+esc(t.code||'')+'</b> '+esc(t.name):esc(fr.templateId))+'<small>'+esc(t?(t.owner?'Yours':(t.row||t.rowLetter||'')):'')+(a?.name?' · posts to '+esc(a.name):'')+'</small></span>'
-     +'<button type="button" class="v2-ghost sl-fav" data-sl="fav" aria-label="Mark as a favourite" title="Favourites are not built yet">☆</button><span class="sl-sp"></span>'
-     +'<button type="button" class="v2-ghost v2-icon-btn" data-sl="prev-layout" aria-label="Previous layout">'+ic('back')+'</button><button type="button" class="v2-ghost v2-icon-btn" data-sl="next-layout" aria-label="Next layout">'+ic('right')+'</button>'
+     +'<button type="button" class="'+CQ+' v2-ghost sl-fav" data-sl="fav" aria-label="Mark as a favourite" title="Favourites are not built yet">☆</button><span class="sl-sp"></span>'
+     +'<button type="button" class="'+CI+' v2-ghost v2-icon-btn" data-sl="prev-layout" aria-label="Previous layout">'+ic('back')+'</button><button type="button" class="'+CI+' v2-ghost v2-icon-btn" data-sl="next-layout" aria-label="Next layout">'+ic('right')+'</button>'
      +'<button type="button" data-sl="make"><span aria-hidden="true">✦ </span>Make a layout</button><button type="button" data-sl="save-open" aria-expanded="'+saveOpen+'">Save as a template</button>'
      +'<button type="button" data-sl="mv" data-d="-1" class="sl-mv" '+(sel?'':'disabled')+'>Move earlier</button><button type="button" data-sl="mv" data-d="1" class="sl-mv" '+(sel<frames().length-1?'':'disabled')+'>Move later</button></div>'
      +(saveOpen?'<form class="sl-savet" data-sl-form="savet"><p>'+(human()?(code?'It will be called <b class="sl-code">'+esc(code)+'</b>, the next free code in '+esc(t.row||t.rowLetter)+'. ':'')+'It keeps the layout and anything placed on it. The words and photographs stay with this Carousel.':'An assistant\'s template goes to Adrian as a proposal. It gets its code when he accepts it.')+'</p>'
       +'<label><span class="sl-lab">Name</span><input name="name" maxlength="80" required value="'+esc((t?.name||'My layout')+', mine')+'"></label>'
       +'<div class="sl-pills" role="radiogroup" aria-label="For which looks"><span class="sl-lab">For</span><label><input type="radio" name="looks" value="this" checked> The '+esc(lookName(lookId()))+' look</label><label><input type="radio" name="looks" value="all"'+(t?.onlyIn?' disabled':'')+'> Every look</label></div>'
-      +'<div class="sl-row"><button type="submit" class="pri">Save template</button><button type="button" data-sl="save-cancel">Cancel</button></div></form>':'');
+      +'<div class="sl-row"><button type="submit" class="'+CP+' pri">Save template</button><button type="button" data-sl="save-cancel">Cancel</button></div></form>':'');
    }
    const tile=(t,cur)=>'<li class="sl-cell" data-find="'+esc((t.code+' '+t.name).toLowerCase())+'"><div class="sl-tile" role="button" tabindex="0" data-sl="use" data-id="'+esc(t.id)+'" aria-pressed="'+(t.code===cur)+'" title="'+esc(t.code+' '+t.name)+'">'+FR(previewSrc(t.id),104,t.code+' '+t.name)+'<span class="sl-tname"><b class="sl-code">'+esc(t.code)+'</b> '+esc(t.name)+'</span></div></li>';
    const yoursList=()=>flat().filter(t=>t.owner);
@@ -439,7 +444,7 @@
     const cur=fr.photos[slot];
     return '<p class="sl-label">Places on this slide</p><div class="sl-places">'+places+'</div>'
      +'<p class="sl-label">This subject\'s photographs</p>'+(all.length?'<ul class="sl-photos">'+all.map(p=>{const on=used.get(p.id)||[];return '<li><button type="button" class="sl-photo" data-sl="photo" data-id="'+esc(p.id)+'" aria-pressed="'+(cur?.photoId===p.id)+'" title="'+esc(p.caption||p.id)+'" aria-label="'+esc((p.caption||p.id)+(on.length?', on slide '+on.join(' and '):''))+'"><img src="'+esc(blob(p))+'" alt="" loading="lazy"></button></li>';}).join('')+'</ul>':'<p class="sl-dim">This plan has no photographs yet.</p>')
-     +'<div class="sl-row"><a class="sl-btn" href="'+esc(advancedHref('media'))+'">From the Library</a><button type="button" class="v2-ghost" data-sl="crop-open" aria-expanded="'+cropOpen+'"'+(cur?'':' disabled')+'>Move the crop</button></div>'
+     +'<div class="sl-row"><a class="sl-btn" href="'+esc(advancedHref('media'))+'">From the Library</a><button type="button" class="'+CQ+' v2-ghost" data-sl="crop-open" aria-expanded="'+cropOpen+'"'+(cur?'':' disabled')+'>Move the crop</button></div>'
      +(cropOpen&&cur?'<div class="sl-crop" role="group" aria-label="Move the crop of place '+(slot+1)+'"><button type="button" data-sl="crop" data-dx="-10" data-dy="0">Left</button><button type="button" data-sl="crop" data-dx="10" data-dy="0">Right</button><button type="button" data-sl="crop" data-dx="0" data-dy="-10">Up</button><button type="button" data-sl="crop" data-dx="0" data-dy="10">Down</button><button type="button" data-sl="crop" data-dx="0" data-dy="0">Centre</button></div>':'')
      +'<p class="sl-dim">Photographs are cropped to fit and never stretched.</p>';
    }
@@ -456,7 +461,7 @@
      +(assets.length?'':'<p class="sl-dim">This look has no logo or marks yet.</p>')+'<p class="sl-dim">These belong to this look. Change the look and they change with it.</p>'
      +'<p class="sl-label">For any look</p><ul class="sl-things">'+plain('label-open','<b class="sl-lab2">LABEL</b>','Small label',' aria-expanded="'+labelOpen+'"')+plain('place','<b class="sl-rule"></b>','Rule',' data-kind="rule"')+plain('place','<b class="sl-inset">'+(ph?'<img src="'+esc(blob(ph))+'" alt="">':'')+'</b>','Inset picture',' data-kind="picture"'+(ph?' data-id="'+esc(ph.id)+'"':''))+'</ul>'
      +(labelOpen?'<form class="sl-row" data-sl-form="label"><input name="label" maxlength="60" placeholder="A short label, like JOURNEY 04" aria-label="Label words"><button type="submit">Add the label</button></form>':'')
-     +'<p class="sl-label">On this slide</p>'+(list.length?'<ul class="sl-on">'+list.map((p,i)=>'<li><span>'+esc(thingName(p))+'</span><button type="button" class="v2-ghost v2-icon-btn" data-sl="size" data-n="'+i+'" data-d="-1" aria-label="Smaller: '+esc(thingName(p))+'">−</button><button type="button" class="v2-ghost v2-icon-btn" data-sl="size" data-n="'+i+'" data-d="1" aria-label="Bigger: '+esc(thingName(p))+'">+</button><button type="button" class="v2-ghost v2-icon-btn" data-sl="unplace" data-n="'+i+'" aria-label="Remove: '+esc(thingName(p))+'">'+ic('close')+'</button></li>').join('')+'</ul><p class="sl-dim">Drag anything you placed to move it on the slide, or focus it and use the arrow keys.</p>'
+     +'<p class="sl-label">On this slide</p>'+(list.length?'<ul class="sl-on">'+list.map((p,i)=>'<li><span>'+esc(thingName(p))+'</span><button type="button" class="'+CI+' v2-ghost v2-icon-btn" data-sl="size" data-n="'+i+'" data-d="-1" aria-label="Smaller: '+esc(thingName(p))+'">−</button><button type="button" class="'+CI+' v2-ghost v2-icon-btn" data-sl="size" data-n="'+i+'" data-d="1" aria-label="Bigger: '+esc(thingName(p))+'">+</button><button type="button" class="'+CI+' v2-ghost v2-icon-btn" data-sl="unplace" data-n="'+i+'" aria-label="Remove: '+esc(thingName(p))+'">'+ic('close')+'</button></li>').join('')+'</ul><p class="sl-dim">Drag anything you placed to move it on the slide, or focus it and use the arrow keys.</p>'
       :'<p class="sl-dim">Nothing placed yet. Press a logo or graphic to put it on the slide, then drag it where you want it.</p>')
      +(left.length?'<p class="sl-warn">'+left.map(x=>esc(x.why)).join(' ')+'</p>':'');
    }

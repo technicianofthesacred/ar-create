@@ -46,7 +46,7 @@
     .sm-primary, .igs-primary, .study-ai-primary, .source-continuation-primary,
     .ama-primary, .apr-primary, .cwb-primary, .ar-whole-draft-primary,
     .ar-passage-primary, .ar-revise-action, .ar-terminal-start, .rw-ask-primary,
-    .pri, [data-current-check="run"], [aria-pressed="true"]) {
+    .pri, [data-current-check="run"], [aria-pressed="true"]):not(.coss) {
     --graphite-button: var(--graphite-ink);
     --graphite-label: var(--graphite-inverse);
   }
