@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AR Create parts</title>
+<!-- The single style page. Every part AR Create builds with, in one place, in the app's colours. Shapes come from
+     coss ui (coss.com/ui, MIT); colours from tokens.css. Change a colour there and every part here follows. -->
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="ui.css">
+<style>
+ /* The page itself follows coss ui's docs: a 60 tall top bar, a 256 wide side list of quiet rows 32 tall, and each part
+    on a bordered preview panel inside one large card. */
+ html,body{margin:0;background:var(--canvas)}
+ .sg-bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:16px;height:60px;padding:0 24px;border-bottom:1px solid var(--border);background:var(--canvas)}
+ .sg-bar h1{margin:0;font:600 18px/1 var(--font-sans);letter-spacing:-.01em}
+ .sg-bar h1 span{color:var(--muted-foreground);font-weight:500}
+ .sg-bar p{margin:0 0 0 auto;font-size:13px;color:var(--muted-foreground)}
+ .sg{display:grid;grid-template-columns:256px minmax(0,1fr)}
+ .sg-nav{position:sticky;top:60px;align-self:start;height:calc(100vh - 60px);overflow:auto;padding:16px}
+ .sg-nav h2{margin:8px 0 4px;padding:0 8px;height:28px;display:flex;align-items:center;font:500 12px/1 var(--font-sans);color:var(--foreground)}
+ .sg-nav ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ .sg-nav a{display:flex;align-items:center;height:32px;padding:0 8px 0 14px;border-radius:var(--r-lg);color:var(--muted-foreground);text-decoration:none;font-size:14px}
+ .sg-nav a:hover{background:var(--accent);color:var(--foreground)}
+ .sg-nav a[aria-current]{background:var(--accent);color:var(--foreground);font-weight:500}
+ .sg-wrap{padding:0 16px 16px 0;min-width:0}
+ .sg-main{position:relative;min-width:0;padding:40px 32px 64px;border:1px solid var(--border);border-top:0;border-radius:0 0 var(--r-2xl) var(--r-2xl);background:var(--card);box-shadow:0 10px 15px -3px var(--shade),0 4px 6px -4px var(--shade)}
+ .sg-inner{max-width:768px;margin:0 auto}
+ .sg-head{margin-bottom:40px}
+ .sg-head h2{margin:0 0 8px;font:700 30px/1.2 var(--font-sans);letter-spacing:-.01em}
+ .sg-head p{margin:0 0 16px;font-size:18px;line-height:28px;color:var(--muted-foreground)}
+ .sg-sec{scroll-margin-top:84px;margin-bottom:56px}
+ .sg-sec>h2{margin:0 0 8px;font:600 24px/1.3 var(--font-sans);letter-spacing:-.01em}
+ .sg-sec>p{margin:0 0 16px;font-size:16px;line-height:1.6;color:var(--muted-foreground)}
+ .sg-stage{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;min-height:200px;padding:40px 32px;border:1px solid var(--border);border-radius:var(--r-xl);background:var(--background)}
+ .sg-stage--col{flex-direction:column;align-items:stretch;justify-content:center}
+ .sg-stage--muted{background:var(--background)}
+ .sg-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px}
+ .sg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;width:100%}
+ .sg-cap{width:100%;height:0}
+ .sg-sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px;width:100%}
+ .sg-sw div{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted-foreground)}
+ .sg-sw i{display:block;height:56px;margin-bottom:4px;border-radius:var(--r-lg);box-shadow:inset 0 0 0 1px var(--border)}
+ .sg-sw b{font-weight:500;font-size:14px;color:var(--foreground)}
+ .sg-type{display:flex;flex-direction:column;gap:14px;width:100%}
+ .sg-type div{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:baseline}
+ .sg-type span{font-size:12px;color:var(--muted-foreground)}
+ .sg-type p{margin:0}
+ .sg-dialog-demo{position:relative;display:grid;place-items:center;width:100%;padding:40px 16px;border-radius:var(--r-xl);overflow:hidden}
+ .sg-dialog-demo .ui-overlay{position:absolute;inset:0}
+ .sg-dialog-demo .ui-dialog{position:relative}
+ @media (max-width:850px){
+  .sg-bar{padding:0 16px}.sg-bar p{display:none}
+  .sg{grid-template-columns:1fr}
+  .sg-nav{position:static;height:auto;padding:12px 16px;border-bottom:1px solid var(--border)}
+  .sg-nav h2{display:none}
+  .sg-nav ol{flex-direction:row;flex-wrap:wrap;gap:2px}
+  .sg-nav a{height:28px;padding:0 8px;font-size:13px}
+  .sg-wrap{padding:0}
+  .sg-main{padding:24px 16px 48px;border:0;border-radius:0;box-shadow:none}
+  .sg-stage{padding:20px 16px;min-height:0}
+  .sg-type div{grid-template-columns:1fr;gap:2px}
+ }
+</style>
+</head>
+<body class="ui-root">
+<header class="sg-bar">
+ <h1>AR Create <span>parts</span></h1>
+ <p>Shapes from coss ui. Colours from AR Create.</p>
+ <div class="ui-seg" role="group" aria-label="Theme" id="sg-theme">
+  <button type="button" data-theme-set="light" aria-pressed="true">Light</button>
+  <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
+ </div>
+</header>
+<div class="sg">
+ <nav class="sg-nav" aria-label="Parts">
+  <h2>Parts</h2>
+  <ol id="sg-index"></ol>
+ </nav>
+
+ <div class="sg-wrap"><main class="sg-main"><div class="sg-inner">
+  <div class="sg-head"><h2>Every part, one page</h2><p>Everything AR Create is built from. The shapes are coss ui's; the colours are AR Create's. Change a colour in one place and every part here follows.</p></div>
+
+  <section class="sg-sec" id="colours" data-name="Colours">
+   <h2>Colours</h2>
+   <p>The only part that changes between brands. Each name below is used by every part on this page.</p>
+   <div class="sg-stage"><div class="sg-sw">
+    <div><i style="background:var(--canvas)"></i><b>Canvas</b>The page</div>
+    <div><i style="background:var(--background)"></i><b>Background</b>Fields, cards</div>
+    <div><i style="background:var(--foreground)"></i><b>Foreground</b>Main text</div>
+    <div><i style="background:var(--muted-foreground)"></i><b>Muted</b>Quiet text</div>
+    <div><i style="background:var(--primary)"></i><b>Primary</b>Main action</div>
+    <div><i style="background:var(--brand)"></i><b>Brand</b>Needs Adrian</div>
+    <div><i style="background:var(--border)"></i><b>Border</b>Edges</div>
+    <div><i style="background:var(--input)"></i><b>Input</b>Field edges</div>
+    <div><i style="background:var(--success)"></i><b>Success</b>Done, saved</div>
+    <div><i style="background:var(--warning)"></i><b>Warning</b>Check this</div>
+    <div><i style="background:var(--destructive)"></i><b>Error</b>Failed, delete</div>
+    <div><i style="background:var(--info)"></i><b>Info</b>Neutral notice</div>
+   </div></div>
+  </section>
+
+  <section class="sg-sec" id="type" data-name="Type">
+   <h2>Type</h2>
+   <p>One face, Plus Jakarta Sans. Text runs one step larger on a phone.</p>
+   <div class="sg-stage"><div class="sg-type">
+    <div><span>Title</span><p style="font:600 24px/1.25 var(--font-sans)">A talk becomes a story</p></div>
+    <div><span>Heading</span><p style="font:600 18px/1.3 var(--font-sans)">Where the idea came from</p></div>
+    <div><span>Body</span><p>Every line keeps the words exactly as they were said, with the source one click away.</p></div>
+    <div><span>Quiet</span><p style="font-size:var(--ui-text-sm);color:var(--muted-foreground)">Saved two minutes ago</p></div>
+   </div></div>
+  </section>
+
+  <section class="sg-sec" id="button" data-name="Button">
+   <h2>Button</h2>
+   <p>Primary for the one main action on a screen. Brand only when something needs Adrian. Outline and ghost for everything else.</p>
+   <div class="sg-stage sg-stage--col">
+    <div class="sg-row">
+     <button class="ui-btn ui-btn--primary">Publish</button>
+     <button class="ui-btn ui-btn--brand">Review now</button>
+     <button class="ui-btn ui-btn--outline">Preview</button>
+     <button class="ui-btn ui-btn--secondary">Duplicate</button>
+     <button class="ui-btn ui-btn--ghost">Cancel</button>
+     <button class="ui-btn ui-btn--link">Open source</button>
+    </div>
+    <div class="sg-row">
+     <button class="ui-btn ui-btn--destructive">Delete</button>
+     <button class="ui-btn ui-btn--destructive-outline">Remove photo</button>
+     <button class="ui-btn ui-btn--outline" disabled>Disabled</button>
+     <button class="ui-btn ui-btn--primary" data-loading aria-disabled="true">Saving<span class="ui-spinner"></span></button>
+    </div>
+    <div class="sg-row">
+     <button class="ui-btn ui-btn--outline ui-btn--xs">Extra small</button>
+     <button class="ui-btn ui-btn--outline ui-btn--sm">Small</button>
+     <button class="ui-btn ui-btn--outline">Default</button>
+     <button class="ui-btn ui-btn--outline ui-btn--lg">Large</button>
+    </div>
+   </div>
+  </section>
+
+  <section class="sg-sec" id="field" data-name="Field">
+   <h2>Field</h2>
+   <p>A label, the input, and a line of help or an error under it.</p>
+   <div class="sg-stage"><div class="sg-grid">
+    <div class="ui-field"><label class="ui-label" for="f1">Title</label><input class="ui-input" id="f1" placeholder="Name the story"><p class="ui-desc">Shown at the top of the page.</p></div>
+    <div class="ui-field"><label class="ui-label" for="f2">Slug</label><input class="ui-input" id="f2" value="tea teacher" aria-invalid="true"><p class="ui-error">Use dashes instead of spaces.</p></div>
+    <div class="ui-field"><label class="ui-label" for="f3">Brand</label><select class="ui-select" id="f3"><option>Teajia</option><option>Mandala Codes</option><option>Adrian Rasmussen</option></select></div>
+    <div class="ui-field"><label class="ui-label" for="f4">Link</label><div class="ui-group"><span class="ui-group-addon">teajia.com/</span><input class="ui-input" id="f4" value="tea-teacher"></div></div>
+    <div class="ui-field" style="grid-column:1/-1"><label class="ui-label" for="f5">Caption</label><textarea class="ui-textarea" id="f5" placeholder="Write the caption"></textarea></div>
+    <div class="ui-field"><label class="ui-label" for="f6">Disabled</label><input class="ui-input" id="f6" value="Locked while publishing" disabled></div>
+   </div></div>
+  </section>
+
+  <section class="sg-sec" id="choice" data-name="Checkbox and switch">
+   <h2>Checkbox, radio and switch</h2>
+   <p>Checkbox for picking several, radio for one of a few, switch for something that takes effect at once.</p>
+   <div class="sg-stage"><div class="sg-grid">
+    <div class="ui-fieldset">
+     <label class="ui-choice"><input type="checkbox" class="ui-check" checked><span>Instagram<small>Carousel and caption</small></span></label>
+     <label class="ui-choice"><input type="checkbox" class="ui-check"><span>Magazine</span></label>
+     <label class="ui-choice"><input type="checkbox" class="ui-check" id="sg-ind"><span>Some selected</span></label>
+    </div>
+    <div class="ui-fieldset" role="radiogroup">
+     <label class="ui-choice"><input type="radio" name="r" class="ui-check" checked><span>Exact words</span></label>
+     <label class="ui-choice"><input type="radio" name="r" class="ui-check"><span>Lightly edited</span></label>
+     <label class="ui-choice"><input type="radio" name="r" class="ui-check" disabled><span>Rewritten</span></label>
+    </div>
+    <div class="ui-fieldset">
+     <label class="ui-choice" style="align-items:center"><input type="checkbox" role="switch" class="ui-switch" checked><span>Show sources</span></label>
+     <label class="ui-choice" style="align-items:center"><input type="checkbox" role="switch" class="ui-switch"><span>Dark photos</span></label>
+     <label class="ui-choice" style="align-items:center"><input type="checkbox" role="switch" class="ui-switch ui-switch--sm" checked><span>Small</span></label>
+    </div>
+   </div></div>
+  </section>
+
+  <section class="sg-sec" id="badge" data-name="Badge">
+   <h2>Badge</h2>
+   <p>A short status on a row or a card. Never a button.</p>
+   <div class="sg-stage">
+    <span class="ui-badge ui-badge--primary">Draft</span>
+    <span class="ui-badge ui-badge--brand">Needs you</span>
+    <span class="ui-badge ui-badge--secondary">Saved</span>
+    <span class="ui-badge ui-badge--outline">Teajia</span>
+    <span class="ui-badge ui-badge--success"><span class="ui-dot"></span>Published</span>
+    <span class="ui-badge ui-badge--warning"><span class="ui-dot"></span>Check facts</span>
+    <span class="ui-badge ui-badge--error"><span class="ui-dot"></span>Failed</span>
+    <span class="ui-badge ui-badge--info">3 sources</span>
+    <span class="ui-badge ui-badge--outline ui-badge--lg">Large</span>
+    <span class="sg-cap"></span>
+    <span class="ui-kbd">⌘</span><span class="ui-kbd">K</span>
+   </div>
+  </section>
+
+  <section class="sg-sec" id="alert" data-name="Alert">
+   <h2>Alert</h2>
+   <p>A message that stays on the screen until it is dealt with.</p>
+   <div class="sg-stage sg-stage--col">
+    <div class="ui-alert"><p class="ui-alert-title">Two people are in this story</p><p class="ui-alert-desc">Their edits show as they type.</p></div>
+    <div class="ui-alert ui-alert--success"><p class="ui-alert-title">Published to Teajia</p><p class="ui-alert-desc">Live at teajia.com/tea-teacher.</p><div class="ui-alert-action"><button class="ui-btn ui-btn--outline ui-btn--sm">Open</button></div></div>
+    <div class="ui-alert ui-alert--warning"><p class="ui-alert-title">Three facts are not checked yet</p><p class="ui-alert-desc">The story can be read but not published.</p><div class="ui-alert-action"><button class="ui-btn ui-btn--outline ui-btn--sm">Check them</button></div></div>
+    <div class="ui-alert ui-alert--error"><p class="ui-alert-title">The carousel did not export</p><p class="ui-alert-desc">Chrome closed before the last slide was saved.</p><div class="ui-alert-action"><button class="ui-btn ui-btn--ghost ui-btn--sm">Dismiss</button><button class="ui-btn ui-btn--outline ui-btn--sm">Try again</button></div></div>
+    <div class="ui-alert ui-alert--info"><p class="ui-alert-title">A new recording arrived</p><p class="ui-alert-desc">From the phone, 14 minutes.</p></div>
+   </div>
+  </section>
+
+  <section class="sg-sec" id="card" data-name="Card">
+   <h2>Card and frame</h2>
+   <p>A card holds one thing. A frame groups cards under one heading.</p>
+   <div class="sg-stage sg-stage--muted"><div class="sg-grid">
+    <div class="ui-card">
+     <div class="ui-card-head"><h3 class="ui-card-title">The tea teacher</h3><p class="ui-card-desc">Magazine story, Teajia</p></div>
+     <div class="ui-card-body"><p style="margin:0;font-size:var(--ui-text-sm)">Twelve years at one table, and what she learned about patience from water.</p></div>
+     <div class="ui-card-foot"><button class="ui-btn ui-btn--primary ui-btn--sm">Open</button><span class="ui-badge ui-badge--warning">Check facts</span></div>
+    </div>
+    <div class="ui-card">
+     <div class="ui-card-head"><h3 class="ui-card-title">Publish settings</h3><p class="ui-card-desc">Where this story goes</p></div>
+     <div class="ui-card-body ui-fieldset" style="gap:14px">
+      <label class="ui-choice" style="align-items:center;justify-content:space-between"><span>Teajia magazine</span><input type="checkbox" role="switch" class="ui-switch" checked></label>
+      <label class="ui-choice" style="align-items:center;justify-content:space-between"><span>Instagram carousel</span><input type="checkbox" role="switch" class="ui-switch"></label>
+     </div>
+     <div class="ui-card-foot ui-card-foot--line"><button class="ui-btn ui-btn--ghost ui-btn--sm" style="margin-left:auto">Cancel</button><button class="ui-btn ui-btn--primary ui-btn--sm">Save</button></div>
+    </div>
+    <div class="ui-frame" style="grid-column:1/-1">
+     <div class="ui-frame-head"><h3 class="ui-frame-title">On your desk</h3><button class="ui-btn ui-btn--ghost ui-btn--xs">See all</button></div>
+     <div class="ui-card"><div class="ui-card-body" style="padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px"><span>Yixing clay, part two</span><span class="ui-badge ui-badge--secondary">Writing</span></div></div>
+    </div>
+   </div></div>
+  </section>
+
+  <section class="sg-sec" id="tabs" data-name="Tabs and segments">
+   <h2>Tabs, segments and toggles</h2>
+   <p>Tabs move between views of one thing; the underline kind sits along the top of a page. Segments pick one setting. Toggles turn a tool on or off.</p>
+   <div class="sg-stage sg-stage--col" style="gap:24px">
+    <div class="ui-tabs" role="tablist" data-pick="aria-selected">
+     <button class="ui-tab" role="tab" aria-selected="true">Write</button>
+     <button class="ui-tab" role="tab" aria-selected="false">Read</button>
+     <button class="ui-tab" role="tab" aria-selected="false">Check</button>
+     <button class="ui-tab" role="tab" aria-selected="false">Outputs</button>
+    </div>
+    <div class="ui-tabs ui-tabs--line" role="tablist" data-pick="aria-selected">
+     <button class="ui-tab" role="tab" aria-selected="true">Write</button>
+     <button class="ui-tab" role="tab" aria-selected="false">Read</button>
+     <button class="ui-tab" role="tab" aria-selected="false">Check</button>
+     <button class="ui-tab" role="tab" aria-selected="false">Outputs</button>
+    </div>
+    <div class="sg-row">
+     <div class="ui-seg" role="group" data-pick="aria-pressed">
+      <button type="button" aria-pressed="true">Phone</button><button type="button" aria-pressed="false">Tablet</button><button type="button" aria-pressed="false">Desktop</button>
+     </div>
+     <div class="ui-toggles" data-pick="aria-pressed">
+      <button class="ui-toggle ui-toggle--outline" aria-pressed="true">Left</button><button class="ui-toggle ui-toggle--outline" aria-pressed="false">Centre</button><button class="ui-toggle ui-toggle--outline" aria-pressed="false">Right</button>
+     </div>
+     <button class="ui-toggle" aria-pressed="false" data-flip><b>B</b></button>
+     <button class="ui-toggle" aria-pressed="true" data-flip><i>I</i></button>
+    </div>
+   </div>
+  </section>
+
+  <section class="sg-sec" id="menu" data-name="Menu and popups">
+   <h2>Menu, tooltip and popover</h2>
+   <p>Shown open here. In the app they open from a button and close on a click outside.</p>
+   <div class="sg-stage" style="align-items:flex-start;gap:28px">
+    <div class="ui-popup ui-menu" role="menu">
+     <div class="ui-menu-label">Story</div>
+     <button class="ui-menu-item" role="menuitem">Rename<span class="ui-kbd">R</span></button>
+     <button class="ui-menu-item" role="menuitem" data-highlighted>Duplicate<span class="ui-kbd">D</span></button>
+     <button class="ui-menu-item" role="menuitem">Move to brand</button>
+     <div class="ui-menu-sep"></div>
+     <button class="ui-menu-item ui-menu-item--danger" role="menuitem">Delete</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px;align-items:flex-start">
+     <span class="ui-tooltip">Copied the link</span>
+     <div class="ui-popup ui-pop"><p class="ui-pop-title">Source</p><p class="ui-desc">From the talk on 3 November, minute 14. The words are exactly as said.</p></div>
+    </div>
+   </div>
+  </section>
+
+  <section class="sg-sec" id="dialog" data-name="Dialog">
+   <h2>Dialog</h2>
+   <p>For a decision that has to be made before going on. On a phone it rises from the bottom.</p>
+   <div class="sg-stage" style="padding:0;overflow:hidden">
+    <div class="sg-dialog-demo">
+     <div class="ui-overlay"></div>
+     <div class="ui-popup ui-dialog" role="dialog" aria-labelledby="dlg-t">
+      <div class="ui-dialog-head"><h3 class="ui-dialog-title" id="dlg-t">Publish this story?</h3><p class="ui-dialog-desc">It goes live on Teajia straight away. You can take it down later.</p></div>
+      <div class="ui-dialog-body"><label class="ui-choice"><input type="checkbox" class="ui-check" checked><span>Also post the carousel</span></label></div>
+      <div class="ui-dialog-foot"><button class="ui-btn ui-btn--ghost">Not yet</button><button class="ui-btn ui-btn--primary">Publish</button></div>
+     </div>
+    </div>
+   </div>
+  </section>
+
+  <section class="sg-sec" id="table" data-name="Table">
+   <h2>Table</h2>
+   <p>For lists that are compared side by side.</p>
+   <div class="ui-table-wrap">
+    <table class="ui-table">
+     <thead><tr><th style="width:1px"><input type="checkbox" class="ui-check" aria-label="Select all"></th><th>Story</th><th>Brand</th><th>Status</th><th class="num">Words</th></tr></thead>
+     <tbody>
+      <tr aria-selected="true"><td><input type="checkbox" class="ui-check" checked aria-label="Select"></td><td>The tea teacher</td><td>Teajia</td><td><span class="ui-badge ui-badge--warning">Check facts</span></td><td class="num">2,140</td></tr>
+      <tr><td><input type="checkbox" class="ui-check" aria-label="Select"></td><td>Yixing clay</td><td>Teajia</td><td><span class="ui-badge ui-badge--secondary">Writing</span></td><td class="num">860</td></tr>
+      <tr><td><input type="checkbox" class="ui-check" aria-label="Select"></td><td>Card 27, the gate</td><td>Mandala Codes</td><td><span class="ui-badge ui-badge--success">Published</span></td><td class="num">1,320</td></tr>
+     </tbody>
+    </table>
+   </div>
+  </section>
+
+  <section class="sg-sec" id="progress" data-name="Progress">
+   <h2>Progress and meter</h2>
+   <p>Progress for something under way. A meter for an amount used against a limit.</p>
+   <div class="sg-stage"><div class="sg-grid">
+    <div class="ui-progress"><div class="ui-progress-row"><span>Transcribing</span><span>64%</span></div><div class="ui-track"><i style="width:64%"></i></div></div>
+    <div class="ui-progress"><div class="ui-progress-row"><span>Facts checked</span><span>9 of 12</span></div><div class="ui-track ui-track--success"><i style="width:75%"></i></div></div>
+    <div class="ui-progress"><div class="ui-progress-row"><span>Image storage</span><span>88%</span></div><div class="ui-track ui-track--warning"><i style="width:88%"></i></div></div>
+   </div></div>
+  </section>
+
+  <section class="sg-sec" id="loading" data-name="Loading">
+   <h2>Spinner and skeleton</h2>
+   <p>A spinner inside a control. A skeleton where content is about to appear.</p>
+   <div class="sg-stage" style="gap:28px">
+    <span class="ui-spinner" aria-label="Loading"></span>
+    <div style="display:flex;gap:12px;align-items:center;flex:1;min-width:220px">
+     <div class="ui-skel" style="width:40px;height:40px;border-radius:50%"></div>
+     <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div class="ui-skel" style="height:12px;width:60%"></div><div class="ui-skel" style="height:12px;width:85%"></div></div>
+    </div>
+   </div>
+  </section>
+
+  <section class="sg-sec" id="avatar" data-name="Avatar">
+   <h2>Avatar</h2>
+   <p>Who is in a story right now. Initials when there is no photo.</p>
+   <div class="sg-stage">
+    <span class="ui-avatar ui-avatar--lg">AR</span><span class="ui-avatar">CC</span>
+    <span class="ui-avatars"><span class="ui-avatar">AR</span><span class="ui-avatar">CD</span><span class="ui-avatar">+2</span></span>
+   </div>
+  </section>
+
+  <section class="sg-sec" id="nav" data-name="Breadcrumb and pages">
+   <h2>Breadcrumb and pagination</h2>
+   <p>Where you are, and which page of a long list.</p>
+   <div class="sg-stage sg-stage--col">
+    <ol class="ui-crumbs"><li><a href="#nav">Teajia</a></li><li><a href="#nav">Magazine</a></li><li><span aria-current="page">The tea teacher</span></li></ol>
+    <div class="ui-pages"><button class="ui-btn ui-btn--ghost ui-btn--sm">Previous</button><button class="ui-btn ui-btn--ghost ui-btn--sm" aria-current="page">1</button><button class="ui-btn ui-btn--ghost ui-btn--sm">2</button><button class="ui-btn ui-btn--ghost ui-btn--sm">3</button><button class="ui-btn ui-btn--ghost ui-btn--sm">Next</button></div>
+   </div>
+  </section>
+
+  <section class="sg-sec" id="empty" data-name="Empty">
+   <h2>Empty</h2>
+   <p>What a list says before anything is in it, with the one thing to do next.</p>
+   <div class="sg-stage"><div class="ui-empty" style="width:100%">
+    <h3 class="ui-empty-title">No recordings yet</h3>
+    <p class="ui-empty-desc">Record on the phone and it appears here within a minute.</p>
+    <button class="ui-btn ui-btn--outline ui-btn--sm">Add a file instead</button>
+   </div></div>
+  </section>
+
+  <section class="sg-sec" id="separator" data-name="Separator">
+   <h2>Separator</h2>
+   <p>A line between groups that belong to one place.</p>
+   <div class="sg-stage sg-stage--col"><span>Write</span><hr class="ui-sep"><div class="sg-row" style="height:20px"><span>Read</span><hr class="ui-sep ui-sep--v"><span>Check</span></div></div>
+  </section>
+ </div></main></div>
+</div>
+<script src="page.js"></script>
+</body>
+</html>
