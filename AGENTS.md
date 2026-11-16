@@ -18,6 +18,7 @@ These steps touch only invented data or your own branch, so they need no approva
 - Take screenshots of the demo and share them with Adrian or attach them to your report.
 - Change code in your branch: interface, runtime, scripts, build and tests, as the approved plan needs (see Plan and visual approval below).
 - Run `npm test`, focused tests, `npm run build` and `node scripts/gen-status.mjs`.
+- Before every push, run `npm run test:changed`: only the test files your change reaches (often 1-6 minutes; full CI takes about 20 on the Mac). Fix what it finds before pushing, so CI is a confirmation rather than the first check. `-- --list` shows what it would run.
 - Commit to your `claude/<name>` branch and push it with `git push -u origin claude/<name>`.
 - Read the live app through the installed CLI's read commands (`status`, `project list`, `project read`, `history`, `library search`).
 
