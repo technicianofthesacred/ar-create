@@ -603,10 +603,13 @@ test('every header reads his sentence through the one reader and shows no stored
 });
 
 // ---------- real records on the subject page (First look, 12 November) ----------
-const car=(key,over={})=>({key,kind:'slides',name:'Carousel',to:'Instagram',title:'',alike:true,done:1,total:5,ring:.2,id:key.slice(4),slides:5,words:41,createdAt:'2026-10-03T12:00:00Z',updatedAt:null,steps:[],...over});
+// Local wall-clock times: the labels read his own clock, so the expected
+// day and hour must not depend on the machine's time zone.
+const at=(month,day,hour,minute,second=0)=>new Date(2026,month-1,day,hour,minute,second).toISOString();
+const car=(key,over={})=>({key,kind:'slides',name:'Carousel',to:'Instagram',title:'',alike:true,done:1,total:5,ring:.2,id:key.slice(4),slides:5,words:41,createdAt:at(10,3,12,0),updatedAt:null,steps:[],...over});
 
 test('two forms of one name are told apart by real fields only: the slide count and the date made, never an invented name',()=>{
- const forms=[car('out:c1'),car('out:c2',{slides:7,createdAt:'2026-10-09T12:00:00Z'}),{...car('out:a1'),kind:'article',name:'Article',to:'the magazine',alike:false,slides:0}];
+ const forms=[car('out:c1'),car('out:c2',{slides:7,createdAt:at(10,9,12,0)}),{...car('out:a1'),kind:'article',name:'Article',to:'the magazine',alike:false,slides:0}];
  const d=S.tellApart(forms);
  assert.equal(d.length,3);
  assert.equal(d[0],'5 slides · made 3 Oct');assert.equal(d[1],'7 slides · made 9 Oct');assert.equal(d[2],'','a form with a name of its own needs nothing added');
@@ -618,17 +621,17 @@ test('two forms of one name are told apart by real fields only: the slide count 
  // A title they all share tells nothing apart, so it is left out.
  assert.equal(S.tellApart([car('out:c1',{title:'Spring'}),car('out:c2',{title:'Spring',slides:7})])[1],'7 slides · made 3 Oct');
  // Two Instagram plans with one title: the frame count and the day each was last changed (a plan keeps no date made).
- const plans=[car('ig:p1',{kind:'instagram',createdAt:null,updatedAt:'2026-11-02T12:00:00Z',slides:3,title:'Same'}),car('ig:p2',{kind:'instagram',createdAt:null,updatedAt:'2026-11-04T12:00:00Z',slides:5,title:'Same'})];
+ const plans=[car('ig:p1',{kind:'instagram',createdAt:null,updatedAt:at(11,2,12,0),slides:3,title:'Same'}),car('ig:p2',{kind:'instagram',createdAt:null,updatedAt:at(11,4,12,0),slides:5,title:'Same'})];
  assert.deepEqual(S.tellApart(plans),['3 slides · changed 2 Nov','5 slides · changed 4 Nov']);
  // No record of a slide count or a date: nothing is invented, and the old line is unchanged.
  const bare=[car('out:c1',{slides:0,createdAt:null}),car('out:c2',{slides:0,createdAt:null,title:'Autumn'})];
  assert.deepEqual(S.tellApart(bare),['','Autumn']);
  assert.equal(S.pillView(bare[0],0,'').line,'Instagram');
  // Same slides, same day: the time made tells them apart.
- const same=S.tellApart([car('out:c1',{createdAt:'2026-10-03T11:00:00Z'}),car('out:c2',{createdAt:'2026-10-03T12:30:00Z'})]);
+ const same=S.tellApart([car('out:c1',{createdAt:at(10,3,8,15)}),car('out:c2',{createdAt:at(10,3,16,40)})]);
  assert.notEqual(same[0],same[1]);assert.match(same[0],/^5 slides · made 3 Oct, \d\d:\d\d$/);
  // The same minute: the second.
- const close=S.tellApart([car('out:c1',{createdAt:'2026-10-03T08:15:10Z'}),car('out:c2',{createdAt:'2026-10-03T08:15:40Z'})]);
+ const close=S.tellApart([car('out:c1',{createdAt:at(10,3,8,15,10)}),car('out:c2',{createdAt:at(10,3,8,15,40)})]);
  assert.notEqual(close[0],close[1]);assert.match(close[0],/, \d\d:\d\d:\d\d$/);
 });
 

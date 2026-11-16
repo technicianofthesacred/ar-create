@@ -83,6 +83,29 @@ test('a confirmed child exit preserves its ready PNG when retired-group cleanup 
  assert.equal(denied,1);assert.match(result.stdout,/data-export-status="ready"/);renderer.validateCarouselPng(fs.readFileSync(file));
 });
 
+// On a loaded Mac, ps can show our exited child as a zombie before Node has
+// reaped it, so the exit event lands after the grace period.
+test('a confirmed zombie group whose exit event arrives after the grace still preserves its ready PNG',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'carousel-late-exit-')),file=path.join(dir,'slide.png'),kill=process.kill.bind(process);let group,denied=0;
+ t.after(()=>{if(group)try{kill(-group,'SIGKILL');}catch{}fs.rmSync(dir,{recursive:true,force:true});});
+ t.mock.method(process,'kill',(pid,signal)=>{if(pid<0){group=-pid;if(signal==='SIGKILL'){denied++;setTimeout(()=>{try{kill(pid,'SIGKILL');}catch{}},300);throw Object.assign(Error('retired group'),{code:'EPERM'});}return;}return kill(pid,signal);});
+ processTable(t,()=>`${group} ${group} ${process.getuid()} Z\n`);
+ const script='const fs=require("fs");fs.writeFileSync(process.argv[1],Buffer.from(process.argv[2],"base64"));process.stdout.write("<html data-export-status=\\"ready\\"></html>");setInterval(()=>{},1000);';
+ const result=await renderer.renderCarouselProcess(process.execPath,['-e',script,file,png],file,{timeout:1500,grace:100});
+ assert.equal(denied,1);assert.match(result.stdout,/data-export-status="ready"/);renderer.validateCarouselPng(fs.readFileSync(file));
+});
+
+test('a confirmed zombie group whose exit never arrives within the bounded wait remains a failure',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'carousel-missing-exit-')),file=path.join(dir,'slide.png'),kill=process.kill.bind(process);let group;
+ t.after(()=>{if(group)try{kill(-group,'SIGKILL');}catch{}fs.rmSync(dir,{recursive:true,force:true});});
+ t.mock.method(process,'kill',(pid,signal)=>{if(pid<0){group=-pid;if(signal==='SIGKILL')throw Object.assign(Error('retired group'),{code:'EPERM'});return;}return kill(pid,signal);});
+ processTable(t,()=>`${group} ${group} ${process.getuid()} Z\n`);
+ const script='const fs=require("fs");fs.writeFileSync(process.argv[1],Buffer.from(process.argv[2],"base64"));process.stdout.write("<html data-export-status=\\"ready\\"></html>");setInterval(()=>{},1000);';
+ const start=Date.now();
+ await assert.rejects(renderer.renderCarouselProcess(process.execPath,['-e',script,file,png],file,{timeout:1500,grace:50,exitWait:200}),error=>error.code==='EPERM');
+ assert.ok(Date.now()-start<1500);
+});
+
 function processTable(t,table){
  const original=childProcess.execFileSync;
  const patched=t.mock.method(childProcess,'execFileSync',(file,args,options)=>file==='/bin/ps'?table():original(file,args,options));
