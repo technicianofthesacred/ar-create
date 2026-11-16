@@ -8,6 +8,11 @@
    section comes near the window, never before, and never a list of every subject. Nothing here keeps a record past the open page. */
 (function(root){
  'use strict';
+ // coss ui's button look (window.coss, from /ui/kit/coss-classes.js) where version three loads it: primary for the
+ // main step action, outline for the others, ghost for the quiet ones. Version two does not load the script, so there
+ // the classes are empty and every button keeps its own look.
+ const coss=o=>{try{return window.coss.button(o);}catch{return '';}};
+ const CP=coss({variant:'default',size:'sm'}),CB=coss({variant:'outline',size:'sm'}),CQ=coss({variant:'ghost',size:'sm'});
 
  // =====================================================================================================
  // The pure half.
@@ -359,8 +364,8 @@
   /** The one quiet control of a row: Stop for a source in use (it names the copy shown), Use for Check again for a stopped one. */
   function control(x,L){
    const off=S.busy?' aria-disabled="true"':'';
-   if(inUse(x)&&x.capturedHash&&typeof L.sourcesHash==='string')return `<button type="button" class="v2-ghost" data-cs="stop" data-src="${esc(x.id)}"${off}>Stop using for Check</button>`;
-   if(x.stopped&&x.hash)return `<button type="button" class="v2-ghost" data-cs="again" data-src="${esc(x.id)}"${off}>Use for Check again</button>`;
+   if(inUse(x)&&x.capturedHash&&typeof L.sourcesHash==='string')return `<button type="button" class="${CQ} v2-ghost" data-cs="stop" data-src="${esc(x.id)}"${off}>Stop using for Check</button>`;
+   if(x.stopped&&x.hash)return `<button type="button" class="${CQ} v2-ghost" data-cs="again" data-src="${esc(x.id)}"${off}>Use for Check again</button>`;
    return '';
   }
   /** `noCapture` leaves out the button that captures (Check's details: Stop is reachable there, capturing is not). */
@@ -373,7 +378,7 @@
    const all=Array.isArray(L.sources)?L.sources:[],yes=all.filter(x=>x.eligible),no=all.filter(x=>!x.eligible);
    const item=x=>`<li data-cs-src="${esc(x.id)}"${x.eligible?'':' data-cs-no'}>${ownIcon(x.kind==='transcript'?'mic':'note')}<span><b title="${esc(x.title)}">${esc(x.title)}</b><small>${esc(csKind(x.kind))} · <i class="${x.eligible?'subj-cs-ok':'subj-cs-why'}">${esc(say(x))}</i></small>${control(x,L)}</span></li>`;
    const link=!yes.length&&back?`<p class="subj-cs-note"><a href="${esc(back)}">Back to the subject</a></p>`:'';
-   return `<div class="subj-cs-block" data-cs-block><div class="subj-cs-h"><h3>Sources</h3><span>${all.length}</span></div>${all.length?`<ul class="subj-cs-list">${yes.map(item).join('')}${no.map(item).join('')}</ul>`:'<p class="subj-cs-note" role="status">Nothing is attached to this subject yet.</p>'}${yes.length&&!noCapture?`<div class="subj-cs-btns"><button type="button" class="subj-btn" data-cs="capture"${S.busy?' disabled':''}>Use it for Check</button></div>`:''}${S.done?`<p class="subj-cs-done" role="status" data-cs-done>${KEPT}</p>`:''}${link}</div>`;
+   return `<div class="subj-cs-block" data-cs-block><div class="subj-cs-h"><h3>Sources</h3><span>${all.length}</span></div>${all.length?`<ul class="subj-cs-list">${yes.map(item).join('')}${no.map(item).join('')}</ul>`:'<p class="subj-cs-note" role="status">Nothing is attached to this subject yet.</p>'}${yes.length&&!noCapture?`<div class="subj-cs-btns"><button type="button" class="${CB} subj-btn" data-cs="capture"${S.busy?' disabled':''}>Use it for Check</button></div>`:''}${S.done?`<p class="subj-cs-done" role="status" data-cs-done>${KEPT}</p>`:''}${link}</div>`;
   }
   async function capture(){
    const at=sc(),L=S.list;
@@ -585,7 +590,7 @@
   const screenOfSection=(section,form)=>form&&form.kind==='article'&&(section==='read'||section==='check')?esc(v2.href(section+'/:id',{id},{piece:pieceFor(form)})):null;
   const lookName=lookId=>st.look.get(lookId)||String(lookId).replace(/^./,c=>c.toUpperCase());
   function head(s){
-   const look=`<button type="button" class="subj-look${s.look?'':' none'}" data-subj-look aria-haspopup="dialog" title="Choose the look here. Looks is where looks are made and changed"><i aria-hidden="true"></i>${s.look?esc(lookName(s.look))+' look':'Choose a look'}</button>`;
+   const look=`<button type="button" class="${CB} subj-look${s.look?'':' none'}" data-subj-look aria-haspopup="dialog" title="Choose the look here. Looks is where looks are made and changed"><i aria-hidden="true"></i>${s.look?esc(lookName(s.look))+' look':'Choose a look'}</button>`;
    const trail=['Subjects',...(s.folder||[])].join(' / ');
    const path=`<p class="subj-path" title="${esc(s.folder?.length?'This is a real folder on disk':'Subjects')}">${esc(trail)}</p>`;
    // The station stays for assistive technology; the sample shows it nowhere on this page.
@@ -649,7 +654,7 @@
     need(s.id);
     const v=viewOf(s),quiet=s.id==='have'&&s.state==='next',big=st.zoom===s.id;
     // The same Back as every other screen: top left, an arrow and where it leads.
-    const back=big?`<button type="button" class="v2-ghost subj-back" data-subj-zoom="${esc(s.id)}">${icon('back')}<span>Back to ${esc(title)}</span></button>`:'';
+    const back=big?`<button type="button" class="${CQ} v2-ghost subj-back" data-subj-zoom="${esc(s.id)}">${icon('back')}<span>Back to ${esc(title)}</span></button>`:'';
     const html=`${back}<header data-subj-zoom="${esc(s.id)}"${big?'':' title="Open this at full size"'}><p class="subj-label">${esc(s.group)}</p><h2 tabindex="-1">${esc(s.name)}</h2>${v.note&&!quiet?`<p class="subj-note" data-state="${v.state}">${esc(v.note)}</p>`:''}</header>${tool(s,form,steps)}${readerOf(s.id)}`;
     // The current step's section answers to [data-subj-panel], as the one open panel did.
     sec.toggleAttribute('data-subj-panel',s.id===st.open);sec.classList.toggle('zoomed',big);
@@ -711,7 +716,7 @@
    try{
     const key='owned-draft:'+binding,found=await call('first-flow.binding',{projectKey:key});
     if(ok(found)&&found.projectKey===key&&typeof found.projectId==='string'&&typeof found.documentId==='string'){await mountIt(found);return;}
-    say('<p class="subj-quiet">No photographs are chosen for this article yet.</p><div class="subj-actions"><button type="button" class="subj-btn pri" data-subj-startphotos>Choose photographs</button></div>');
+    say('<p class="subj-quiet">No photographs are chosen for this article yet.</p><div class="subj-actions"><button type="button" class="'+CP+' subj-btn pri" data-subj-startphotos>Choose photographs</button></div>');
     e.node.addEventListener('click',async ev=>{const b=ev.target.closest('[data-subj-startphotos]');if(!b||b.disabled)return;b.disabled=true;
      try{const made=await v2.call('study.photos.select',{bindingId:binding,parentStudyId:id});await mountIt(made);}
      catch(error){b.disabled=false;v2.ui.say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});}});
@@ -738,7 +743,7 @@
       a large file). Saving is its own, with its own rules; a save the app refuses is said in its own words. */
   function startArrange(e,binding,piece){
    const key=binding+'|'+piece,scope={parentStudyId:id,rootBindingId:binding};
-   e.node.innerHTML='<div class="subj-actions"><button type="button" class="subj-btn" data-subj-startarrange>Place photographs in the story</button></div>';
+   e.node.innerHTML='<div class="subj-actions"><button type="button" class="'+CB+' subj-btn" data-subj-startarrange>Place photographs in the story</button></div>';
    e.node.addEventListener('click',async ev=>{
     const b=ev.target.closest('[data-subj-startarrange]');if(!b||b.disabled)return;b.disabled=true;b.textContent='Opening the layout';
     try{
@@ -766,7 +771,7 @@
       is opened first; otherwise the reader offers the kept conversations to choose from, as it does in the workspace. */
   let sourceReader=null;
   function startSource(e){
-   const idle=()=>{e.node.innerHTML='<div class="subj-actions"><button type="button" class="subj-btn" data-subj-startsource>Read a kept conversation</button></div>';};
+   const idle=()=>{e.node.innerHTML='<div class="subj-actions"><button type="button" class="'+CB+' subj-btn" data-subj-startsource>Read a kept conversation</button></div>';};
    idle();
    e.node.addEventListener('click',async ev=>{
     if(ev.target.closest('[data-subj-closesource]')){try{sourceReader?.closeContext();}catch{}idle();e.node.querySelector('button')?.focus({preventScroll:true});return;}
@@ -780,7 +785,7 @@
      const project=Object.freeze({id,title:st.standing?.title||'',name:st.standing?.title||''});
      sourceReader||=made.installSourceReader({document,getProject:()=>project,fetch:viaCommands,observe:false});
      const mine=new Set(materialFrom({tree,brief,planRecords:Array.isArray(plans)?plans:[]},ids().projectId).items.map(x=>x.id));
-     const bar=document.createElement('div');bar.className='subj-actions';bar.innerHTML='<button type="button" class="v2-ghost" data-subj-closesource>Close the conversation</button>';
+     const bar=document.createElement('div');bar.className='subj-actions';bar.innerHTML='<button type="button" class="'+CQ+' v2-ghost" data-subj-closesource>Close the conversation</button>';
      const box=document.createElement('div');box.className='subj-convo';e.node.replaceChildren(bar,box);
      sourceReader.openContext({container:box,project});await sourceReader.refresh();if(ctx.signal.aborted)return;
      const sessions=sourceReader.getState().data?.sessions,own=Array.isArray(sessions)?sessions.find(s=>mine.has(s.sourceId)):null;
@@ -821,7 +826,7 @@
       Looking changes nothing. The reader comes in the same large file as the layout editor, so it too loads when asked for. */
   function startAudience(e,binding,piece){
    const scope={parentStudyId:id,rootBindingId:binding};
-   const idle=label=>{e.node.innerHTML=`<div class="subj-actions"><button type="button" class="subj-btn" data-subj-startaudience>${label}</button></div>`;};
+   const idle=label=>{e.node.innerHTML=`<div class="subj-actions"><button type="button" class="${CB} subj-btn" data-subj-startaudience>${label}</button></div>`;};
    idle('See it as readers will');
    e.node.addEventListener('click',async ev=>{
     const b=ev.target.closest('[data-subj-startaudience]');if(!b||b.disabled)return;b.disabled=true;const label=b.textContent;b.textContent='Reading the saved edition';
@@ -830,7 +835,7 @@
      if(v?.scope?.parentStudyId!==id||v.scope.rootBindingId!==binding||v.documentId!==binding||v.output?.id!==piece)throw new Error('The reader returned a different edition. Nothing is shown.');
      if(!['article','carousel'].includes(v.output.kind)||typeof root.ArStudyOutputHost?.mountStudyAudience!=='function')throw new Error('This kind of piece has no reader view on this page yet.');
      try{e.instance?.destroy?.();}catch{}e.instance=null;
-     const bar=document.createElement('div');bar.className='subj-actions';bar.innerHTML='<button type="button" class="v2-ghost" data-subj-startaudience>Read it again as it is now</button><button type="button" class="v2-ghost" data-subj-closeaudience>Close</button>';
+     const bar=document.createElement('div');bar.className='subj-actions';bar.innerHTML='<button type="button" class="'+CQ+' v2-ghost" data-subj-startaudience>Read it again as it is now</button><button type="button" class="'+CQ+' v2-ghost" data-subj-closeaudience>Close</button>';
      const target=document.createElement('div');target.className='subj-reads';target.setAttribute('aria-label','As readers will see it');
      e.node.replaceChildren(bar,target);e.instance=root.ArStudyOutputHost.mountStudyAudience(target,v);
     }catch(error){b.disabled=false;b.textContent=label;v2.ui.say(error?.message||'The reader view could not be opened.',{tone:'bad'});}
@@ -852,7 +857,7 @@
   /** One thing he has, opened where it is: a note or a transcript to read, a photograph at full width, a link to follow. */
   function readerOf(sid){
    const r=st.reader;if(!r||r.sec!==sid)return '';
-   const f=r.file,head=`<header><b>${esc(r.title||'Untitled')}</b><button type="button" class="v2-ghost" data-subj-readclose>Close</button></header>`;
+   const f=r.file,head=`<header><b>${esc(r.title||'Untitled')}</b><button type="button" class="${CQ} v2-ghost" data-subj-readclose>Close</button></header>`;
    let body='<p class="subj-quiet" role="status">Reading</p>';
    if(r.kind==='photos')body=`<img src="/api/sources/blob?id=${encodeURIComponent(r.id)}" alt="${esc(r.title||'')}">`;
    else if(f&&f.__error)body=`<p class="subj-quiet" role="alert">${esc(f.__error?.message||'This could not be read.')}</p>`;
@@ -929,7 +934,7 @@
   const links=(...items)=>{const seen=new Set(),l=items.filter(x=>{if(!x)return false;if(!mag())return true;const k=x.replace(/<[^>]*>/g,'').trim();return !seen.has(k)&&seen.add(k);}).join('');return l?`<div class="subj-links">${l}</div>`:'';};
   /** What a step waits for: one button to the step in question, as the sample's Go to the words. */
   const waitsFor=(s,steps)=>{
-   const rows=(s.waits||[]).map(w=>{const t=steps.find(x=>x.id===w);return t?`<button type="button" class="subj-btn" data-subj-step="${esc(t.id)}">Go to ${esc(/^(The|Your) /.test(t.name)?t.name.charAt(0).toLowerCase()+t.name.slice(1):t.name)}${icon('right')}</button>`:'';}).join('');
+   const rows=(s.waits||[]).map(w=>{const t=steps.find(x=>x.id===w);return t?`<button type="button" class="${CB} subj-btn" data-subj-step="${esc(t.id)}">Go to ${esc(/^(The|Your) /.test(t.name)?t.name.charAt(0).toLowerCase()+t.name.slice(1):t.name)}${icon('right')}</button>`:'';}).join('');
    return rows?`<div class="subj-actions subj-waits">${rows}</div>`:'';
   };
   const reading=()=>`<p class="subj-quiet" role="status">Reading</p>`;
@@ -975,7 +980,7 @@
   /** The row's words and control for a transcript that is ready: the truth from the stamp, never from "reviewed" alone. */
   function confirmRow(job){
    const how=reviewOf(job);if(how===null)return '';
-   const L=cf.looks.get(job.id),mine=v2.isHuman(),button=`<button type="button" class="subj-btn" data-cs="open" data-job="${esc(job.id)}">Confirm this transcript</button>`;
+   const L=cf.looks.get(job.id),mine=v2.isHuman(),button=`<button type="button" class="${CB} subj-btn" data-cs="open" data-job="${esc(job.id)}">Confirm this transcript</button>`;
    if(how==='human')return `<span class="subj-where" data-cs-confirmed tabindex="-1">${mine?'Confirmed by you':'Confirmed by Adrian'}</span>`;
    if(how==='other'){
     const note=mine?'Reviewed, not confirmed by you yet':String(L.reviewedBy||'').startsWith('agent:')?'Reviewed by an assistant. Not confirmed by Adrian yet.':'Reviewed, not confirmed by Adrian yet';
@@ -1021,13 +1026,13 @@
    if(!cf.job)return '';
    const open=inner=>`<section class="subj-cs-confirm" data-cs-confirm aria-label="Confirm this transcript">${inner}</section>`;
    if(cf.state==='loading')return open('<p class="subj-cs-note" role="status">Reading the transcript.</p>');
-   if(cf.state==='error')return open(`<p class="subj-cs-note" role="alert">${esc(cf.error)}</p><div class="subj-cs-btns"><button type="button" class="v2-ghost" data-cs="cancel">Close</button></div>`);
+   if(cf.state==='error')return open(`<p class="subj-cs-note" role="alert">${esc(cf.error)}</p><div class="subj-cs-btns"><button type="button" class="${CQ} v2-ghost" data-cs="cancel">Close</button></div>`);
    const sp=cf.look?.speakers||[],segs=cf.look?.segments||[],label=sid=>{const i=sp.findIndex(s=>s.id===sid),s=sp[i];return s&&s.name?s.name:i<0?'No speaker':'Speaker '+(i+1);};
    const words=segs.map(g=>`<p>${sp.length>1||g.speaker==null||sp[0]?.name?`<b>${esc(label(g.speaker))}</b> `:''}${esc(g.text)}</p>`).join('');
    const boxes=sp.filter(s=>!s.name).map(s=>`<label class="subj-cs-name"><span>Who is ${esc(label(s.id))}?</span><input type="text" data-cs-name="${esc(s.id)}" maxlength="120" autocomplete="off" value="${esc(cf.names[s.id]||'')}"></label>`).join('');
    const loose=segs.some(g=>g.speaker==null||!sp.some(s=>s.id===g.speaker))?'<p class="subj-cs-note">A line with no speaker has to be settled in Advanced before this can be confirmed.</p>':'';
    const busy=cf.state==='busy';
-   return open(`<div class="subj-cs-words" data-cs-words tabindex="0" role="region" aria-label="The transcript's words">${words||'<p>The transcript has no words.</p>'}</div>${loose}${boxes}<div class="subj-cs-btns">${segs.length?`<button type="button" class="subj-btn" data-cs="confirm"${busy?' disabled':''}>Confirm</button>`:''}<button type="button" class="v2-ghost" data-cs="cancel"${busy?' disabled':''}>Not now</button></div>`);
+   return open(`<div class="subj-cs-words" data-cs-words tabindex="0" role="region" aria-label="The transcript's words">${words||'<p>The transcript has no words.</p>'}</div>${loose}${boxes}<div class="subj-cs-btns">${segs.length?`<button type="button" class="${CB} subj-btn" data-cs="confirm"${busy?' disabled':''}>Confirm</button>`:''}<button type="button" class="${CQ} v2-ghost" data-cs="cancel"${busy?' disabled':''}>Not now</button></div>`);
   }
   // ===== confirm a transcript and use it for Check: END =====
 
@@ -1083,7 +1088,7 @@
    const where=x=>{
     if(x.kind!=='recordings'||x.recordingId)return '';
     const job=byJob.get(x.id),v=jobs&&job?recordingView(job,jobs.capability,done.has(job.id)):null;if(!v)return '';
-    const mine=transcriptAct(v.act,v2.isHuman()),act=mine==='owner'?`<span class="subj-quiet" data-subj-owner>Keeping this transcript as a source is for Adrian to do.</span><a class="subj-link subj-quietlink" data-subj-handoff="readTranscript" href="${handoffHref('source',null)}" title="Opens the transcript in Advanced">Open in Advanced</a>`:mine==='use'?`<button type="button" class="subj-btn" data-subj-rec="use" data-job="${esc(job.id)}" title="Keeps the finished transcript as a source of this subject">Use the transcript</button><a class="subj-link subj-quietlink" data-subj-handoff="readTranscript" href="${handoffHref('source',null)}" title="Opens the transcript in Advanced, where its words are checked">Open in Advanced</a>`:v.act?`<button type="button" class="subj-btn" data-subj-rec="${v.act}" data-job="${esc(job.id)}">${v.act==='start'?'Make the transcript':'Try the transcript again'}</button>`:'';
+    const mine=transcriptAct(v.act,v2.isHuman()),act=mine==='owner'?`<span class="subj-quiet" data-subj-owner>Keeping this transcript as a source is for Adrian to do.</span><a class="subj-link subj-quietlink" data-subj-handoff="readTranscript" href="${handoffHref('source',null)}" title="Opens the transcript in Advanced">Open in Advanced</a>`:mine==='use'?`<button type="button" class="${CB} subj-btn" data-subj-rec="use" data-job="${esc(job.id)}" title="Keeps the finished transcript as a source of this subject">Use the transcript</button><a class="subj-link subj-quietlink" data-subj-handoff="readTranscript" href="${handoffHref('source',null)}" title="Opens the transcript in Advanced, where its words are checked">Open in Advanced</a>`:v.act?`<button type="button" class="${CB} subj-btn" data-subj-rec="${v.act}" data-job="${esc(job.id)}">${v.act==='start'?'Make the transcript':'Try the transcript again'}</button>`:'';
     // capture sources (marked block): the transcript's own confirm control, or the words "Confirmed by you"
     const ready=job.state==='done'&&job.transcriptReady;
     const confirm=ready?confirmRow(job):'';
@@ -1109,9 +1114,9 @@
    const checks=ok(rec('wordChecks'))?(rec('wordChecks').recordings||[]).filter(r=>jobs.has(r.jobId)&&r.open):[];
    const words=flags.length?`<ol class="subj-talk">${flags.slice(0,6).map(x=>`<li><small>${esc(x.why||'To confirm')}</small><p class="subj-quote">${hl(x.line,x.heard)}</p></li>`).join('')}</ol>${flags.length>6?`<p class="subj-quiet">and ${flags.length-6} more</p>`:''}`:'';
    const who=v2.actor()&&!v2.isHuman()?'&reviewActor='+encodeURIComponent(v2.actor()):'';
-   const hear=checks.map(c=>`<a class="subj-btn" href="/transcript-check/index.html?job=${encodeURIComponent(c.jobId)}${who}" title="Opens the word check">Hear ${plural(c.open,'word')}${c.story?' in '+esc(c.story):''}</a>`).join('');
+   const hear=checks.map(c=>`<a class="${CB} subj-btn" href="/transcript-check/index.html?job=${encodeURIComponent(c.jobId)}${who}" title="Opens the word check">Hear ${plural(c.open,'word')}${c.story?' in '+esc(c.story):''}</a>`).join('');
    const plan=flags[0]?.planId;
-   return (plans===undefined?reading():'')+words+(hear||plan?`<div class="subj-actions">${hear}${plan?`<a class="subj-btn" href="/document-study/index.html?instagram=${encodeURIComponent(plan)}${who}" title="Opens the slide studio in Advanced">Confirm them in the slide studio</a>`:''}</div>`:'')+links(out('readTranscript',form));
+   return (plans===undefined?reading():'')+words+(hear||plan?`<div class="subj-actions">${hear}${plan?`<a class="${CB} subj-btn" href="/document-study/index.html?instagram=${encodeURIComponent(plan)}${who}" title="Opens the slide studio in Advanced">Confirm them in the slide studio</a>`:''}</div>`:'')+links(out('readTranscript',form));
   }
   const hl=(line,heard)=>{const i=heard?String(line).indexOf(heard):-1;return i<0?esc(line):esc(line.slice(0,i))+'<mark>'+esc(heard)+'</mark>'+esc(line.slice(i+heard.length));};
   function toolFacts(s,form){
@@ -1138,8 +1143,8 @@
    const dishes=(f.dishes||[]).slice(0,4).map(x=>`<li${f.dish===x.id?' class="on"':''}><b>${esc(x.title||'')}</b>${x.why?`<span>${esc(x.why)}</span>`:''}${f.dish===x.id?'<em class="subj-by">Chosen</em>':by(x)}</li>`).join('');
    const right=dishes?`<section><p class="subj-label">It could be</p><ul class="subj-dishes">${dishes}</ul></section>`:'';
    const said=sentence||dir,editing=st.editDish!==undefined;
-   const edit=editing?`<form class="subj-dishform" data-subj-dishform><label for="subj-dish">The dish, in your words</label><textarea id="subj-dish" rows="3" data-subj-dishtext>${esc(st.editDish)}</textarea><div class="subj-actions"><button type="submit" class="pri">Keep it</button><button type="button" class="v2-ghost" data-subj-dishcancel>Cancel</button></div></form>`
-    :`<p class="subj-label">The dish, in your words</p>${said?`<blockquote class="subj-quote big">${esc(said)}</blockquote>`:`<p class="subj-quiet">Not said yet.</p>`}<div class="subj-actions">${mag()?'':`<a class="subj-btn" data-subj-handoff="dishChange" href="${handoffHref('direction',form)}" title="Opens Direction in Advanced">Say it again</a>`}${mag()?'':'<button type="button" class="subj-btn pri" data-subj-borrow="simmer" data-subj-covers="board dishChange dishWrite">Open the Simmer board</button>'}<button type="button" class="subj-btn" data-subj-dishedit>${said?'Edit':'Write it'}</button><span class="subj-sp"></span>${out('board',form,'subj-btn').replace('</a>',icon('right')+'</a>')}</div>`;
+   const edit=editing?`<form class="subj-dishform" data-subj-dishform><label for="subj-dish">The dish, in your words</label><textarea id="subj-dish" rows="3" data-subj-dishtext>${esc(st.editDish)}</textarea><div class="subj-actions"><button type="submit" class="pri">Keep it</button><button type="button" class="${CQ} v2-ghost" data-subj-dishcancel>Cancel</button></div></form>`
+    :`<p class="subj-label">The dish, in your words</p>${said?`<blockquote class="subj-quote big">${esc(said)}</blockquote>`:`<p class="subj-quiet">Not said yet.</p>`}<div class="subj-actions">${mag()?'':`<a class="${CB} subj-btn" data-subj-handoff="dishChange" href="${handoffHref('direction',form)}" title="Opens Direction in Advanced">Say it again</a>`}${mag()?'':'<button type="button" class="${CP} subj-btn pri" data-subj-borrow="simmer" data-subj-covers="board dishChange dishWrite">Open the Simmer board</button>'}<button type="button" class="${CB} subj-btn" data-subj-dishedit>${said?'Edit':'Write it'}</button><span class="subj-sp"></span>${out('board',form,'subj-btn').replace('</a>',icon('right')+'</a>')}</div>`;
    return (rec('board')===undefined?reading():'')+waitsFor(s,steps)+((left||right)?`<div class="subj-sim">${left?`<div>${left}</div>`:''}${right?`<div>${right}</div>`:''}</div>`:'')+`<div class="subj-named">${edit}</div>`;
   }
   function toolWords(s,form){
@@ -1147,7 +1152,7 @@
    const write=writeHref(form);
    const sheet=blocks.length?`<a class="subj-sheet" href="${write}" aria-label="Open the writing in Advanced" tabindex="-1"><b>${esc(form?.title||st.standing.title)}</b>${blocks.slice(0,5).map(x=>x.blockKind==='heading'?`<i>${esc(String(x.words).slice(0,80))}</i>`:`<span>${esc(String(x.words).slice(0,220))}</span>`).join('')}</a>`:'';
    const list=parts.length?`<ol class="subj-parts">${parts.map(p=>`<li title="${esc(plural(p.paragraphs,'paragraph'))}"><i aria-hidden="true"></i><span>${esc(p.name)}</span></li>`).join('')}</ol>`:'';
-   return (rec('read')===undefined?reading():'')+(sheet||list?`<div class="subj-words">${sheet}<div>${list}</div></div>`:'')+`<div class="subj-actions"><a class="subj-btn pri" data-subj-handoff="write" href="${write}">${HANDOFFS.write.label}${icon('right')}</a>${blocks.length||mag()&&s.state!=='todo'?`<a class="subj-btn" data-subj-handoff="read" href="${screenHref('read',form)||handoffHref('read',form)}">${HANDOFFS.read.label}</a>`:''}</div>`;
+   return (rec('read')===undefined?reading():'')+(sheet||list?`<div class="subj-words">${sheet}<div>${list}</div></div>`:'')+`<div class="subj-actions"><a class="${CP} subj-btn pri" data-subj-handoff="write" href="${write}">${HANDOFFS.write.label}${icon('right')}</a>${blocks.length||mag()&&s.state!=='todo'?`<a class="${CB} subj-btn" data-subj-handoff="read" href="${screenHref('read',form)||handoffHref('read',form)}">${HANDOFFS.read.label}</a>`:''}</div>`;
   }
   function toolCheck(s,steps,form){
    const c=ok(rec('check'))?rec('check'):null,all=(c?.issues||[]).map(i=>i.message).filter(Boolean),list=st.zoom==='check'?all:all.slice(0,3);
@@ -1155,8 +1160,8 @@
    return waitsFor(s,steps)+rows+links(out(c?'checkOpen':'checkRun',form));
   }
   const planOf=form=>{const p=rec('planRecords');return form?.kind==='instagram'&&Array.isArray(p)?p.filter(ok).find(x=>x.id===form.id)||null:null;};
-  const studio=form=>form?.kind==='instagram'?`<a class="subj-btn pri" href="${esc(v2.href('slides/:id',{id:form.id}))}">Open the slide studio${icon('right')}</a>`:'';
-  const igAdvanced=form=>`<a class="subj-btn" href="/document-study/index.html?instagram=${encodeURIComponent(form.id)}${v2.actor()&&!v2.isHuman()?'&reviewActor='+encodeURIComponent(v2.actor()):''}" title="Opens the slide studio in Advanced">Open the slide studio in Advanced</a>`;
+  const studio=form=>form?.kind==='instagram'?`<a class="${CP} subj-btn pri" href="${esc(v2.href('slides/:id',{id:form.id}))}">Open the slide studio${icon('right')}</a>`:'';
+  const igAdvanced=form=>`<a class="${CB} subj-btn" href="/document-study/index.html?instagram=${encodeURIComponent(form.id)}${v2.actor()&&!v2.isHuman()?'&reviewActor='+encodeURIComponent(v2.actor()):''}" title="Opens the slide studio in Advanced">Open the slide studio in Advanced</a>`;
   const laidOut=form=>{const p=planOf(form);return !!p&&Object.values(p.layouts||{}).some(l=>(l?.frames||[]).length);};
   // What a waiting Carousel step waits for, and the way forward that already exists: the same place in Advanced.
   const STORY_WAIT='An assistant proposes the stories from your words and photographs. You choose one.';
@@ -1177,7 +1182,7 @@
   /** An older Outputs carousel: version two's studio shows it read only; changing it is still done in Advanced. */
   function toolOutputSlides(s,form){
    const studioHref=esc(v2.href('slides/:id',{id:outputStudio(form)},{kind:'output',subject:id}));
-   return `<div class="subj-actions"><a class="subj-btn pri" data-subj-outputstudio href="${studioHref}" title="Shows the slides as they are; nothing is changed here">Open the slides${icon('right')}</a><a class="subj-link" data-subj-handoff="slides" href="${handoffHref('arrange',form)}" title="Opens the slides in Advanced, where they are changed">Open in Advanced${icon('chev')}</a></div>`;
+   return `<div class="subj-actions"><a class="${CP} subj-btn pri" data-subj-outputstudio href="${studioHref}" title="Shows the slides as they are; nothing is changed here">Open the slides${icon('right')}</a><a class="subj-link" data-subj-handoff="slides" href="${handoffHref('arrange',form)}" title="Opens the slides in Advanced, where they are changed">Open in Advanced${icon('chev')}</a></div>`;
   }
   function toolYes(s,form){
    const y=ok(rec('desk'))?rec('desk'):null;

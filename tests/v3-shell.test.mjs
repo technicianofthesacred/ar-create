@@ -65,9 +65,9 @@ const OWN={home:['screens/home.js'],write:['screens/write-page.js','screens/writ
 const scriptOf=s=>OWN[s]||[`/v2/screens/${s}.js`],styleOf=s=>OWN[s]?[`screens/${s}.css`]:[`/v2/screens/${s}.css`];
 test('index.html loads one shell only, version two\'s client, parts, Capture and every screen file it has not built as they are, its own screens, and its own frame',()=>{
  const html=read('public/v3/index.html'),scripts=scriptsOf(html),styles=stylesOf(html);
- assert.deepEqual(scripts,['/document-study/recovery-storage.js','/v2/shell/client.js','/v2/shell/parts.js','/v2/shell/capture.js','shell/frame.js',...SCREENS.flatMap(scriptOf)]);
+ assert.deepEqual(scripts,['/document-study/recovery-storage.js','/v2/shell/client.js','/v2/shell/parts.js','/v2/shell/capture.js','/ui/kit/coss-classes.js','shell/frame.js',...SCREENS.flatMap(scriptOf)]);
  assert.ok(!scripts.some(s=>/shell\.js$/.test(s)),'version two\'s shell.js and its top bar are never loaded here');
- assert.deepEqual(styles,['/document-study/c3-theme.css','/v2/shell/shell.css','/v2/shell/capture.css','/document-study/graphite-controls.css',...SCREENS.flatMap(styleOf),'shell/frame.css']);
+ assert.deepEqual(styles,['/document-study/c3-theme.css','/v2/shell/shell.css','/v2/shell/capture.css','/document-study/graphite-controls.css',...SCREENS.flatMap(styleOf),'shell/frame.css','/ui/kit/app-parts.css']);
  for(const file of [...scripts,...styles])assert.ok(fs.existsSync(fileOf(file,v3dir)),file+' exists');
  assert.doesNotMatch(html,/<script>(?!<)/,'no inline script: the page runs under the app\'s strict script policy');
  assert.ok(fs.existsSync(path.join(v3dir,'README.md')));

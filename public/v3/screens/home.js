@@ -10,6 +10,12 @@
    list from subject-places.folders.get. Only the five covers on the desk are read one by one, after first paint. */
 (function(v2){
  'use strict';
+
+ // coss ui's button look (window.coss, from /ui/kit/coss-classes.js): primary for the main action, outline for the
+ // ordinary ones, ghost for the quiet and icon buttons. If the script did not load, the classes are empty and the
+ // button keeps Home's own look.
+ const coss=o=>{try{return window.coss.button(o);}catch{return '';}};
+ const CP=coss({variant:'default'}),CB=coss({variant:'outline'}),CQ=coss({variant:'ghost',size:'sm'}),CI=coss({variant:'ghost',size:'icon-sm'});
  if(!v2)return;
  const W=window,{esc,icon,ring}=v2.ui;
 
@@ -86,7 +92,7 @@
  /* ======================= the screen ======================= */
  v2.screen({id:'home',title:'Home',route:'',
   render:()=>`<div class="v2-page v3-home" data-home>
- <header><div><h1 class="h3-title">Home</h1><p class="h3-quiet">${esc(today())}</p></div><button type="button" class="h3-pri h3-new" data-home-new>${icon('plus')}New subject</button></header>
+ <header><div><h1 class="h3-title">Home</h1><p class="h3-quiet">${esc(today())}</p></div><button type="button" class="${CP} h3-pri h3-new" data-home-new>${icon('plus')}New subject</button></header>
  <div class="h3-needs-slot" data-home-needs></div>
  <section class="h3-desk" data-home-desk aria-labelledby="h3-desk-h" hidden></section>
  <section class="h3-file" data-home-file aria-labelledby="h3-file-h" hidden></section>
@@ -221,8 +227,8 @@
     const show=ui.allFile?unfiled:unfiled.slice(0,FILE_CUT),more=unfiled.length-show.length,lib=v2.advanced({section:'library'});
     sec.hidden=false;
     sec.innerHTML=`<div class="h3-sec-h"><h2 class="h3-title" id="h3-file-h">To file</h2><span>${plural(unfiled.length,'thing')} in the Library, not with a subject yet</span></div>
-<ul class="h3-file-list">${show.map(f=>`<li data-source="${esc(f.id)}"><span class="h3-file-name">${esc(f.rel_path||f.name||'Untitled')}</span><small>${esc(when(f.provenance?.capturedAt||f.modified_at))}</small><span class="h3-file-acts"><button type="button" class="h3-q" data-file-in="${esc(f.id)}">File in a subject</button><a class="h3-act" href="${esc(lib)}">See it in Advanced</a></span></li>`).join('')}</ul>
-${more>0?`<button type="button" class="h3-q h3-more" data-file-more>Show ${more} more</button>`:''}`;
+<ul class="h3-file-list">${show.map(f=>`<li data-source="${esc(f.id)}"><span class="h3-file-name">${esc(f.rel_path||f.name||'Untitled')}</span><small>${esc(when(f.provenance?.capturedAt||f.modified_at))}</small><span class="h3-file-acts"><button type="button" class="${CQ} h3-q" data-file-in="${esc(f.id)}">File in a subject</button><a class="h3-act" href="${esc(lib)}">See it in Advanced</a></span></li>`).join('')}</ul>
+${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show ${more} more</button>`:''}`;
    }
    /** File one capture with a subject, as the Capture sheet does: study.material.attach, else first-flow.attach. */
    function fileSheet(id){
@@ -308,7 +314,7 @@ ${more>0?`<button type="button" class="h3-q h3-more" data-file-more>Show ${more}
     if(ctx.signal.aborted)return;
     if(failed&&!data){
      root.querySelector('[data-home-needs]').innerHTML='';root.querySelector('[data-home-desk]').hidden=true;
-     root.querySelector('[data-home-all]').innerHTML=`<div class="h3-sec-h"><h2 class="h3-title" id="h3-all-h">Everything</h2></div><div class="h3-empty" data-home-error><p>${esc(failed.message||'The app could not be reached. Nothing was changed.')}</p><button type="button" class="h3-btn" data-home-retry>Try again</button></div>`;
+     root.querySelector('[data-home-all]').innerHTML=`<div class="h3-sec-h"><h2 class="h3-title" id="h3-all-h">Everything</h2></div><div class="h3-empty" data-home-error><p>${esc(failed.message||'The app could not be reached. Nothing was changed.')}</p><button type="button" class="${CB} h3-btn" data-home-retry>Try again</button></div>`;
      return;
     }
     if(!data)return;
@@ -335,17 +341,17 @@ ${more>0?`<button type="button" class="h3-q h3-more" data-file-more>Show ${more}
     const rows=shown.slice(0,cut).map(a=>{
      const done=answeredHere.get(a.id)||(a.status==='defaulted'?{choice:a.resolution?.choice||a.default,auto:true}:null);
      const about=a.about?`<small class="h3-about">${esc(a.about)}</small>`:'';
-     if(done&&!changing.has(a.id))return `<li class="ok" data-ask="${esc(a.id)}">${icon('check')}<p><span class="h3-state">${done.auto?'Applied by default':'Answered'}</span><b>${esc(a.question)}</b>${about}<span class="h3-said">${esc(done.choice||done.text||'')}</span></p><span class="h3-acts"><button type="button" class="h3-q" data-ask-change="${esc(a.id)}"${off}>Change it</button></span></li>`;
+     if(done&&!changing.has(a.id))return `<li class="ok" data-ask="${esc(a.id)}">${icon('check')}<p><span class="h3-state">${done.auto?'Applied by default':'Answered'}</span><b>${esc(a.question)}</b>${about}<span class="h3-said">${esc(done.choice||done.text||'')}</span></p><span class="h3-acts"><button type="button" class="${CQ} h3-q" data-ask-change="${esc(a.id)}"${off}>Change it</button></span></li>`;
      const recording=['recording-words','recording-check'].includes(a.scope?.kind);
      let href=recording?(a.recording?.wordsHref||a.wordsHref||a.link?.href):a.link?.href;
      if(typeof href==='string'&&href.startsWith('#'))href='/document-study/index.html'+href;
      const link=typeof href==='string'&&/^\/(?!\/)/.test(href)?`<a class="h3-act" href="${esc(href)}">${esc(recording?'Go through them':a.link?.label||'Open')}${icon('right')}</a>`:'';
      const current=done?.choice;
-     const choices=recording?'':(a.choices||[]).map(c=>`<button type="button" class="h3-btn" data-ask-id="${esc(a.id)}" data-ask-choice="${esc(c)}"${current===c?' aria-pressed="true"':''}${off}>${esc(c)}${a.default===c&&!current?'<small>default</small>':''}</button>`).join('');
+     const choices=recording?'':(a.choices||[]).map(c=>`<button type="button" class="${CB} h3-btn" data-ask-id="${esc(a.id)}" data-ask-choice="${esc(c)}"${current===c?' aria-pressed="true"':''}${off}>${esc(c)}${a.default===c&&!current?'<small>default</small>':''}</button>`).join('');
      const due=a.band==='steer'&&a.applyAt&&a.status==='open'?`<span class="h3-due">Takes its default ${esc(dueAt(a.applyAt))} unless you choose.</span>`:'';
      return `<li data-ask="${esc(a.id)}"><p><b>${esc(a.question)}</b>${about}${due}</p>${choices||link?`<span class="h3-acts">${choices}${link}</span>`:''}</li>`;
     }).join('');
-    slot.innerHTML=`<section class="h3-needs${shown.some(a=>!(answeredHere.get(a.id)||a.status==='defaulted')||changing.has(a.id))?' h3-asking':''}" aria-labelledby="h3-needs-h"><h2 class="h3-label" id="h3-needs-h"><i class="h3-pip" aria-hidden="true"></i>Needs you</h2><ul>${rows}</ul>${more>0?`<button type="button" class="h3-q h3-more" data-all-asks>Show all ${shown.length}${icon('chev')}</button>`:''}${carrying?`<p class="h3-quiet">${esc(carrying)}</p>`:''}${human?'':'<p class="h3-quiet h3-reason">Only Adrian answers these.</p>'}</section>`;
+    slot.innerHTML=`<section class="h3-needs${shown.some(a=>!(answeredHere.get(a.id)||a.status==='defaulted')||changing.has(a.id))?' h3-asking':''}" aria-labelledby="h3-needs-h"><h2 class="h3-label" id="h3-needs-h"><i class="h3-pip" aria-hidden="true"></i>Needs you</h2><ul>${rows}</ul>${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-all-asks>Show all ${shown.length}${icon('chev')}</button>`:''}${carrying?`<p class="h3-quiet">${esc(carrying)}</p>`:''}${human?'':'<p class="h3-quiet h3-reason">Only Adrian answers these.</p>'}</section>`;
    }
 
    function card(s){
@@ -377,8 +383,8 @@ ${more>0?`<button type="button" class="h3-q h3-more" data-file-more>Show ${more}
    }
 
    const tagsOf=s=>{const tags=s.place.tags||[],extra=tags.length-TAGS_SHOWN;return `<span class="h3-tags">${tags.slice(0,TAGS_SHOWN).map(t=>`<i title="${esc(t)}">${esc(t)}</i>`).join('')}${extra>0?`<i class="h3-tag-more" title="${esc(tags.slice(TAGS_SHOWN).join(', '))}">+${extra}</i>`:''}</span>`;};
-   const pinBtn=s=>{const on=!!s.place.pinnedAt;return `<button type="button" class="h3-q h3-ic h3-pin" data-pin="${esc(s.id)}" aria-pressed="${on}" aria-label="${on?'Take off your desk':'Put on your desk'}: ${esc(s.title)}" title="${on?'On your desk':'Put on your desk'}">${PIN}</button>`;};
-   const menuBtn=s=>`<button type="button" class="h3-q h3-ic h3-rowmenu" data-row-menu="${esc(s.id)}" aria-label="Move or archive: ${esc(s.title)}" title="Move or archive">${MORE}</button>`;
+   const pinBtn=s=>{const on=!!s.place.pinnedAt;return `<button type="button" class="${CI} h3-q h3-ic h3-pin" data-pin="${esc(s.id)}" aria-pressed="${on}" aria-label="${on?'Take off your desk':'Put on your desk'}: ${esc(s.title)}" title="${on?'On your desk':'Put on your desk'}">${PIN}</button>`;};
+   const menuBtn=s=>`<button type="button" class="${CI} h3-q h3-ic h3-rowmenu" data-row-menu="${esc(s.id)}" aria-label="Move or archive: ${esc(s.title)}" title="Move or archive">${MORE}</button>`;
    const rowPic=s=>{const url=covers.get(s.id);return `<span class="h3-row-pic${url?' has-img':''}" aria-hidden="true">${url?`<img src="${esc(url)}" alt="">`:''}</span>`;};
    function row(s){
     const who=holder(s.id);
@@ -399,11 +405,11 @@ ${more>0?`<button type="button" class="h3-q h3-more" data-file-more>Show ${more}
      const count=!g.items.length?'Empty':ui.find||ui.station?`${g.items.length} of ${g.total}`:g.total;
      const head=`<header${ui.group==='folder'?` data-drop-folder`:''}>${folder&&g.saved?'<i class="h3-grip" aria-hidden="true"></i>':''}${folder?folderDot(g.path):''}<h3 class="h3-title">${esc(g.name)}</h3><span>${esc(count)}</span>${folder?`<small class="h3-path" title="A real folder">${esc(folderPath(g.path))}</small>`:''}</header>`;
      const body=!items.length?'':ui.view==='covers'?`<ul class="h3-covers" data-group="${esc(g.key)}">${items.map(cover).join('')}</ul>`:`<ul class="h3-rows" data-group="${esc(g.key)}">${items.map(row).join('')}</ul>`;
-     return `<section class="h3-group${items.length?'':' h3-empty-folder'}" data-key="${esc(g.key)}"${folder&&g.saved?' data-saved':''}${g.path?` data-path="${esc(JSON.stringify(g.path))}"`:''}>${head}${body}${more>0?`<button type="button" class="h3-q h3-more" data-show-all="${esc(g.key)}">Show all ${g.items.length}${icon('chev')}</button>`:''}</section>`;
+     return `<section class="h3-group${items.length?'':' h3-empty-folder'}" data-key="${esc(g.key)}"${folder&&g.saved?' data-saved':''}${g.path?` data-path="${esc(JSON.stringify(g.path))}"`:''}>${head}${body}${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-show-all="${esc(g.key)}">Show all ${g.items.length}${icon('chev')}</button>`:''}</section>`;
     }).join('');
-    const empty=!all.length?`<div class="h3-empty"><p>${archived.length?'Every subject is archived.':'No subjects yet.'}</p><button type="button" class="h3-btn" data-home-new>${icon('plus')}New subject</button></div>`
+    const empty=!all.length?`<div class="h3-empty"><p>${archived.length?'Every subject is archived.':'No subjects yet.'}</p><button type="button" class="${CB} h3-btn" data-home-new>${icon('plus')}New subject</button></div>`
      :!gs.length?`<p class="h3-quiet">No subject matches${ui.find?` "${esc(ui.find)}"`:''}${ui.station?' in '+esc(NAME[ui.station]):''}.</p>`:'';
-    const archive=archived.length?`<div class="h3-archived"><button type="button" class="h3-q" data-archived aria-expanded="${ui.archived}">${ui.archived?'Hide archived':'Archived'} · ${archived.length}</button>${ui.archived?`<ul class="h3-rows">${archived.sort(byName).map(s=>`<li class="h3-row" data-id="${esc(s.id)}"><a class="h3-row-open" href="${esc(subjectHref(s.id))}">${rowPic(s)}<b>${esc(s.title)}</b>${tagsOf(s)}<span class="h3-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="h3-next"></span><small>${esc(when(s.changedAt))}</small></a><button type="button" class="h3-q h3-unarchive" data-unarchive="${esc(s.id)}">Put back</button></li>`).join('')}</ul>`:''}</div>`:'';
+    const archive=archived.length?`<div class="h3-archived"><button type="button" class="${CQ} h3-q" data-archived aria-expanded="${ui.archived}">${ui.archived?'Hide archived':'Archived'} · ${archived.length}</button>${ui.archived?`<ul class="h3-rows">${archived.sort(byName).map(s=>`<li class="h3-row" data-id="${esc(s.id)}"><a class="h3-row-open" href="${esc(subjectHref(s.id))}">${rowPic(s)}<b>${esc(s.title)}</b>${tagsOf(s)}<span class="h3-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="h3-next"></span><small>${esc(when(s.changedAt))}</small></a><button type="button" class="${CQ} h3-q h3-unarchive" data-unarchive="${esc(s.id)}">Put back</button></li>`).join('')}</ul>`:''}</div>`:'';
     sec.innerHTML=`<div class="h3-sec-h"><h2 class="h3-title" id="h3-all-h">Everything</h2><span>${plural(all.length,'subject')}</span>${all.length?`<label class="h3-find"><span class="h3-sr">Find a subject</span>${icon('search')}<input type="search" data-home-find placeholder="Find a subject" value="${esc(ui.find)}" autocomplete="off"></label>`:''}</div>
 ${all.length?`<div class="h3-tools">
  <div class="h3-seg" role="group" aria-label="Group">${GROUPS.map(([k,l])=>`<button type="button" class="h3-nav" data-group-by="${k}" aria-pressed="${ui.group===k}">${l}</button>`).join('')}</div>
@@ -412,7 +418,7 @@ ${all.length?`<div class="h3-tools">
   <div class="h3-seg" role="group" aria-label="View">${[['rows','Rows'],['covers','Covers']].map(([k,l])=>`<button type="button" class="h3-nav" data-view="${k}" aria-pressed="${ui.view===k}">${l}</button>`).join('')}</div>
 </div>`:''}
 ${empty}<div class="h3-groups" data-home-groups>${list}</div>
-${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" class="h3-btn" data-new-folder>${icon('plus')}New folder</button><span class="h3-quiet">Folders here are the real folders on disk. Drag a folder to change the order, or a subject onto a folder to move it. Tags cut across folders.</span></div>`:''}${archive}`;
+${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" class="${CB} h3-btn" data-new-folder>${icon('plus')}New folder</button><span class="h3-quiet">Folders here are the real folders on disk. Drag a folder to change the order, or a subject onto a folder to move it. Tags cut across folders.</span></div>`:''}${archive}`;
     if(!arrange)return;
     // Drag, and Move up and Move down: subjects inside a folder (rows or covers), and the folders themselves. The new
     // order is read from the screen at the moment of the press.
@@ -507,7 +513,7 @@ ${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" cl
     catch(error){v2.ui.say(error.message,{tone:'bad'});paintNeeds();}
    }
    function form(markup){const f=document.createElement('form');f.className='v3-home h3-form';f.innerHTML=markup;return f;}
-   const formActs=label=>`<div class="h3-form-acts"><button type="button" class="h3-q" data-v2-close>Cancel</button><button type="submit" class="h3-pri h3-primary">${esc(label)}</button></div>`;
+   const formActs=label=>`<div class="h3-form-acts"><button type="button" class="${CQ} h3-q" data-v2-close>Cancel</button><button type="submit" class="${CP} h3-pri h3-primary">${esc(label)}</button></div>`;
    function newSubject(){
     const f=form(`<label for="h3-new-name">Subject name</label><input id="h3-new-name" name="name" maxlength="160" required autocomplete="off" placeholder="What is it about?">${formActs('Create subject')}`);
     const sheet=v2.ui.sheet({title:'New subject',body:f});f.elements.name.focus();
@@ -533,7 +539,7 @@ ${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" cl
    }
    /** A row's quiet menu: move it to another folder, or archive it. */
    function rowMenu(s){
-    const f=form(`<label for="h3-move-to">Folder</label><select id="h3-move-to" name="to">${folderOptions(s.place.folder)}</select><div class="h3-form-acts h3-form-split"><button type="button" class="h3-q" data-archive-now>Archive</button><span class="h3-grow"></span><button type="button" class="h3-q" data-v2-close>Cancel</button><button type="submit" class="h3-pri">Move</button></div>`);
+    const f=form(`<label for="h3-move-to">Folder</label><select id="h3-move-to" name="to">${folderOptions(s.place.folder)}</select><div class="h3-form-acts h3-form-split"><button type="button" class="${CQ} h3-q" data-archive-now>Archive</button><span class="h3-grow"></span><button type="button" class="${CQ} h3-q" data-v2-close>Cancel</button><button type="submit" class="${CP} h3-pri">Move</button></div>`);
     const sheet=v2.ui.sheet({title:s.title,body:f});f.elements.to.focus();
     f.addEventListener('submit',e=>{e.preventDefault();let to=[];try{to=JSON.parse(f.elements.to.value);}catch{}sheet.close();void moveTo(s,to);});
     f.querySelector('[data-archive-now]').addEventListener('click',()=>{sheet.close();void setArchived(s,true);});

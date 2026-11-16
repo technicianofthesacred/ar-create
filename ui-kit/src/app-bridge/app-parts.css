@@ -1,0 +1,113 @@
+/* coss ui's parts inside the AR Create app (version three). Compiled into public/ui/kit/app-parts.css by the
+   build at ui-kit/build.mjs.
+   - No page-wide reset: only the utility classes coss's parts use, so nothing changes until an element carries them.
+   - The rules are marked important and sit outside any layer, so they win over the app's older control styles
+     (Graphite's forced button look and version two's control layer) on the elements that opt in.
+   - coss's colour names are given the app's own colours, so light and dark follow the app's data-theme switch and
+     the warm brown stays. */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" important;
+@source not "../page";
+@source not "../components/p-*.tsx";
+@source not "../components/chat-demo";
+
+@custom-variant dark (&:is([data-theme="dark"] *, [data-theme="dark"]));
+
+@theme inline {
+  --animate-skeleton: skeleton 2s -1s infinite linear;
+  --animate-caret-blink: 1s ease-out infinite caret-blink;
+  --animate-toast-success-odd: toast-success-odd 0.32s cubic-bezier(0.5, 1, 0.89, 1);
+  --animate-toast-success-even: toast-success-even 0.32s cubic-bezier(0.5, 1, 0.89, 1);
+  --animate-toast-error-odd: toast-error-odd 0.28s cubic-bezier(0.5, 1, 0.89, 1);
+  --animate-toast-error-even: toast-error-even 0.28s cubic-bezier(0.5, 1, 0.89, 1);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar: var(--sidebar);
+  --color-code-highlight: var(--code-highlight);
+  --color-code: var(--code);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-ring: var(--ring);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-input: var(--input);
+  --color-foreground: var(--foreground);
+  --color-destructive: var(--destructive);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-background: var(--background);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning: var(--warning);
+  --color-success-foreground: var(--success-foreground);
+  --color-success: var(--success);
+  --color-info-foreground: var(--info-foreground);
+  --color-info: var(--info);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --font-sans: var(--ar-ui);
+  --font-heading: var(--ar-ui);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--paper);
+  --secondary: color-mix(in srgb, var(--ink) 6%, transparent);
+  --secondary-foreground: var(--ink);
+  --muted: color-mix(in srgb, var(--ink) 5%, transparent);
+  --muted-foreground: var(--dim);
+  --accent: color-mix(in srgb, var(--ink) 6%, transparent);
+  --accent-foreground: var(--ink);
+  --border: color-mix(in srgb, var(--ink) 10%, transparent);
+  --input: color-mix(in srgb, var(--ink) 14%, transparent);
+  --ring: var(--warm);
+  --destructive: var(--c3-bad);
+  --destructive-foreground: var(--c3-bad);
+  --success: var(--c3-good);
+  --success-foreground: var(--c3-good);
+  --warning: var(--c3-warn);
+  --warning-foreground: var(--c3-warn);
+  --info: var(--dim);
+  --info-foreground: var(--ink);
+  --brand: var(--warm);
+  --brand-foreground: var(--paper);
+}
+
+/* The small part of coss's page-wide reset its parts rely on, applied only to elements that opt in (class "coss"),
+   so the rest of the app keeps its own defaults. coss's rules above are marked important and win over these. */
+.coss { background-color: transparent; color: inherit; font: inherit; margin: 0; text-decoration: none; appearance: none; -webkit-appearance: none; box-sizing: border-box; letter-spacing: normal; text-transform: none; }
+.coss *, .coss::before, .coss::after { box-sizing: border-box; border: 0 solid; }
+.coss svg { display: block; flex-shrink: 0; }
+/* The app hides controls with the hidden attribute; coss's display rules must not undo that. */
+.coss[hidden] { display: none !important; }

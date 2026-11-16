@@ -21,7 +21,7 @@
 
   /* Keep navigation, photo tiles, drag handles and document text geometry.
      Ordinary action controls share the compact treatment across sheets too. */
-  button:not(:where(.combined-rail *, .combined-phonebar *, .cp-tabs *,
+  button:not(:where(.coss, .combined-rail *, .combined-phonebar *, .cp-tabs *,
     .cp-subject, .cp-reference-title, .oo-title, .pl-project, .workflowStep, #wbf-pull, .checkpoint-rail *,
     .make-photo-grid *, .car-layout-option, .car-picker-grid *, .igs-tile,
     .cwb-album-thumbnails *, [role="tab"], [role="treeitem"],
@@ -100,7 +100,7 @@
 
   @media (max-width: 650px), (pointer: coarse) {
     :root { --graphite-field-height: 32px; }
-    button:not(:where(.combined-rail *, .combined-phonebar *, .cp-tabs *,
+    button:not(:where(.coss, .combined-rail *, .combined-phonebar *, .cp-tabs *,
       .cp-subject, .cp-reference-title, .oo-title, .pl-project, .workflowStep, #wbf-pull, .checkpoint-rail *,
       .make-photo-grid *, .car-layout-option, .car-picker-grid *, .igs-tile,
       .cwb-album-thumbnails *, [role="tab"], [role="treeitem"],

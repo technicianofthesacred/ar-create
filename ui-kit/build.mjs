@@ -64,5 +64,13 @@ for (const [, f] of fs.readFileSync(path.join(out, "kit.css"), "utf8").matchAll(
   fs.copyFileSync(from, path.join(out, "files", f));
 }
 
+// The bridge into the app: coss's style rules as a plain script (window.coss) and a stylesheet with no reset.
+await build({
+  entryPoints: [path.join(src, "app-bridge", "coss-classes.ts")],
+  outfile: path.join(out, "coss-classes.js"),
+  bundle: true, format: "iife", minify: true, target: "es2020", alias: { "@": src }, logLevel: "warning",
+});
+execFileSync(path.join(here, "node_modules", ".bin", "tailwindcss"), ["-i", path.join(src, "app-bridge", "app-parts.css"), "-o", path.join(out, "app-parts.css"), "--minify"], { cwd: here, stdio: "inherit" });
+
 const total = fs.readdirSync(out, { recursive: true }).length;
 console.log(`Parts page built: ${examples.length} examples from ${new Set(examples.map((e) => e.part)).size} parts, ${total} files in public/ui/kit.`);
