@@ -2,6 +2,11 @@
    already drew, so a screen can stay a plain render function. Styles live in shell.css under the same names. */
 (function(root){
  'use strict';
+ // coss ui's button look (window.coss, from /ui/kit/coss-classes.js) where version three loads it: primary for the
+ // main action, outline for ordinary ones, ghost for quiet and icon buttons. Version two does not load the script, so
+ // there the classes are empty and every button keeps its own look.
+ const coss=o=>{try{return window.coss.button(o);}catch{return '';}};
+ const CP=coss({variant:'default',size:'sm'}),CB=coss({variant:'outline',size:'sm'}),CQ=coss({variant:'ghost',size:'sm'}),CI=coss({variant:'ghost',size:'icon-sm'});
  const doc=root.document;
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  // Line icons, drawn for version two. 24 by 24, stroke only, so they take the text colour.
@@ -53,7 +58,7 @@
      node. Returns {el, body, close}. Escape and the backdrop close it; focus returns to where it was. */
  function sheet({title,body='',label,onClose,close:closeButton=true}={}){
   const opener=doc.activeElement,d=doc.createElement('dialog');d.className='v2-sheet';d.setAttribute('aria-label',label||title||'Sheet');
-  d.innerHTML=`<div class="v2-sheet-in"><header><h2 tabindex="-1">${esc(title||'')}</h2>${closeButton?`<button type="button" class="v2-ghost v2-icon-btn" data-v2-close aria-label="Close">${icon('close')}</button>`:''}</header><div class="v2-sheet-msgs" data-v2-sheet-msgs role="status" aria-live="polite"></div><div class="v2-sheet-body"></div></div>`;
+  d.innerHTML=`<div class="v2-sheet-in"><header><h2 tabindex="-1">${esc(title||'')}</h2>${closeButton?`<button type="button" class="${CI} v2-ghost v2-icon-btn" data-v2-close aria-label="Close">${icon('close')}</button>`:''}</header><div class="v2-sheet-msgs" data-v2-sheet-msgs role="status" aria-live="polite"></div><div class="v2-sheet-body"></div></div>`;
   const content=d.querySelector('.v2-sheet-body');if(typeof body==='string')content.innerHTML=body;else if(body)content.append(body);
   let done=false;const close=()=>{if(done)return;done=true;try{d.close();}catch{}d.remove();try{onClose?.();}finally{opener?.focus?.({preventScroll:true});}};
   d.addEventListener('click',e=>{if(e.target===d||e.target.closest('[data-v2-close]'))close();});
@@ -73,7 +78,7 @@
   const move=async(el,to)=>{const list=items(),from=list.indexOf(el);if(from<0||to<0||to>=list.length||to===from)return;
    const target=list[to];if(to>from)target.after(el);else target.before(el);decorate();
    try{await onMove?.(from,to);announce(el,to,list.length);}catch(error){/* put it back */const now=items(),back=now[from];if(back&&back!==el){if(from>to)back.after(el);else back.before(el);}decorate();say(error?.message||'The new order could not be saved.',{tone:'bad'});}};
-  function decorate(){const list=items();list.forEach((el,i)=>{el.draggable=true;el.dataset.v2Reorder='';let bar=el.querySelector(':scope > .v2-move');if(!bar){bar=doc.createElement('span');bar.className='v2-move';bar.innerHTML=`<button type="button" class="v2-ghost v2-icon-btn" data-v2-up>${icon('up')}</button><button type="button" class="v2-ghost v2-icon-btn" data-v2-down>${icon('down')}</button>`;el.append(bar);}
+  function decorate(){const list=items();list.forEach((el,i)=>{el.draggable=true;el.dataset.v2Reorder='';let bar=el.querySelector(':scope > .v2-move');if(!bar){bar=doc.createElement('span');bar.className='v2-move';bar.innerHTML=`<button type="button" class="${CI} v2-ghost v2-icon-btn" data-v2-up>${icon('up')}</button><button type="button" class="${CI} v2-ghost v2-icon-btn" data-v2-down>${icon('down')}</button>`;el.append(bar);}
    const name=label(el);bar.querySelector('[data-v2-up]').setAttribute('aria-label','Move up: '+name);bar.querySelector('[data-v2-down]').setAttribute('aria-label','Move down: '+name);
    bar.querySelector('[data-v2-up]').disabled=i===0;bar.querySelector('[data-v2-down]').disabled=i===list.length-1;});}
   /** Focus stays on the same card's Move button through the move and the save (moving the card in the page drops focus, and a button at the end of the list is disabled, so the other one is used). */

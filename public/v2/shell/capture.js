@@ -5,6 +5,11 @@
    The shell hands over what it can do (create({call,...})) and exposes the result as v2.capture(options). */
 (function(root){
  'use strict';
+ // coss ui's button look (window.coss, from /ui/kit/coss-classes.js) where version three loads it: primary for the
+ // main action, outline for ordinary ones, ghost for quiet and icon buttons. Version two does not load the script, so
+ // there the classes are empty and every button keeps its own look.
+ const coss=o=>{try{return window.coss.button(o);}catch{return '';}};
+ const CP=coss({variant:'default',size:'sm'}),CB=coss({variant:'outline',size:'sm'}),CQ=coss({variant:'ghost',size:'sm'}),CI=coss({variant:'ghost',size:'icon-sm'});
  const doc=root.document,P=root.V2Parts||{},esc=P.esc||(v=>String(v??'')),icon=P.icon||(()=>'');
  const MAX_BYTES=8*1024*1024,MAX_MS=15*60*1000,MAX_FILE=64*1024*1024,LONG=180000;
  // A phone clock may run ahead of the app's: a file saved this long before the attempt began still counts as this one's.
@@ -200,7 +205,7 @@
    }
 
    // ---------- the views ----------
-   const back=(extra='')=>`<button type="button" class="v2-ghost v2-icon-btn" data-cap="back" aria-label="Back to the four ways in"${extra}>${icon('back')}</button>`;
+   const back=(extra='')=>`<button type="button" class="${CI} v2-ghost v2-icon-btn" data-cap="back" aria-label="Back to the four ways in"${extra}>${icon('back')}</button>`;
    const head=(title,locked)=>`<div class="v2-cap-head">${back(locked?' disabled':'')}<h3 tabindex="-1" data-cap-title>${esc(title)}</h3></div>`;
    const hint=text=>`<p class="v2-cap-hint">${text}</p>`;
    function tilesView(){
@@ -215,30 +220,30 @@
      const dr=S.draft,len=dr.ms==null?'':` Length <b>${clock(dr.ms)}</b>.`;
      if(!dr.url)dr.url=url(dr.blob);
      return `${head('Speak',S.busy)}<p>${dr.fromFile?`<b>${esc(dr.name)}</b>.`:'Recording done.'}${len}</p><audio controls preload="metadata" src="${esc(dr.url)}"></audio>
-      <div class="v2-cap-actions"><button type="button" class="pri" data-cap="save"${S.busy?' disabled':''}>${dr.failed?'Try again':'Save'}</button><button type="button" class="v2-ghost" data-cap="discard"${S.busy?' disabled':''}>Discard</button></div>`;
+      <div class="v2-cap-actions"><button type="button" class="${CP} pri" data-cap="save"${S.busy?' disabled':''}>${dr.failed?'Try again':'Save'}</button><button type="button" class="${CQ} v2-ghost" data-cap="discard"${S.busy?' disabled':''}>Discard</button></div>`;
     }
-    if(r.state==='recording')return `${head('Speak',true)}<div class="v2-cap-rec"><i aria-hidden="true"></i><span class="v2-cap-time" data-cap-time>${clock(Date.now()-mic.t0)}</span></div><div class="v2-cap-actions"><button type="button" class="pri" data-cap="stop">Stop</button></div>${hint('Up to 15 minutes or 8 MB.')}`;
+    if(r.state==='recording')return `${head('Speak',true)}<div class="v2-cap-rec"><i aria-hidden="true"></i><span class="v2-cap-time" data-cap-time>${clock(Date.now()-mic.t0)}</span></div><div class="v2-cap-actions"><button type="button" class="${CP} pri" data-cap="stop">Stop</button></div>${hint('Up to 15 minutes or 8 MB.')}`;
     if(r.state==='asking')return `${head('Speak',true)}<p>Allow the microphone when your browser asks.</p>`;
-    return `${head('Speak',false)}<p>${esc(r.problem||'The microphone is ready when you are.')}</p><div class="v2-cap-actions">${r.problem?`<button type="button" class="pri" data-cap="record">Try the microphone again</button>`:`<button type="button" class="pri" data-cap="record">Start recording</button>`}${audioPicker()}</div>`;
+    return `${head('Speak',false)}<p>${esc(r.problem||'The microphone is ready when you are.')}</p><div class="v2-cap-actions">${r.problem?`<button type="button" class="${CP} pri" data-cap="record">Try the microphone again</button>`:`<button type="button" class="${CP} pri" data-cap="record">Start recording</button>`}${audioPicker()}</div>`;
    }
    const photoState=p=>p.state==='saved'?'Saved':p.state==='saving'?'Saving':p.state==='failed'?esc(p.msg||'Not saved'):'Waiting';
    function photoItems(){
-    return S.photos.map(p=>`<li data-state="${p.state}" data-id="${p.id}"><img alt="" src="${esc(p.url)}"><span>${esc(p.name)}<small>${photoState(p)}</small></span>${p.state==='failed'?`<button type="button" class="v2-ghost" data-cap="photo-retry" data-id="${p.id}">Try again</button>`:''}${p.state==='failed'||p.state==='waiting'?`<button type="button" class="v2-ghost" data-cap="photo-remove" data-id="${p.id}" aria-label="Remove ${esc(p.name)}">Remove</button>`:''}</li>`).join('');
+    return S.photos.map(p=>`<li data-state="${p.state}" data-id="${p.id}"><img alt="" src="${esc(p.url)}"><span>${esc(p.name)}<small>${photoState(p)}</small></span>${p.state==='failed'?`<button type="button" class="${CQ} v2-ghost" data-cap="photo-retry" data-id="${p.id}">Try again</button>`:''}${p.state==='failed'||p.state==='waiting'?`<button type="button" class="${CQ} v2-ghost" data-cap="photo-remove" data-id="${p.id}" aria-label="Remove ${esc(p.name)}">Remove</button>`:''}</li>`).join('');
    }
    function photoView(){
     return `${head('Photograph',S.busy)}${hint('Take one now, or choose several from this device.')}
-     <div class="v2-cap-actions"><button type="button" class="pri" data-cap="photo-camera"${S.busy?' disabled':''}>Take a photograph</button><button type="button" data-cap="photo-choose"${S.busy?' disabled':''}>Choose photographs</button></div>
+     <div class="v2-cap-actions"><button type="button" class="${CP} pri" data-cap="photo-camera"${S.busy?' disabled':''}>Take a photograph</button><button type="button" data-cap="photo-choose"${S.busy?' disabled':''}>Choose photographs</button></div>
      <input class="v2-cap-file" type="file" accept="image/*" capture="environment" data-cap-input="camera" tabindex="-1" aria-hidden="true">
      <input class="v2-cap-file" type="file" accept="image/*" multiple data-cap-input="choose" tabindex="-1" aria-hidden="true">
      <ul class="v2-cap-photos" data-cap-photos aria-label="Photographs">${photoItems()}</ul>`;
    }
    function thoughtView(){
     return `${head('Write a thought',S.busy)}<label class="v2-cap-field"><span>Your thought</span><textarea data-cap-text rows="6" ${S.busy?'readonly':''}></textarea></label>
-     <div class="v2-cap-actions"><button type="button" class="pri" data-cap="save"${S.busy||!S.thought.trim()?' disabled':''}>Save</button><button type="button" class="v2-ghost" data-cap="discard"${S.busy?' disabled':''}>Discard</button><span class="v2-cap-hint">Ctrl or Cmd with Enter saves.</span></div>`;
+     <div class="v2-cap-actions"><button type="button" class="${CP} pri" data-cap="save"${S.busy||!S.thought.trim()?' disabled':''}>Save</button><button type="button" class="${CQ} v2-ghost" data-cap="discard"${S.busy?' disabled':''}>Discard</button><span class="v2-cap-hint">Ctrl or Cmd with Enter saves.</span></div>`;
    }
    function questionView(){
     return `${head('Ask a question',S.busy)}<label class="v2-cap-field"><span>What do you want to understand?</span><input type="text" data-cap-text maxlength="200" autocomplete="off" ${S.busy?'readonly':''}></label>
-     <div class="v2-cap-actions"><button type="button" class="pri" data-cap="save"${S.busy||!S.question.trim()?' disabled':''}>${human()?'Add to Research':'Propose to Research'}</button><button type="button" class="v2-ghost" data-cap="discard"${S.busy?' disabled':''}>Discard</button></div>
+     <div class="v2-cap-actions"><button type="button" class="${CP} pri" data-cap="save"${S.busy||!S.question.trim()?' disabled':''}>${human()?'Add to Research':'Propose to Research'}</button><button type="button" class="${CQ} v2-ghost" data-cap="discard"${S.busy?' disabled':''}>Discard</button></div>
      ${hint(human()?'It is added to Research'+(S.subject&&!S.fellBack?`, linked to ${esc(S.subject.name||'this subject')}`:'')+'.':'You are not Adrian, so this goes to Research as a proposal for him to keep or let go.')}`;
    }
    function waitingHtml(){
@@ -247,7 +252,7 @@
    }
    function doneView(){
     const x=S.done;
-    return `<div class="v2-cap-done">${icon('check')}<span id="v2-cap-said">${x.text}</span>${x.undo?`<button type="button" data-cap="undo">Undo</button>`:''}<button type="button" class="pri" data-cap="done" aria-describedby="v2-cap-said">Done</button></div>
+    return `<div class="v2-cap-done">${icon('check')}<span id="v2-cap-said">${x.text}</span>${x.undo?`<button type="button" data-cap="undo">Undo</button>`:''}<button type="button" class="${CP} pri" data-cap="done" aria-describedby="v2-cap-said">Done</button></div>
      ${waitingHtml()}<div class="v2-cap-done-more">${x.link?`<a class="v2-cap-link" href="${esc(x.link.href)}" data-cap-link>${esc(x.link.label)}</a>`:''}${(x.notes||[]).map(n=>`<span>${esc(n)}</span>`).join('')}</div>`;
    }
    const VIEWS={tiles:tilesView,speak:speakView,photo:photoView,thought:thoughtView,question:questionView,done:doneView};

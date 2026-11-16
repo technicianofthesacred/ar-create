@@ -3,6 +3,11 @@
    from a DESIGN.md (look.import, then look.save). Every read and write is a registry command. */
 (function(v2){
  'use strict';
+ // coss ui's button look (window.coss, from /ui/kit/coss-classes.js) where version three loads it: primary for the
+ // main action, outline for ordinary ones, ghost for quiet and icon buttons. Version two does not load the script, so
+ // there the classes are empty and every button keeps its own look.
+ const coss=o=>{try{return window.coss.button(o);}catch{return '';}};
+ const CP=coss({variant:'default',size:'sm'}),CB=coss({variant:'outline',size:'sm'}),CQ=coss({variant:'ghost',size:'sm'}),CI=coss({variant:'ghost',size:'icon-sm'});
  const esc=v2.ui.esc,ic=v2.ui.icon;
  const ROLES=[['ground','Ground'],['box','Boxes and bands'],['line','Lines'],['headline','Headlines'],['supporting','Supporting words'],['label','Labels'],['accent','Accent']];
  const BRANDS=['teajia','art','mandala-codes'];
@@ -118,7 +123,7 @@
     const tile=a=>{const r=rec.roles?.dark,g=hex(r?.ground),ac=hex(r?.accent),hd=hex(r?.headline);
      const face=a.src?'<img src="'+esc(a.src)+'" alt="">':a.kind==='mark'&&a.text?'<b class="lk-seal"'+(g&&ac?' style="background:'+ac+';color:'+g+'"':'')+'>'+esc(a.text)+'</b>':'<b class="lk-word"'+(hd?' style="color:'+hd+'"':'')+'>'+esc(rec.roles?.logo?.wordmark||rec.name)+'</b>';
      return '<li><span class="lk-face"'+(g?' style="background:'+g+'"':'')+'>'+face+'</span><span class="lk-tn">'+esc(a.name)+'</span></li>';};
-    return '<section><div class="lk-sechead"><h2>Logo, marks and graphics</h2><span class="lk-dim">'+assets.length+'</span><span class="lk-sp"></span><button type="button" class="v2-ghost" data-lk="asset-open" aria-expanded="'+addAsset+'">'+ic('plus')+' Bring one in</button></div>'
+    return '<section><div class="lk-sechead"><h2>Logo, marks and graphics</h2><span class="lk-dim">'+assets.length+'</span><span class="lk-sp"></span><button type="button" class="'+CQ+' v2-ghost" data-lk="asset-open" aria-expanded="'+addAsset+'">'+ic('plus')+' Bring one in</button></div>'
      +(addAsset?assetForm():'')
      +(assets.length?'<ul class="lk-assets">'+assets.map(tile).join('')+'</ul>':'<p class="lk-dim">This look has no logo, marks or graphics yet.</p>')+'</section>';
    }
@@ -127,7 +132,7 @@
      +'<label><span class="lk-lab">What it is</span><select name="kind"><option value="graphic">Graphic</option><option value="mark">Mark</option><option value="logo">Logo</option></select></label>'
      +'<label><span class="lk-lab">A PNG or SVG file</span><input type="file" name="file" accept=".png,.svg,image/png,image/svg+xml"></label>'
      +'<label><span class="lk-lab">Or, for a mark: one to four characters set as a seal</span><input name="text" maxlength="4" placeholder="佳"></label>'
-     +'<div class="lk-row"><button type="submit" class="pri">Add to this look</button><button type="button" data-lk="asset-open">Cancel</button></div></form>';
+     +'<div class="lk-row"><button type="submit" class="'+CP+' pri">Add to this look</button><button type="button" data-lk="asset-open">Cancel</button></div></form>';
    }
    function rulesHTML(){
     const r=rulesOf(rec.text);
@@ -138,7 +143,7 @@
     return '<div class="lk-acct">'+svg(ICON.share)+'<div><span>Posts to</span><div class="lk-accts">'+mine.map(a=>'<b title="'+esc((a.service||'instagram')+(a.handle?' · '+a.handle:''))+'">'+esc(a.name)+'</b>').join('')+(mine.length?'':'<span class="lk-dim">No account posts this look yet.</span>')+'<button type="button" class="lk-link" data-lk="acct-open" aria-expanded="'+addAcct+'">'+ic('plus')+'Account</button></div><small>'+(mine.length>1?'You choose the account each time you post. ':'')+'An account is separate from a look, so one look can post to several and new accounts can be added.</small></div></div>'
      +(addAcct?'<form class="lk-form" data-lk-form="acct"><label><span class="lk-lab">Account name</span><input name="name" maxlength="80" required></label><label><span class="lk-lab">Handle (optional)</span><input name="handle" maxlength="80" placeholder="@"></label><label><span class="lk-lab">Link (optional): the account\'s web address. It is kept as text and never opened.</span><input name="link" maxlength="300" inputmode="url" autocomplete="off" placeholder="https://"></label>'
       +'<fieldset class="lk-checks"><legend class="lk-lab">Looks that post here</legend>'+looks.map(l=>'<label><input type="checkbox" name="looks" value="'+esc(l.id)+'"'+(l.id===rec.id?' checked':'')+'> '+esc(lookName(l.id))+'</label>').join('')+'</fieldset>'
-      +(acctError?'<p class="lk-bad" role="alert">'+esc(acctError)+'</p>':'')+'<div class="lk-row"><button type="submit" class="pri">Save account</button><button type="button" data-lk="acct-open">Cancel</button></div></form>':'');
+      +(acctError?'<p class="lk-bad" role="alert">'+esc(acctError)+'</p>':'')+'<div class="lk-row"><button type="submit" class="'+CP+' pri">Save account</button><button type="button" data-lk="acct-open">Cancel</button></div></form>':'');
    }
    const offeredFor=id=>{const seen=new Set();return cat.filter(t=>!t.owner&&t.code&&(!t.onlyIn||t.onlyIn===id)&&!seen.has(t.code)&&seen.add(t.code));};
    const yoursFor=id=>cat.filter(t=>t.owner&&(!t.status||t.status==='kept')&&(!Array.isArray(t.looks)||t.looks.includes(id)));
@@ -175,10 +180,10 @@
    }
    function lookHTML(){
     const r=rec.roles;
-    if(!r)return '<section class="lk-empty"><h2>'+esc(lookName(rec.id))+'</h2><p>Nothing is set for this look yet: no colours, type or logo.</p><button type="button" class="pri" data-lk="import">Import a look from a DESIGN.md</button></section>';
+    if(!r)return '<section class="lk-empty"><h2>'+esc(lookName(rec.id))+'</h2><p>Nothing is set for this look yet: no colours, type or logo.</p><button type="button" class="'+CP+' pri" data-lk="import">Import a look from a DESIGN.md</button></section>';
     return '<div class="lk-grid"><section class="lk-id"><div class="lk-logos">'+logoBox(r,'dark')+logoBox(r,'light')+'</div>'+filesHTML()+accountsHTML()
      +'<p class="lk-dim">'+(rec.source==='home'?'Your copy, kept in your home. It wins over any copy shipped with the app.':'Shipped with the app. Saving a change keeps your own copy in your home, and that copy wins.')+(rec.description?' '+esc(rec.description):'')+'</p>'
-     +'<div class="lk-row"><button type="button" data-lk="talk">'+ic('ask')+'Change it by talking</button><button type="button" class="v2-ghost" data-lk="folder">Open the folder</button></div>'+tintHTML()+'</section>'
+     +'<div class="lk-row"><button type="button" class="'+CB+'" data-lk="talk">'+ic('ask')+'Change it by talking</button><button type="button" class="'+CQ+' v2-ghost" data-lk="folder">Open the folder</button></div>'+tintHTML()+'</section>'
      +'<div class="lk-main">'+colourHTML(r)+typeHTML(r)+assetHTML()+rulesHTML()+templatesHTML()+likeHTML()+usedHTML()+'</div></div>';
    }
 
@@ -188,7 +193,7 @@
     const inputs='<label><span class="lk-lab">Paste the text of a DESIGN.md</span><textarea name="text" rows="10" spellcheck="false" placeholder="---\nname: Your brand\ncolors:\n  ...">'+esc(s.input)+'</textarea></label>'
      +'<label><span class="lk-lab">A short name for its folder (optional): lower-case letters, digits and dashes</span><input name="id" maxlength="40" value="'+esc(s.idIn)+'"></label>';
     if(!s.result)return '<section class="lk-import"><h2>Import a look from a DESIGN.md</h2><p class="lk-dim">The app reads the colours, type and logo it finds, says where it had to guess, and lets you correct each guess before anything is saved.</p><form class="lk-form" data-lk-form="read">'+inputs
-     +(s.error?'<p class="lk-bad" role="alert">'+esc(s.error)+'</p>':'')+'<div class="lk-row"><button type="submit" class="pri">Read it</button><button type="button" data-lk="import-cancel">Cancel</button></div></form></section>';
+     +(s.error?'<p class="lk-bad" role="alert">'+esc(s.error)+'</p>':'')+'<div class="lk-row"><button type="submit" class="'+CP+' pri">Read it</button><button type="button" data-lk="import-cancel">Cancel</button></div></form></section>';
     const r=s.result,colors=front(s.draft).colors,resolve=v=>{const m=/^\{colors\.([\w-]+)\}$/.exec(v||'');return hex(m?colors[m[1]]:v);};
     const exists=looks.find(l=>l.id===s.saveId);
     return '<section class="lk-import"><h2>What the app read from it</h2><p>The look is called <b>'+esc(r.name||'(no name)')+'</b>.'+(r.keptOwnSlides?' Its own slides block was kept as written, so nothing was guessed.':'')+'</p>'
@@ -196,7 +201,7 @@
      +'<form class="lk-form" data-lk-form="save"><label><span class="lk-lab">Name of this look. It must differ from the other looks.</span><input name="name" maxlength="80" required value="'+esc(s.name)+'"></label><label><span class="lk-lab">Folder name for this look</span><input name="id" maxlength="40" value="'+esc(s.saveId)+'" required></label>'
      +(exists?'<label class="lk-inline"><input type="checkbox" name="replace"> A look called '+esc(lookName(exists.id))+' already exists. Replace it with this one. Your copy is kept in your home and wins over the shipped one.</label>':'')
      +(s.error?'<p class="lk-bad" role="alert">'+esc(s.error)+'</p>':'')
-     +'<div class="lk-row"><button type="submit" class="pri">Save this look</button><button type="button" data-lk="import-back">Back to the text</button><button type="button" data-lk="import-cancel">Cancel</button></div></form></section>';
+     +'<div class="lk-row"><button type="submit" class="'+CP+' pri">Save this look</button><button type="button" data-lk="import-back">Back to the text</button><button type="button" data-lk="import-cancel">Cancel</button></div></form></section>';
    }
 
    /* ---------- drawing ---------- */

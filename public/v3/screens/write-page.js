@@ -3,6 +3,11 @@
    calls once for each open page with the page's shared state (W). Names it needs from the other files are reached through W. */
 (function(v2){
  'use strict';
+ // coss ui's button look (window.coss, from /ui/kit/coss-classes.js) where version three loads it: primary for the
+ // main action, outline for ordinary ones, ghost for quiet and icon buttons. Version two does not load the script, so
+ // there the classes are empty and every button keeps its own look.
+ const coss=o=>{try{return window.coss.button(o);}catch{return '';}};
+ const CP=coss({variant:'default',size:'sm'}),CB=coss({variant:'outline',size:'sm'}),CQ=coss({variant:'ghost',size:'sm'}),CI=coss({variant:'ghost',size:'icon-sm'});
  const root=window,doc=document;
  v2.shared['write-page']=function(W){
   const {esc,uuid,clock,savedLabel,AUTOSAVE_MS,rowsOf,minimalDiff,buildOps,flat,bar,own}=W.lib;
@@ -207,7 +212,7 @@
      <p class="wr-says"><b>Try again</b> sends them to the app now.</p>
      <p class="wr-says"><b>Meanwhile</b> they are kept on this device, so you can keep writing.</p>
      <p class="wr-says"><b>If it fails again</b>, copy all your words and paste them anywhere safe, such as a note.</p>
-     <div class="wr-acts"><button type="button" class="wr-b wr-pri" data-wr="retry"></button><button type="button" class="wr-b" data-wr="copy">${own('copy')}Copy all my words</button></div></div>`;
+     <div class="wr-acts"><button type="button" class="${CP} wr-b wr-pri" data-wr="retry"></button><button type="button" class="${CB} wr-b" data-wr="copy">${own('copy')}Copy all my words</button></div></div>`;
     if(box._wrHtml!==html){box.innerHTML=html;box._wrHtml=html;}
     const retry=box.querySelector('[data-wr="retry"]');if(retry){retry.disabled=!!trying;retry.innerHTML=trying?'<span class="wr-spin"></span>Trying':'Try again';}
    }
@@ -302,7 +307,7 @@
     const when=a.at?clock(a.at):'',what=a.count>1?plural(a.count)+(when?' saved at '+when:' saved'):'your latest saved change'+(when?', made at '+when:'');
     const html=`<div class="wr-item wr-on"><div class="wr-hd"><h2>${esc('This takes back '+what+'.')}</h2></div>
      <p class="wr-says">${esc('Straight after, Put back brings those words back.')}</p>
-     <div class="wr-acts"><button type="button" class="wr-b wr-pri" data-wr="undo-yes">${esc(a.count>1?'Take back '+plural(a.count):'Take it back')}</button><button type="button" class="wr-b" data-wr="undo-no">${esc(a.count>1?'Keep them':'Keep it')}</button></div></div>`;
+     <div class="wr-acts"><button type="button" class="${CP} wr-b wr-pri" data-wr="undo-yes">${esc(a.count>1?'Take back '+plural(a.count):'Take it back')}</button><button type="button" class="${CB} wr-b" data-wr="undo-no">${esc(a.count>1?'Keep them':'Keep it')}</button></div></div>`;
     if(box._wrHtml!==html){box.innerHTML=html;box._wrHtml=html;}
    }
    const noAsk=()=>{st.ask=null;paintAsk();};
@@ -606,10 +611,10 @@
      const closed=r.at?'The app closed at '+clock(new Date(r.at).toISOString())+' before ':'The app closed before ';
      out.push(`<div class="wr-item wr-on" data-wr-side="recovered"><div class="wr-hd"><h2>Words kept on this device</h2><p class="wr-by">${esc(closed+(more>0?'these changes were saved.':'this change'+(where?' in '+where:'')+' was saved.'))}<br>${esc(countLine(before,after)+(more>0?' And '+plural(more)+' more.':''))}</p></div>
       <div class="wr-ba"><div><p class="wr-label">Saved</p><p class="wr-pr">${before?b:'<i>Nothing here yet.</i>'}</p></div><div><p class="wr-label">Kept on this device</p><p class="wr-pr">${a}</p></div></div>
-      <div class="wr-acts"><button type="button" class="wr-b wr-pri" data-act="rec" data-v="back">Put them back</button><button type="button" class="wr-b wr-q" data-act="rec" data-v="left">Leave them out</button></div></div>`);
+      <div class="wr-acts"><button type="button" class="${CP} wr-b wr-pri" data-act="rec" data-v="back">Put them back</button><button type="button" class="${CQ} wr-b wr-q" data-act="rec" data-v="left">Leave them out</button></div></div>`);
     }else if(st.recDone){
      const d=st.recDone;
-     out.push(`<div class="wr-item" data-wr-side="recovered-done"><div class="wr-hd"><h2>Words kept on this device</h2></div><p class="wr-says">${esc(d.v==='back'?'Put back. They save with the rest of your words.':d.where==='server'?'Left out. They are kept in Earlier versions.':'Left out. They stay on this device, and Copy all my words includes them.')}</p><div class="wr-acts"><button type="button" class="wr-b wr-q" data-act="side-done" data-v="rec">Done</button></div></div>`);
+     out.push(`<div class="wr-item" data-wr-side="recovered-done"><div class="wr-hd"><h2>Words kept on this device</h2></div><p class="wr-says">${esc(d.v==='back'?'Put back. They save with the rest of your words.':d.where==='server'?'Left out. They are kept in Earlier versions.':'Left out. They stay on this device, and Copy all my words includes them.')}</p><div class="wr-acts"><button type="button" class="${CQ} wr-b wr-q" data-act="side-done" data-v="rec">Done</button></div></div>`);
     }
     const m=st.merged;
     if(m&&!m.done&&!(c&&c.pairs.size)&&(m.mine.length||m.theirs.length||m.decided.length)){
@@ -617,9 +622,9 @@
      if(m.theirs.length)lines.push(plural(m.theirs.length)+' changed elsewhere '+(m.theirs.length===1?'was':'were')+' taken as '+(m.theirs.length===1?'it is':'they are')+'.');
      if(m.mine.length)lines.push('Your words in '+plural(m.mine.length)+' changed only here '+(m.mine.length===1?'stay':'stay')+' as you wrote them.');
      for(const p of m.decided)lines.push(p.kept==='both'?'You kept both versions of a paragraph, one after the other.':p.kept==='mine'?'You kept the version written here. The other is in Earlier versions.':p.where==='device'?'You kept the version written elsewhere. Yours stays on this device, and Copy all my words includes it.':'You kept the version written elsewhere. Yours is in Earlier versions.');
-     const list=m.open&&m.theirs.length?`<ul class="wr-took">${m.theirs.map(t=>`<li><p class="wr-label">${esc(t.now===null?'Removed elsewhere':'Changed elsewhere')}</p><p class="wr-pr">${esc(t.now??t.was)}</p>${t.was!==null&&t.now!==null||t.now===null?`<div class="wr-acts wr-acts-in"><button type="button" class="wr-b" data-act="earlier" data-k="${esc(t.id)}">${esc(t.now===null?'Put this paragraph back':'Use the words you had')}</button></div>`:''}</li>`).join('')}</ul>`:'';
+     const list=m.open&&m.theirs.length?`<ul class="wr-took">${m.theirs.map(t=>`<li><p class="wr-label">${esc(t.now===null?'Removed elsewhere':'Changed elsewhere')}</p><p class="wr-pr">${esc(t.now??t.was)}</p>${t.was!==null&&t.now!==null||t.now===null?`<div class="wr-acts wr-acts-in"><button type="button" class="${CB} wr-b" data-act="earlier" data-k="${esc(t.id)}">${esc(t.now===null?'Put this paragraph back':'Use the words you had')}</button></div>`:''}</li>`).join('')}</ul>`:'';
      out.push(`<div class="wr-item" data-wr-side="merged"><div class="wr-hd"><h2>${esc('A newer version was saved '+(m.by?.at?'elsewhere at '+clock(m.by.at):'elsewhere'))}</h2></div><p class="wr-says">${esc(lines.join(' '))}</p>${list}
-      <div class="wr-acts">${m.theirs.length?`<button type="button" class="wr-b" data-act="merged-see" aria-expanded="${!!m.open}">${m.open?'Hide them':'See them'}</button>`:''}<button type="button" class="wr-b wr-q" data-act="side-done" data-v="merged">Done</button></div></div>`);
+      <div class="wr-acts">${m.theirs.length?`<button type="button" class="${CB} wr-b" data-act="merged-see" aria-expanded="${!!m.open}">${m.open?'Hide them':'See them'}</button>`:''}<button type="button" class="${CQ} wr-b wr-q" data-act="side-done" data-v="merged">Done</button></div></div>`);
     }
     return out.join('');
    }
@@ -645,9 +650,9 @@
    function pairHTML(r,p,n){
     const [t,m]=marked(p.theirs,p.mine),label=r.kind==='heading'?'heading':'paragraph '+n,h=r.kind==='heading'?' wr-h':'';
     return `<div class="wr-row" data-row="${esc(r.id)}" data-pair><div class="wr-main"><div class="wr-two${h}" role="group" aria-label="${esc('Two versions of '+label)}">
-     <div class="wr-v"><p class="wr-k"><span>${esc(elsewhere(st.conflict.by))}</span><button type="button" class="wr-b" data-act="keep" data-v="theirs" data-k="${esc(r.id)}" aria-label="${esc('Keep the version '+elsewhere(st.conflict.by).replace(/^Written /,'written ').replace(/, .*$/,''))}">Keep this one</button></p><p class="wr-vt">${t}</p></div>
-     <div class="wr-v"><p class="wr-k"><span>${esc('Written here, '+clock(new Date(p.at).toISOString()))}</span><button type="button" class="wr-b" data-act="keep" data-v="mine" data-k="${esc(r.id)}" aria-label="Keep the version written here">Keep this one</button></p><p class="wr-vt">${m}</p></div>
-     <div class="wr-after"><button type="button" class="wr-b wr-q" data-act="keep" data-v="both" data-k="${esc(r.id)}">Keep both, one after the other</button></div>
+     <div class="wr-v"><p class="wr-k"><span>${esc(elsewhere(st.conflict.by))}</span><button type="button" class="${CB} wr-b" data-act="keep" data-v="theirs" data-k="${esc(r.id)}" aria-label="${esc('Keep the version '+elsewhere(st.conflict.by).replace(/^Written /,'written ').replace(/, .*$/,''))}">Keep this one</button></p><p class="wr-vt">${t}</p></div>
+     <div class="wr-v"><p class="wr-k"><span>${esc('Written here, '+clock(new Date(p.at).toISOString()))}</span><button type="button" class="${CB} wr-b" data-act="keep" data-v="mine" data-k="${esc(r.id)}" aria-label="Keep the version written here">Keep this one</button></p><p class="wr-vt">${m}</p></div>
+     <div class="wr-after"><button type="button" class="${CQ} wr-b wr-q" data-act="keep" data-v="both" data-k="${esc(r.id)}">Keep both, one after the other</button></div>
     </div></div><aside class="wr-margin"></aside></div>`;
    }
    /** Words a closed tab kept for a paragraph, in place and set into the page, until he puts them back or leaves them out. */

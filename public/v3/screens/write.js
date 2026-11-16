@@ -8,6 +8,11 @@
    a reload, and only his. Every rule starts with .wr. */
 (function(v2){
  'use strict';
+ // coss ui's button look (window.coss, from /ui/kit/coss-classes.js) where version three loads it: primary for the
+ // main action, outline for ordinary ones, ghost for quiet and icon buttons. Version two does not load the script, so
+ // there the classes are empty and every button keeps its own look.
+ const coss=o=>{try{return window.coss.button(o);}catch{return '';}};
+ const CP=coss({variant:'default',size:'sm'}),CB=coss({variant:'outline',size:'sm'}),CQ=coss({variant:'ghost',size:'sm'}),CI=coss({variant:'ghost',size:'icon-sm'});
  const {esc,icon}=v2.ui,root=window,doc=document;
  const OWN={side:'M4 5h16v14H4zM9 5v14',focus:'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',note:'M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7',link:'M10 14a4 4 0 0 0 5.700 0l3-3a4 4 0 0 0-5.700-5.700l-1 1M14 10a4 4 0 0 0-5.700 0l-3 3a4 4 0 0 0 5.700 5.700l1-1',
   undo:'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3',history:'M3 12a9 9 0 1 0 3-6.700L3 8M3 3v5h5M12 8v4l3 2',book:'M4 5a2 2 0 0 1 2-2h5v17H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2z',
@@ -252,9 +257,9 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
 
   // ---------- drawing ----------
   /** The bar's tools, and the same three on a phone's bottom bar. Each keeps its size in every state. */
-  const tool=(wr,ic,label,extra='')=>`<button type="button" class="v2-ghost wr-tool" data-wr="${wr}" aria-label="${label}" title="${label}"${extra}>${own(ic)}<span>${label}</span></button>`;
+  const tool=(wr,ic,label,extra='')=>`<button type="button" class="${CQ} v2-ghost wr-tool" data-wr="${wr}" aria-label="${label}" title="${label}"${extra}>${own(ic)}<span>${label}</span></button>`;
   function shell(){
-   const right=`<span class="wr-status" data-wr-status><span class="wr-st-ic" data-wr-st-ic aria-hidden="true"></span><span class="wr-saved" data-wr-saved role="status"></span><span class="wr-saved-s" data-wr-saved-s aria-hidden="true"></span><button type="button" class="v2-ghost wr-retry" data-wr="retry" hidden>Try again</button><button type="button" class="v2-ghost wr-retry" data-wr="putback" hidden aria-label="Put back the words Undo took back" title="Put back the words Undo took back">Put back</button></span>
+   const right=`<span class="wr-status" data-wr-status><span class="wr-st-ic" data-wr-st-ic aria-hidden="true"></span><span class="wr-saved" data-wr-saved role="status"></span><span class="wr-saved-s" data-wr-saved-s aria-hidden="true"></span><button type="button" class="${CQ} v2-ghost wr-retry" data-wr="retry" hidden>Try again</button><button type="button" class="${CQ} v2-ghost wr-retry" data-wr="putback" hidden aria-label="Put back the words Undo took back" title="Put back the words Undo took back">Put back</button></span>
     <span class="wr-tools">${tool('undo','undo','Undo')}${tool('versions','history','Versions',' aria-pressed="false"')}${tool('src','book','Sources',` aria-pressed="${st.src}"`)}${tool('focus','focus','Focus')}</span>`;
    page.classList.add('wr-w');
    page.innerHTML=bar({id,forms:st.forms,form:st.form,piece:st.piece,mode:'write',right,title:st.standing?.title||''})+`
@@ -274,7 +279,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    </div>
    <nav class="wr-pphone" aria-label="Writing">${tool('undo','undo','Undo')}${tool('versions','history','Versions',' aria-pressed="false"')}${tool('src','book','Sources',` aria-pressed="${st.src}"`)}</nav>`;
    // Focus keeps the bar with only the way out, the status and nothing else.
-   $('.wr-bar')?.insertAdjacentHTML('afterbegin',`<button type="button" class="v2-ghost wr-leave" data-wr="unfocus">${icon('back')}<span>Leave focus</span></button>`);
+   $('.wr-bar')?.insertAdjacentHTML('afterbegin',`<button type="button" class="${CQ} v2-ghost wr-leave" data-wr="unfocus">${icon('back')}<span>Leave focus</span></button>`);
    const out=$('.wr-todo .v2-out');if(out)out.setAttribute('data-wr-advanced','');
    paintSources();paintText();paintSaved();
   }
@@ -283,7 +288,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const box=$('[data-wr-src]');if(!box)return;
    const list=(st.sources||[]).map(s=>`<li>${own(s.icon)}<span><b>${esc(s.title)}</b><small>${esc(s.kind)}</small></span></li>`).join('');
    const body=st.sources===null?'<p class="wr-dim" role="status">Reading the sources</p>':list?`<ul class="wr-src-l">${list}</ul>`:'<p class="wr-dim">No material is attached to this subject yet.</p>';
-   box.innerHTML=`<div class="wr-src-h"><h2>Sources</h2><span>${st.sources?esc(st.sources.length)+', one list':''}</span><button type="button" class="v2-ghost v2-icon-btn" data-wr="src" aria-label="Close sources">${icon('close')}</button></div>${body}
+   box.innerHTML=`<div class="wr-src-h"><h2>Sources</h2><span>${st.sources?esc(st.sources.length)+', one list':''}</span><button type="button" class="${CI} v2-ghost v2-icon-btn" data-wr="src" aria-label="Close sources">${icon('close')}</button></div>${body}
     <div class="wr-play">${v2.ui.notBuilt('Playing a recording and reading its transcript beside the page.',{advanced:{subject:id,section:'source'}})}</div>`;
   }
   const kindOf=s=>{const k=String(s.kind||s.role||'').toLowerCase();return /record|audio|voice/.test(k)?['Recording','mic']:/note/.test(k)?['Your note','note']:/photo|image/.test(k)?['Photograph','photo']:/link|web/.test(k)?['Link','link']:['Source','note'];};
@@ -575,10 +580,10 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   function shell(){
    const names=tabNames(st.forms);
    const right=`<span class="wr-saved" data-wr-saved></span>
-    <button type="button" class="v2-ghost" data-wr="ask" aria-label="Ask">${icon('ask')}<span>Ask</span></button>
-    <button type="button" class="v2-ghost" data-wr="focus" aria-label="Focus">${own('focus')}<span>Focus</span></button>`;
+    <button type="button" class="${CQ} v2-ghost" data-wr="ask" aria-label="Ask">${icon('ask')}<span>Ask</span></button>
+    <button type="button" class="${CQ} v2-ghost" data-wr="focus" aria-label="Focus">${own('focus')}<span>Focus</span></button>`;
    page.innerHTML=bar({id,forms:st.forms,form:st.form,piece:st.piece,mode:'write',right,title:st.standing?.title||''})+`
-   <div class="wr-focusbar" hidden><span>${esc(st.standing?.title||'')} / ${esc(names.get(st.form?.key)||'Article')}</span><button type="button" class="v2-ghost" data-wr="unfocus">Leave focus</button></div>
+   <div class="wr-focusbar" hidden><span>${esc(st.standing?.title||'')} / ${esc(names.get(st.form?.key)||'Article')}</span><button type="button" class="${CQ} v2-ghost" data-wr="unfocus">Leave focus</button></div>
    <div class="wr-work" data-src="closed">
     <article class="wr-paper"><div class="wr-sheet">
      <div class="wr-conflict" data-wr-conflict hidden></div>
@@ -632,7 +637,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const copy=e=>`<button type="button" data-act="copy" data-k="${esc(e.k)}">Copy my words</button><a class="wr-btn" href="${esc(adv('write'))}">Open in Advanced${icon('out')}</a>`;
    const items=lost.map(e=>{
     const c=counterpartOf(e,st.rows);
-    return c?`<li>${says('Yours',esc(e.text))}${says('Saved',esc(c.words))}<div class="wr-row-btns"><button type="button" class="pri" data-act="mine" data-k="${esc(e.k)}">Keep my words</button><button type="button" data-act="theirs" data-k="${esc(e.k)}">Use the saved version</button></div></li>`
+    return c?`<li>${says('Yours',esc(e.text))}${says('Saved',esc(c.words))}<div class="wr-row-btns"><button type="button" class="${CP} pri" data-act="mine" data-k="${esc(e.k)}">Keep my words</button><button type="button" data-act="theirs" data-k="${esc(e.k)}">Use the saved version</button></div></li>`
      :`<li>${says('Yours',esc(e.text))}${says('Saved',note('This paragraph is not where you left it, so your words are not put on any other paragraph. They stay here and on this device until you place them.'))}<div class="wr-row-btns">${copy(e)}<button type="button" data-act="theirs" data-k="${esc(e.k)}">I have placed these words</button></div></li>`;
    }).concat(refused.map(e=>`<li>${says('Yours',esc(e.text.length>600?e.text.slice(0,600)+'…':e.text))}${says('Not saved',note(e.refused))}<div class="wr-row-btns">${copy(e)}</div></li>`));
    box.innerHTML=`<h2>${lost.length?'A newer version of this story is saved in the Magazine':'Some words were not saved'}</h2>
@@ -659,7 +664,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    box.innerHTML=st.props.map((p,k)=>{
     const by=v2.actorName(p.by||'agent:'),n=k+1,c=p.changes;
     const body=(c.in.length||c.out.length)?part('Would come in',c.in)+part('Would go',c.out):c.reordered?'<p class="wr-dim">It puts the same paragraphs in another order.</p>':'<p class="wr-dim">The paragraphs are the same. Only marks in them, or the file around them, change.</p>';
-    return `<div class="wr-note" data-prop="${esc(p.id)}"><p class="wr-note-h"><sup>${n}</sup>${esc(by+' suggests new words for this story')}</p><p class="wr-dim">As written in the file. If you accept, they replace the saved words as they stand. They are not yours until you do.</p>${body}${canWrite()?`<div class="wr-row-btns"><button type="button" class="pri" data-act="accept" data-id="${esc(p.id)}">Accept</button><button type="button" class="v2-ghost" data-act="reject" data-id="${esc(p.id)}">Reject</button></div>`:'<p class="wr-dim">Only Adrian decides.</p>'}</div>`;
+    return `<div class="wr-note" data-prop="${esc(p.id)}"><p class="wr-note-h"><sup>${n}</sup>${esc(by+' suggests new words for this story')}</p><p class="wr-dim">As written in the file. If you accept, they replace the saved words as they stand. They are not yours until you do.</p>${body}${canWrite()?`<div class="wr-row-btns"><button type="button" class="${CP} pri" data-act="accept" data-id="${esc(p.id)}">Accept</button><button type="button" class="${CQ} v2-ghost" data-act="reject" data-id="${esc(p.id)}">Reject</button></div>`:'<p class="wr-dim">Only Adrian decides.</p>'}</div>`;
    }).join('')+(st.dropped?`<p class="wr-dim wr-stale">${esc(st.dropped===1?'A suggestion was set aside because the words changed after it was made.':st.dropped+' suggestions were set aside because the words changed after they were made.')}</p>`:'');
   }
   async function decide(kind,pid){
