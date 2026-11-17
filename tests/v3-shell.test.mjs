@@ -25,7 +25,7 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 const keysOf=v2=>({top:Object.keys(v2).sort(),desk:Object.keys(v2.desk).sort(),needs:Object.keys(v2.needs).sort(),ui:Object.keys(v2.ui).sort()});
 
 /** A front's page in a DOM. fetch is answered by the table, or sent to a real server when base is given. */
-async function page({front='v3',url,answers={},base=null,storage={}}={}){
+async function page({front='v3',url,answers={},base=null,storage={},beforeResponse}={}){
  const html=read(`public/${front}/index.html`),dir=front==='v3'?v3dir:v2dir;
  const errors=[],virtualConsole=new VirtualConsole();
  virtualConsole.on('error',(...a)=>errors.push(a.map(String).join(' ')));virtualConsole.on('jsdomError',e=>errors.push(String(e?.message||e)));
@@ -39,7 +39,12 @@ async function page({front='v3',url,answers={},base=null,storage={}}={}){
   .map(([name,method,route])=>({name,method,route,readOnly:true,schema:{},actors:['any']}));
  w.fetch=async(input,options={})=>{
   const u=new URL(String(input),w.location.href),method=options.method||'GET';calls.push({path:u.pathname+u.search,options});
-  if(base){const r=await fetch(base+u.pathname+u.search,{method,headers:{...options.headers,...(method!=='GET'?{Origin:base}:{})},body:options.body});const text=await r.text();return {ok:r.ok,status:r.status,text:async()=>text};}
+  if(base){
+   const r=await fetch(base+u.pathname+u.search,{method,headers:{...options.headers,...(method!=='GET'?{Origin:base}:{})},body:options.body});
+   const text=await r.text();
+   if(beforeResponse)await beforeResponse(u.pathname,r.status);
+   return {ok:r.ok,status:r.status,text:async()=>text};
+  }
   const answer=u.pathname==='/api/capabilities'?{commands}:answers[u.pathname]??{};const [status,body]=Array.isArray(answer)?answer:[200,answer];
   return {ok:status>=200&&status<300,status,text:async()=>JSON.stringify(body)};};
  for(const src of scriptsOf(html))w.eval(fs.readFileSync(fileOf(src,dir),'utf8'));
@@ -193,6 +198,30 @@ test('the app\'s own address and /v3 open version three with the query kept; ver
  for(const route of ['/document-study/index.html','/document-study/index.html?reviewActor=agent:claude-code','/document-study/index.html?subject=hk&section=write']){
   const r=await get(route);assert.equal(r.status,200,route);assert.match(r.headers.get('content-type'),/text\/html/,route);
  }
+});
+
+test('a missing research group response does not touch the next screen after navigation',async()=>{
+ const {base}=await theWorld();
+ const {promise:releaseResponse,resolve:release}=Promise.withResolvers();
+ let status;
+ const hash='#/research/group/none';
+ const {w,doc,errors}=await page({url:base+'/v3/index.html'+hash,base,beforeResponse:(pathname,responseStatus)=>{
+  if(pathname!=='/api/research-topics/group')return;
+  status=responseStatus;
+  return releaseResponse;
+ }});
+ try{
+  assert.equal(await until(()=>status),404);
+  assert.match(doc.querySelector('[data-rs-main]').textContent,/Reading the group/);
+  await goHash(w,'#/looks');
+  assert.equal(w.v2.route().id,'looks');
+  assert.equal(doc.querySelector('[data-rs-main]'),null);
+ }finally{release();}
+ await settle(0);
+ assert.deepEqual(errors.filter(e=>!/Not implemented|scrollTo/.test(e)),[],'no error after the missing group response arrives');
+ await goHash(w,hash);
+ const problem=await until(()=>doc.querySelector('[data-rs-main] .v2-msg[data-tone="bad"]'));
+ assert.ok(problem.textContent.trim(),'the active group still shows the error');
 });
 
 test('every version two screen opens and draws inside the frame against the real server, and a link drawn by a borrowed screen stays in version three',async()=>{

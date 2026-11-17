@@ -148,7 +148,10 @@
    el.addEventListener('click',e=>{if(e.target.closest('[data-rs-newgroup]'))newGroup();},{signal:ctx.signal});
    const paint=async()=>{
     let list,gone=null;
-    try{list=await v2.call('research-topics');if(show==='gone')gone=await v2.call('research-topics',{gone:true});}catch(error){el.querySelector('[data-rs-main]').innerHTML=`<header><h1>Research</h1></header>${problem(error)}`;return;}
+    try{list=await v2.call('research-topics');if(show==='gone')gone=await v2.call('research-topics',{gone:true});}catch(error){
+     if(!ctx.signal.aborted)el.querySelector('[data-rs-main]').innerHTML=`<header><h1>Research</h1></header>${problem(error)}`;
+     return;
+    }
     if(ctx.signal.aborted)return;
     el.querySelector('[data-rs-railhost]').innerHTML=rail(list,show);wireRail(el);
     const groups=list.groups,topics=list.topics,main=el.querySelector('[data-rs-main]');
@@ -185,7 +188,10 @@
    let g=null;const showAll={src:false,top:false};
    const paint=async()=>{
     let list;
-    try{[g,list]=await Promise.all([v2.call('research-topics.group',{id}),v2.call('research-topics')]);}catch(error){el.querySelector('[data-rs-main]').innerHTML=`<header><h1>Research group</h1></header>${problem(error)}`;return;}
+    try{[g,list]=await Promise.all([v2.call('research-topics.group',{id}),v2.call('research-topics')]);}catch(error){
+     if(!ctx.signal.aborted)el.querySelector('[data-rs-main]').innerHTML=`<header><h1>Research group</h1></header>${problem(error)}`;
+     return;
+    }
     if(ctx.signal.aborted)return;
     ctx.setTitle(g.name);
     el.querySelector('[data-rs-railhost]').innerHTML=rail(list,id);wireRail(el);
@@ -284,7 +290,10 @@
   async mount(el,ctx){
    const id=ctx.params.id,tab=['read','decide','sources'].includes(ctx.query.tab)?ctx.query.tab:'read';let t=null,groups=[];
    const paint=async()=>{
-    try{const [topic,list]=await Promise.all([v2.call('research-topics.read',{id}),v2.call('research-topics.groups')]);t=topic;groups=list.groups;}catch(error){el.querySelector('[data-rs-body]').innerHTML=`<div class="v2-page">${problem(error)}</div>`;return;}
+    try{const [topic,list]=await Promise.all([v2.call('research-topics.read',{id}),v2.call('research-topics.groups')]);t=topic;groups=list.groups;}catch(error){
+     if(!ctx.signal.aborted)el.querySelector('[data-rs-body]').innerHTML=`<div class="v2-page">${problem(error)}</div>`;
+     return;
+    }
     if(ctx.signal.aborted)return;
     ctx.setTitle(t.name);ctx.setAdvanced({section:'research',...(t.usedIn[0]?{subject:t.usedIn[0].parentStudyId}:{})});
     const tabs=[['read','Read'],['decide',t.waitingNow.length?'Decide · '+t.waitingNow.length:'Decide'],['sources','Sources · '+t.sources.length]];
