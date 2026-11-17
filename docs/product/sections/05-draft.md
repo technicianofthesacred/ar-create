@@ -1,5 +1,13 @@
 # 5 — Draft
 
+## Approved exact quote links — 18 November follow-through
+
+C01/C04/C05/C06, S02/S05. Connect the approved single dotted underline to exact saved native wording. The dots cover the same words and width as a normal underline, at the normal underline position. Quotation marks remain clickable but outside the dotted span. When actual solid underlining is present, retain it and place the equally thin dots below it. Preserve manuscript words and caret.
+
+A stored link pins the native paragraph ID, saved draft revision, paragraph hash and exact text range to the captured source ID, hash, range and identical quoted text. Creation refuses stale or mismatched records. Opening revalidates both owners and highlights only the original saved source range beside Write. Editing the linked wording removes the mark; the old link cannot find a similar passage or silently retarget after revision changes. Unsupported formatting remains unmarked. Audio playback requires separate recording identity and timing proof.
+
+Finish criterion is a disposable native Article with a saved link, inline click to its exact highlighted source, stale source/draft refusal, removal after edits, preserved separate piece/source bytes and usable desktop/phone view. This records existing approval; local candidate verification and installed publication are separate.
+
 ## Questions inside the active Article
 
 On Write, show the registered Magazine article’s questions alongside its manuscript. Answer through the existing human-only decision record. An answer saves against the question revision shown and leaves the manuscript unchanged. A different article, a carousel and Home do not inherit these questions. Verify both prompts, saving and reopening, stale refusal and a second article without questions. Sending a notification and verifying a manuscript change remain separate steps.
