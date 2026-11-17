@@ -27,7 +27,8 @@
     for(const link of links){const p=link.paragraph;if(p.from<at||p.from<0||p.to>row.text.length||p.to<=p.from)continue;
      const left=p.from>at&&/[“\"‘']/.test(row.text[p.from-1])?p.from-1:p.from,right=p.to<row.text.length&&/[”\"’']/.test(row.text[p.to])?p.to+1:p.to;
      html+=esc(row.text.slice(at,left));
-     html+=`<span class="wr-source-quote" data-quote-link="${esc(link.id)}" role="link" tabindex="0" aria-label="Open original source passage"><span>${esc(row.text.slice(left,p.from))}<span class="wr-source-dots">${esc(p.text)}</span>${esc(row.text.slice(p.to,right))}</span></span>`;at=right;
+     const kept=(st.kept||[]).some(k=>k.id===row.id&&row.text.indexOf(k.text)>=0&&row.text.indexOf(k.text)===row.text.lastIndexOf(k.text)&&row.text.indexOf(k.text)<p.to&&row.text.indexOf(k.text)+k.text.length>p.from);
+     html+=`<span class="wr-source-quote" data-quote-link="${esc(link.id)}" role="link" tabindex="0" aria-label="Open original source passage"><span>${esc(row.text.slice(left,p.from))}<span class="wr-source-dots${kept?' wr-source-dots-below':''}">${esc(p.text)}</span>${esc(row.text.slice(p.to,right))}</span></span>`;at=right;
     }
     return html+esc(row.text.slice(at));
    }

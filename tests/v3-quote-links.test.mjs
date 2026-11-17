@@ -20,6 +20,7 @@ test('saved quote ranges escape text, keep quote marks outside dots, and disappe
  assert.match(api.quoteHTML(row),/data-quote-link="q"/);
  assert.match(api.quoteHTML(row),/“<span class="wr-source-dots">&lt;tea&gt;<\/span>”/);
  assert.equal(api.quoteHTML(row).includes('<tea>'),false);
+ st.kept=[{id:'p',text:'<tea>'}];assert.match(api.quoteHTML(row),/wr-source-dots-below/,'protected solid underline keeps dotted source mark below it');st.kept=[];
  dirty=true;assert.equal(api.quoteHTML(row),'“&lt;tea&gt;”');dirty=false;
  st.base.expected={hash:'new'};assert.equal(api.quoteHTML(row),'“&lt;tea&gt;”','revision drift never renders cached marks');
  await api.loadQuoteLinks();assert.equal(api.quoteHTML(row),'“&lt;tea&gt;”','a response checked against another saved revision cannot mark matching words');
