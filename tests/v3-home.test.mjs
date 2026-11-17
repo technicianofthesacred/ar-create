@@ -178,6 +178,30 @@ const logged=(url,log)=>{const inner=pageFetch(url);return async(u,o)=>{log.push
 const nextText=s=>!s.known||!s.next||['published','resting'].includes(s.station)?'':s.next.formName&&s.forms.length>1?s.next.name+' · '+s.next.formName:s.next.name;
 
 
+test('a subject opens while five-second Needs you and assistant activity reads are pending',async t=>{
+ const f=await server(t);await world(f);
+ await f.agent('/api/leases/acquire',{scope:{kind:'project',id:'inv-river'},reason:'Invented work'},{op:false});
+ const calls=[],pending=new Set(),fetchPage=pageFetch(f.url);
+ const slow=['/api/needs-you','/api/leases'];
+ const {w,doc}=await page({base:f.url,fetchImpl:async(u,o)=>{
+  const route=new URL(String(u),f.url).pathname;calls.push(route);
+  if(!slow.includes(route))return fetchPage(u,o);
+  pending.add(route);
+  await settle(5000);
+  const response=await fetchPage(u,o);
+  pending.delete(route);
+  return response;
+ }});
+ const row=await until(()=>doc.querySelector('.h3-row[data-id="inv-river"] .h3-row-open'),'the subject link',2000);
+ row.click();
+ await until(()=>doc.querySelector('[data-subj-head] h1')?.textContent==='Invented river','the open subject',2000);
+ assert.deepEqual([...pending].sort(),[...slow].sort(),'both reads are still pending when the subject opens');
+ w.v2.go('');
+ await until(()=>doc.querySelector('.h3-needs [data-ask-choice]')&&doc.querySelector('.h3-row[data-id="inv-river"] .h3-held'),'the question and assistant activity');
+ assert.equal(doc.querySelector('[data-v2-needs-count]').textContent,'1');
+ assert.equal(calls.filter(route=>route==='/api/needs-you').length,1,'the badge and Home share the same read');
+});
+
 test('Home on real records: every row is true against subjects.standing, in a handful of calls',async t=>{
  const f=await server(t);await world(f);
  const calls=[];
@@ -204,7 +228,7 @@ test('Home on real records: every row is true against subjects.standing, in a ha
  assert.equal(mine.filter(p=>/human-direction|inquiries|first-flow|study-ai/.test(p)).length,0,'nothing is read subject by subject: '+mine.join(' '));
  assert.ok(mine.length<=24,'a handful of calls, not hundreds: '+mine.length);
  // Needs you: the question, where it is from, its choices in place.
- const ask=doc.querySelector('.h3-needs li');
+ const ask=await until(()=>doc.querySelector('.h3-needs li'),'the question');
  assert.match(ask.textContent,/Is the invented garden named in the piece\?/);assert.match(ask.textContent,/Invented garden/);
  assert.deepEqual([...ask.querySelectorAll('[data-ask-choice]')].map(b=>b.dataset.askChoice),['Name it','Leave it out']);
  // On your desk: the two pinned subjects, opening the subject.
@@ -269,7 +293,7 @@ test('Home writes through the commands: pin, answer, move to a folder with Undo,
  assert.equal((await placeOf('inv-cups')).updatedBy,'human:adrian');
  await until(()=>doc.querySelectorAll('.h3-card').length===3,'three cards');
  // His answer, from the app's own page.
- click(w,doc.querySelector('[data-ask-choice="Leave it out"]'));
+ click(w,await until(()=>doc.querySelector('[data-ask-choice="Leave it out"]'),'the choice'));
  await until(()=>doc.querySelector('.h3-needs li.ok'),'the answer');
  assert.equal(doc.querySelector('.h3-needs li.ok .h3-said').textContent,'Leave it out');assert.match(doc.querySelector('.h3-needs li.ok').textContent,/Answered/);
  const answered=(await f.agent('/api/needs-you?status=answered')).asks[0];
@@ -302,6 +326,7 @@ test('Home as an assistant says why the answers are greyed, in a visible line; c
  const f=await server(t);await world(f);
  const {w,doc}=await page({base:f.url,fetchImpl:pageFetch(f.url),hash:'?reviewActor=agent:codex#/'});
  await until(()=>doc.querySelector('.h3-groups .h3-row'),'the list');
+ await until(()=>doc.querySelector('.h3-needs [data-ask-choice]'),'the choices');
  const buttons=[...doc.querySelectorAll('.h3-needs [data-ask-choice]')];
  assert.ok(buttons.length&&buttons.every(b=>b.disabled),'the choices are greyed for an assistant');
  const reason=doc.querySelector('.h3-needs .h3-reason');
