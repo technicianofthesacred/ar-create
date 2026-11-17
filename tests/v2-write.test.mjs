@@ -705,8 +705,8 @@ test('real server: a human rejects a plain suggestion and it is gone',{timeout:6
  await adrian.call('study-ai.reject',{...scope,requestId});
  assert.ok(!(await adrian.call('study-ai.requests',scope)).items.some(i=>i.id===requestId&&i.status==='pending'),'it is no longer pending');
 });
-test('real server: the other commands Write calls are not refused for an unsupported field',{timeout:60000},async()=>{
- const {base}=await theWorld(),{scope,requestId,target,adrian}=await plainSuggestion(base,'Taken as it stands.');
+test('real server: the other commands Write calls are not refused for an unsupported field',{timeout:60000},async t=>{
+ const {url:base}=await server(t),{scope,requestId,target,adrian}=await plainSuggestion(base,'Taken as it stands.');
  const sub={id:scope.parentStudyId};
  await adrian.call('subject.standing',{parentStudyId:sub.id});
  await adrian.call('study.outputs',{rootBindingId:scope.bindingId,parentStudyId:sub.id});
