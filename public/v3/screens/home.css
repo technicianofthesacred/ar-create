@@ -27,19 +27,19 @@
    Graphite's control layer sets every plain button with !important, so these are declared in version two's control layer
    (named first by shell.css), which wins over it. Hover and focus change colour and background only. */
 @layer v2-controls{
- .v3-home button.h3-btn:not(.coss),.v3-home button.h3-pri:not(.coss),.v3-home button.h3-q:not(.coss),.v3-home .v2-move button,.v3-home.h3-form button{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;box-sizing:border-box!important;height:32px!important;min-height:32px!important;max-height:none!important;width:auto!important;min-width:0!important;padding:0 12px!important;margin:0!important;border:0!important;border-radius:6px!important;font:600 14px/1 var(--ar-ui)!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap!important;box-shadow:none!important;filter:none!important;transform:none!important;transition:none!important;flex:none!important;background-clip:border-box!important;cursor:pointer!important}
+ .v3-home button.h3-btn:not(.coss),.v3-home button.h3-pri:not(.coss),.v3-home button.h3-q:not(.coss),.v3-home .v2-move button:not(.coss),.v3-home.h3-form button{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;box-sizing:border-box!important;height:32px!important;min-height:32px!important;max-height:none!important;width:auto!important;min-width:0!important;padding:0 12px!important;margin:0!important;border:0!important;border-radius:6px!important;font:600 14px/1 var(--ar-ui)!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap!important;box-shadow:none!important;filter:none!important;transform:none!important;transition:none!important;flex:none!important;background-clip:border-box!important;cursor:pointer!important}
  .v3-home button.h3-btn:not(.coss){background:var(--v3-fill)!important;color:var(--ink)!important}
  .v3-home button.h3-btn:not(.coss):not(:disabled):hover{background:var(--v3-fill2)!important}
  .v3-home button.h3-btn:not(.coss)[aria-pressed="true"]{background:var(--v3-fill2)!important}
  .v3-home button.h3-pri:not(.coss){background:var(--ink)!important;color:var(--paper)!important}
  .v3-home button.h3-pri:not(.coss):not(:disabled):hover{background:color-mix(in srgb,var(--ink) 86%,var(--paper))!important}
- .v3-home button.h3-q:not(.coss),.v3-home .v2-move button{background:transparent!important;color:var(--dim)!important}
- .v3-home button.h3-q:not(.coss):not(:disabled):hover,.v3-home .v2-move button:not(:disabled):hover{background:var(--v3-fill)!important;color:var(--ink)!important}
+ .v3-home button.h3-q:not(.coss),.v3-home .v2-move button:not(.coss){background:transparent!important;color:var(--dim)!important}
+ .v3-home button.h3-q:not(.coss):not(:disabled):hover,.v3-home .v2-move button:not(.coss):not(:disabled):hover{background:var(--v3-fill)!important;color:var(--ink)!important}
  .v3-home button:disabled{opacity:.42!important;cursor:default!important}
  .v3-home button.h3-pri:not(.coss):focus-visible{outline:2px solid var(--ink)!important;outline-offset:2px!important}
  .v3-home button:not(.h3-pri):focus-visible{outline:2px solid var(--ink)!important;outline-offset:-2px!important}
  /* an icon button: the quiet kind with only an icon */
- .v3-home button.h3-ic:not(.coss),.v3-home .v2-move button{width:32px!important;padding:0!important}
+ .v3-home button.h3-ic:not(.coss),.v3-home .v2-move button:not(.coss){width:32px!important;padding:0!important}
  .v3-home button.h3-pin:not(.coss)[aria-pressed="true"]{color:var(--ink)!important;background:var(--v3-fill)!important}
  /* a choice that can be long wraps instead of running sideways */
  .v3-home .h3-acts button{height:auto!important;padding:6px 12px!important;line-height:1.3!important;white-space:normal!important;text-align:left!important;overflow-wrap:anywhere!important;max-width:100%!important}
@@ -61,8 +61,8 @@
  @media (max-width:850px),(pointer:coarse){
   .v3-home button.h3-btn:not(.coss),.v3-home button.h3-pri:not(.coss),.v3-home button.h3-q:not(.coss),.v3-home.h3-form button{height:44px!important;min-height:44px!important}
   .v3-home .h3-acts button{height:auto!important;min-height:44px!important}
-  .v3-home button.h3-ic:not(.coss),.v3-home .v2-move button{width:36px!important;height:44px!important;min-height:44px!important}
-  .v3-home .h3-card .v2-move button{width:32px!important}
+  .v3-home button.h3-ic:not(.coss),.v3-home .v2-move button:not(.coss){width:36px!important;height:44px!important;min-height:44px!important}
+  .v3-home .h3-card .v2-move button:not(.coss){width:32px!important}
   .v3-home .h3-needs>button.h3-more{margin-top:-8px!important;margin-bottom:-8px!important}
   .v3-home .h3-needs>button.h3-more:last-child{margin-bottom:-12px!important}
   .v3-home.h3-form :is(input,select){height:44px!important;min-height:44px!important}
