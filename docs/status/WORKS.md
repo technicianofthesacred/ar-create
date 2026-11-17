@@ -25,7 +25,7 @@ The installed app is version three's Home release: commit `2d02f5ee0e06f297820fb
 - Decisions on angle and title, marked wording, Carousel words and photos, and translations belong to Adrian. Re-read those records before asking him; old counts may be stale.
 - Accepted Article to Carousel, final media layout, downloads of the chosen edition, and publication are separate follow-ups. Sending and publishing stay Adrian's decision.
 - Phone or VPS access, offline sync, more account connections and remote approval each need their own design and Adrian's agreement. Large-library speed and meaning-based search are not measured; today's search matches words literally.
-- Old dependency warnings need a fresh audit before any fix. The MCP SDK is already on 2.4.0.
+- The 17 November source audit found zero production advisories after pinning Readability 0.6.0. The check covered the runtime, MCP SDK and UI kit locks.
 
 ## Agent handoff
 
