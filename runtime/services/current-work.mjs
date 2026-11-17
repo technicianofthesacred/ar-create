@@ -16,12 +16,29 @@ export function createCurrentWork({concepts,direction,boards,library,understandi
   let understandingView=await understanding.resolve(request);
   if(selected.outputId&&understandingView.piece?.status!=='current')fail('This selected output is not current and uniquely owned by this subject/root.',409);
   const bindingId=understandingView.piece?.wordOwner?.bindingId||null,gaps=[...sourceGaps];
-  if(selected.outputId){request.scopes.push({selector:{scope:'output',parentStudyId,outputId:selected.outputId,bindingId:selected.rootBindingId}});if(bindingId)request.scopes.push({selector:{scope:'part',parentStudyId,bindingId}});understandingView=await understanding.resolve(request);if(understandingView.piece?.status!=='current'||(understandingView.piece?.wordOwner?.bindingId||null)!==bindingId)fail('The selected piece owner changed during this read.',409);}
   let proposals=null,contracts=null;
-  if(bindingId){
-   try{proposals=await studyAI.call('list',{parentStudyId,bindingId});contracts=await studyAI.call('contracts',{parentStudyId,bindingId});}
-   catch(error){gaps.push({owner:'native-proposals',status:'unavailable',reason:error.message});}
-  }else if(selected.outputId)gaps.push({owner:'native-proposals',status:'not-applicable-or-unavailable',reason:'This output has no native paragraph owner; no Article contracts are borrowed.'});
+  if(selected.outputId){
+   request.scopes.push({selector:{scope:'output',parentStudyId,outputId:selected.outputId,bindingId:selected.rootBindingId}});
+   if(bindingId)request.scopes.push({selector:{scope:'part',parentStudyId,bindingId}});
+   // The initial projection resolved the exact owner. Read its proposal state
+   // alongside the expanded projection, then confirm the owner before returning either.
+   const readProposalState=async()=>{
+    if(!bindingId)return {gap:{owner:'native-proposals',status:'not-applicable-or-unavailable',reason:'This output has no native paragraph owner; no Article contracts are borrowed.'}};
+    let proposals=null;
+    try{
+     proposals=await studyAI.call('list',{parentStudyId,bindingId});
+     return {proposals,contracts:await studyAI.call('contracts',{parentStudyId,bindingId})};
+    }catch(error){
+     return {proposals,gap:{owner:'native-proposals',status:'unavailable',reason:error.message}};
+    }
+   };
+   const [expanded,proposalState]=await Promise.all([understanding.resolve(request),readProposalState()]);
+   if(expanded.piece?.status!=='current'||(expanded.piece?.wordOwner?.bindingId||null)!==bindingId)fail('The selected piece owner changed during this read.',409);
+   understandingView=expanded;
+   proposals=proposalState.proposals??null;
+   contracts=proposalState.contracts??null;
+   if(proposalState.gap)gaps.push(proposalState.gap);
+  }
   const scope=selected.outputId?{kind:'piece',parentStudyId,rootBindingId:selected.rootBindingId,outputId:selected.outputId}:{kind:'project',parentStudyId};
   let work=null;try{work=await continuity.read({scope});}catch(error){gaps.push({owner:'work-continuity',status:'unavailable',reason:error.message});}
   const allAsks=needs.peek().asks,ids=[parentStudyId,selected.outputId,bindingId].filter(Boolean),asks=allAsks.filter(a=>a.scope&&ids.includes(a.scope.id));
