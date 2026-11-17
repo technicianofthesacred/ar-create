@@ -138,6 +138,29 @@
   return Object.freeze({call,commands,find,request,actor:()=>who.actor,explicit:()=>who.explicit,isHuman:()=>String(who.actor||'').startsWith('human:'),actorName});
  }
 
+ /** The badge and Home consume the same pending asks. A change during a read queues one fresh read. */
+ function createNeedsFeed(client){
+  const listeners=new Set();
+  let latest=null,running=null,again=false;
+  function refresh(){
+   if(running){again=true;return running;}
+   running=(async()=>{
+    do{
+     again=false;
+     latest=await client.call('needs-you',{status:'pending'}).catch(()=>null);
+     for(const listener of listeners)listener(latest);
+    }while(again);
+   })().finally(()=>{running=null;});
+   return running;
+  }
+  function subscribe(listener){
+   listeners.add(listener);
+   listener(latest);
+   return ()=>listeners.delete(listener);
+  }
+  return Object.freeze({refresh,subscribe});
+ }
+
  /** The live change stream: one EventSource for the page, resumed from its last cursor, quiet while the page is hidden. */
  function createLive({base='',doc=root.document,win=root}={}){
   const listeners=new Set();let source=null,cursor=null,bootId=null,retry=0,timer=null,connected=false,stopped=false;
@@ -167,7 +190,7 @@
   });
  }
 
- const api=Object.freeze({ACTORS,resolveActor,buildRequest,createClient,createLive,V2Error,actorName,uuid});
+ const api=Object.freeze({ACTORS,resolveActor,buildRequest,createClient,createNeedsFeed,createLive,V2Error,actorName,uuid});
  root.V2Client=api;
  if(typeof module==='object'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
