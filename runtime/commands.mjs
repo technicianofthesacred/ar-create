@@ -91,6 +91,7 @@ const BODY = {
   '/api/study/outputs/stand-in-refresh':['rootBindingId','parentStudyId','selectedOutputId','operationId','expectedOutput','expectedNative'],
   '/api/study/outputs/stand-in-create':['rootBindingId','parentStudyId','operationId','expectedOutput','kind','sourceBindingId','expectedNative'],
   '/api/study/outputs/stand-in-save':['rootBindingId','parentStudyId','selectedOutputId','operationId','expectedOutput','expectedNative?','changes'],
+  '/api/study/video-briefs':['projectKey','parentStudyId','operationId','findingId','title','sourcePath','sourceHash','from','to','quote'],
   '/api/study/footage/ranges':['bindingId','parentStudyId','operationId','expected','sourceId','sourceHash','metadataHash','inTicks','outTicks','label','decision','rangeId?'],
   '/api/study/outputs/visual-review':['rootBindingId','parentStudyId','selectedOutputId','exportId','operationId','expectedOutput','expectedManifestHash','reviewedFiles','humanDecision'],
   '/api/study/structure-tests/visual-review':['rootBindingId','parentStudyId','selectedOutputId','exportId','operationId','expectedOutput','expectedManifestHash','reviewedFiles'],
@@ -265,7 +266,7 @@ export const publicEntry = ({ pattern, ...rest }) => {const schema=rest.route===
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {captureStudySources,stopStudySources,listStudySources,nativeCarouselMake,voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    const {captureStudySources,stopStudySources,listStudySources,nativeCarouselMake,voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyVideoBriefs,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
     // The one publish check (consent desk): refuses with the reason while anyone on the piece is unanswered.
     const holdPublish=(scopes,what)=>consentDesk.assertNotHeld(scopes,what);
     // The older single-project export routes belong to the workspace's own project.
@@ -401,6 +402,25 @@ export function createRouteMap(services) {
       '/api/research/atlas/search': {POST:input=>localAtlas.search(input)},
       '/api/research/atlas/article': {GET:()=>localAtlas.read(Object.fromEntries(url.searchParams))},
       '/api/study/material/attach': {POST:input=>draftCall(async()=>{if(url.search)throw new StateError('Use the exact native material attachment path.',400);if(!input||Object.keys(input).sort().join(',')!=='bindingId,operationId,parentStudyId,sourceIds')throw new StateError('Attach retained sources to one exact native subject.',400);const parent=await studyBindings.lookup({projectKey:input.parentStudyId});return firstFlow.study.attach({...input,projectId:parent.projectId,documentId:parent.documentId});})},
+      '/api/study/video-briefs': {
+        GET:()=>draftCall(()=>{
+          if(!studyVideoBriefs)throw new StateError('Video Editing briefs are unavailable.',503);
+          if([...url.searchParams.keys()].sort().join(',')!=='parentStudyId,projectKey')throw new StateError('Choose one exact Video Editing subject.',400);
+          const projectKey=url.searchParams.get('projectKey'),parentStudyId=url.searchParams.get('parentStudyId');
+          return studyVideoBriefs.list({projectKey,parentStudyId});
+        }),
+        POST:input=>draftCall(()=>{
+          if(url.search)throw new StateError('Use the exact Video Editing brief command.',400);
+          if(!studyVideoBriefs)throw new StateError('Video Editing briefs are unavailable.',503);
+          return studyVideoBriefs.add(input);
+        }),
+      },
+      '/api/study/video-briefs/source': {GET:()=>draftCall(()=>{
+        if(!studyVideoBriefs)throw new StateError('Video Editing briefs are unavailable.',503);
+        if([...url.searchParams.keys()].sort().join(',')!=='id,parentStudyId,projectKey')throw new StateError('Choose one exact Video Editing brief.',400);
+        const projectKey=url.searchParams.get('projectKey'),parentStudyId=url.searchParams.get('parentStudyId'),id=url.searchParams.get('id');
+        return studyVideoBriefs.resolve({projectKey,parentStudyId,id});
+      })},
       '/api/study/footage': {GET:()=>draftCall(()=>{if([...url.searchParams.keys()].sort().join(',')!=='bindingId,parentStudyId')throw new StateError('Choose one exact native footage scope.',400);if(!studyFootage)throw new StateError('Footage is unavailable.',503);return studyFootage.list({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')});})},
       '/api/study/footage/ranges': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact footage range command.',400);if(!studyFootage)throw new StateError('Footage is unavailable.',503);return studyFootage.save(input);})},
       '/api/study/outputs/visual-review': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use one exact Carousel visual review.',400);return studyOutputExports.reviewCarouselVisual(input);})},
