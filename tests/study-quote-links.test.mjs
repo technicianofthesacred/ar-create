@@ -39,6 +39,7 @@ test('HTTP uses existing captured source bytes and exact native projection witho
  const from=row.words.indexOf(words.phrase),start=source.raw.indexOf(words.phrase);
  const input={...f.scope,operationId:op(),expected:d.expected,paragraph:{id:row.id,blockHash:row.blockHash,from,to:from+words.phrase.length,text:words.phrase},source:{id:source.id,hash:source.copiedHash,from:start,to:start+words.phrase.length,quote:words.phrase}};
  const created=await f.request('/api/study-draft/quote-link',input);assert.equal(created.link.active,true);
- const result=await f.request('/api/study-draft/quote-link/source?'+new URLSearchParams({...f.scope,id:input.operationId}));assert.equal(result.source.quote,words.phrase);
+ const result=await f.request('/api/study-draft/quote-link/source?'+new URLSearchParams({...f.scope,id:input.operationId}));assert.equal(result.source.quote,words.phrase);assert.deepEqual(result.expected,d.expected);
+ const listed=await f.request('/api/study-draft/quote-link?'+new URLSearchParams(f.scope));assert.deepEqual(listed.expected,d.expected);
  assert.equal((await f.native()).raw,d.raw);
 });

@@ -45,7 +45,7 @@ export function createStudyQuoteLinks({dataDir,drafts}){
    if(!prior)atomicWrite(target,JSON.stringify(record,null,2)+'\n',{exclusive:true});
    return {link:publicLink(record,d),replay:!!prior};
   },
-  async list(input){const s=scope(input),d=await read(s),dir=directory(s),names=fs.readdirSync(dir).filter(n=>uuid.test(n.slice(0,-5))&&n.endsWith('.json'));if(names.length>2000)fail('Too many quote links for this draft.',413);return {links:names.map(n=>readJson(path.join(dir,n),null)).filter(r=>r&&r.bindingId===s.bindingId&&r.parentStudyId===s.parentStudyId).map(r=>publicLink(r,d))};},
-  async source(input){const s=scope(input),record=readJson(file(s,input.id),null);if(!record||record.bindingId!==s.bindingId||record.parentStudyId!==s.parentStudyId)fail('This quote link is unavailable.',404);const d=await read(s);return {link:publicLink(record,d),source:validate(record,d)};}
+  async list(input){const s=scope(input),d=await read(s),dir=directory(s),names=fs.readdirSync(dir).filter(n=>uuid.test(n.slice(0,-5))&&n.endsWith('.json'));if(names.length>2000)fail('Too many quote links for this draft.',413);return {expected:d.expected,links:names.map(n=>readJson(path.join(dir,n),null)).filter(r=>r&&r.bindingId===s.bindingId&&r.parentStudyId===s.parentStudyId).map(r=>publicLink(r,d))};},
+  async source(input){const s=scope(input),record=readJson(file(s,input.id),null);if(!record||record.bindingId!==s.bindingId||record.parentStudyId!==s.parentStudyId)fail('This quote link is unavailable.',404);const d=await read(s);return {expected:d.expected,link:publicLink(record,d),source:validate(record,d)};}
  };
 }
