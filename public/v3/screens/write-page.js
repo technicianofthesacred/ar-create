@@ -21,8 +21,6 @@
 
    // Source links never enter the text saved by the editor. Only exact saved ranges are marked.
    let quoteRevision='',quoteLinks=[],quoteRead=0,sourceRead=0;
-   const quoteScope=()=>new URLSearchParams(scope());
-   async function quoteRequest(url){const r=await root.fetch(url,{cache:'no-store'}),body=JSON.parse(await r.text());if(!r.ok)throw Error(body.error||'This source link is no longer current.');return body;}
    function quoteHTML(row){
     const links=dirty()||quoteRevision!==JSON.stringify(st.base?.expected)?[]:quoteLinks.filter(l=>l.active&&l.paragraph.id===row.id&&l.paragraph.text===row.text.slice(l.paragraph.from,l.paragraph.to)).sort((a,b)=>a.paragraph.from-b.paragraph.from);
     let at=0,html='';
@@ -43,7 +41,7 @@
     if(!st.bindingId||dirty()||clk.gone)return;
     const revision=JSON.stringify(st.base?.expected);if(revision===quoteRevision)return;quoteRevision=revision;quoteLinks=[];
     const ticket=++quoteRead;
-    try{const result=await quoteRequest('/api/study-draft/quote-link?'+quoteScope());
+    try{const result=await v2.call('study-draft.quote-link.get',scope());
      if(ticket!==quoteRead||clk.gone||ctx.signal.aborted||dirty()||revision!==JSON.stringify(st.base?.expected))return;
      quoteLinks=JSON.stringify(result.expected)===revision&&Array.isArray(result.links)?result.links:[];if(quoteLinks.some(l=>l.active))paintText();
     }catch{/* An unavailable source link never changes or decorates manuscript words. */}
@@ -54,7 +52,7 @@
     st.src=true;const work=$('.wr-work');if(work)work.dataset.src='open';
     const box=$('[data-wr-src]');if(!box)return;
     box.innerHTML='<p role="status">Checking the original passage…</p>';
-    try{const result=await quoteRequest('/api/study-draft/quote-link/source?'+new URLSearchParams({...scope(),id:linkId}));
+    try{const result=await v2.call('study-draft.quote-link.source',{...scope(),id:linkId});
      if(ticket!==sourceRead||clk.gone||ctx.signal.aborted||dirty()||revision!==JSON.stringify(st.base?.expected))return;
      if(JSON.stringify(result.expected)!==revision){invalidateQuotes();return;}
      const source=result.source;
