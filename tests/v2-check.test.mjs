@@ -62,10 +62,11 @@ function boot(w,{coverage=true}={}){
 }
 
 // ---- a page whose commands are answered from a table: route -> body, [status, body] or function(url, body) ----
-async function page({hash='',answers={},search='',cover=null}={}){
+async function page({hash='',answers={},search='',cover=null,storage={}}={}){
  const html=read('public/v2/index.html');
  const dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:'http://local.test/v2/index.html'+search+hash,runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,calls=[];windows.push(w);w.__sources=[];
+ for(const [key,value] of Object.entries(storage))w.localStorage.setItem(key,value);
  w.fetch=async(input,options={})=>{const u=new URL(String(input),w.location.href),body=options.body?JSON.parse(options.body):null;calls.push({path:u.pathname,method:options.method||'GET',body,search:u.search});
   let answer=u.pathname==='/api/capabilities'?{commands:COMMANDS}:answers[u.pathname]??{};if(typeof answer==='function')answer=answer(u,body);
   const [status,out]=Array.isArray(answer)?answer:[200,answer];
@@ -138,6 +139,16 @@ test('Check opens the saved words read only and, with no saved check, offers to 
  assert.ok(!calls.some(c=>c.method==='POST'&&/study-draft\/save/.test(c.path)),'Check never changes the draft');
  assert.match(doc.querySelector('.ck-more').textContent,/Not built yet/,'comparing versions says it is not built');
  assert.ok([...doc.querySelectorAll('.ck-more a')].some(a=>/section=check/.test(a.getAttribute('href'))),'with Open in Advanced');
+});
+
+test('Check identifies unsaved version three words in another tab without changing the saved draft',async()=>{
+ const key='ar-v3-write:root1:1',kept=JSON.stringify({v:2,edits:[['p1','Newer words.','First, with "Exact words." in it.']],added:[]});
+ const {w,doc,calls}=await page({hash:'#/check/s1?piece=o1',answers:base(),storage:{[key]:kept}});await ready(doc);
+ assert.match(doc.querySelector('.ck-note').textContent,/unsaved words in Write/);
+ assert.match(doc.querySelector('.ck-text').textContent,/First, with "Exact words."/);
+ assert.ok(!calls.some(c=>c.method==='POST'&&/study-draft\/save/.test(c.path)));
+ w.localStorage.removeItem(key);w.dispatchEvent(new w.StorageEvent('storage',{key}));
+ assert.equal(doc.querySelector('.ck-note'),null);
 });
 
 test('pressing Check saved draft posts the revision he read with an operation id, then shows the finding and brings its words into view',async()=>{

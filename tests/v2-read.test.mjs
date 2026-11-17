@@ -126,6 +126,23 @@ test('words kept in Write on this device are said plainly; Read keeps showing th
  assert.equal(asst.doc.querySelector('[data-rd-unsaved]').hidden,true);
 });
 
+test('Read sees every version three tab slot for this exact piece and updates after another tab types',async()=>{
+ const answers={'/api/subject/standing':standing,...owned,'/api/study-draft/read':draft([row('r0','Saved words.')])};
+ const {w,doc}=await page({hash:'#/read/s1?piece=o1',answers});await settle(150);
+ const key='ar-v3-write:b1:1',kept=JSON.stringify({v:2,edits:[['r0','Newer words.','Saved words.']],added:[]});
+ assert.equal(doc.querySelector('[data-rd-unsaved]').hidden,true);
+ w.localStorage.setItem('ar-v3-write:another:1',kept);
+ w.dispatchEvent(new w.StorageEvent('storage',{key:'ar-v3-write:another:1'}));
+ assert.equal(doc.querySelector('[data-rd-unsaved]').hidden,true,'another piece cannot affect this one');
+ w.localStorage.setItem(key,kept);
+ w.dispatchEvent(new w.StorageEvent('storage',{key}));
+ assert.equal(doc.querySelector('[data-rd-unsaved]').hidden,false);
+ assert.equal(doc.querySelector('.rd-p').textContent,'Saved words.');
+ w.localStorage.removeItem(key);
+ w.dispatchEvent(new w.StorageEvent('storage',{key}));
+ assert.equal(doc.querySelector('[data-rd-unsaved]').hidden,true);
+});
+
 test('when the saved draft changes while Read is open, the new words are shown',async()=>{
  const answers={'/api/subject/standing':standing,...owned,'/api/study-draft/read':draft([row('r0','Before.')])};
  const {doc,sources}=await page({hash:'#/read/s1?piece=o1',answers});await settle(150);
