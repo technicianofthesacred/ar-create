@@ -45,7 +45,7 @@
     const ticket=++quoteRead;
     try{const result=await quoteRequest('/api/study-draft/quote-link?'+quoteScope());
      if(ticket!==quoteRead||clk.gone||ctx.signal.aborted||dirty()||revision!==JSON.stringify(st.base?.expected))return;
-     quoteLinks=Array.isArray(result.links)?result.links:[];if(quoteLinks.some(l=>l.active))paintText();
+     quoteLinks=JSON.stringify(result.expected)===revision&&Array.isArray(result.links)?result.links:[];if(quoteLinks.some(l=>l.active))paintText();
     }catch{/* An unavailable source link never changes or decorates manuscript words. */}
    }
    async function openQuote(linkId){
@@ -56,6 +56,7 @@
     box.innerHTML='<p role="status">Checking the original passage…</p>';
     try{const result=await quoteRequest('/api/study-draft/quote-link/source?'+new URLSearchParams({...scope(),id:linkId}));
      if(ticket!==sourceRead||clk.gone||ctx.signal.aborted||dirty()||revision!==JSON.stringify(st.base?.expected))return;
+     if(JSON.stringify(result.expected)!==revision){invalidateQuotes();return;}
      const source=result.source;
      box.innerHTML=`<div class="wr-src-h"><h2>${esc(source.title||'Source')}</h2><button type="button" class="wr-btn" data-quote-close>Close source</button></div><p class="wr-dim">Original source · read only</p><pre class="wr-quote-source">${esc(source.before)}<mark>${esc(source.quote)}</mark>${esc(source.after)}</pre>`;
     }catch(error){if(ticket!==sourceRead||clk.gone||ctx.signal.aborted)return;invalidateQuotes();box.innerHTML=`<p role="status">${esc(error.message)}</p>`;}
