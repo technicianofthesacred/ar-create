@@ -100,7 +100,7 @@
      try{data=await Standing.list();failed=null;}
      catch(error){if(ctx.signal.aborted)return;failed=error;}
      finally{loading=null;}
-     if(ctx.signal.aborted)return;
+     if(ctx.signal.aborted||!W.document||!root.isConnected)return;
      // The desk in the top bar follows this page's order while it is open, once Home has read its subjects.
      if(data)void v2.desk.use(async()=>desk().map(s=>({id:s.id,title:s.title,...(covers.get(s.id)?{cover:covers.get(s.id)}:{})})));
      loadedAt=Date.now();
@@ -272,7 +272,8 @@ ${more>0?`<button type="button" class="v2-ghost home-more" data-file-more>Show $
    /* ---------- painting ---------- */
    /** Draw again, then give focus back to the same control of the same subject, if it is still there. */
    function keepFocus(draw){
-    const a=document.activeElement,inside=a&&root.contains(a);
+    if(ctx.signal.aborted||!W.document||!root.isConnected)return;
+    const a=W.document.activeElement,inside=a&&root.contains(a);
     let pick=null;
     if(inside){const key=FOCUS_KEYS.find(k=>a.hasAttribute(k));if(key){const holderEl=a.closest('[data-id],[data-ask]');pick={key,value:a.getAttribute(key),id:holderEl?.dataset.id||null,ask:holderEl?.dataset.ask||null};}}
     const caret=a?.matches?.('[data-home-find]')?a.selectionStart:null;
