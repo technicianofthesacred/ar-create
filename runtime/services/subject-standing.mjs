@@ -197,7 +197,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   const [lib, reqs, planList, placeList, askList, topicList] = await Promise.all(['library', 'requests', 'plans', 'places', 'asks', 'topics'].map(sharedQuiet));
   // Where it lives.
   const place = placeList?.find(p => p.parentStudyId === id);
-  if (place) {facts.folder = place.folder || []; facts.archived = !!place.archived; if (place.saved) times.push(place.updatedAt);}
+  if (place) {facts.folder = place.folder || []; facts.archived = !!place.archived;}
   if (askList) facts.asks = askList.filter(a => a.scope?.id === id).length;
   // Project and document. None saved means no material folder and no research brief yet, which is known.
   let project = null, projectKnown = true;
@@ -336,7 +336,8 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   // The consent desk.
   const desk = consentDesk ? await quiet(timed('desk', () => consentDesk.read({parentStudyId: id}))) : undefined;
   facts.consent = desk ? {people: (desk.people || []).map(p => ({name: p.name, state: p.consent?.state || 'not-asked', request: !!p.request})), released: !!desk.release?.released, overridden: !!desk.release?.overridden, ready: !!desk.release?.ready, held: !!desk.release?.held} : null;
-  facts.changedAt = newest(times);
+  facts.workChangedAt = newest(times);
+  facts.changedAt = newest([facts.workChangedAt, place?.saved ? place.updatedAt : null]);
   facts._sources = [...new Set([...items.keys(), ...sourceIds])];
   facts._jobs = [...new Set([...items.values()].filter(s => kindOf(s) === 'recordings').map(s => s.transcriptState?.jobId || s.recordingId).filter(Boolean))];
   // Ids that point back to this subject, for changes that name them.
@@ -398,7 +399,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   const facts = {id, title: subject.title, bindingId: null, projectId: null, folder: [], magazine: {storyId: m.storyId, pieceId: m.pieceId}};
   const [placeList, askList, propList] = await Promise.all(['places', 'asks', 'proposals'].map(sharedQuiet));
   const place = placeList?.find(p => p.parentStudyId === id);
-  if (place) {facts.folder = place.folder || []; facts.archived = !!place.archived; if (place.saved) times.push(place.updatedAt);}
+  if (place) {facts.folder = place.folder || []; facts.archived = !!place.archived;}
   if (askList) facts.asks = askList.filter(a => a.scope?.id === id).length;
   let project = null; try {project = magazine.projects.project(m.storyId);} catch {}
   const recs = key => [].concat(project?.vaultRecords?.[key] || []).map(r => r.rel).filter(Boolean);
@@ -450,7 +451,8 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   const desk = consentDesk ? await quiet(timed('desk', () => consentDesk.read({parentStudyId: id}))) : undefined;
   facts.consent = desk ? {people: (desk.people || []).map(p => ({name: p.name, state: p.consent?.state || 'not-asked', request: !!p.request})), released: !!desk.release?.released, overridden: !!desk.release?.overridden, ready: !!desk.release?.ready, held: !!desk.release?.held} : null;
   for (const rel of [...recs('draft'), ...recs('map'), ...recs('src'), ...recs('raw'), ...recs('context'), ...(project ? checkFiles(project) : [])]) times.push(vaultStat(rel)?.mtime);
-  facts.changedAt = newest(times);
+  facts.workChangedAt = newest(times);
+  facts.changedAt = newest([facts.workChangedAt, place?.saved ? place.updatedAt : null]);
   ids.set(m.pieceId, id);
   return facts;
  }
@@ -465,6 +467,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
  }
  /** Mark a Magazine story's standing so a screen can tell: the subject and its one Article are owned by the Magazine story. */
  function decorate(standing, facts) {
+  standing.workChangedAt = facts?.workChangedAt ?? null;
   if (!facts?.magazine) return standing;
   const owner = {kind: 'magazine', storyId: facts.magazine.storyId, pieceId: facts.magazine.pieceId};
   standing.origin = {kind: 'magazine', storyId: owner.storyId};

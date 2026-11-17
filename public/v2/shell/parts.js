@@ -71,14 +71,14 @@
  /** Reorder by dragging (mouse), and by Move up and Move down (touch and keys; Alt with an arrow key also moves the
      focused item). container holds the items; item is a selector for them. onMove(from, to) is told the indexes and
      does the saving; the shell only moves the element. Returns a function that stops it. */
- function reorder(container,{item,onMove,label=el=>el.textContent.trim().slice(0,60)}={}){
+ function reorder(container,{item,onMove,controls=true,label=el=>el.textContent.trim().slice(0,60)}={}){
   if(!container||!item)return ()=>{};
   const items=()=>[...container.querySelectorAll(':scope > '+item)];
   const announce=(el,to,count)=>say(`${label(el)} moved to place ${to+1} of ${count}.`,{timeout:3000});
   const move=async(el,to)=>{const list=items(),from=list.indexOf(el);if(from<0||to<0||to>=list.length||to===from)return;
    const target=list[to];if(to>from)target.after(el);else target.before(el);decorate();
    try{await onMove?.(from,to);announce(el,to,list.length);}catch(error){/* put it back */const now=items(),back=now[from];if(back&&back!==el){if(from>to)back.after(el);else back.before(el);}decorate();say(error?.message||'The new order could not be saved.',{tone:'bad'});}};
-  function decorate(){const list=items();list.forEach((el,i)=>{el.draggable=true;el.dataset.v2Reorder='';let bar=el.querySelector(':scope > .v2-move');if(!bar){bar=doc.createElement('span');bar.className='v2-move';bar.innerHTML=`<button type="button" class="${CI} v2-ghost v2-icon-btn" data-v2-up>${icon('up')}</button><button type="button" class="${CI} v2-ghost v2-icon-btn" data-v2-down>${icon('down')}</button>`;el.append(bar);}
+  function decorate(){const list=items();list.forEach((el,i)=>{el.draggable=true;el.dataset.v2Reorder='';if(!controls)return;let bar=el.querySelector(':scope > .v2-move');if(!bar){bar=doc.createElement('span');bar.className='v2-move';bar.innerHTML=`<button type="button" class="${CI} v2-ghost v2-icon-btn" data-v2-up>${icon('up')}</button><button type="button" class="${CI} v2-ghost v2-icon-btn" data-v2-down>${icon('down')}</button>`;el.append(bar);}
    const name=label(el);bar.querySelector('[data-v2-up]').setAttribute('aria-label','Move up: '+name);bar.querySelector('[data-v2-down]').setAttribute('aria-label','Move down: '+name);
    bar.querySelector('[data-v2-up]').disabled=i===0;bar.querySelector('[data-v2-down]').disabled=i===list.length-1;});}
   /** Focus stays on the same card's Move button through the move and the save (moving the card in the page drops focus, and a button at the end of the list is disabled, so the other one is used). */
