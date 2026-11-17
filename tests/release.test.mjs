@@ -1,5 +1,6 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {createHash} from 'node:crypto';import {execFileSync,spawnSync} from 'node:child_process';
 import {buildManifest} from '../scripts/lib/manifest.mjs';
+import {requestReleaseCI} from '../scripts/release-ci.mjs';
 const script=path.resolve(import.meta.dirname,'../scripts/release.mjs');
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const git=(cwd,...args)=>execFileSync('git',['-C',cwd,...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']});
@@ -31,6 +32,50 @@ const walk=(dir,rel='')=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.i
 const SHIPPED=['AGENTS.md','CLAUDE.md','editorial/stages/mag/ask.md','public/index.html','runtime/lib.mjs','serve.mjs','source-manifest.json','tools/magazine/mag.mjs'];
 const releases=home=>fs.readFileSync(path.join(home,'RELEASES.jsonl'),'utf8').trim().split('\n').map(line=>JSON.parse(line));
 const record=home=>JSON.parse(fs.readFileSync(path.join(home,'RELEASE.json'),'utf8'));
+
+test('release CI dispatches the pinned Slim workflow once and reuses the same commit’s run',t=>{
+ const ci='.github/workflows/ci.yml',tag='v2026.11.17-1',url='https://github.test/actions/runs/123';
+ const s=scene(t,{extra:{[ci]:'jobs:\n  pick-runner:\n    runs-on: ubuntu-latest\n  ci:\n    runs-on: ubuntu-slim\n'}});
+ const old=s.commit('older workflow');
+ git(s.repo,'tag','-a',tag,'-m','old release',old);git(s.repo,'push','origin',tag);
+ assert.throws(()=>requestReleaseCI(s.repo,tag,{gh:s.gh}),/without Ubuntu Slim for pick-runner/);
+ assert.equal(s.calls(),'');
+
+ const next='v2026.11.17-2';
+ s.write(ci,'jobs:\n  pick-runner:\n    # Discovery uses Slim.\n    runs-on: ubuntu-slim\n  ci:\n    runs-on: ubuntu-latest\n');
+ const sha=s.commit('Slim workflow');git(s.repo,'tag','-a',next,'-m','next release',sha);
+ assert.throws(()=>requestReleaseCI(s.repo,next,{gh:s.gh}),/Push the annotated tag/);
+ git(s.repo,'push','origin',next);
+
+ const response=path.join(s.base,'workflow-response.json');
+ fs.writeFileSync(s.gh,`#!/usr/bin/env node
+import fs from 'node:fs';
+const args=process.argv.slice(2),url=args[1]||'';
+fs.appendFileSync(${JSON.stringify(path.join(s.base,'gh-calls.log'))},args.join(' ')+'\\n');
+const data=JSON.parse(fs.readFileSync(${JSON.stringify(response)},'utf8'));
+if(args[0]==='workflow'){
+ console.log(data.run.html_url);
+ fs.writeFileSync(${JSON.stringify(response)},JSON.stringify({...data,runs:[data.run]}));
+}else if(url.includes('/check-runs'))console.log(JSON.stringify({check_runs:data.checks}));
+else console.log(JSON.stringify({workflow_runs:data.runs}));
+`,{mode:0o755});
+ const run={status:'queued',html_url:url};
+ const simulate=(runs,checks)=>fs.writeFileSync(response,JSON.stringify({run,runs,checks}));
+ simulate([],[]);
+ const output=[];const request=()=>requestReleaseCI(s.repo,next,{gh:s.gh,log:line=>output.push(line)});
+ request();request();
+ assert.match(s.calls(),new RegExp(`runs\\?head_sha=${sha}`));
+ assert.deepEqual(s.calls().split('\n').filter(line=>line.startsWith('workflow run')),[
+  `workflow run ci.yml --repo acme/widgets --ref ${next}`
+ ]);
+ assert.match(output[0],/CI requested/);assert.match(output[1],/already queued/);
+
+ simulate([{...run,status:'completed',conclusion:'success'}],green);
+ request();assert.match(output[2],/already passed/);
+ simulate([{...run,status:'completed',conclusion:'failure'}],[{...green[0],conclusion:'failure'}]);
+ assert.throws(request,/Review the existing run before any retry/);
+ assert.equal(s.calls().split('\n').filter(line=>line.startsWith('workflow run')).length,1);
+});
 
 test('refuses a dirty tree and writes nothing',t=>{
  const s=scene(t);s.commit('first');
