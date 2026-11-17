@@ -25,7 +25,8 @@ jobs:
   # about 21 minutes and 10 of 16 runs between 8 and 16 November hit the time limit, so there it
   # is split into four parts that run at the same time (about 6 minutes each).
   pick-runner:
-    runs-on: ubuntu-latest
+    # Runner discovery only needs curl and jq. The test fallback still uses Ubuntu Latest.
+    runs-on: ubuntu-slim
     timeout-minutes: 2
     outputs:
       runs_on: ${{ steps.pick.outputs.runs_on }}
