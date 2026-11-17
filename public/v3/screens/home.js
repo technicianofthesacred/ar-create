@@ -368,7 +368,7 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
    function paintNeeds(){
     const slot=root.querySelector('[data-home-needs]');
     const asks=needs?.asks;
-    const carrying=asks?.length===0?carryingOn({leases}):'';
+    const carrying=asks?.length===0?carryingOn(leases):'';
     slot.hidden=asks?.length===0&&!carrying;
     if(!asks?.length){
      slot.innerHTML=asks?(carrying?`<p class="h3-quiet">${esc(carrying)}</p>`:''):
