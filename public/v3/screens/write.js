@@ -531,6 +531,10 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   const say=(text,tone='info')=>v2.ui.say(text,{tone});
   const adv=section=>v2.advanced({subject:id,piece:story.pieceId,section});
   const readStory=()=>v2.call('magazine.working-draft.read',sel);
+  const questionScope={storyId:story.storyId,pieceId:story.pieceId};
+  let questionRecord=null,answering=false;
+  const answerRequests=new Map();
+
   const all=()=>[...st.edits.values()];
   const live=e=>!e.gone;
   /** Whether this page may write at all: it is his, editing is switched on, and the Magazine says the draft can be edited. */
@@ -592,6 +596,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
      ${st.human?'':`<p class="wr-ro" role="status">${esc('Opened as '+v2.actorName(v2.actor())+'. Only Adrian writes here. '+v2.actorName(v2.actor())+' can propose words, and Adrian decides.')}</p>`}
      <p class="wr-ro" data-wr-locked role="status" hidden></p>
      <div class="wr-loose wr-props" data-wr-props></div>
+     <section class="wr-questions" data-wr-questions aria-label="Article questions" hidden></section>
      <div class="wr-text" data-wr-text></div>
      ${STORY_EDITING?`<section class="wr-todo" aria-label="Still to write"><p class="wr-label">New and removed paragraphs</p>${v2.ui.notBuilt('Adding, splitting, joining and removing paragraphs of a Magazine story. Each paragraph can be changed here; the shape of the story is changed in the Magazine.',{advanced:{subject:id,piece:story.pieceId,section:'write'}})}</section>`:''}
     </div></article>
@@ -599,6 +604,91 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const out=$('.wr-todo .v2-out');if(out)out.setAttribute('data-wr-advanced','');
    paintText();paintSaved();paintConflict();paintProps();
   }
+  function questionHTML(q,editable){
+   const id='wr-question-'+q.index;
+   const label=q.text?'Your answer':q.otherLabel||'Your own answer';
+   return `<form class="wr-question" data-wr-question="${q.index}" aria-labelledby="${id}">
+    <h3 id="${id}">${esc(q.title)}</h3>
+    ${q.context.map(line=>`<p class="wr-dim">${esc(line)}</p>`).join('')}
+    ${q.answered?`<p class="wr-question-answer">Answered: ${esc(q.value)}</p>`:
+      editable?`<div class="wr-question-input">
+       ${q.options.length?`<select name="choice" aria-labelledby="${id}"><option value="">Choose an answer</option>${q.options.map(option=>`<option value="${esc(option.label)}">${esc(option.label)}</option>`).join('')}</select>`:''}
+       ${q.text||q.other?`<textarea name="answer" rows="2" maxlength="2000" aria-labelledby="${id}" placeholder="${esc(label)}"></textarea>`:''}
+       <button type="submit" class="${CP}">Save answer</button>
+      </div>`:''}
+    <p class="wr-dim" role="status" data-wr-question-status></p>
+   </form>`;
+  }
+  async function loadQuestions(){
+   const box=$('[data-wr-questions]');
+   if(!box)return;
+   const entered=[...box.querySelectorAll('[data-wr-question]')].map(form=>({
+    title:form.querySelector('h3').textContent,
+    choice:form.elements.choice?.value,
+    answer:form.elements.answer?.value
+   }));
+   try{
+    const record=await v2.call('magazine.article-questions',questionScope);
+    if(gone||ctx.signal.aborted||!box.isConnected)return;
+    questionRecord=record;
+    const questions=record.questions.filter(q=>q.text||q.options.length||q.other);
+    if(!questions.length){box.hidden=true;return;}
+    box.innerHTML='<h2>Questions for this article</h2>'+questions.map(q=>questionHTML(q,human&&record.editable)).join('');
+    for(const form of box.querySelectorAll('[data-wr-question]')){
+     const matching=entered.filter(entry=>entry.title===form.querySelector('h3').textContent);
+     if(matching.length!==1)continue;
+     const old=matching[0];
+     if(form.elements.choice&&old.choice)form.elements.choice.value=old.choice;
+     if(form.elements.answer&&old.answer)form.elements.answer.value=old.answer;
+    }
+    box.hidden=false;
+   }catch(error){
+    if(gone||ctx.signal.aborted||!box.isConnected)return;
+    if(questionRecord){
+     const status=box.querySelector('[data-wr-question-status]');
+     if(status)status.textContent='The questions could not be refreshed. Your unsaved answers are still here.';
+     return;
+    }
+    box.innerHTML='<p class="wr-dim" role="status">The article’s questions could not be loaded.</p><button type="button" class="'+CQ+'" data-wr-question-retry>Try again</button>';
+    box.hidden=false;
+   }
+  }
+  async function answerQuestion(event){
+   const form=event.target;
+   if(!form.matches('[data-wr-question]'))return;
+   event.preventDefault();
+   if(!human||!questionRecord?.editable||answering)return;
+   const index=Number(form.dataset.wrQuestion);
+   const q=questionRecord.questions.find(item=>item.index===index);
+   const value=(form.elements.answer?.value.trim()||form.elements.choice?.value||'');
+   const status=form.querySelector('[data-wr-question-status]');
+   if(!q||q.answered||!value){status.textContent='Enter an answer first.';return;}
+   const {path,hash:expectedHash}=questionRecord;
+   const key=JSON.stringify([index,value,expectedHash]);
+   if(!answerRequests.has(key))answerRequests.set(key,uuid());
+   const button=form.querySelector('[type="submit"]');
+   answering=true;button.disabled=true;status.textContent='Saving answer…';
+   try{
+    const saved=await v2.call('magazine.ask.answer',{...questionScope,path,expectedHash,index,title:q.title,value,operationId:answerRequests.get(key)});
+    if(gone||ctx.signal.aborted||!form.isConnected)return;
+    Object.assign(q,saved.question);
+    questionRecord.hash=saved.hash;
+    answerRequests.delete(key);
+    form.outerHTML=questionHTML(q,true);
+   }catch(error){
+    if(!gone&&!ctx.signal.aborted&&form.isConnected){
+     status.textContent=storyWords(error)||'Your answer could not be saved. Your words are still here.';
+     if(error.status===409){
+      const retry=doc.createElement('button');retry.type='button';retry.className=CQ;retry.dataset.wrQuestionRetry='';retry.textContent='Refresh questions';
+      status.append(' ',retry);
+     }
+    }
+   }finally{answering=false;button.disabled=false;}
+  }
+  page.addEventListener('submit',answerQuestion);
+  page.addEventListener('click',event=>{
+   if(event.target.closest('[data-wr-question-retry]'))void loadQuestions();
+  });
   /** Why the whole page is read only, when it is for a reason other than being an assistant's: the switch, or the Magazine. */
   function paintLocked(){
    const n=$('[data-wr-locked]');if(!n)return;
@@ -890,7 +980,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     const kept=unstash();
     for(const e of kept){if(e.sending)st.ops.add(e.sending.op);st.edits.set(e.k,e);}
     if(kept.length)adopt(read);
-    shell();stash();
+    shell();stash();void loadQuestions();
     if(kept.length&&dirty()){say('Your unsaved words from earlier are back.','info');schedule(300);}
     presence(true);loadProps();
    }catch(error){if(ctx.signal.aborted)return;plainText(error.message||'This story’s words could not be opened.');}

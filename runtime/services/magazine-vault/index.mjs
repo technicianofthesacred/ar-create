@@ -326,13 +326,33 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     });
   }
 
+  function articleAskPath({storyId, pieceId}) {
+    const story = projects.project(storyId);
+    const records = [].concat(story.vaultRecords.ask || []);
+    const primary = story.pieces.find(piece => piece.kind === 'article' && piece.rel);
+    return !story.archived && primary?.pieceId === pieceId && records.length === 1 ? records[0].rel : null;
+  }
+
+  function articleQuestions(scope) {
+    const path = articleAskPath(scope);
+    if (!path) return {questions: []};
+    const record = read({path});
+    if (!record.exists) return {questions: []};
+    if (typeof record.text !== 'string') throw new StateError('The article’s questions could not be read.', 409);
+    return {path, hash: record.hash, editable: writable, questions: askDonor.parseAsk(record.text).questions};
+  }
+
   async function askAnswer(input) {
     requireHuman('Answering a question on the page');
-    fields(input, ['path', 'index', 'value', 'title', 'operationId'], ['path', 'index', 'value', 'operationId']);
+    fields(input, ['path', 'index', 'value', 'title', 'operationId', 'storyId', 'pieceId', 'expectedHash'], ['path', 'index', 'value', 'operationId']);
     const c = classify(input.path); if (c.kind !== 'ASK') throw new StateError('Answers go into an ASK file.', 400);
     if (!Number.isSafeInteger(input.index) || input.index < 0 || typeof input.value !== 'string' || input.value.length > 2000) throw new StateError('index and value are required.', 400);
-    return operation({command: 'magazine.ask.answer', operationId: input.operationId, input: {path: c.rel, index: input.index, value: input.value, title: input.title ?? null}, rel: c.rel, doing: 'Adrian answers on the page'}, async tx => {
+    const scoped = input.storyId !== undefined || input.pieceId !== undefined || input.expectedHash !== undefined;
+    const guard = scoped ? {storyId: input.storyId, pieceId: input.pieceId, expectedHash: expected(input.expectedHash)} : {};
+    if (scoped && (typeof guard.storyId !== 'string' || typeof guard.pieceId !== 'string' || !guard.expectedHash || typeof input.title !== 'string')) throw new StateError('Reopen the article’s question before answering.', 400);
+    return operation({command: 'magazine.ask.answer', operationId: input.operationId, input: {path: c.rel, index: input.index, value: input.value, title: input.title ?? null, ...guard}, rel: c.rel, doing: 'Adrian answers on the page'}, async tx => {
       const cur = tx.read('mag', c.rel); if (!cur.exists) throw new StateError('That ASK file is gone.', 404);
+      if (scoped && (articleAskPath(guard) !== c.rel || cur.hash !== guard.expectedHash)) throw new StateError('The article’s questions changed. Refresh them before saving your answer.', 409);
       const parsed = askDonor.parseAsk(cur.bytes.toString('utf8')), q = parsed.questions[input.index];
       if (!q) throw new StateError('That question is gone; reload the page.', 409);
       if (input.title !== undefined && q.title !== input.title) throw new StateError('The questions changed since the page loaded; reload it and answer again.', 409);
@@ -608,7 +628,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     // study-draft-copies asks before making a new working copy (only while AR Create writes the vault).
     vaultBound: source => (configured && writable ? projects.vaultBound(source) : null),
     status: () => ({configured, writable, vaultRoot: configured ? vaultRoot : null, filesRoot, drops, lock: configured ? roots().lock.status() : null}),
-    board, read, write, edit, askAnswer, askSet, requestsAdd, pageFeedback, lineupSave, approve, exportSave, albumLink,
+    board, read, write, edit, articleQuestions, askAnswer, askSet, requestsAdd, pageFeedback, lineupSave, approve, exportSave, albumLink,
     statusRefresh, statusInstall, statusTable: () => { const cur = io('mag').read('STATUS.md'); return {hash: cur.hash, ...findTable(cur.exists ? cur.bytes.toString('utf8') : '')}; },
     issueWrite, proposalList, proposalRead, proposalAccept, proposalReject, undo, draftHistory,
     feedbackOperations, feedbackInvitationMessage, prepareFeedbackParagraph,
