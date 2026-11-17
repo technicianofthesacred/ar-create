@@ -17,7 +17,7 @@ export const MAGAZINE_READ_ONLY_POSTS = Object.freeze(['/api/magazine/send-check
 export const MAGAZINE_BODY = Object.freeze({
   '/api/magazine/write': ['path', 'content', 'expectedHash (sha256 you read, or null for a new file)', 'operationId', 'reason?'],
   '/api/magazine/ask/set': ['path (Workflow/ASK - <story>.md)', 'content', 'expectedHash', 'operationId'],
-  '/api/magazine/ask/answer': ['path', 'index', 'value', 'title?', 'operationId'],
+  '/api/magazine/ask/answer': ['path', 'index', 'value', 'title?', 'operationId', 'storyId?', 'pieceId?', 'expectedHash?'],
   '/api/magazine/edit': ['path', 'block', 'seen (paragraph hash)', 'text', 'operationId'],
   '/api/magazine/requests/add': ['story', 'kind? (Carousel|Post|Reel|Video script)', 'step? (Redo step)', 'operationId'],
   '/api/magazine/page-feedback/add': ['story', 'step', 'q', 'value (yes|no)', 'note?', 'operationId'],
@@ -57,6 +57,7 @@ export function createMagazineRoutes(vault, extra = {}) {
     '/api/magazine/read': {GET: () => vault.read({path: url.searchParams.get('path')})},
     '/api/magazine/stories': {GET: () => vault.projects.list()},
     '/api/magazine/story': {GET: () => vault.story({id: url.searchParams.get('id')})},
+    '/api/magazine/article-questions': {GET: () => vault.articleQuestions({storyId: url.searchParams.get('storyId'), pieceId: url.searchParams.get('pieceId')})},
     '/api/magazine/write': {POST: write(input => vault.write(input))},
     '/api/magazine/ask/set': {POST: write(input => vault.askSet(input))},
     '/api/magazine/ask/answer': {POST: write(input => vault.askAnswer(input))},

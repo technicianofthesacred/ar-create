@@ -8,6 +8,7 @@ import {createMagazineVault} from '../runtime/services/magazine-vault/index.mjs'
 import {createJournal} from '../runtime/services/journal.mjs';
 import {createLeases} from '../runtime/services/leases.mjs';
 import {withActor} from '../runtime/services/actor.mjs';
+import {apply as registerMagazine} from '../tools/magazine/register.mjs';
 import * as edits from '../runtime/reference/mag-edit.mjs';
 
 const sha = b => createHash('sha256').update(b).digest('hex');
@@ -204,4 +205,26 @@ test('the board reads like mag-status and carries the lock and open proposals', 
   assert.match(b.text, /- Clay Teacher: step \d+ of 12/);
   assert.equal(b.lock.state, 'free'); assert.deepEqual(b.proposals, []);
   assert.ok(b.drop.some(d => d.name === 'Stone Carver.txt'));
+});
+
+
+test('article questions belong to the selected Magazine article and reject stale answers', async t => {
+  const {f, vault, hashOf} = setup(t);
+  const registered = await registerMagazine({mag: f.vault, files: f.files, data: f.data, verification: path.join(f.dir, 'proof')});
+  assert.equal(registered.applied, true);
+  const storyId = vault.projects.list().stories.find(story => story.name === 'Clay Teacher').storyId;
+  const pieceId = storyId + ':article', scope = {storyId, pieceId}, draftHash = hashOf(DEV);
+  const before = vault.articleQuestions(scope);
+  assert.equal(before.questions[0].title, 'The title');
+  assert.equal(vault.articleQuestions({...scope, pieceId: 'wrong:article'}).questions.length, 0);
+  const answer = {...scope, path: before.path, expectedHash: before.hash, title: 'The title',
+    index: 0, value: 'Open It Together', operationId: randomUUID()};
+  await assert.rejects(as(AGENT, () => vault.askAnswer(answer)), e => e.status === 403);
+  await assert.rejects(as(ADRIAN, () => vault.askAnswer({...answer, pieceId: 'wrong:article'})), e => e.status === 409);
+  const saved = await as(ADRIAN, () => vault.askAnswer(answer));
+  assert.ok(saved.question.answered);
+  assert.equal(vault.articleQuestions(scope).questions[0].value, 'Open It Together');
+  assert.equal((await as(ADRIAN, () => vault.askAnswer(answer))).replay, true);
+  await assert.rejects(as(ADRIAN, () => vault.askAnswer({...answer, operationId: randomUUID()})), e => e.status === 409);
+  assert.equal(hashOf(DEV), draftHash);
 });

@@ -1,5 +1,10 @@
 # 5 — Draft
 
+## Questions inside the active Article
+
+On Write, show the registered Magazine article’s questions alongside its manuscript. Answer through the existing human-only decision record. An answer saves against the question revision shown and leaves the manuscript unchanged. A different article, a carousel and Home do not inherit these questions. Verify both prompts, saving and reopening, stale refusal and a second article without questions. Sending a notification and verifying a manuscript change remain separate steps.
+
+
 ## Installed checkpoint — 10 November 2026
 
 PR230 has an installed, real existing-account initial-Article generation result awaiting human read-through. Separate blank creation retains exact non-draft source captures without copying or clearing the original manuscript. PR229 also repaired exact plain multiline AI targets. Acceptance, real-content follow-through and remaining work are recorded in [CURRENT](../../status/CURRENT.md) and [TODO](../../../TODO.md); the detailed boundaries are in [November releases](../../status/RELEASES-2026-11.md). This is a result update, not new product intent or editorial approval.
