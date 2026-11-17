@@ -206,7 +206,15 @@ test('six invented subjects at different stages each show exactly what subject.s
   const {doc,calls}=await page(base,'#/subject/'+id);
   await until(()=>doc.querySelector('.subj-row')&&doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
   assert.equal(doc.querySelector('.subj-head h1').textContent,standing.title);
-  assert.equal(doc.querySelector('.subj-where span').textContent,standing.stationName,'the station is the command\'s');
+  // The page and this test read subject.standing a few seconds apart. On a busy machine one read can find a fact
+  // Not known (a swallowed read, or the 5-second wait for the suggestion count running out), which honestly moves the
+  // station. The check stays exact; on a mismatch it reads once more and names which facts were unknown in each read,
+  // so the failure says its cause (CI on the Mac, 17 November 2026: Research read, Create shown).
+  const shown=doc.querySelector('.subj-where span').textContent;
+  if(shown!==standing.stationName){
+   const again=await standingOf(base,id),unknown=s=>Object.entries(s.facts||{}).filter(([,v])=>v===null).map(([k])=>k).join(', ')||'none';
+   assert.fail(`the station is the command's: ${id} shows ${shown}; the read before the page said ${standing.stationName} (unknown: ${unknown(standing)}), a read after it says ${again.stationName} (unknown: ${unknown(again)})`);
+  }
   assert.equal(doc.querySelector('.subj-where .v2-ring').style.getPropertyValue('--p'),Math.max(0,Math.min(1,standing.ring)).toFixed(2),'the ring is the command\'s');
   // The forms, in the command's order, each with its own n/m.
   assert.deepEqual([...doc.querySelectorAll('button.subj-form[data-subj-form]')].map(b=>[b.dataset.subjForm,b.querySelector('em').textContent]),standing.forms.map(f=>[f.key,f.done+'/'+f.total]));
