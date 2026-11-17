@@ -74,3 +74,51 @@ test('sidebar toggle names its action, reports its state and persists without na
 });
 
 test('cached pagehide retains sheet observation and ordinary hide disconnects it',async()=>{const f=boot();try{f.w.dispatchEvent(new f.w.PageTransitionEvent('pagehide',{persisted:true}));f.w.dispatchEvent(new f.w.PageTransitionEvent('pageshow',{persisted:true}));f.d.querySelector('[data-combined-group="develop"]').click();const sheet=f.d.createElement('div');sheet.id='combined-sheet';f.d.body.append(sheet);await new Promise(r=>setTimeout(r,0));assert.equal(f.d.getElementById('combined-phone-sheet'),null);sheet.remove();f.w.dispatchEvent(new f.w.PageTransitionEvent('pagehide'));f.d.querySelector('[data-combined-group="develop"]').click();f.d.body.append(sheet);await new Promise(r=>setTimeout(r,0));assert.ok(f.d.getElementById('combined-phone-sheet'));}finally{f.close();}});
+
+test('Research returns to the same browser draft before a working file is bound', async () => {
+ const f = boot();
+ try {
+  f.p.view = 'article';
+  f.w.state = {projects: [f.p]};
+  f.w.fetch = async () => { throw Error('No research data in this fixture'); };
+  const editor = f.d.createElement('div');
+  editor.id = 'manuscript';
+  editor.tabIndex = 0;
+  editor.textContent = 'Exact retained draft words.';
+  f.d.body.append(editor);
+  const range = f.d.createRange();
+  range.setStart(editor.firstChild, 0);
+  range.setEnd(editor.firstChild, 5);
+  f.w.getSelection().addRange(range);
+  editor.scrollTop = 42;
+  const releases = [];
+  f.w.studyDraft = {
+   currentBinding: () => null,
+   currentOwner: () => null,
+   holdForContext: options => options.deferWorking
+    ? {bufferToken: 'browser-draft', browserOnly: true}
+    : null,
+   releaseContext: options => {
+    releases.push({...options});
+    if (!options.cancelOnly) throw Error('Browser holds require browser-only release');
+   },
+  };
+  f.w.eval(fs.readFileSync(new URL('../public/document-study/research-tab.js',import.meta.url),'utf8'));
+
+  assert.equal(await f.w.combinedNavigation.go('research'), true);
+  const close = f.d.querySelector('[data-rt-learning-close]');
+  assert.equal(close.textContent, 'Back to Write');
+  f.w.getSelection().removeAllRanges();
+  editor.scrollTop = 0;
+  close.click();
+
+  assert.equal(f.w.c3Research.isOpen(), false);
+  assert.equal(f.d.getElementById('manuscript'), editor);
+  assert.equal(editor.textContent, 'Exact retained draft words.');
+  assert.equal(f.w.getSelection().toString(), 'Exact');
+  assert.equal(editor.scrollTop, 42);
+  assert.deepEqual(releases, [{bufferToken: 'browser-draft', cancelOnly: true, restoreSelection: false}]);
+ } finally {
+  f.close();
+ }
+});
