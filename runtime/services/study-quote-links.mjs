@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {isDeepStrictEqual} from 'node:util';
-import {atomicWrite,ensurePrivateDirectory,digest,readJson} from './files.mjs';
+import {atomicWrite,ensurePrivateDirectory,digest,readJson,regular} from './files.mjs';
 import {currentActor,requireWriteActor} from './actor.mjs';
 import {StateError} from '../store.mjs';
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
@@ -27,7 +27,11 @@ export function createStudyQuoteLinks({dataDir,drafts}){
   const sources=[...(d.context?.records||[]),...(d.addedSources?.records||[])],s=record.source;
   const matches=sources.filter(r=>r.id===s.id&&!r.missing&&['source','transcript'].includes(r.role));
   if(matches.length!==1)fail('The captured original source is unavailable or ambiguous.');
-  const source=matches[0],raw=source.raw;
+  const source=matches[0];
+  // Added captures expose an owner-resolved copiedPath instead of inlining raw bytes.
+  // Never accept a caller's path or substitute the mutable external original.
+  let raw=source.raw;
+  if(typeof raw!=='string'&&typeof source.copiedPath==='string'){regular(source.copiedPath);raw=new TextDecoder('utf-8',{fatal:true}).decode(fs.readFileSync(source.copiedPath));}
   if(typeof raw!=='string'||digest(raw)!==s.hash||source.copiedHash!==s.hash||!range(s,raw,'quote')||p.text!==s.quote)fail('The source revision or exact passage changed. Select the quote again.');
   return {id:s.id,hash:s.hash,title:path.basename(source.sourcePath||source.id),before:raw.slice(Math.max(0,s.from-500),s.from),quote:s.quote,after:raw.slice(s.to,s.to+500),from:s.from,to:s.to};
  }

@@ -26,6 +26,12 @@ test('exact quote receipts replay safely, never mutate words, and refuse revisio
  doc.expected={workflow:{draft:'newer',edits:'2'}};
  assert.equal((await links.list(scope)).links[0].active,false);
  await assert.rejects(links.source({...scope,id:input.operationId}),/draft revision changed/);
+ doc=structuredClone(before);
+ const capturePath=path.join(dir,'added-source.md');fs.writeFileSync(capturePath,raw);
+ doc.context.records=[];doc.addedSources={records:[{id:sourceId,role:'source',copiedPath:capturePath,copiedHash:digest(raw),sourcePath:'Original external path is not read'}]};
+ assert.equal((await links.source({...scope,id:input.operationId})).source.quote,quote,'added capture path is read through owner metadata');
+ fs.writeFileSync(capturePath,'Changed captured bytes');
+ await assert.rejects(links.source({...scope,id:input.operationId}),/source revision or exact passage/);
  doc=structuredClone(before);doc.context.records[0].raw='Changed source';
  assert.equal((await links.list(scope)).links[0].active,false);
  await assert.rejects(links.source({...scope,id:input.operationId}),/source revision or exact passage/);
