@@ -7,6 +7,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      hosted:
+        description: Run all tests on GitHub-hosted runners
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -17,6 +22,7 @@ permissions:
 
 jobs:
   # Queue trusted runs on Adrian's Mac (mac-ci) while it is online, even when it is busy.
+  # The ci: hosted PR label or hosted dispatch input selects the same hosted fallback.
   # Fork PRs and offline/error cases fall back to ubuntu-latest. GitHub has no built-in
   # fallback, and the default token cannot list runners, so this reads RUNNER_STATUS_TOKEN
   # (fine-grained, Administration: read). With no token set, every run goes to ubuntu-latest.
@@ -36,10 +42,12 @@ jobs:
       - id: pick
         env:
           TOKEN: ${{ secrets.RUNNER_STATUS_TOKEN }}
+          HOSTED: >-
+            ${{ inputs.hosted == true || contains(github.event.pull_request.labels.*.name, 'ci: hosted') }}
           CAN_USE_SELF_HOSTED: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
         run: |
           choice='"ubuntu-latest"'
-          if [ "$CAN_USE_SELF_HOSTED" = true ] && [ -n "$TOKEN" ]; then
+          if [ "$HOSTED" != true ] && [ "$CAN_USE_SELF_HOSTED" = true ] && [ -n "$TOKEN" ]; then
             online=$(curl -fsS --max-time 15 -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/${{ github.repository }}/actions/runners" \
               | jq '[.runners[] | select(.status == "online" and any(.labels[]; .name == "mac-ci"))] | length' || echo 0)
