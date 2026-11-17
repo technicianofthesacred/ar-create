@@ -131,8 +131,9 @@ jobs:
     name: ci
     needs: [pick-runner, tests]
     if: ${{ !cancelled() }}
-    # Use hosted capacity to report failures even when the Mac is unavailable.
-    runs-on: ${{ fromJSON(needs.tests.result == 'success' && needs.pick-runner.outputs.runs_on || '"ubuntu-latest"') }}
+    # A successful Mac run reports locally. The summary job needs only jq and
+    # artifact access, so keep hosted reporting available on Ubuntu Slim.
+    runs-on: ${{ fromJSON(needs.tests.result == 'success' && needs.pick-runner.outputs.total == '1' && needs.pick-runner.outputs.runs_on || '"ubuntu-slim"') }}
     timeout-minutes: 3
     steps:
       - name: Create a fresh summary directory

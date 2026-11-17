@@ -1,9 +1,6 @@
 /* Version three: Home, in the approved look (design/2026-11-write/NOTES.md, third pass). It is a copy of version two's Home:
-   the same route, the same commands, the same sections in the same order, the same controls and wording. Only the look
-   changes (public/v3/screens/home.css), plus the three changes Adrian approved: a desk card with no cover picture has no
-   blank cover block, the Needs you panel is tighter on a phone, and nothing appears only on hover. Every class here starts
-   with h3-, and every rule in home.css starts with .v3-home.
-   Version two's Home: "Needs you", "On your desk" and "Everything", on the app's real records only.
+   Home shows a quiet entrance to Needs you, On your desk and Everything, on the app's real records only.
+   The full Needs you list has its own route. Every class here starts with h3-, and every rule in home.css starts with .v3-home.
    Where every subject stands (its station, ring, next step, forms, when it last changed) comes from ONE read,
    subjects.standing, and nothing else: no per-subject reads, no list of projects. Where each subject lives (folder,
    tags, pin, archived, hand-set order in its folder, hand-set place on the desk) comes from subject-places, the folder
@@ -25,6 +22,38 @@
  const NAME=Object.fromEntries(STATIONS.map(s=>[s.id,s.name]));
  const plural=(n,one,many=one+'s')=>n+' '+(n===1?one:many);
  const quiet=p=>p.then(v=>v,()=>null);
+ const readNeeds=()=>v2.call('needs-you',{status:'pending'});
+ const readLeases=()=>quiet(v2.call('leases',{}));
+ const needsHref=ask=>v2.href('needs-you',{},ask?{ask}:null);
+ const isRecordingAsk=ask=>['recording-words','recording-check'].includes(ask.scope?.kind);
+ function askLinks(ask){
+  const recording=isRecordingAsk(ask);
+  const links=recording?[
+   {href:ask.recording?.wordsHref||ask.wordsHref,label:'Check words'},
+   {href:ask.recording?.transcriptHref||ask.transcriptHref,label:'Check passages'},
+  ].filter(link=>link.href):[];
+  if(!links.length&&ask.link)links.push({href:ask.link.href,label:recording?'Go through them':ask.link.label||'Open'});
+  return links.map(link=>({
+   ...link,href:typeof link.href==='string'&&link.href.startsWith('#')?'/document-study/index.html'+link.href:link.href,
+  })).filter(link=>typeof link.href==='string'&&/^\/(?![/\\])/.test(link.href));
+ }
+ function askTile(ask){
+  const links=askLinks(ask);
+  const direct=ask.status==='open'&&links.length===1&&
+   (isRecordingAsk(ask)||(ask.choices||[]).every(choice=>choice==='Done'));
+  const href=direct?links[0].href:needsHref(ask.id);
+  const question=String(ask.question||'').trim();
+  const contextualLabel=direct&&links[0].label!=='Open'?links[0].label.replace(/^Open the /i,'Open '):'';
+  let label=question.split(/[?!.](?:\s|$)/,1)[0],symbol='ask';
+  if(isRecordingAsk(ask)){label=contextualLabel||'Check recording';symbol='mic';}
+  else if(/\b(?:what (?:month|year|date)|when did you|(?:confirm|check|verify) (?:the )?(?:visit )?date)\b/i.test(question)){label='Visit date';symbol='calendar';}
+  else if(/\b(?:introduce|introduction)\b/i.test(question)){label='Introduction';symbol='pen';}
+  else if(contextualLabel){label=contextualLabel;symbol='out';}
+  const context=ask.status==='defaulted'?'Applied by default':ask.about;
+  const detail=context?.split(' · ').at(-1);
+  const accessibleLabel=[label===question?'':label,question,context].filter(Boolean).join(' · ');
+  return `<li><a class="h3-needs-link" data-needs-open="${esc(ask.id)}" href="${esc(href)}" title="${esc(question)}" aria-label="${esc(accessibleLabel)}">${icon(symbol)}<span class="h3-needs-copy"><span>${esc(label)}</span>${detail?`<small>${esc(detail)}</small>`:''}</span></a></li>`;
+ }
  const fkey=path=>(path||[]).join('\u0001');
  const lower=s=>String(s||'').normalize('NFKC').trim().toLocaleLowerCase();
  const num=v=>typeof v==='number'&&Number.isFinite(v);
@@ -48,19 +77,18 @@
  const sharedApi=Object.freeze({nextOf,STATIONS});
  try{let shared=v2.shared;if(!shared){try{v2.shared={};}catch{}shared=v2.shared;}if(shared&&typeof shared==='object')shared.home=sharedApi;}catch{}
 
- /* ======================= reading: five calls, whatever the number of subjects ======================= */
+ /* ======================= reading: three calls for the subject list ======================= */
  const Standing={
   async list(){
-   const [summary,places,folders,needs,leases]=await Promise.all([
-    v2.call('subjects.standing',{}),v2.call('subject-places',{}),v2.call('subject-places.folders.get',{}),
-    quiet(v2.call('needs-you',{status:'pending'})),quiet(v2.call('leases',{}))]);
+   const [summary,places,folders]=await Promise.all([
+    v2.call('subjects.standing',{}),v2.call('subject-places',{}),v2.call('subject-places.folders.get',{})]);
    const placeOf=new Map((places?.places||[]).map(p=>[p.parentStudyId,p]));
    const unplaced=id=>({parentStudyId:id,folder:[],tags:[],pinnedAt:null,archived:false,order:null,deskOrder:null,revision:0,saved:false});
    const subjects=(summary?.subjects||[]).filter(x=>x&&typeof x.id==='string'&&x.id).map(x=>{
     const place=placeOf.get(x.id)||unplaced(x.id);
     return {...x,title:String(x.title||'').trim()||'Untitled subject',forms:x.forms||[],place,archived:!!(x.archived||place.archived)};
    });
-   return {subjects,folders,needs,leases:leases?.leases||[],readAt:Date.now(),ms:summary?.ms};
+   return {subjects,folders,readAt:Date.now(),ms:summary?.ms};
   },
  };
 
@@ -76,8 +104,15 @@
   const t=Date.parse(iso||'');if(!Number.isFinite(t))return '';
   const d=new Date(t),today=new Date(now);
   if(d.toDateString()===today.toDateString())return 'Today';
-  if(d.toDateString()===new Date(now-864e5).toDateString())return 'Yesterday';
+  const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
+  if(d.toDateString()===yesterday.toDateString())return 'Yesterday';
   return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',...(d.getFullYear()!==today.getFullYear()?{year:'numeric'}:{})});
+ }
+ function workDate(iso){
+  const label=when(iso);
+  if(!label)return '<small></small>';
+  const exact=new Date(iso).toLocaleDateString('en-GB',{dateStyle:'long'});
+  return `<small><time datetime="${esc(iso)}" title="Last worked on ${esc(exact)}">${esc(label)}</time></small>`;
  }
  function dueAt(iso){const t=Date.parse(iso||'');if(!Number.isFinite(t))return 'soon';const d=new Date(t),clock=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});return when(iso)==='Today'?'at '+clock:'on '+when(iso)+' at '+clock;}
  const today=()=>{const d=new Date(),part=o=>d.toLocaleDateString('en-GB',o);return part({weekday:'long'})+' '+part({day:'numeric',month:'short',year:'numeric'});};
@@ -87,23 +122,23 @@
  const V2Client=W.V2Client;
  const uuid=()=>{try{return crypto.randomUUID();}catch{return V2Client?.uuid?.()||String(Date.now());}};
  // The controls a repaint must hand focus back to, by what they are and which subject they belong to.
- const FOCUS_KEYS=['data-pin','data-v2-up','data-v2-down','data-row-menu','data-group-by','data-view','data-station','data-arrange','data-archived','data-show-all','data-home-find','data-file-in','data-file-more','data-ask-change','data-ask-choice','data-unarchive'];
+ const FOCUS_KEYS=['data-pin','data-v2-up','data-v2-down','data-row-menu','data-group-by','data-view','data-station','data-arrange','data-archived','data-show-all','data-home-find','data-file-in','data-file-more','data-needs-open','data-unarchive'];
 
  /* ======================= the screen ======================= */
  v2.screen({id:'home',title:'Home',route:'',
   render:()=>`<div class="v2-page v3-home" data-home>
  <header><div><h1 class="h3-title">Home</h1><p class="h3-quiet">${esc(today())}</p></div><button type="button" class="${CP} h3-pri h3-new" data-home-new>${icon('plus')}New subject</button></header>
- <div class="h3-needs-slot" data-home-needs></div>
+ <div class="h3-needs-slot" data-home-needs hidden></div>
  <section class="h3-desk" data-home-desk aria-labelledby="h3-desk-h" hidden></section>
  <section class="h3-file" data-home-file aria-labelledby="h3-file-h" hidden></section>
  <section class="h3-all" data-home-all aria-labelledby="h3-all-h"><div class="h3-sec-h"><h2 class="h3-title" id="h3-all-h">Everything</h2></div><p class="h3-quiet" data-home-loading>Reading your subjects…</p></section>
 </div>`,
   async mount(el,ctx){
    const root=el.querySelector('[data-home]');if(!root)return;
-   const ui={...prefs(),station:null,find:'',open:new Set(),archived:false,arrange:false,allAsks:false,allFile:false};
+   const ui={...prefs(),station:null,find:'',open:new Set(),archived:false,arrange:false,allFile:false};
    let data=null,failed=null,loading=null,again=false,loadedAt=0,timer=0,dragId=null,dragging=false,deskStops=[],allStops=[],repaintWaiting=false;
-   // Needs you: a question answered here stays in its place, marked answered, until he leaves the page.
-   const answeredHere=new Map(),changing=new Set(),askOrder=[],askBook=new Map(),lookRoles=new Map(),lookNames=new Map();
+   let dragPreview=null,needs=null,leases=[],leaseRead=0;
+   const lookRoles=new Map(),lookNames=new Map();
    // Covers of the desk's cards: subject id to an address, or '' when it has no chosen photograph. Read after first paint.
    // failedCovers: subjects whose cover read did not answer during this visit; they are not asked again (as in version two),
    // their held block is dropped, and the list on the device is left as it was for the next visit.
@@ -127,6 +162,14 @@
      if(again){again=false;void load();}
     })();
     return loading;
+   }
+   async function readLeases(){
+    const run=++leaseRead,result=await quiet(v2.call('leases',{}));
+    if(ctx.signal.aborted||!root.isConnected||run!==leaseRead)return;
+    const next=result?.leases||[];
+    if(!next.length&&!leases.length)return;
+    leases=next;
+    if(data)repaint();else keepFocus(paintNeeds);
    }
    const soon=()=>{clearTimeout(timer);timer=setTimeout(()=>{if(!ctx.signal.aborted)void load();},350);};
    const busy=()=>!!(dragging||ordersPending||document.querySelector('dialog.v2-sheet[open]'));
@@ -269,7 +312,7 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
    const deskKey=s=>num(s.place.deskOrder)?s.place.deskOrder:1e9;
    function desk(){return live().filter(s=>s.place.pinnedAt).sort((a,b)=>deskKey(a)-deskKey(b)||String(a.place.pinnedAt).localeCompare(String(b.place.pinnedAt))).slice(0,DESK_MAX);}
    const findMatch=s=>!ui.find||lower(s.title).includes(lower(ui.find));
-   function holder(id){const l=(data?.leases||[]).find(x=>x?.scope?.id===id&&x.actor&&x.actor!==v2.actor()&&Date.parse(x.expiresAt||0)>Date.now());return l?v2.actorName(l.actor):'';}
+   function holder(id){const l=leases.find(x=>x?.scope?.id===id&&x.actor&&x.actor!==v2.actor()&&Date.parse(x.expiresAt||0)>Date.now());return l?v2.actorName(l.actor):'';}
    function folderList(){
     const list=(data?.folders?.folders||[]).map(f=>({path:f.path,saved:f.saved!==false}));
     const seen=new Set(list.map(f=>fkey(f.path)));
@@ -292,7 +335,7 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
      return out.filter(g=>g.items.length);
     }
     if(ui.group==='station')return STATIONS.map(st=>({key:'s:'+st.id,name:st.name,total:all.filter(s=>s.station===st.id).length,items:rows.filter(s=>s.station===st.id).sort(byName)})).filter(g=>g.items.length);
-    const t=s=>Date.parse(s.changedAt||'')||0;
+    const t=s=>Date.parse(s.workChangedAt||'')||0;
     return [{key:'r:',name:'Most recent first',total:all.length,items:rows.sort((a,b)=>t(b)-t(a)||byName(a,b))}];
    }
    const canArrange=()=>ui.group==='folder'&&!ui.find&&!ui.station;
@@ -301,7 +344,7 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
    /* ---------- painting ---------- */
    /** Draw again, then give focus back to the same control of the same subject, if it is still there. */
    function keepFocus(draw){
-    const a=document.activeElement,inside=a&&root.contains(a);
+    const a=root.ownerDocument.activeElement,inside=a&&root.contains(a);
     let pick=null;
     if(inside){const key=FOCUS_KEYS.find(k=>a.hasAttribute(k));if(key){const holderEl=a.closest('[data-id],[data-ask]');pick={key,value:a.getAttribute(key),id:holderEl?.dataset.id||null,ask:holderEl?.dataset.ask||null};}}
     const caret=a?.matches?.('[data-home-find]')?a.selectionStart:null;
@@ -313,7 +356,7 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
    function paint(){
     if(ctx.signal.aborted)return;
     if(failed&&!data){
-     root.querySelector('[data-home-needs]').innerHTML='';root.querySelector('[data-home-desk]').hidden=true;
+     root.querySelector('[data-home-needs]').hidden=true;root.querySelector('[data-home-desk]').hidden=true;
      root.querySelector('[data-home-all]').innerHTML=`<div class="h3-sec-h"><h2 class="h3-title" id="h3-all-h">Everything</h2></div><div class="h3-empty" data-home-error><p>${esc(failed.message||'The app could not be reached. Nothing was changed.')}</p><button type="button" class="${CB} h3-btn" data-home-retry>Try again</button></div>`;
      return;
     }
@@ -322,36 +365,19 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
     keepFocus(()=>{paintNeeds();paintDesk();paintFile();paintAll();applyCovers();});
    }
 
-   /** The questions waiting, in the order they first appeared. One answered here keeps its place; one that is gone from
-       the list because something else settled it drops out. */
-   function syncAsks(){
-    const fresh=new Map((data.needs?.asks||[]).filter(a=>a.status==='open'||a.status==='defaulted').map(a=>[a.id,a]));
-    for(const [id,a] of fresh){askBook.set(id,a);if(!askOrder.includes(id))askOrder.push(id);}
-    for(let i=askOrder.length-1;i>=0;i--){const id=askOrder[i];if(!fresh.has(id)&&!answeredHere.has(id)&&!changing.has(id)){askOrder.splice(i,1);askBook.delete(id);}}
-   }
    function paintNeeds(){
-    const slot=root.querySelector('[data-home-needs]'),human=v2.isHuman();syncAsks();
-    const shown=askOrder.map(id=>askBook.get(id)).filter(Boolean);
-    const working=new Map();for(const l of data.leases||[])if(String(l.actor||'').startsWith('agent:')&&Date.parse(l.expiresAt||0)>Date.now()){const n=v2.actorName(l.actor);working.set(n,(working.get(n)||0)+1);}
-    const steer=shown.filter(a=>a.status==='open'&&a.band==='steer'&&a.default&&!answeredHere.has(a.id)).length;
-    const carrying=([...working].map(([n,c])=>`${n} is carrying on with ${plural(c,'thing')} by itself.`).join(' ')+(steer?` ${plural(steer,'question')} will take ${steer===1?'its':'their'} default unless you choose.`:'')).trim();
-    const off=human?'':' disabled title="Only Adrian answers these."';
-    if(!shown.length){slot.innerHTML=carrying?`<p class="h3-quiet h3-carry">${esc(carrying)}</p>`:'';return;}
-    const cut=ui.allAsks?shown.length:3,more=shown.length-cut;
-    const rows=shown.slice(0,cut).map(a=>{
-     const done=answeredHere.get(a.id)||(a.status==='defaulted'?{choice:a.resolution?.choice||a.default,auto:true}:null);
-     const about=a.about?`<small class="h3-about">${esc(a.about)}</small>`:'';
-     if(done&&!changing.has(a.id))return `<li class="ok" data-ask="${esc(a.id)}">${icon('check')}<p><span class="h3-state">${done.auto?'Applied by default':'Answered'}</span><b>${esc(a.question)}</b>${about}<span class="h3-said">${esc(done.choice||done.text||'')}</span></p><span class="h3-acts"><button type="button" class="${CQ} h3-q" data-ask-change="${esc(a.id)}"${off}>Change it</button></span></li>`;
-     const recording=['recording-words','recording-check'].includes(a.scope?.kind);
-     let href=recording?(a.recording?.wordsHref||a.wordsHref||a.link?.href):a.link?.href;
-     if(typeof href==='string'&&href.startsWith('#'))href='/document-study/index.html'+href;
-     const link=typeof href==='string'&&/^\/(?!\/)/.test(href)?`<a class="h3-act" href="${esc(href)}">${esc(recording?'Go through them':a.link?.label||'Open')}${icon('right')}</a>`:'';
-     const current=done?.choice;
-     const choices=recording?'':(a.choices||[]).map(c=>`<button type="button" class="${CB} h3-btn" data-ask-id="${esc(a.id)}" data-ask-choice="${esc(c)}"${current===c?' aria-pressed="true"':''}${off}>${esc(c)}${a.default===c&&!current?'<small>default</small>':''}</button>`).join('');
-     const due=a.band==='steer'&&a.applyAt&&a.status==='open'?`<span class="h3-due">Takes its default ${esc(dueAt(a.applyAt))} unless you choose.</span>`:'';
-     return `<li data-ask="${esc(a.id)}"><p><b>${esc(a.question)}</b>${about}${due}</p>${choices||link?`<span class="h3-acts">${choices}${link}</span>`:''}</li>`;
-    }).join('');
-    slot.innerHTML=`<section class="h3-needs${shown.some(a=>!(answeredHere.get(a.id)||a.status==='defaulted')||changing.has(a.id))?' h3-asking':''}" aria-labelledby="h3-needs-h"><h2 class="h3-label" id="h3-needs-h"><i class="h3-pip" aria-hidden="true"></i>Needs you</h2><ul>${rows}</ul>${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-all-asks>Show all ${shown.length}${icon('chev')}</button>`:''}${carrying?`<p class="h3-quiet">${esc(carrying)}</p>`:''}${human?'':'<p class="h3-quiet h3-reason">Only Adrian answers these.</p>'}</section>`;
+    const slot=root.querySelector('[data-home-needs]');
+    const asks=needs?.asks;
+    const carrying=asks?.length===0?carryingOn(leases):'';
+    slot.hidden=asks?.length===0&&!carrying;
+    if(!asks?.length){
+     slot.innerHTML=asks?(carrying?`<p class="h3-quiet">${esc(carrying)}</p>`:''):
+      `<a class="h3-needs-link" data-needs-open href="${esc(needsHref())}"><span>Open Needs you</span>${icon('chev')}</a>`;
+     return;
+    }
+    const tiles=asks.slice(0,3).map(askTile).join('');
+    const all=asks.length>3?`<a class="h3-needs-all" data-needs-open href="${esc(needsHref())}">All ${asks.length}${icon('chev')}</a>`:'';
+    slot.innerHTML=`<section class="h3-needs-shelf" aria-labelledby="h3-needs-title"><h2 class="h3-needs-title" id="h3-needs-title">Needs you:</h2><ul class="h3-needs-preview">${tiles}</ul>${all}</section>`;
    }
 
    function card(s){
@@ -385,11 +411,11 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
    const tagsOf=s=>{const tags=s.place.tags||[],extra=tags.length-TAGS_SHOWN;return `<span class="h3-tags">${tags.slice(0,TAGS_SHOWN).map(t=>`<i title="${esc(t)}">${esc(t)}</i>`).join('')}${extra>0?`<i class="h3-tag-more" title="${esc(tags.slice(TAGS_SHOWN).join(', '))}">+${extra}</i>`:''}</span>`;};
    const pinBtn=s=>{const on=!!s.place.pinnedAt;return `<button type="button" class="${CI} h3-q h3-ic h3-pin" data-pin="${esc(s.id)}" aria-pressed="${on}" aria-label="${on?'Take off your desk':'Put on your desk'}: ${esc(s.title)}" title="${on?'On your desk':'Put on your desk'}">${PIN}</button>`;};
    const menuBtn=s=>`<button type="button" class="${CI} h3-q h3-ic h3-rowmenu" data-row-menu="${esc(s.id)}" aria-label="Move or archive: ${esc(s.title)}" title="Move or archive">${MORE}</button>`;
-   const rowPic=s=>{const url=covers.get(s.id);return `<span class="h3-row-pic${url?' has-img':''}" aria-hidden="true">${url?`<img src="${esc(url)}" alt="">`:''}</span>`;};
+   const rowPic=s=>{const url=covers.get(s.id);return `<span class="h3-row-pic${url?' has-img':''}" aria-hidden="true">${url?`<img src="${esc(url)}" alt="" draggable="false">`:''}</span>`;};
    function row(s){
-    const who=holder(s.id);
-    return `<li class="h3-row" data-id="${esc(s.id)}"><i class="h3-grip" aria-hidden="true"></i>
- <a class="h3-row-open" href="${esc(subjectHref(s.id))}">${rowPic(s)}<b>${esc(s.title)}</b>${tagsOf(s)}<span class="h3-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="h3-next">${who?`<em class="h3-held">${esc(who)} is working on it</em>`:esc(nextOf(s))}</span><small>${esc(when(s.changedAt))}</small></a>
+    const who=holder(s.id),keys=canArrange()?' aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"':'';
+    return `<li class="h3-row" data-id="${esc(s.id)}">
+ <a class="h3-row-open" draggable="false"${keys} href="${esc(subjectHref(s.id))}">${rowPic(s)}<b>${esc(s.title)}</b>${tagsOf(s)}<span class="h3-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="h3-next">${who?`<em class="h3-held">${esc(who)} is working on it</em>`:esc(nextOf(s))}</span>${workDate(s.workChangedAt)}</a>
  ${menuBtn(s)}${pinBtn(s)}
 </li>`;
    }
@@ -409,7 +435,7 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
     }).join('');
     const empty=!all.length?`<div class="h3-empty"><p>${archived.length?'Every subject is archived.':'No subjects yet.'}</p><button type="button" class="${CB} h3-btn" data-home-new>${icon('plus')}New subject</button></div>`
      :!gs.length?`<p class="h3-quiet">No subject matches${ui.find?` "${esc(ui.find)}"`:''}${ui.station?' in '+esc(NAME[ui.station]):''}.</p>`:'';
-    const archive=archived.length?`<div class="h3-archived"><button type="button" class="${CQ} h3-q" data-archived aria-expanded="${ui.archived}">${ui.archived?'Hide archived':'Archived'} · ${archived.length}</button>${ui.archived?`<ul class="h3-rows">${archived.sort(byName).map(s=>`<li class="h3-row" data-id="${esc(s.id)}"><a class="h3-row-open" href="${esc(subjectHref(s.id))}">${rowPic(s)}<b>${esc(s.title)}</b>${tagsOf(s)}<span class="h3-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="h3-next"></span><small>${esc(when(s.changedAt))}</small></a><button type="button" class="${CQ} h3-q h3-unarchive" data-unarchive="${esc(s.id)}">Put back</button></li>`).join('')}</ul>`:''}</div>`:'';
+    const archive=archived.length?`<div class="h3-archived"><button type="button" class="${CQ} h3-q" data-archived aria-expanded="${ui.archived}">${ui.archived?'Hide archived':'Archived'} · ${archived.length}</button>${ui.archived?`<ul class="h3-rows">${archived.sort(byName).map(s=>`<li class="h3-row" data-id="${esc(s.id)}"><a class="h3-row-open" href="${esc(subjectHref(s.id))}">${rowPic(s)}<b>${esc(s.title)}</b>${tagsOf(s)}<span class="h3-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="h3-next"></span>${workDate(s.workChangedAt)}</a><button type="button" class="${CQ} h3-q h3-unarchive" data-unarchive="${esc(s.id)}">Put back</button></li>`).join('')}</ul>`:''}</div>`:'';
     sec.innerHTML=`<div class="h3-sec-h"><h2 class="h3-title" id="h3-all-h">Everything</h2><span>${plural(all.length,'subject')}</span>${all.length?`<label class="h3-find"><span class="h3-sr">Find a subject</span>${icon('search')}<input type="search" data-home-find placeholder="Find a subject" value="${esc(ui.find)}" autocomplete="off"></label>`:''}</div>
 ${all.length?`<div class="h3-tools">
  <div class="h3-seg" role="group" aria-label="Group">${GROUPS.map(([k,l])=>`<button type="button" class="h3-nav" data-group-by="${k}" aria-pressed="${ui.group===k}">${l}</button>`).join('')}</div>
@@ -420,12 +446,12 @@ ${all.length?`<div class="h3-tools">
 ${empty}<div class="h3-groups" data-home-groups>${list}</div>
 ${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" class="${CB} h3-btn" data-new-folder>${icon('plus')}New folder</button><span class="h3-quiet">Folders here are the real folders on disk. Drag a folder to change the order, or a subject onto a folder to move it. Tags cut across folders.</span></div>`:''}${archive}`;
     if(!arrange)return;
-    // Drag, and Move up and Move down: subjects inside a folder (rows or covers), and the folders themselves. The new
-    // order is read from the screen at the moment of the press.
+    // Rows use the full drag surface and Alt+arrow. Covers and folders also show move buttons.
+    // The new order is read from the screen at the moment of the move.
     for(const ul of sec.querySelectorAll('.h3-rows[data-group],.h3-covers[data-group]')){
      const g=gs.find(x=>x.key===ul.dataset.group);if(!g)continue;
      const sel=ul.classList.contains('h3-covers')?'.h3-cover':'.h3-row';
-     allStops.push(v2.ui.reorder(ul,{item:sel,label:el=>el.querySelector('b')?.textContent||'Subject',
+     allStops.push(v2.ui.reorder(ul,{item:sel,controls:ui.view==='covers',label:el=>el.querySelector('b')?.textContent||'Subject',
       onMove:()=>{const shown=[...ul.querySelectorAll(':scope>'+sel)].map(x=>x.dataset.id);
        // Those cut off by "Show all" keep their places after the ones shown.
        const rest=inFolder(g.path).map(s=>s.id).filter(id=>!shown.includes(id));
@@ -504,14 +530,6 @@ ${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" cl
     try{await savePlace(s,on?{pinned:true,...(last>=0?{deskOrder:last+1}:{})}:{pinned:false});repaint();void readCovers();v2.ui.say(on?`"${s.title}" is on your desk.`:`"${s.title}" is off your desk.`);soon();}
     catch(error){v2.ui.say(error.message,{tone:'bad'});}
    }
-   async function answer(id,choice){
-    if(!askBook.has(id))return;
-    for(const b of root.querySelectorAll('[data-ask] button'))if(b.closest('[data-ask]').dataset.ask===id)b.disabled=true;
-    try{const saved=await v2.call('needs-you.answer',{id,choice});answeredHere.set(id,{choice:saved?.resolution?.choice||choice});changing.delete(id);
-     if(saved?.id===id)askBook.set(id,saved);paintNeeds();
-     [...root.querySelectorAll('[data-ask-change]')].find(b=>b.dataset.askChange===id)?.focus({preventScroll:true});v2.needs.refresh();}
-    catch(error){v2.ui.say(error.message,{tone:'bad'});paintNeeds();}
-   }
    function form(markup){const f=document.createElement('form');f.className='v3-home h3-form';f.innerHTML=markup;return f;}
    const formActs=label=>`<div class="h3-form-acts"><button type="button" class="${CQ} h3-q" data-v2-close>Cancel</button><button type="submit" class="${CP} h3-pri h3-primary">${esc(label)}</button></div>`;
    function newSubject(){
@@ -551,43 +569,169 @@ ${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" cl
     if(t.matches('[data-home-new]'))return newSubject();
     if(t.dataset.fileIn)return fileSheet(t.dataset.fileIn);
     if(t.hasAttribute('data-file-more')){ui.allFile=true;return keepFocus(paintFile);}
-    if(t.matches('[data-home-retry]')){t.disabled=true;t.textContent='Reading again…';return void load();}
+    if(t.matches('[data-home-retry]')){t.disabled=true;t.textContent='Reading again…';void v2.needs.refresh();void readLeases();return void load();}
     if(t.dataset.groupBy){ui.group=t.dataset.groupBy;ui.open.clear();if(ui.group!=='folder')ui.arrange=false;keepPrefs(ui);return keepFocus(paintAll);}
     if(t.dataset.view){ui.view=t.dataset.view;keepPrefs(ui);return keepFocus(()=>{paintAll();applyCovers();});}
     if(t.dataset.station){const id=t.dataset.station;ui.station=ui.station===id?null:id;return keepFocus(()=>{paintAll();applyCovers();});}
     if(t.dataset.showAll){ui.open.add(t.dataset.showAll);return paintAll();}
-    if(t.hasAttribute('data-all-asks')){ui.allAsks=true;return paintNeeds();}
     if(t.hasAttribute('data-arrange')){ui.arrange=!ui.arrange;return keepFocus(paintAll);}
     if(t.hasAttribute('data-archived')){ui.archived=!ui.archived;return keepFocus(paintAll);}
     if(t.hasAttribute('data-new-folder'))return newFolder();
     if(t.dataset.pin){const s=find(t.dataset.pin);if(s)void togglePin(s);return;}
     if(t.dataset.rowMenu){const s=find(t.dataset.rowMenu);if(s)rowMenu(s);return;}
     if(t.dataset.unarchive){const s=find(t.dataset.unarchive);if(s)void setArchived(s,false);return;}
-    if(t.dataset.askChoice)return void answer(t.dataset.askId,t.dataset.askChoice);
-    // Change it: the row stays where it is and offers its choices again. A later answer replaces the earlier one.
-    if(t.dataset.askChange){const id=t.dataset.askChange;changing.add(id);paintNeeds();return [...root.querySelectorAll('[data-ask-choice]')].find(b=>b.dataset.askId===id)?.focus();}
    });
    root.addEventListener('input',e=>{if(e.target.matches?.('[data-home-find]')){ui.find=e.target.value;keepFocus(()=>{paintAll();applyCovers();});}});
+   // Keep native drops, drawing the row ourselves so the preview has full contrast and follows the grab point.
+   function previewRow(e,row){
+    const transfer=e.dataTransfer;
+    if(typeof transfer?.setDragImage!=='function')return;
+    const blank=document.createElement('canvas');blank.width=blank.height=1;
+    transfer.setDragImage(blank,0,0);
+    const box=row.getBoundingClientRect(),offsetX=e.clientX-box.left,offsetY=e.clientY-box.top;
+    const preview=document.createElement('div');
+    preview.className='h3-row h3-row-preview';preview.innerHTML=row.innerHTML;
+    preview.setAttribute('aria-hidden','true');preview.inert=true;
+    preview.style.width=box.width+'px';
+    const follow=event=>{preview.style.transform=`translate(${event.clientX-offsetX}px,${event.clientY-offsetY}px)`;};
+    follow(e);root.append(preview);
+    document.addEventListener('dragover',follow,true);
+    dragPreview=()=>{document.removeEventListener('dragover',follow,true);preview.remove();dragPreview=null;};
+   }
    // A subject dragged onto a folder's heading moves there, with Undo.
-   root.addEventListener('dragstart',e=>{dragging=true;const r=e.target.closest?.('.h3-row,.h3-cover');dragId=r&&root.contains(r)?r.dataset.id:null;},true);
-   root.addEventListener('drop',()=>{dragging=false;},true);
-   root.addEventListener('dragend',()=>{dragging=false;dragId=null;root.querySelectorAll('.h3-over').forEach(x=>x.classList.remove('h3-over'));});
-   root.addEventListener('dragover',e=>{const h=e.target.closest?.('[data-drop-folder]');if(!dragId||!h)return;e.preventDefault();root.querySelectorAll('.h3-over').forEach(x=>x!==h&&x.classList.remove('h3-over'));h.classList.add('h3-over');});
+   root.addEventListener('dragstart',e=>{
+    const r=e.target.closest?.('.h3-row,.h3-cover');
+    if(r&&!r.draggable){e.preventDefault();return;}
+    dragging=true;dragId=r?.dataset.id||null;
+    if(r?.matches('.h3-row'))previewRow(e,r);
+   },true);
+   root.addEventListener('drop',()=>{dragging=false;dragPreview?.();},true);
+   root.addEventListener('dragend',()=>{dragging=false;dragId=null;dragPreview?.();root.querySelectorAll('.h3-over').forEach(x=>x.classList.remove('h3-over'));});
+   root.addEventListener('dragover',e=>{const h=e.target.closest?.('[data-drop-folder]');if(!dragId)return;root.querySelectorAll('.h3-over').forEach(x=>x!==h&&x.classList.remove('h3-over'));if(h){e.preventDefault();h.classList.add('h3-over');}});
    root.addEventListener('drop',e=>{const h=e.target.closest?.('[data-drop-folder]');if(!dragId||!h)return;e.preventDefault();const s=find(dragId);dragId=null;h.classList.remove('h3-over');
     let path=[];try{path=JSON.parse(h.closest('.h3-group')?.dataset.path||'[]');}catch{}if(s)void moveTo(s,path);});
    // What an assistant changes shows here without a reload. A photograph or piece changing makes the covers be read again.
-   ctx.on({kinds:['subject-places*','study-draft*','study.human-direction*','study.outputs*','study.photos*','study.material*','instagram*','inquiries*','sources*','library*','recordings*','first-flow*','needs-you*','lease*','magazine*','study-ai*','words*','consent*','simmer*']},e=>{
+   ctx.on({kinds:['subject-places*','study-draft*','study.human-direction*','study.outputs*','study.photos*','study.material*','instagram*','inquiries*','sources*','library*','recordings*','first-flow*','needs-you*','magazine*','study-ai*','words*','consent*','simmer*']},e=>{
     if(e?.reset)return;
     if(/^(study\.photos|study\.outputs)/.test(String(e?.kind||''))){coversStale=true;bindings=null;}
     if(/^(sources|library|study\.material|first-flow|instagram|study\.photos|study\.outputs)/.test(String(e?.kind||'')))unfiledStale=true;
     soon();
    });
+   ctx.on({kinds:['lease*']},e=>{if(!e?.reset)void readLeases();});
    // A reset asks for everything to be read again; one that comes while the first reading is still under way is that reading.
-   ctx.on({},e=>{if(e?.reset&&(data||failed)&&Date.now()-loadedAt>3000){coversStale=true;bindings=null;unfiledStale=true;soon();}});
+   ctx.on({},e=>{if(e?.reset&&(data||failed)&&Date.now()-loadedAt>3000){coversStale=true;bindings=null;unfiledStale=true;void readLeases();soon();}});
+   const stopNeeds=v2.needs.subscribe(result=>{
+    if(ctx.signal.aborted||!root.isConnected)return;
+    needs=result;
+    keepFocus(paintNeeds);
+   });
    ctx.setAdvanced({section:'home'});
-   ctx.homeStop=()=>{clearTimeout(timer);deskStops.forEach(f=>f());allStops.forEach(f=>f());coverRun++;};
+   ctx.homeStop=()=>{dragPreview?.();stopNeeds();clearTimeout(timer);deskStops.forEach(f=>f());allStops.forEach(f=>f());coverRun++;};
+   void readLeases();
    await load();
   },
   unmount(el,ctx){ctx.homeStop?.();void v2.desk.use(null);},
+ });
+
+ function carryingOn(leases){
+  const working=new Map();
+  for(const l of leases||[])if(String(l.actor||'').startsWith('agent:')&&Date.parse(l.expiresAt||0)>Date.now()){
+   const name=v2.actorName(l.actor);working.set(name,(working.get(name)||0)+1);
+  }
+  return [...working].map(([name,count])=>`${name} is carrying on with ${plural(count,'thing')} by itself.`).join(' ');
+ }
+
+ v2.screen({id:'needs',title:'Needs you',route:'needs-you',
+  render:()=>`<div class="v2-page v3-home h3-review"><header><div><a class="h3-back" href="${esc(v2.href())}">${icon('back')}Home</a><h1 class="h3-title" tabindex="-1">Needs you</h1></div></header><div class="h3-needs" data-needs-list><p class="h3-quiet" role="status">Reading what needs you…</p></div></div>`,
+  async mount(el,ctx){
+   const root=el.querySelector('.h3-review'),slot=root.querySelector('[data-needs-list]');
+   const answeredHere=new Map(),changing=new Set(),saving=new Set(),askOrder=[],askBook=new Map();
+   let leases=[],failed=false,loading=false,again=false;
+   let requestedAsk=ctx.query.ask;
+   /** The questions waiting, in the order they first appeared. One answered here keeps its place; one that is gone from
+       the list because something else settled it drops out. */
+   function syncAsks(needs){
+    const fresh=new Map((needs.asks||[]).filter(a=>a.status==='open'||a.status==='defaulted').map(a=>[a.id,a]));
+    for(const [id,a] of fresh){askBook.set(id,a);if(!askOrder.includes(id))askOrder.push(id);}
+    for(let i=askOrder.length-1;i>=0;i--){const id=askOrder[i];if(!fresh.has(id)&&!answeredHere.has(id)&&!changing.has(id)&&!saving.has(id)){askOrder.splice(i,1);askBook.delete(id);}}
+   }
+   function paintNeeds(){
+    const human=v2.isHuman(),shown=askOrder.map(id=>askBook.get(id)).filter(Boolean);
+    const steer=shown.filter(a=>a.status==='open'&&a.band==='steer'&&a.default&&!answeredHere.has(a.id)).length;
+    const carrying=[carryingOn(leases),steer?`${plural(steer,'question')} will take ${steer===1?'its':'their'} default unless you choose.`:''].filter(Boolean).join(' ');
+    const rows=shown.map(a=>{
+     const off=human?(saving.has(a.id)?' disabled':''):' disabled title="Only Adrian answers these."';
+     const done=answeredHere.get(a.id)||(a.status==='defaulted'?{choice:a.resolution?.choice||a.default,auto:true}:null);
+     const about=a.about?`<small class="h3-about">${esc(a.about)}</small>`:'';
+     if(done&&!changing.has(a.id))return `<li class="ok" data-ask="${esc(a.id)}" tabindex="-1">${icon('check')}<p><span class="h3-state">${done.auto?'Applied by default':'Answered'}</span><b>${esc(a.question)}</b>${about}<span class="h3-said">${esc(done.choice||done.text||'')}</span></p><span class="h3-acts"><button type="button" class="${CQ} h3-q" data-ask-change="${esc(a.id)}"${off}>Change it</button></span></li>`;
+     const recording=isRecordingAsk(a);
+     const link=askLinks(a).map(({href,label})=>`<a class="h3-act" href="${esc(href)}">${esc(label)}${icon('right')}</a>`).join('');
+     const current=done?.choice;
+     const choices=recording?'':(a.choices||[]).map(c=>`<button type="button" class="${CB} h3-btn" data-ask-id="${esc(a.id)}" data-ask-choice="${esc(c)}"${current===c?' aria-pressed="true"':''}${off}>${esc(c)}${a.default===c&&!current?'<small>default</small>':''}</button>`).join('');
+     const due=a.band==='steer'&&a.applyAt&&a.status==='open'?`<span class="h3-due">Takes its default ${esc(dueAt(a.applyAt))} unless you choose.</span>`:'';
+     return `<li data-ask="${esc(a.id)}" tabindex="-1"><p><b>${esc(a.question)}</b>${about}${due}</p>${choices||link?`<span class="h3-acts">${choices}${link}</span>`:''}</li>`;
+    }).join('');
+    const active=document.activeElement,focused=slot.contains(active)?active:null;
+    slot.innerHTML=`${failed?`<div><p class="h3-quiet" role="status">The list could not be read.</p><button type="button" class="${CB} h3-btn" data-ask-retry>Try again</button></div>`:''}${rows?`<ul>${rows}</ul>`:(failed?'':'<p class="h3-quiet">Nothing needs you right now.</p>')}${carrying?`<p class="h3-quiet">${esc(carrying)}</p>`:''}${rows&&!human?'<p class="h3-quiet h3-reason">Only Adrian answers these.</p>':''}`;
+    if(focused?.isConnected===false){
+     const id=focused.closest('[data-ask]')?.dataset.ask;
+     const next=[...slot.querySelectorAll('[data-ask] button:not(:disabled),[data-ask] a')].find(b=>
+      b.closest('[data-ask]').dataset.ask===id&&b.dataset.askChoice===focused.dataset.askChoice&&
+      b.dataset.askChange===focused.dataset.askChange&&b.getAttribute('href')===focused.getAttribute('href'));
+     const row=focused.matches('[data-ask]')?findAsk(id):null;
+     (next||row||root.querySelector('h1')).focus({preventScroll:true});
+    }
+   }
+   function findAsk(id){
+    return [...slot.querySelectorAll('[data-ask]')].find(row=>row.dataset.ask===id);
+   }
+   async function answer(id,choice){
+    if(!v2.isHuman()||!askBook.has(id)||saving.has(id))return;
+    saving.add(id);
+    for(const b of root.querySelectorAll('[data-ask] button'))if(b.closest('[data-ask]').dataset.ask===id)b.disabled=true;
+    try{const saved=await v2.call('needs-you.answer',{id,choice});answeredHere.set(id,{choice:saved?.resolution?.choice||choice});changing.delete(id);
+     if(ctx.signal.aborted)return;
+     if(saved?.id===id)askBook.set(id,saved);saving.delete(id);paintNeeds();
+     [...root.querySelectorAll('[data-ask-change]')].find(b=>b.dataset.askChange===id)?.focus({preventScroll:true});v2.needs.refresh();}
+    catch(error){if(!ctx.signal.aborted)v2.ui.say(error.message,{tone:'bad'});}
+    finally{saving.delete(id);if(!ctx.signal.aborted)for(const b of root.querySelectorAll('[data-ask] button'))if(b.closest('[data-ask]').dataset.ask===id)b.disabled=false;}
+   }
+
+   async function load(){
+    if(loading){again=true;return;}
+    loading=true;
+    try{
+     const [needs,work]=await Promise.all([readNeeds(),readLeases()]);
+     if(ctx.signal.aborted)return;
+     syncAsks(needs);leases=work?.leases||[];failed=false;
+    }catch{failed=true;}
+    finally{loading=false;}
+    if(ctx.signal.aborted)return;
+    paintNeeds();
+    if(requestedAsk&&!failed){
+     const row=findAsk(requestedAsk);
+     requestedAsk=null;
+     if(row&&(document.activeElement===el||document.activeElement===document.body)){
+      row.focus({preventScroll:true});
+      row.scrollIntoView?.({block:'nearest'});
+     }
+    }
+    if(again){again=false;await load();}
+   }
+   root.addEventListener('click',e=>{
+    const t=e.target.closest?.('button');
+    if(!t||t.disabled)return;
+    if(t.hasAttribute('data-ask-retry')){t.disabled=true;void load();}
+    if(t.dataset.askChoice)return void answer(t.dataset.askId,t.dataset.askChoice);
+    if(t.dataset.askChange&&v2.isHuman()){
+     const id=t.dataset.askChange;changing.add(id);paintNeeds();
+     [...root.querySelectorAll('[data-ask-choice]')].find(b=>b.dataset.askId===id)?.focus();
+    }
+   });
+   ctx.on({kinds:['needs-you*','lease*']},e=>{if(!e?.reset)void load();});
+   ctx.on({},e=>{if(e?.reset&&!loading)void load();});
+   ctx.setAdvanced({section:'home'});
+   await load();
+  }
  });
 })(window.v2);

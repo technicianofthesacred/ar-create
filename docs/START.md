@@ -123,13 +123,27 @@ node scripts/release.mjs --home "$HOME/Library/Application Support/i64os/ar-crea
 
 Add `--dry-run` first to see what it would do. The rules:
 
-- **`--tag <name>` is required.** It creates an annotated local tag and prints the push command; it never pushes.
+- **`--tag <name>` is required.** It verifies the annotated local tag or creates it if missing, and prints the push command. The installer never pushes.
 - **The file list is computed by the release.** `source-manifest.json` is no longer tracked, and `scripts/refresh-manifest.mjs` is a read-only viewer (`--out <file>`). Nothing needs refreshing before a release.
 - **CI must be green.** The release checks the GitHub check run named `ci` for the commit. `--no-ci-check "<reason>"` and `--hotfix "<reason>"` override it; both write the reason to the journal.
 - **At most two releases a day per home.**
 - **`--candidate`** builds a separate home for a trial and refuses 8841 and the permanent home.
 - **`--deps-from`** is accepted only from inside the checkout or the home.
 - `npm run build` regenerates `docs/CAPABILITIES.md`; commit the result.
+
+For release CI, select the exact merged commit in a clean worktree. Create and push
+its annotated tag once, then use the release CI command:
+
+```sh
+git tag -a vYYYY.MM.DD-N -m "Release vYYYY.MM.DD-N"
+git push origin refs/tags/vYYYY.MM.DD-N
+node scripts/release-ci.mjs vYYYY.MM.DD-N
+```
+
+The command checks the workflow at the tagged commit for Ubuntu Slim runner
+selection. It reuses CI already running or green for that commit and prints its
+link. A failed run needs diagnosis before a retry. The installer still requires
+a successful `ci` check on the exact release commit.
 
 It builds, swaps `service/`, keeps `service.prev/` and writes `RELEASE.json`. `--rollback` and `--verify` exist. It never touches `data/`, `config/` or `state/`, and never restarts anything. Whoever runs it is recorded in `builtBy`.
 

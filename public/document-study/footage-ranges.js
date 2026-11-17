@@ -17,6 +17,12 @@ export function createFootageRanges({window:win,fetch:request=(...args)=>win.fet
  }
  function choose(m,sourceId,range=null){m.sourceId=sourceId;m.rangeId=range?.id||null;m.range=range;m.form=null;m.message='';paint(m);}
  function paint(m){if(!active(m))return;const previous=m.host.querySelector('video');if(previous&&!previous.paused)previous.pause();m.host.replaceChildren();const header=node('header');header.append(node('h2','Video · original ranges'),button('Back to piece',close));m.host.append(header);
+  if(win.studyVideoBriefs?.scopeFor(m.scope.parentStudyId)){
+   const briefs=node('a','Video Editing briefs');
+   briefs.href=win.studyVideoBriefs.address(m.scope.parentStudyId);
+   briefs.target='_blank';briefs.rel='noopener';
+   m.host.append(briefs);
+  }
   if(!m.data){m.host.append(node('p',m.message||'Reading attached video originals…'));return;}
   const data=m.data,available=data.sources.filter(s=>s.available),source=available.find(s=>s.id===m.sourceId)||available[0];if(source)m.sourceId=source.id;
   const note=node('p',data.canStandInReview?'Test copy · agent stand-ins':'Original footage · saved ranges');note.className='footage-context';m.host.append(note);

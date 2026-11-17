@@ -32,19 +32,18 @@
  const sharedApi=Object.freeze({nextOf,STATIONS});
  try{let shared=v2.shared;if(!shared){try{v2.shared={};}catch{}shared=v2.shared;}if(shared&&typeof shared==='object')shared.home=sharedApi;}catch{}
 
- /* ======================= reading: five calls, whatever the number of subjects ======================= */
+ /* ======================= reading: three calls for the subject list ======================= */
  const Standing={
   async list(){
-   const [summary,places,folders,needs,leases]=await Promise.all([
-    v2.call('subjects.standing',{}),v2.call('subject-places',{}),v2.call('subject-places.folders.get',{}),
-    quiet(v2.call('needs-you',{status:'pending'})),quiet(v2.call('leases',{}))]);
+   const [summary,places,folders]=await Promise.all([
+    v2.call('subjects.standing',{}),v2.call('subject-places',{}),v2.call('subject-places.folders.get',{})]);
    const placeOf=new Map((places?.places||[]).map(p=>[p.parentStudyId,p]));
    const unplaced=id=>({parentStudyId:id,folder:[],tags:[],pinnedAt:null,archived:false,order:null,deskOrder:null,revision:0,saved:false});
    const subjects=(summary?.subjects||[]).filter(x=>x&&typeof x.id==='string'&&x.id).map(x=>{
     const place=placeOf.get(x.id)||unplaced(x.id);
     return {...x,title:String(x.title||'').trim()||'Untitled subject',forms:x.forms||[],place,archived:!!(x.archived||place.archived)};
    });
-   return {subjects,folders,needs,leases:leases?.leases||[],readAt:Date.now(),ms:summary?.ms};
+   return {subjects,folders,readAt:Date.now(),ms:summary?.ms};
   },
  };
 
@@ -86,6 +85,7 @@
    const root=el.querySelector('[data-home]');if(!root)return;
    const ui={...prefs(),station:null,find:'',open:new Set(),archived:false,arrange:false,allAsks:false,allFile:false};
    let data=null,failed=null,loading=null,again=false,loadedAt=0,timer=0,dragId=null,dragging=false,deskStops=[],allStops=[],repaintWaiting=false;
+   let needs=null,leases=[],leaseRead=0;
    // Needs you: a question answered here stays in its place, marked answered, until he leaves the page.
    const answeredHere=new Map(),changing=new Set(),askOrder=[],askBook=new Map(),lookRoles=new Map(),lookNames=new Map();
    // Covers of the desk's cards: subject id to an address, or '' when it has no chosen photograph. Read after first paint.
@@ -100,7 +100,7 @@
      try{data=await Standing.list();failed=null;}
      catch(error){if(ctx.signal.aborted)return;failed=error;}
      finally{loading=null;}
-     if(ctx.signal.aborted)return;
+     if(ctx.signal.aborted||!W.document||!root.isConnected)return;
      // The desk in the top bar follows this page's order while it is open, once Home has read its subjects.
      if(data)void v2.desk.use(async()=>desk().map(s=>({id:s.id,title:s.title,...(covers.get(s.id)?{cover:covers.get(s.id)}:{})})));
      loadedAt=Date.now();
@@ -109,6 +109,14 @@
      if(again){again=false;void load();}
     })();
     return loading;
+   }
+   async function readLeases(){
+    const run=++leaseRead,result=await quiet(v2.call('leases',{}));
+    if(ctx.signal.aborted||!root.isConnected||run!==leaseRead)return;
+    const next=result?.leases||[];
+    if(!next.length&&!leases.length)return;
+    leases=next;
+    if(data)repaint();else keepFocus(paintNeeds);
    }
    const soon=()=>{clearTimeout(timer);timer=setTimeout(()=>{if(!ctx.signal.aborted)void load();},350);};
    const busy=()=>!!(dragging||ordersPending||document.querySelector('dialog.v2-sheet[open]'));
@@ -240,7 +248,7 @@ ${more>0?`<button type="button" class="v2-ghost home-more" data-file-more>Show $
    const deskKey=s=>num(s.place.deskOrder)?s.place.deskOrder:1e9;
    function desk(){return live().filter(s=>s.place.pinnedAt).sort((a,b)=>deskKey(a)-deskKey(b)||String(a.place.pinnedAt).localeCompare(String(b.place.pinnedAt))).slice(0,DESK_MAX);}
    const findMatch=s=>!ui.find||lower(s.title).includes(lower(ui.find));
-   function holder(id){const l=(data?.leases||[]).find(x=>x?.scope?.id===id&&x.actor&&x.actor!==v2.actor()&&Date.parse(x.expiresAt||0)>Date.now());return l?v2.actorName(l.actor):'';}
+   function holder(id){const l=leases.find(x=>x?.scope?.id===id&&x.actor&&x.actor!==v2.actor()&&Date.parse(x.expiresAt||0)>Date.now());return l?v2.actorName(l.actor):'';}
    function folderList(){
     const list=(data?.folders?.folders||[]).map(f=>({path:f.path,saved:f.saved!==false}));
     const seen=new Set(list.map(f=>fkey(f.path)));
@@ -272,7 +280,8 @@ ${more>0?`<button type="button" class="v2-ghost home-more" data-file-more>Show $
    /* ---------- painting ---------- */
    /** Draw again, then give focus back to the same control of the same subject, if it is still there. */
    function keepFocus(draw){
-    const a=document.activeElement,inside=a&&root.contains(a);
+    if(ctx.signal.aborted||!root.isConnected)return;
+    const a=root.ownerDocument.activeElement,inside=a&&root.contains(a);
     let pick=null;
     if(inside){const key=FOCUS_KEYS.find(k=>a.hasAttribute(k));if(key){const holderEl=a.closest('[data-id],[data-ask]');pick={key,value:a.getAttribute(key),id:holderEl?.dataset.id||null,ask:holderEl?.dataset.ask||null};}}
     const caret=a?.matches?.('[data-home-find]')?a.selectionStart:null;
@@ -284,7 +293,7 @@ ${more>0?`<button type="button" class="v2-ghost home-more" data-file-more>Show $
    function paint(){
     if(ctx.signal.aborted)return;
     if(failed&&!data){
-     root.querySelector('[data-home-needs]').innerHTML='';root.querySelector('[data-home-desk]').hidden=true;
+     root.querySelector('[data-home-desk]').hidden=true;
      root.querySelector('[data-home-all]').innerHTML=`<div class="home-sec-h"><h2 id="home-all-h">Everything</h2></div><div class="home-empty" data-home-error><p>${esc(failed.message||'The app could not be reached. Nothing was changed.')}</p><button type="button" data-home-retry>Try again</button></div>`;
      return;
     }
@@ -296,14 +305,14 @@ ${more>0?`<button type="button" class="v2-ghost home-more" data-file-more>Show $
    /** The questions waiting, in the order they first appeared. One answered here keeps its place; one that is gone from
        the list because something else settled it drops out. */
    function syncAsks(){
-    const fresh=new Map((data.needs?.asks||[]).filter(a=>a.status==='open'||a.status==='defaulted').map(a=>[a.id,a]));
+    const fresh=new Map((needs?.asks||[]).filter(a=>a.status==='open'||a.status==='defaulted').map(a=>[a.id,a]));
     for(const [id,a] of fresh){askBook.set(id,a);if(!askOrder.includes(id))askOrder.push(id);}
     for(let i=askOrder.length-1;i>=0;i--){const id=askOrder[i];if(!fresh.has(id)&&!answeredHere.has(id)&&!changing.has(id)){askOrder.splice(i,1);askBook.delete(id);}}
    }
    function paintNeeds(){
     const slot=root.querySelector('[data-home-needs]'),human=v2.isHuman();syncAsks();
     const shown=askOrder.map(id=>askBook.get(id)).filter(Boolean);
-    const working=new Map();for(const l of data.leases||[])if(String(l.actor||'').startsWith('agent:')&&Date.parse(l.expiresAt||0)>Date.now()){const n=v2.actorName(l.actor);working.set(n,(working.get(n)||0)+1);}
+    const working=new Map();for(const l of leases)if(String(l.actor||'').startsWith('agent:')&&Date.parse(l.expiresAt||0)>Date.now()){const n=v2.actorName(l.actor);working.set(n,(working.get(n)||0)+1);}
     const steer=shown.filter(a=>a.status==='open'&&a.band==='steer'&&a.default&&!answeredHere.has(a.id)).length;
     const carrying=([...working].map(([n,c])=>`${n} is carrying on with ${plural(c,'thing')} by itself.`).join(' ')+(steer?` ${plural(steer,'question')} will take ${steer===1?'its':'their'} default unless you choose.`:'')).trim();
     const off=human?'':' disabled title="Only Adrian answers these."';
@@ -514,7 +523,7 @@ ${all.length&&ui.group==='folder'?`<div class="home-foot"><button type="button" 
     if(t.matches('[data-home-new]'))return newSubject();
     if(t.dataset.fileIn)return fileSheet(t.dataset.fileIn);
     if(t.hasAttribute('data-file-more')){ui.allFile=true;return keepFocus(paintFile);}
-    if(t.matches('[data-home-retry]')){t.disabled=true;t.textContent='Reading again…';return void load();}
+    if(t.matches('[data-home-retry]')){t.disabled=true;t.textContent='Reading again…';void v2.needs.refresh();void readLeases();return void load();}
     if(t.dataset.groupBy){ui.group=t.dataset.groupBy;ui.open.clear();if(ui.group!=='folder')ui.arrange=false;keepPrefs(ui);return keepFocus(paintAll);}
     if(t.dataset.view){ui.view=t.dataset.view;keepPrefs(ui);return keepFocus(()=>{paintAll();applyCovers();});}
     if(t.dataset.station){const id=t.dataset.station;ui.station=ui.station===id?null:id;return keepFocus(()=>{paintAll();applyCovers();});}
@@ -539,16 +548,23 @@ ${all.length&&ui.group==='folder'?`<div class="home-foot"><button type="button" 
    root.addEventListener('drop',e=>{const h=e.target.closest?.('[data-drop-folder]');if(!dragId||!h)return;e.preventDefault();const s=find(dragId);dragId=null;h.classList.remove('home-over');
     let path=[];try{path=JSON.parse(h.closest('.home-group')?.dataset.path||'[]');}catch{}if(s)void moveTo(s,path);});
    // What an assistant changes shows here without a reload. A photograph or piece changing makes the covers be read again.
-   ctx.on({kinds:['subject-places*','study-draft*','study.human-direction*','study.outputs*','study.photos*','study.material*','instagram*','inquiries*','sources*','library*','recordings*','first-flow*','needs-you*','lease*','magazine*','study-ai*','words*','consent*','simmer*']},e=>{
+   ctx.on({kinds:['subject-places*','study-draft*','study.human-direction*','study.outputs*','study.photos*','study.material*','instagram*','inquiries*','sources*','library*','recordings*','first-flow*','needs-you*','magazine*','study-ai*','words*','consent*','simmer*']},e=>{
     if(e?.reset)return;
     if(/^(study\.photos|study\.outputs)/.test(String(e?.kind||''))){coversStale=true;bindings=null;}
     if(/^(sources|library|study\.material|first-flow|instagram|study\.photos|study\.outputs)/.test(String(e?.kind||'')))unfiledStale=true;
     soon();
    });
+   ctx.on({kinds:['lease*']},e=>{if(!e?.reset)void readLeases();});
    // A reset asks for everything to be read again; one that comes while the first reading is still under way is that reading.
-   ctx.on({},e=>{if(e?.reset&&(data||failed)&&Date.now()-loadedAt>3000){coversStale=true;bindings=null;unfiledStale=true;soon();}});
+   ctx.on({},e=>{if(e?.reset&&(data||failed)&&Date.now()-loadedAt>3000){coversStale=true;bindings=null;unfiledStale=true;void readLeases();soon();}});
+   const stopNeeds=v2.needs.subscribe(result=>{
+    if(ctx.signal.aborted||!root.isConnected)return;
+    needs=result;
+    keepFocus(paintNeeds);
+   });
    ctx.setAdvanced({section:'home'});
-   ctx.homeStop=()=>{clearTimeout(timer);deskStops.forEach(f=>f());allStops.forEach(f=>f());coverRun++;};
+   ctx.homeStop=()=>{stopNeeds();clearTimeout(timer);deskStops.forEach(f=>f());allStops.forEach(f=>f());coverRun++;};
+   void readLeases();
    await load();
   },
   unmount(el,ctx){ctx.homeStop?.();void v2.desk.use(null);},

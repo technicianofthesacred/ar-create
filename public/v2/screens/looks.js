@@ -70,7 +70,9 @@
    const root=el.querySelector('.lk-body');
    let looks=[],accounts=[],cat=[],proposals=[],plans=[],sel=null,rec=null,assets=[],busy=false,gone=false,addAcct=false,addAsset=false,imp=null,acctError='',tints={},fmts={};
    ctx.signal.addEventListener('abort',()=>{gone=true;});
-   const say=(t,tone)=>v2.ui.say(t,{tone:tone||'info'});
+   let address=window.location.hash;
+   const stillHere=()=>!gone&&root.isConnected&&window.location.hash===address;
+   const say=(t,tone)=>{if(stillHere())v2.ui.say(t,{tone:tone||'info'});};
    const call=(n,i)=>v2.call(n,i);
 
    async function loadList(){
@@ -84,7 +86,8 @@
     [rec,assets]=await Promise.all([call('look',{id}),call('look.assets',{id}).then(r=>r.assets||[]).catch(()=>[])]);
    }
    function choose(id){
-    sel=id;try{history.replaceState(null,'','#/looks'+(id?'?look='+encodeURIComponent(id):''));}catch{}
+    if(!stillHere())return;
+    sel=id;try{history.replaceState(null,'','#/looks'+(id?'?look='+encodeURIComponent(id):''));address=window.location.hash;}catch{}
     v2.brand(id);
    }
 
@@ -206,7 +209,7 @@
 
    /* ---------- drawing ---------- */
    function paint(){
-    if(gone||!root.isConnected)return;
+    if(!stillHere())return;
     const had=root.contains(document.activeElement)?document.activeElement.dataset:null;
     root.innerHTML=pillsHTML()+(imp?importHTML():rec?lookHTML():'<p class="lk-dim">No looks yet. Import one from a DESIGN.md.</p>');
     if(had?.lk){const a=root.querySelector('[data-lk="'+CSS.escape(had.lk)+'"]'+(had.id?'[data-id="'+CSS.escape(had.id)+'"]':''));a?.focus?.({preventScroll:true});}

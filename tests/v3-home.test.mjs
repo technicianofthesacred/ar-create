@@ -112,6 +112,7 @@ test('Home runs in version three\'s frame against the real server: the same sect
  const home=doc.querySelector('.v3-home');
  assert.equal(w.v2.screens().filter(s=>s.id==='home').length,1);
  assert.equal(home.querySelector('h1').textContent,'Home');
+ assert.equal(home.querySelector('[data-home-needs]').hidden,true,'an empty queue takes no space');
  assert.ok(home.querySelector('header [data-home-new]'),'New subject');
  assert.equal(home.querySelector('header [data-home-new]').textContent.trim(),'New subject');
  const sections=[...home.children].map(e=>e.tagName+':'+(e.getAttribute('data-home-needs')!==null?'needs':e.getAttribute('data-home-desk')!==null?'desk':e.getAttribute('data-home-file')!==null?'file':e.getAttribute('data-home-all')!==null?'all':'header'));
@@ -178,6 +179,30 @@ const logged=(url,log)=>{const inner=pageFetch(url);return async(u,o)=>{log.push
 const nextText=s=>!s.known||!s.next||['published','resting'].includes(s.station)?'':s.next.formName&&s.forms.length>1?s.next.name+' · '+s.next.formName:s.next.name;
 
 
+test('a subject opens while five-second Needs you and assistant activity reads are pending',async t=>{
+ const f=await server(t);await world(f);
+ await f.agent('/api/leases/acquire',{scope:{kind:'project',id:'inv-river'},reason:'Invented work'},{op:false});
+ const calls=[],pending=new Set(),fetchPage=pageFetch(f.url);
+ const slow=['/api/needs-you','/api/leases'];
+ const {w,doc}=await page({base:f.url,fetchImpl:async(u,o)=>{
+  const route=new URL(String(u),f.url).pathname;calls.push(route);
+  if(!slow.includes(route))return fetchPage(u,o);
+  pending.add(route);
+  await settle(5000);
+  const response=await fetchPage(u,o);
+  pending.delete(route);
+  return response;
+ }});
+ const row=await until(()=>doc.querySelector('.h3-row[data-id="inv-river"] .h3-row-open'),'the subject link',2000);
+ row.click();
+ await until(()=>doc.querySelector('[data-subj-head] h1')?.textContent==='Invented river','the open subject',2000);
+ assert.deepEqual([...pending].sort(),[...slow].sort(),'both reads are still pending when the subject opens');
+ w.v2.go('');
+ await until(()=>doc.querySelector('.h3-needs-preview [data-needs-open]')&&doc.querySelector('.h3-row[data-id="inv-river"] .h3-held'),'the question and assistant activity');
+ assert.equal(doc.querySelector('[data-v2-needs-count]').textContent,'1');
+ assert.equal(calls.filter(route=>route==='/api/needs-you').length,1,'the badge and Home share the same read');
+});
+
 test('Home on real records: every row is true against subjects.standing, in a handful of calls',async t=>{
  const f=await server(t);await world(f);
  const calls=[];
@@ -203,10 +228,12 @@ test('Home on real records: every row is true against subjects.standing, in a ha
  assert.equal(mine.filter(p=>p==='/api/subjects/standing').length,1);
  assert.equal(mine.filter(p=>/human-direction|inquiries|first-flow|study-ai/.test(p)).length,0,'nothing is read subject by subject: '+mine.join(' '));
  assert.ok(mine.length<=24,'a handful of calls, not hundreds: '+mine.length);
- // Needs you: the question, where it is from, its choices in place.
- const ask=doc.querySelector('.h3-needs li');
- assert.match(ask.textContent,/Is the invented garden named in the piece\?/);assert.match(ask.textContent,/Invented garden/);
- assert.deepEqual([...ask.querySelectorAll('[data-ask-choice]')].map(b=>b.dataset.askChoice),['Name it','Leave it out']);
+ // Home shows a compact tile that opens the corresponding question.
+ const askLink=await until(()=>doc.querySelector('.h3-needs-preview [data-needs-open]'),'the question tile');
+ assert.match(askLink.getAttribute('aria-label'),/Is the invented garden named in the piece\?/);
+ assert.ok(askLink.querySelector('svg'));
+ assert.equal(new URL(askLink.href).hash,'#/needs-you?ask='+askLink.dataset.needsOpen);
+ assert.equal(doc.querySelector('[data-ask-choice]'),null);
  // On your desk: the two pinned subjects, opening the subject.
  const cards=[...doc.querySelectorAll('.h3-card')];
  assert.deepEqual(cards.map(c=>c.querySelector('b').textContent.slice(0,15)),['Invented garden','Invented river']);
@@ -263,17 +290,40 @@ test('Home writes through the commands: pin, answer, move to a folder with Undo,
  const {w,doc}=await page({base:f.url,fetchImpl:pageFetch(f.url)});
  await until(()=>doc.querySelector('.h3-groups .h3-row'),'the list');
  const placeOf=async id=>(await f.agent('/api/subject-places?parentStudyId='+id)).places[0];
+ const originalRow=doc.querySelector('.h3-row[data-id="inv-cups"]');
+ const originalDate=originalRow.querySelector('time')?.dateTime ?? null;
+ assert.ok(originalRow.draggable,'the whole row is draggable');
+ assert.equal(originalRow.querySelector('a').draggable,false,'the link clicks through and drags as part of the row');
+ assert.equal(originalRow.querySelector('.h3-grip, .v2-move'),null,'subject rows need no visible drag controls');
  // Pin puts a subject on the desk, stamped as Adrian's from the app.
  click(w,doc.querySelector('[data-pin="inv-cups"]'));
  await until(async()=>(await placeOf('inv-cups')).pinnedAt,'the pin to be saved');
  assert.equal((await placeOf('inv-cups')).updatedBy,'human:adrian');
  await until(()=>doc.querySelectorAll('.h3-card').length===3,'three cards');
- // His answer, from the app's own page.
- click(w,doc.querySelector('[data-ask-choice="Leave it out"]'));
+ await until(async()=>{
+  const standing=(await f.agent('/api/subjects/standing')).subjects.find(s=>s.id==='inv-cups');
+  return standing.changedAt===(await placeOf('inv-cups')).updatedAt;
+ },'the place timestamp to reach the standing');
+ const pinnedStanding=(await f.agent('/api/subjects/standing')).subjects.find(s=>s.id==='inv-cups');
+ assert.ok(Object.hasOwn(pinnedStanding,'workChangedAt'));
+ assert.equal(pinnedStanding.workChangedAt,originalDate,'pinning does not advance the date of work');
+ // Open the queue from Home, then answer the same saved ask.
+ const needsLink=await until(()=>doc.querySelector('.h3-needs-preview [data-needs-open]'),'the question tile');
+ needsLink.click();
+ const ask=await until(()=>doc.querySelector('.h3-needs li'),'the Needs you route to show the question');
+ assert.equal(w.location.hash,'#/needs-you?ask='+needsLink.dataset.needsOpen);
+ assert.equal(doc.activeElement,ask,'the row opens and focuses its question');
+ assert.equal(doc.querySelector('.h3-review h1').textContent,'Needs you');
+ assert.match(ask.textContent,/Is the invented garden named in the piece\?/);
+ assert.match(ask.textContent,/Invented garden/);
+ click(w,ask.querySelector('[data-ask-choice="Leave it out"]'));
  await until(()=>doc.querySelector('.h3-needs li.ok'),'the answer');
  assert.equal(doc.querySelector('.h3-needs li.ok .h3-said').textContent,'Leave it out');assert.match(doc.querySelector('.h3-needs li.ok').textContent,/Answered/);
  const answered=(await f.agent('/api/needs-you?status=answered')).asks[0];
  assert.equal(answered.resolution.choice,'Leave it out');assert.equal(answered.resolution.by,'human:adrian');assert.equal(answered.resolution.client,'ui');
+ doc.querySelector('.h3-back').click();
+ await until(()=>doc.querySelector('.h3-row[data-id="inv-cups"]'),'Home to reopen');
+ assert.equal(doc.querySelector('[data-needs-open]'),null,'the answered item no longer appears on Home');
  // A subject dropped onto a folder moves there; Undo moves it back.
  const row=doc.querySelector('.h3-row[data-id="inv-cups"]'),head=doc.querySelector('.h3-group[data-key="f:Art"]>header');
  row.dispatchEvent(new w.Event('dragstart',{bubbles:true}));head.dispatchEvent(new w.Event('dragover',{bubbles:true,cancelable:true}));head.dispatchEvent(new w.Event('drop',{bubbles:true,cancelable:true}));
@@ -298,14 +348,10 @@ test('Home writes through the commands: pin, answer, move to a folder with Undo,
  assert.equal(catalog.collections.find(c=>c.parentStudyId===id)?.title,'Invented new subject');
 });
 
-test('Home as an assistant says why the answers are greyed, in a visible line; covers view with no photograph is a plain card; the look dot names its look',async t=>{
+test('Home as an assistant shows plain cards without photographs and names the look on its dot',async t=>{
  const f=await server(t);await world(f);
  const {w,doc}=await page({base:f.url,fetchImpl:pageFetch(f.url),hash:'?reviewActor=agent:codex#/'});
  await until(()=>doc.querySelector('.h3-groups .h3-row'),'the list');
- const buttons=[...doc.querySelectorAll('.h3-needs [data-ask-choice]')];
- assert.ok(buttons.length&&buttons.every(b=>b.disabled),'the choices are greyed for an assistant');
- const reason=doc.querySelector('.h3-needs .h3-reason');
- assert.ok(reason&&/Only Adrian answers these/.test(reason.textContent),'the reason is a line on the page, not only a tooltip');
  click(w,doc.querySelector('[data-view="covers"]'));
  const covers=[...doc.querySelectorAll('.h3-cover')];assert.ok(covers.length);
  for(const c of covers){
@@ -392,20 +438,29 @@ test('a desk card\'s footer is one bar: the next step, then Move up and Move dow
 
 test('Needs you guard: as the human the choices are enabled and there is no reason line; as an agent every choice and "Change it" is disabled, with the reason as a line',async t=>{
  const f=await server(t);await world(f);
- const human=await page({base:f.url,fetchImpl:pageFetch(f.url)});
+ const human=await page({base:f.url,fetchImpl:pageFetch(f.url),hash:'#/needs-you'});
  await until(()=>human.doc.querySelector('.h3-needs [data-ask-choice]'),'the question');
  assert.ok([...human.doc.querySelectorAll('.h3-needs [data-ask-choice]')].every(b=>!b.disabled),'enabled for him');
  assert.equal(human.doc.querySelector('.h3-needs .h3-reason'),null);
  click(human.w,human.doc.querySelector('[data-ask-choice="Name it"]'));
  await until(()=>human.doc.querySelector('.h3-needs li.ok [data-ask-change]'),'the answer');
  assert.equal(human.doc.querySelector('.h3-needs li.ok [data-ask-change]').disabled,false,'Change it is his');
- await f.agent('/api/needs-you/raise',{band:'only-adrian',question:'A later invented question?',choices:['One','Two'],about:'Invented cups'});
+ for(let i=1;i<=4;i++)await f.agent('/api/needs-you/raise',{band:'only-adrian',question:`Invented question ${i}?`,choices:['One','Two'],about:'Invented cups'});
+ await f.agent('/api/needs-you/raise',{band:'only-adrian',question:'Review the invented notes.',about:'Invented cups',link:{label:'Open notes',href:'/document-study/index.html?section=home'}});
  const agent=await page({base:f.url,fetchImpl:pageFetch(f.url),hash:'?reviewActor=agent:codex#/'});
- await until(()=>agent.doc.querySelector('.h3-needs'),'the panel');
+ await until(()=>agent.doc.querySelectorAll('.h3-needs-preview li').length===3,'the Home tiles stay in one row');
+ const tile=[...agent.doc.querySelectorAll('.h3-needs-preview a')].find(a=>a.textContent.includes('Open notes'));
+ assert.equal(tile.getAttribute('href'),'/document-study/index.html?section=home');
+ const all=agent.doc.querySelector('.h3-needs-all');
+ assert.equal(all.textContent,'All 5');
+ all.click();
+ await until(()=>agent.doc.querySelectorAll('.h3-needs li').length===5,'the full list');
+ assert.equal(agent.doc.querySelector('[data-v2-needs-phone]').getAttribute('aria-current'),'page');
+ assert.equal(agent.doc.querySelector('[data-v2-needs]').hidden,true,'the full list has no duplicate in the top bar');
+ assert.equal(new URL(agent.doc.querySelector('[data-v3-two]').href).hash,'','Version two keeps its list on Home');
  const open=[...agent.doc.querySelectorAll('.h3-needs [data-ask-choice]')];
  assert.ok(open.length&&open.every(b=>b.disabled&&/Only Adrian answers these/.test(b.title)),'every choice disabled, with the reason');
  assert.match(agent.doc.querySelector('.h3-needs .h3-reason').textContent,/Only Adrian answers these/);
- assert.ok(agent.doc.querySelector('.h3-needs.h3-asking'),'the accent border is for a question still asking');
  // "Change it" is drawn with the same guard: its markup is built from the same flag.
  assert.match(read('public/v3/screens/home.js'),/data-ask-change="\$\{esc\(a\.id\)\}"\$\{off\}>Change it/);
 });

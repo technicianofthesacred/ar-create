@@ -116,7 +116,7 @@ test('Home on real records: every row is true against subjects.standing, in a ha
  assert.equal(mine.filter(p=>/human-direction|inquiries|first-flow|study-ai/.test(p)).length,0,'nothing is read subject by subject: '+mine.join(' '));
  assert.ok(mine.length<=24,'a handful of calls, not hundreds: '+mine.length);
  // Needs you: the question, where it is from, its choices in place.
- const ask=doc.querySelector('.home-needs li');
+ const ask=await until(()=>doc.querySelector('.home-needs li'),'the question');
  assert.match(ask.textContent,/Is the invented garden named in the piece\?/);assert.match(ask.textContent,/Invented garden/);
  assert.deepEqual([...ask.querySelectorAll('[data-ask-choice]')].map(b=>b.dataset.askChoice),['Name it','Leave it out']);
  // On your desk: the two pinned subjects, opening the subject.
@@ -181,7 +181,7 @@ test('Home writes through the commands: pin, answer, move to a folder with Undo,
  assert.equal((await placeOf('inv-cups')).updatedBy,'human:adrian');
  await until(()=>doc.querySelectorAll('.home-card').length===3,'three cards');
  // His answer, from the app's own page.
- click(w,doc.querySelector('[data-ask-choice="Leave it out"]'));
+ click(w,await until(()=>doc.querySelector('[data-ask-choice="Leave it out"]'),'the choice'));
  await until(()=>doc.querySelector('.home-needs li.ok'),'the answer');
  assert.equal(doc.querySelector('.home-needs li.ok .home-said').textContent,'Leave it out');assert.match(doc.querySelector('.home-needs li.ok').textContent,/Answered/);
  const answered=(await f.agent('/api/needs-you?status=answered')).asks[0];
@@ -221,7 +221,9 @@ test('Home hears an assistant: a subject filed elsewhere moves on screen without
  es.emit('change',{cursor:2,bootId:'b1',kind:'subject-places.save',scope:{kind:'subjects',id:'inv-cups'}});
  await until(()=>rowsOf(doc,'f:Art').includes('Invented cups'),'the row to move');
  assert.deepEqual(rowsOf(doc,'f:Tea'),['Invented river']);
- assert.match(doc.querySelector('.home-row[data-id="inv-river"]').textContent,/Codex is working on it/);
+ es.emit('change',{cursor:3,bootId:'b1',kind:'lease.acquire',scope:{kind:'project',id:'inv-river'}});
+ const held=await until(()=>doc.querySelector('.home-row[data-id="inv-river"] .home-held'),'the assistant activity');
+ assert.match(held.textContent,/Codex is working on it/);
  assert.match(doc.querySelector('.home-carry, .home-needs .home-quiet').textContent,/Codex is carrying on with 1 thing by itself\./);
 });
 
@@ -327,6 +329,7 @@ test('Home as an assistant says why the answers are greyed, in a visible line; c
  const f=await server(t);await world(f);
  const {w,doc}=await page({base:f.url,fetchImpl:pageFetch(f.url),hash:'?reviewActor=agent:codex#/'});
  await until(()=>doc.querySelector('.home-groups .home-row'),'the list');
+ await until(()=>doc.querySelector('.home-needs [data-ask-choice]'),'the choices');
  const buttons=[...doc.querySelectorAll('.home-needs [data-ask-choice]')];
  assert.ok(buttons.length&&buttons.every(b=>b.disabled),'the choices are greyed for an assistant');
  const reason=doc.querySelector('.home-needs .home-reason');

@@ -217,8 +217,9 @@
 
  // ---------- Needs you: the count ----------
  let needs=0;
- const refreshNeeds=oneAtATime(readNeeds);
- async function readNeeds(){try{const r=await client.call('needs-you',{status:'open'});needs=Number(r?.counts?.open??r?.asks?.length??0)||0;}catch{needs=0;}
+ const needsFeed=C.createNeedsFeed(client),refreshNeeds=needsFeed.refresh;
+ function paintNeeds(r){
+  needs=Number(r?.counts?.open??r?.asks?.filter(a=>a.status==='open').length??0)||0;
   const a=doc.querySelector('[data-v2-needs]');if(a){a.hidden=!needs;a.querySelector('[data-v2-needs-count]').textContent=String(needs);a.setAttribute('aria-label',`Needs you: ${needs}`);}
   const badge=doc.querySelector('[data-v2-needs-badge]');if(badge){badge.hidden=!needs;badge.textContent=String(needs);}
   const phone=doc.querySelector('[data-v2-needs-phone]');phone?.setAttribute('aria-label',needs?`Needs you: ${needs}`:'Needs you');}
@@ -297,7 +298,8 @@
   if(typeof ResizeObserver==='function'){const ro=new ResizeObserver(refit);ro.observe(doc.querySelector('[data-v2-top]'));ro.observe(doc.querySelector('.v2-grow'));}else root.addEventListener('resize',refit);
   doc.fonts?.ready?.then(refit);
   // A reset reaches every listener, so the named ones leave it to the one below.
-  live.on({kinds:['needs-you*']},e=>{if(!e?.reset)refreshNeeds();});
+  needsFeed.subscribe(paintNeeds);
+  live.on({kinds:['needs-you*','recordings*','words*','transcript*']},e=>{if(!e?.reset)refreshNeeds();});
   live.on({kinds:['subject-places*','study-draft*','concept*']},e=>{if(!e?.reset)refreshDesk();});
   // A reset asks for everything again; the one that comes with the stream's first hello is the reading just made.
   live.on({},e=>{if(e.reset&&Date.now()-startedAt>3000){refreshNeeds();refreshDesk();}});
@@ -318,7 +320,7 @@
   // the other front and the frame
   capture:options=>openCapture(options),find:()=>openFind(),advanced,brand:id=>applyBrand(id),theme:()=>doc.documentElement.dataset.theme,
   desk:Object.freeze({refresh:refreshDesk,use:source=>{deskSource=typeof source==='function'?source:null;return refreshDesk();},list:()=>desk.map(d=>({...d}))}),
-  needs:Object.freeze({refresh:refreshNeeds,count:()=>needs}),
+  needs:Object.freeze({refresh:refreshNeeds,count:()=>needs,subscribe:needsFeed.subscribe}),
   // Helpers a screen offers the others: v2.shared.<screen id> = {...}. The only part of v2 a screen may write to.
   shared:{},
   // the shared pieces
