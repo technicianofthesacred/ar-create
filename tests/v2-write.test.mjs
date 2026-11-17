@@ -335,7 +335,7 @@ const draftOf=(base,sub)=>getJSON(base,`/api/study-draft/read?bindingId=${sub.bi
 const wordsOf=d=>d.projection.filter(r=>r.safe!==false||r.words).map(r=>r.words);
 
 /** The real page on the real server. slowSave holds the save's answer back so he can keep typing while it is in flight. */
-async function livePage(base,sub,{search='',slowSave=0,lateSave=0,delay=null,seed=null}={}){
+async function livePage(base,sub,{search='',slowSave=0,beforeSave=null,delay=null,seed=null}={}){
  const html=read('public/v2/index.html');
  const dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:base+'/v2/index.html'+search+'#/write/'+sub.id+'?piece='+sub.piece,runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,calls=[],sources=[];windows.push(w);
@@ -346,7 +346,7 @@ async function livePage(base,sub,{search='',slowSave=0,lateSave=0,delay=null,see
  w.fetch=async(input,options={})=>{
   const u=new URL(String(input),w.location.href),method=options.method||'GET',entry={path:u.pathname,method,body:options.body?JSON.parse(options.body):null,status:0};calls.push(entry);
   const isSave=u.pathname==='/api/study-draft/save';
-  if(lateSave&&isSave)await settle(lateSave);// held back before it reaches the server
+  if(beforeSave&&isSave)await beforeSave();// held back before it reaches the server
   const r=await fetch(base+u.pathname+u.search,{method,headers:{...options.headers,...(method!=='GET'?{Origin:base}:{})},body:options.body});
   const text=await r.text();entry.status=r.status;
   if(slowSave&&isSave)await settle(slowSave);// the server has it; the answer is held back
@@ -521,10 +521,20 @@ test('real server: reload while a new paragraph is being saved keeps every word,
 test('real server: reload while a save has not yet reached the server also loses and doubles nothing',{timeout:120000},async()=>{
  const {base}=await theWorld(),sub=await subjectOf(base,'straw-over-the-rows');
  const before=wordsOf(await draftOf(base,sub));
- const a=await livePage(base,sub,{lateSave:2500});
+ const {promise:releaseSave,resolve:release}=Promise.withResolvers();
+ const a=await livePage(base,sub,{beforeSave:()=>releaseSave});
  const tail=[...a.doc.querySelectorAll('textarea.wr-ed')].at(-1),first='Another closing paragraph, for the held-back save';
- type(a.w,tail,first);blur(a.w,tail);await settle(300);
- const b=await reload(a,base,sub);
+ let b,held;
+ try{
+  type(a.w,tail,first);blur(a.w,tail);
+  held=await until(()=>a.calls.find(c=>c.path==='/api/study-draft/save'));
+  assert.ok(key(a.w,sub.binding)?.sent.some(s=>s.operationId===held.body.operationId),'the held save is kept on the device');
+  b=await reload(a,base,sub);
+  assert.equal(held.status,0,'the old save has not reached the server after reload');
+  // The reopened page recovers the kept words first, even if the machine is slow to open it.
+  await savedOnServer(b);
+ }finally{release();}
+ await until(()=>held.status);
  const server=await agree(b,base,sub);
  assert.equal(server.filter(x=>x===first).length,1);assert.equal(server.length,before.length+1);
 });
