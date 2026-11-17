@@ -263,11 +263,23 @@ test('Home writes through the commands: pin, answer, move to a folder with Undo,
  const {w,doc}=await page({base:f.url,fetchImpl:pageFetch(f.url)});
  await until(()=>doc.querySelector('.h3-groups .h3-row'),'the list');
  const placeOf=async id=>(await f.agent('/api/subject-places?parentStudyId='+id)).places[0];
+ const originalRow=doc.querySelector('.h3-row[data-id="inv-cups"]');
+ const originalDate=originalRow.querySelector('time')?.dateTime ?? null;
+ assert.ok(originalRow.draggable,'the whole row is draggable');
+ assert.equal(originalRow.querySelector('a').draggable,false,'the link clicks through and drags as part of the row');
+ assert.equal(originalRow.querySelector('.h3-grip, .v2-move'),null,'subject rows need no visible drag controls');
  // Pin puts a subject on the desk, stamped as Adrian's from the app.
  click(w,doc.querySelector('[data-pin="inv-cups"]'));
  await until(async()=>(await placeOf('inv-cups')).pinnedAt,'the pin to be saved');
  assert.equal((await placeOf('inv-cups')).updatedBy,'human:adrian');
  await until(()=>doc.querySelectorAll('.h3-card').length===3,'three cards');
+ await until(async()=>{
+  const standing=(await f.agent('/api/subjects/standing')).subjects.find(s=>s.id==='inv-cups');
+  return standing.changedAt===(await placeOf('inv-cups')).updatedAt;
+ },'the place timestamp to reach the standing');
+ const pinnedStanding=(await f.agent('/api/subjects/standing')).subjects.find(s=>s.id==='inv-cups');
+ assert.ok(Object.hasOwn(pinnedStanding,'workChangedAt'));
+ assert.equal(pinnedStanding.workChangedAt,originalDate,'pinning does not advance the date of work');
  // His answer, from the app's own page.
  click(w,doc.querySelector('[data-ask-choice="Leave it out"]'));
  await until(()=>doc.querySelector('.h3-needs li.ok'),'the answer');

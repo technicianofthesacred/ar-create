@@ -76,8 +76,15 @@
   const t=Date.parse(iso||'');if(!Number.isFinite(t))return '';
   const d=new Date(t),today=new Date(now);
   if(d.toDateString()===today.toDateString())return 'Today';
-  if(d.toDateString()===new Date(now-864e5).toDateString())return 'Yesterday';
+  const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
+  if(d.toDateString()===yesterday.toDateString())return 'Yesterday';
   return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',...(d.getFullYear()!==today.getFullYear()?{year:'numeric'}:{})});
+ }
+ function workDate(iso){
+  const label=when(iso);
+  if(!label)return '<small></small>';
+  const exact=new Date(iso).toLocaleDateString('en-GB',{dateStyle:'long'});
+  return `<small><time datetime="${esc(iso)}" title="Last worked on ${esc(exact)}">${esc(label)}</time></small>`;
  }
  function dueAt(iso){const t=Date.parse(iso||'');if(!Number.isFinite(t))return 'soon';const d=new Date(t),clock=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});return when(iso)==='Today'?'at '+clock:'on '+when(iso)+' at '+clock;}
  const today=()=>{const d=new Date(),part=o=>d.toLocaleDateString('en-GB',o);return part({weekday:'long'})+' '+part({day:'numeric',month:'short',year:'numeric'});};
@@ -102,6 +109,7 @@
    const root=el.querySelector('[data-home]');if(!root)return;
    const ui={...prefs(),station:null,find:'',open:new Set(),archived:false,arrange:false,allAsks:false,allFile:false};
    let data=null,failed=null,loading=null,again=false,loadedAt=0,timer=0,dragId=null,dragging=false,deskStops=[],allStops=[],repaintWaiting=false;
+   let dragPreview=null;
    // Needs you: a question answered here stays in its place, marked answered, until he leaves the page.
    const answeredHere=new Map(),changing=new Set(),askOrder=[],askBook=new Map(),lookRoles=new Map(),lookNames=new Map();
    // Covers of the desk's cards: subject id to an address, or '' when it has no chosen photograph. Read after first paint.
@@ -292,7 +300,7 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
      return out.filter(g=>g.items.length);
     }
     if(ui.group==='station')return STATIONS.map(st=>({key:'s:'+st.id,name:st.name,total:all.filter(s=>s.station===st.id).length,items:rows.filter(s=>s.station===st.id).sort(byName)})).filter(g=>g.items.length);
-    const t=s=>Date.parse(s.changedAt||'')||0;
+    const t=s=>Date.parse(s.workChangedAt||'')||0;
     return [{key:'r:',name:'Most recent first',total:all.length,items:rows.sort((a,b)=>t(b)-t(a)||byName(a,b))}];
    }
    const canArrange=()=>ui.group==='folder'&&!ui.find&&!ui.station;
@@ -385,11 +393,11 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
    const tagsOf=s=>{const tags=s.place.tags||[],extra=tags.length-TAGS_SHOWN;return `<span class="h3-tags">${tags.slice(0,TAGS_SHOWN).map(t=>`<i title="${esc(t)}">${esc(t)}</i>`).join('')}${extra>0?`<i class="h3-tag-more" title="${esc(tags.slice(TAGS_SHOWN).join(', '))}">+${extra}</i>`:''}</span>`;};
    const pinBtn=s=>{const on=!!s.place.pinnedAt;return `<button type="button" class="${CI} h3-q h3-ic h3-pin" data-pin="${esc(s.id)}" aria-pressed="${on}" aria-label="${on?'Take off your desk':'Put on your desk'}: ${esc(s.title)}" title="${on?'On your desk':'Put on your desk'}">${PIN}</button>`;};
    const menuBtn=s=>`<button type="button" class="${CI} h3-q h3-ic h3-rowmenu" data-row-menu="${esc(s.id)}" aria-label="Move or archive: ${esc(s.title)}" title="Move or archive">${MORE}</button>`;
-   const rowPic=s=>{const url=covers.get(s.id);return `<span class="h3-row-pic${url?' has-img':''}" aria-hidden="true">${url?`<img src="${esc(url)}" alt="">`:''}</span>`;};
+   const rowPic=s=>{const url=covers.get(s.id);return `<span class="h3-row-pic${url?' has-img':''}" aria-hidden="true">${url?`<img src="${esc(url)}" alt="" draggable="false">`:''}</span>`;};
    function row(s){
-    const who=holder(s.id);
-    return `<li class="h3-row" data-id="${esc(s.id)}"><i class="h3-grip" aria-hidden="true"></i>
- <a class="h3-row-open" href="${esc(subjectHref(s.id))}">${rowPic(s)}<b>${esc(s.title)}</b>${tagsOf(s)}<span class="h3-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="h3-next">${who?`<em class="h3-held">${esc(who)} is working on it</em>`:esc(nextOf(s))}</span><small>${esc(when(s.changedAt))}</small></a>
+    const who=holder(s.id),keys=canArrange()?' aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"':'';
+    return `<li class="h3-row" data-id="${esc(s.id)}">
+ <a class="h3-row-open" draggable="false"${keys} href="${esc(subjectHref(s.id))}">${rowPic(s)}<b>${esc(s.title)}</b>${tagsOf(s)}<span class="h3-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="h3-next">${who?`<em class="h3-held">${esc(who)} is working on it</em>`:esc(nextOf(s))}</span>${workDate(s.workChangedAt)}</a>
  ${menuBtn(s)}${pinBtn(s)}
 </li>`;
    }
@@ -409,7 +417,7 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
     }).join('');
     const empty=!all.length?`<div class="h3-empty"><p>${archived.length?'Every subject is archived.':'No subjects yet.'}</p><button type="button" class="${CB} h3-btn" data-home-new>${icon('plus')}New subject</button></div>`
      :!gs.length?`<p class="h3-quiet">No subject matches${ui.find?` "${esc(ui.find)}"`:''}${ui.station?' in '+esc(NAME[ui.station]):''}.</p>`:'';
-    const archive=archived.length?`<div class="h3-archived"><button type="button" class="${CQ} h3-q" data-archived aria-expanded="${ui.archived}">${ui.archived?'Hide archived':'Archived'} · ${archived.length}</button>${ui.archived?`<ul class="h3-rows">${archived.sort(byName).map(s=>`<li class="h3-row" data-id="${esc(s.id)}"><a class="h3-row-open" href="${esc(subjectHref(s.id))}">${rowPic(s)}<b>${esc(s.title)}</b>${tagsOf(s)}<span class="h3-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="h3-next"></span><small>${esc(when(s.changedAt))}</small></a><button type="button" class="${CQ} h3-q h3-unarchive" data-unarchive="${esc(s.id)}">Put back</button></li>`).join('')}</ul>`:''}</div>`:'';
+    const archive=archived.length?`<div class="h3-archived"><button type="button" class="${CQ} h3-q" data-archived aria-expanded="${ui.archived}">${ui.archived?'Hide archived':'Archived'} · ${archived.length}</button>${ui.archived?`<ul class="h3-rows">${archived.sort(byName).map(s=>`<li class="h3-row" data-id="${esc(s.id)}"><a class="h3-row-open" href="${esc(subjectHref(s.id))}">${rowPic(s)}<b>${esc(s.title)}</b>${tagsOf(s)}<span class="h3-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="h3-next"></span>${workDate(s.workChangedAt)}</a><button type="button" class="${CQ} h3-q h3-unarchive" data-unarchive="${esc(s.id)}">Put back</button></li>`).join('')}</ul>`:''}</div>`:'';
     sec.innerHTML=`<div class="h3-sec-h"><h2 class="h3-title" id="h3-all-h">Everything</h2><span>${plural(all.length,'subject')}</span>${all.length?`<label class="h3-find"><span class="h3-sr">Find a subject</span>${icon('search')}<input type="search" data-home-find placeholder="Find a subject" value="${esc(ui.find)}" autocomplete="off"></label>`:''}</div>
 ${all.length?`<div class="h3-tools">
  <div class="h3-seg" role="group" aria-label="Group">${GROUPS.map(([k,l])=>`<button type="button" class="h3-nav" data-group-by="${k}" aria-pressed="${ui.group===k}">${l}</button>`).join('')}</div>
@@ -420,12 +428,12 @@ ${all.length?`<div class="h3-tools">
 ${empty}<div class="h3-groups" data-home-groups>${list}</div>
 ${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" class="${CB} h3-btn" data-new-folder>${icon('plus')}New folder</button><span class="h3-quiet">Folders here are the real folders on disk. Drag a folder to change the order, or a subject onto a folder to move it. Tags cut across folders.</span></div>`:''}${archive}`;
     if(!arrange)return;
-    // Drag, and Move up and Move down: subjects inside a folder (rows or covers), and the folders themselves. The new
-    // order is read from the screen at the moment of the press.
+    // Rows use the full drag surface and Alt+arrow. Covers and folders also show move buttons.
+    // The new order is read from the screen at the moment of the move.
     for(const ul of sec.querySelectorAll('.h3-rows[data-group],.h3-covers[data-group]')){
      const g=gs.find(x=>x.key===ul.dataset.group);if(!g)continue;
      const sel=ul.classList.contains('h3-covers')?'.h3-cover':'.h3-row';
-     allStops.push(v2.ui.reorder(ul,{item:sel,label:el=>el.querySelector('b')?.textContent||'Subject',
+     allStops.push(v2.ui.reorder(ul,{item:sel,controls:ui.view==='covers',label:el=>el.querySelector('b')?.textContent||'Subject',
       onMove:()=>{const shown=[...ul.querySelectorAll(':scope>'+sel)].map(x=>x.dataset.id);
        // Those cut off by "Show all" keep their places after the ones shown.
        const rest=inFolder(g.path).map(s=>s.id).filter(id=>!shown.includes(id));
@@ -568,11 +576,32 @@ ${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" cl
     if(t.dataset.askChange){const id=t.dataset.askChange;changing.add(id);paintNeeds();return [...root.querySelectorAll('[data-ask-choice]')].find(b=>b.dataset.askId===id)?.focus();}
    });
    root.addEventListener('input',e=>{if(e.target.matches?.('[data-home-find]')){ui.find=e.target.value;keepFocus(()=>{paintAll();applyCovers();});}});
+   // Keep native drops, drawing the row ourselves so the preview has full contrast and follows the grab point.
+   function previewRow(e,row){
+    const transfer=e.dataTransfer;
+    if(typeof transfer?.setDragImage!=='function')return;
+    const blank=document.createElement('canvas');blank.width=blank.height=1;
+    transfer.setDragImage(blank,0,0);
+    const box=row.getBoundingClientRect(),offsetX=e.clientX-box.left,offsetY=e.clientY-box.top;
+    const preview=document.createElement('div');
+    preview.className='h3-row h3-row-preview';preview.innerHTML=row.innerHTML;
+    preview.setAttribute('aria-hidden','true');preview.inert=true;
+    preview.style.width=box.width+'px';
+    const follow=event=>{preview.style.transform=`translate(${event.clientX-offsetX}px,${event.clientY-offsetY}px)`;};
+    follow(e);root.append(preview);
+    document.addEventListener('dragover',follow,true);
+    dragPreview=()=>{document.removeEventListener('dragover',follow,true);preview.remove();dragPreview=null;};
+   }
    // A subject dragged onto a folder's heading moves there, with Undo.
-   root.addEventListener('dragstart',e=>{dragging=true;const r=e.target.closest?.('.h3-row,.h3-cover');dragId=r&&root.contains(r)?r.dataset.id:null;},true);
-   root.addEventListener('drop',()=>{dragging=false;},true);
-   root.addEventListener('dragend',()=>{dragging=false;dragId=null;root.querySelectorAll('.h3-over').forEach(x=>x.classList.remove('h3-over'));});
-   root.addEventListener('dragover',e=>{const h=e.target.closest?.('[data-drop-folder]');if(!dragId||!h)return;e.preventDefault();root.querySelectorAll('.h3-over').forEach(x=>x!==h&&x.classList.remove('h3-over'));h.classList.add('h3-over');});
+   root.addEventListener('dragstart',e=>{
+    const r=e.target.closest?.('.h3-row,.h3-cover');
+    if(r&&!r.draggable){e.preventDefault();return;}
+    dragging=true;dragId=r?.dataset.id||null;
+    if(r?.matches('.h3-row'))previewRow(e,r);
+   },true);
+   root.addEventListener('drop',()=>{dragging=false;dragPreview?.();},true);
+   root.addEventListener('dragend',()=>{dragging=false;dragId=null;dragPreview?.();root.querySelectorAll('.h3-over').forEach(x=>x.classList.remove('h3-over'));});
+   root.addEventListener('dragover',e=>{const h=e.target.closest?.('[data-drop-folder]');if(!dragId)return;root.querySelectorAll('.h3-over').forEach(x=>x!==h&&x.classList.remove('h3-over'));if(h){e.preventDefault();h.classList.add('h3-over');}});
    root.addEventListener('drop',e=>{const h=e.target.closest?.('[data-drop-folder]');if(!dragId||!h)return;e.preventDefault();const s=find(dragId);dragId=null;h.classList.remove('h3-over');
     let path=[];try{path=JSON.parse(h.closest('.h3-group')?.dataset.path||'[]');}catch{}if(s)void moveTo(s,path);});
    // What an assistant changes shows here without a reload. A photograph or piece changing makes the covers be read again.
@@ -585,7 +614,7 @@ ${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" cl
    // A reset asks for everything to be read again; one that comes while the first reading is still under way is that reading.
    ctx.on({},e=>{if(e?.reset&&(data||failed)&&Date.now()-loadedAt>3000){coversStale=true;bindings=null;unfiledStale=true;soon();}});
    ctx.setAdvanced({section:'home'});
-   ctx.homeStop=()=>{clearTimeout(timer);deskStops.forEach(f=>f());allStops.forEach(f=>f());coverRun++;};
+   ctx.homeStop=()=>{dragPreview?.();clearTimeout(timer);deskStops.forEach(f=>f());allStops.forEach(f=>f());coverRun++;};
    await load();
   },
   unmount(el,ctx){ctx.homeStop?.();void v2.desk.use(null);},
