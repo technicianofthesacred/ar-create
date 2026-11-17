@@ -1,9 +1,6 @@
 /* Version three: Home, in the approved look (design/2026-11-write/NOTES.md, third pass). It is a copy of version two's Home:
-   the same route, the same commands, the same sections in the same order, the same controls and wording. Only the look
-   changes (public/v3/screens/home.css), plus the three changes Adrian approved: a desk card with no cover picture has no
-   blank cover block, the Needs you panel is tighter on a phone, and nothing appears only on hover. Every class here starts
-   with h3-, and every rule in home.css starts with .v3-home.
-   Version two's Home: "Needs you", "On your desk" and "Everything", on the app's real records only.
+   Home shows a quiet entrance to Needs you, On your desk and Everything, on the app's real records only.
+   The full Needs you list has its own route. Every class here starts with h3-, and every rule in home.css starts with .v3-home.
    Where every subject stands (its station, ring, next step, forms, when it last changed) comes from ONE read,
    subjects.standing, and nothing else: no per-subject reads, no list of projects. Where each subject lives (folder,
    tags, pin, archived, hand-set order in its folder, hand-set place on the desk) comes from subject-places, the folder
@@ -25,6 +22,38 @@
  const NAME=Object.fromEntries(STATIONS.map(s=>[s.id,s.name]));
  const plural=(n,one,many=one+'s')=>n+' '+(n===1?one:many);
  const quiet=p=>p.then(v=>v,()=>null);
+ const readNeeds=()=>v2.call('needs-you',{status:'pending'});
+ const readLeases=()=>quiet(v2.call('leases',{}));
+ const needsHref=ask=>v2.href('needs-you',{},ask?{ask}:null);
+ const isRecordingAsk=ask=>['recording-words','recording-check'].includes(ask.scope?.kind);
+ function askLinks(ask){
+  const recording=isRecordingAsk(ask);
+  const links=recording?[
+   {href:ask.recording?.wordsHref||ask.wordsHref,label:'Check words'},
+   {href:ask.recording?.transcriptHref||ask.transcriptHref,label:'Check passages'},
+  ].filter(link=>link.href):[];
+  if(!links.length&&ask.link)links.push({href:ask.link.href,label:recording?'Go through them':ask.link.label||'Open'});
+  return links.map(link=>({
+   ...link,href:typeof link.href==='string'&&link.href.startsWith('#')?'/document-study/index.html'+link.href:link.href,
+  })).filter(link=>typeof link.href==='string'&&/^\/(?![/\\])/.test(link.href));
+ }
+ function askTile(ask){
+  const links=askLinks(ask);
+  const direct=ask.status==='open'&&links.length===1&&
+   (isRecordingAsk(ask)||(ask.choices||[]).every(choice=>choice==='Done'));
+  const href=direct?links[0].href:needsHref(ask.id);
+  const question=String(ask.question||'').trim();
+  const contextualLabel=direct&&links[0].label!=='Open'?links[0].label.replace(/^Open the /i,'Open '):'';
+  let label=question.split(/[?!.](?:\s|$)/,1)[0],symbol='ask';
+  if(isRecordingAsk(ask)){label=contextualLabel||'Check recording';symbol='mic';}
+  else if(/\b(?:what (?:month|year|date)|when did you|(?:confirm|check|verify) (?:the )?(?:visit )?date)\b/i.test(question)){label='Visit date';symbol='calendar';}
+  else if(/\b(?:introduce|introduction)\b/i.test(question)){label='Introduction';symbol='pen';}
+  else if(contextualLabel){label=contextualLabel;symbol='out';}
+  const context=ask.status==='defaulted'?'Applied by default':ask.about;
+  const detail=context?.split(' · ').at(-1);
+  const accessibleLabel=[label===question?'':label,question,context].filter(Boolean).join(' · ');
+  return `<li><a class="h3-needs-link" data-needs-open="${esc(ask.id)}" href="${esc(href)}" title="${esc(question)}" aria-label="${esc(accessibleLabel)}">${icon(symbol)}<span class="h3-needs-copy"><span>${esc(label)}</span>${detail?`<small>${esc(detail)}</small>`:''}</span></a></li>`;
+ }
  const fkey=path=>(path||[]).join('\u0001');
  const lower=s=>String(s||'').normalize('NFKC').trim().toLocaleLowerCase();
  const num=v=>typeof v==='number'&&Number.isFinite(v);
@@ -53,7 +82,7 @@
   async list(){
    const [summary,places,folders,needs,leases]=await Promise.all([
     v2.call('subjects.standing',{}),v2.call('subject-places',{}),v2.call('subject-places.folders.get',{}),
-    quiet(v2.call('needs-you',{status:'pending'})),quiet(v2.call('leases',{}))]);
+    quiet(readNeeds()),readLeases()]);
    const placeOf=new Map((places?.places||[]).map(p=>[p.parentStudyId,p]));
    const unplaced=id=>({parentStudyId:id,folder:[],tags:[],pinnedAt:null,archived:false,order:null,deskOrder:null,revision:0,saved:false});
    const subjects=(summary?.subjects||[]).filter(x=>x&&typeof x.id==='string'&&x.id).map(x=>{
@@ -87,23 +116,22 @@
  const V2Client=W.V2Client;
  const uuid=()=>{try{return crypto.randomUUID();}catch{return V2Client?.uuid?.()||String(Date.now());}};
  // The controls a repaint must hand focus back to, by what they are and which subject they belong to.
- const FOCUS_KEYS=['data-pin','data-v2-up','data-v2-down','data-row-menu','data-group-by','data-view','data-station','data-arrange','data-archived','data-show-all','data-home-find','data-file-in','data-file-more','data-ask-change','data-ask-choice','data-unarchive'];
+ const FOCUS_KEYS=['data-pin','data-v2-up','data-v2-down','data-row-menu','data-group-by','data-view','data-station','data-arrange','data-archived','data-show-all','data-home-find','data-file-in','data-file-more','data-needs-open','data-unarchive'];
 
  /* ======================= the screen ======================= */
  v2.screen({id:'home',title:'Home',route:'',
   render:()=>`<div class="v2-page v3-home" data-home>
  <header><div><h1 class="h3-title">Home</h1><p class="h3-quiet">${esc(today())}</p></div><button type="button" class="${CP} h3-pri h3-new" data-home-new>${icon('plus')}New subject</button></header>
- <div class="h3-needs-slot" data-home-needs></div>
+ <div class="h3-needs-slot" data-home-needs hidden></div>
  <section class="h3-desk" data-home-desk aria-labelledby="h3-desk-h" hidden></section>
  <section class="h3-file" data-home-file aria-labelledby="h3-file-h" hidden></section>
  <section class="h3-all" data-home-all aria-labelledby="h3-all-h"><div class="h3-sec-h"><h2 class="h3-title" id="h3-all-h">Everything</h2></div><p class="h3-quiet" data-home-loading>Reading your subjects…</p></section>
 </div>`,
   async mount(el,ctx){
    const root=el.querySelector('[data-home]');if(!root)return;
-   const ui={...prefs(),station:null,find:'',open:new Set(),archived:false,arrange:false,allAsks:false,allFile:false};
+   const ui={...prefs(),station:null,find:'',open:new Set(),archived:false,arrange:false,allFile:false};
    let data=null,failed=null,loading=null,again=false,loadedAt=0,timer=0,dragId=null,dragging=false,deskStops=[],allStops=[],repaintWaiting=false;
-   // Needs you: a question answered here stays in its place, marked answered, until he leaves the page.
-   const answeredHere=new Map(),changing=new Set(),askOrder=[],askBook=new Map(),lookRoles=new Map(),lookNames=new Map();
+   const lookRoles=new Map(),lookNames=new Map();
    // Covers of the desk's cards: subject id to an address, or '' when it has no chosen photograph. Read after first paint.
    // failedCovers: subjects whose cover read did not answer during this visit; they are not asked again (as in version two),
    // their held block is dropped, and the list on the device is left as it was for the next visit.
@@ -313,7 +341,7 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
    function paint(){
     if(ctx.signal.aborted)return;
     if(failed&&!data){
-     root.querySelector('[data-home-needs]').innerHTML='';root.querySelector('[data-home-desk]').hidden=true;
+     root.querySelector('[data-home-needs]').hidden=true;root.querySelector('[data-home-desk]').hidden=true;
      root.querySelector('[data-home-all]').innerHTML=`<div class="h3-sec-h"><h2 class="h3-title" id="h3-all-h">Everything</h2></div><div class="h3-empty" data-home-error><p>${esc(failed.message||'The app could not be reached. Nothing was changed.')}</p><button type="button" class="${CB} h3-btn" data-home-retry>Try again</button></div>`;
      return;
     }
@@ -322,36 +350,19 @@ ${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-file-more>Show $
     keepFocus(()=>{paintNeeds();paintDesk();paintFile();paintAll();applyCovers();});
    }
 
-   /** The questions waiting, in the order they first appeared. One answered here keeps its place; one that is gone from
-       the list because something else settled it drops out. */
-   function syncAsks(){
-    const fresh=new Map((data.needs?.asks||[]).filter(a=>a.status==='open'||a.status==='defaulted').map(a=>[a.id,a]));
-    for(const [id,a] of fresh){askBook.set(id,a);if(!askOrder.includes(id))askOrder.push(id);}
-    for(let i=askOrder.length-1;i>=0;i--){const id=askOrder[i];if(!fresh.has(id)&&!answeredHere.has(id)&&!changing.has(id)){askOrder.splice(i,1);askBook.delete(id);}}
-   }
    function paintNeeds(){
-    const slot=root.querySelector('[data-home-needs]'),human=v2.isHuman();syncAsks();
-    const shown=askOrder.map(id=>askBook.get(id)).filter(Boolean);
-    const working=new Map();for(const l of data.leases||[])if(String(l.actor||'').startsWith('agent:')&&Date.parse(l.expiresAt||0)>Date.now()){const n=v2.actorName(l.actor);working.set(n,(working.get(n)||0)+1);}
-    const steer=shown.filter(a=>a.status==='open'&&a.band==='steer'&&a.default&&!answeredHere.has(a.id)).length;
-    const carrying=([...working].map(([n,c])=>`${n} is carrying on with ${plural(c,'thing')} by itself.`).join(' ')+(steer?` ${plural(steer,'question')} will take ${steer===1?'its':'their'} default unless you choose.`:'')).trim();
-    const off=human?'':' disabled title="Only Adrian answers these."';
-    if(!shown.length){slot.innerHTML=carrying?`<p class="h3-quiet h3-carry">${esc(carrying)}</p>`:'';return;}
-    const cut=ui.allAsks?shown.length:3,more=shown.length-cut;
-    const rows=shown.slice(0,cut).map(a=>{
-     const done=answeredHere.get(a.id)||(a.status==='defaulted'?{choice:a.resolution?.choice||a.default,auto:true}:null);
-     const about=a.about?`<small class="h3-about">${esc(a.about)}</small>`:'';
-     if(done&&!changing.has(a.id))return `<li class="ok" data-ask="${esc(a.id)}">${icon('check')}<p><span class="h3-state">${done.auto?'Applied by default':'Answered'}</span><b>${esc(a.question)}</b>${about}<span class="h3-said">${esc(done.choice||done.text||'')}</span></p><span class="h3-acts"><button type="button" class="${CQ} h3-q" data-ask-change="${esc(a.id)}"${off}>Change it</button></span></li>`;
-     const recording=['recording-words','recording-check'].includes(a.scope?.kind);
-     let href=recording?(a.recording?.wordsHref||a.wordsHref||a.link?.href):a.link?.href;
-     if(typeof href==='string'&&href.startsWith('#'))href='/document-study/index.html'+href;
-     const link=typeof href==='string'&&/^\/(?!\/)/.test(href)?`<a class="h3-act" href="${esc(href)}">${esc(recording?'Go through them':a.link?.label||'Open')}${icon('right')}</a>`:'';
-     const current=done?.choice;
-     const choices=recording?'':(a.choices||[]).map(c=>`<button type="button" class="${CB} h3-btn" data-ask-id="${esc(a.id)}" data-ask-choice="${esc(c)}"${current===c?' aria-pressed="true"':''}${off}>${esc(c)}${a.default===c&&!current?'<small>default</small>':''}</button>`).join('');
-     const due=a.band==='steer'&&a.applyAt&&a.status==='open'?`<span class="h3-due">Takes its default ${esc(dueAt(a.applyAt))} unless you choose.</span>`:'';
-     return `<li data-ask="${esc(a.id)}"><p><b>${esc(a.question)}</b>${about}${due}</p>${choices||link?`<span class="h3-acts">${choices}${link}</span>`:''}</li>`;
-    }).join('');
-    slot.innerHTML=`<section class="h3-needs${shown.some(a=>!(answeredHere.get(a.id)||a.status==='defaulted')||changing.has(a.id))?' h3-asking':''}" aria-labelledby="h3-needs-h"><h2 class="h3-label" id="h3-needs-h"><i class="h3-pip" aria-hidden="true"></i>Needs you</h2><ul>${rows}</ul>${more>0?`<button type="button" class="${CQ} h3-q h3-more" data-all-asks>Show all ${shown.length}${icon('chev')}</button>`:''}${carrying?`<p class="h3-quiet">${esc(carrying)}</p>`:''}${human?'':'<p class="h3-quiet h3-reason">Only Adrian answers these.</p>'}</section>`;
+    const slot=root.querySelector('[data-home-needs]');
+    const asks=data.needs?.asks;
+    const carrying=asks?.length===0?carryingOn(data.leases):'';
+    slot.hidden=asks?.length===0&&!carrying;
+    if(!asks?.length){
+     slot.innerHTML=asks?(carrying?`<p class="h3-quiet">${esc(carrying)}</p>`:''):
+      `<a class="h3-needs-link" data-needs-open href="${esc(needsHref())}"><span>Open Needs you</span>${icon('chev')}</a>`;
+     return;
+    }
+    const tiles=asks.slice(0,3).map(askTile).join('');
+    const all=asks.length>3?`<a class="h3-needs-all" data-needs-open href="${esc(needsHref())}">All ${asks.length}${icon('chev')}</a>`:'';
+    slot.innerHTML=`<section class="h3-needs-shelf" aria-labelledby="h3-needs-title"><h2 class="h3-needs-title" id="h3-needs-title">Needs you:</h2><ul class="h3-needs-preview">${tiles}</ul>${all}</section>`;
    }
 
    function card(s){
@@ -504,14 +515,6 @@ ${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" cl
     try{await savePlace(s,on?{pinned:true,...(last>=0?{deskOrder:last+1}:{})}:{pinned:false});repaint();void readCovers();v2.ui.say(on?`"${s.title}" is on your desk.`:`"${s.title}" is off your desk.`);soon();}
     catch(error){v2.ui.say(error.message,{tone:'bad'});}
    }
-   async function answer(id,choice){
-    if(!askBook.has(id))return;
-    for(const b of root.querySelectorAll('[data-ask] button'))if(b.closest('[data-ask]').dataset.ask===id)b.disabled=true;
-    try{const saved=await v2.call('needs-you.answer',{id,choice});answeredHere.set(id,{choice:saved?.resolution?.choice||choice});changing.delete(id);
-     if(saved?.id===id)askBook.set(id,saved);paintNeeds();
-     [...root.querySelectorAll('[data-ask-change]')].find(b=>b.dataset.askChange===id)?.focus({preventScroll:true});v2.needs.refresh();}
-    catch(error){v2.ui.say(error.message,{tone:'bad'});paintNeeds();}
-   }
    function form(markup){const f=document.createElement('form');f.className='v3-home h3-form';f.innerHTML=markup;return f;}
    const formActs=label=>`<div class="h3-form-acts"><button type="button" class="${CQ} h3-q" data-v2-close>Cancel</button><button type="submit" class="${CP} h3-pri h3-primary">${esc(label)}</button></div>`;
    function newSubject(){
@@ -556,16 +559,12 @@ ${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" cl
     if(t.dataset.view){ui.view=t.dataset.view;keepPrefs(ui);return keepFocus(()=>{paintAll();applyCovers();});}
     if(t.dataset.station){const id=t.dataset.station;ui.station=ui.station===id?null:id;return keepFocus(()=>{paintAll();applyCovers();});}
     if(t.dataset.showAll){ui.open.add(t.dataset.showAll);return paintAll();}
-    if(t.hasAttribute('data-all-asks')){ui.allAsks=true;return paintNeeds();}
     if(t.hasAttribute('data-arrange')){ui.arrange=!ui.arrange;return keepFocus(paintAll);}
     if(t.hasAttribute('data-archived')){ui.archived=!ui.archived;return keepFocus(paintAll);}
     if(t.hasAttribute('data-new-folder'))return newFolder();
     if(t.dataset.pin){const s=find(t.dataset.pin);if(s)void togglePin(s);return;}
     if(t.dataset.rowMenu){const s=find(t.dataset.rowMenu);if(s)rowMenu(s);return;}
     if(t.dataset.unarchive){const s=find(t.dataset.unarchive);if(s)void setArchived(s,false);return;}
-    if(t.dataset.askChoice)return void answer(t.dataset.askId,t.dataset.askChoice);
-    // Change it: the row stays where it is and offers its choices again. A later answer replaces the earlier one.
-    if(t.dataset.askChange){const id=t.dataset.askChange;changing.add(id);paintNeeds();return [...root.querySelectorAll('[data-ask-choice]')].find(b=>b.dataset.askId===id)?.focus();}
    });
    root.addEventListener('input',e=>{if(e.target.matches?.('[data-home-find]')){ui.find=e.target.value;keepFocus(()=>{paintAll();applyCovers();});}});
    // A subject dragged onto a folder's heading moves there, with Undo.
@@ -589,5 +588,107 @@ ${all.length&&ui.group==='folder'?`<div class="h3-foot"><button type="button" cl
    await load();
   },
   unmount(el,ctx){ctx.homeStop?.();void v2.desk.use(null);},
+ });
+
+ function carryingOn(leases){
+  const working=new Map();
+  for(const l of leases||[])if(String(l.actor||'').startsWith('agent:')&&Date.parse(l.expiresAt||0)>Date.now()){
+   const name=v2.actorName(l.actor);working.set(name,(working.get(name)||0)+1);
+  }
+  return [...working].map(([name,count])=>`${name} is carrying on with ${plural(count,'thing')} by itself.`).join(' ');
+ }
+
+ v2.screen({id:'needs',title:'Needs you',route:'needs-you',
+  render:()=>`<div class="v2-page v3-home h3-review"><header><div><a class="h3-back" href="${esc(v2.href())}">${icon('back')}Home</a><h1 class="h3-title" tabindex="-1">Needs you</h1></div></header><div class="h3-needs" data-needs-list><p class="h3-quiet" role="status">Reading what needs you…</p></div></div>`,
+  async mount(el,ctx){
+   const root=el.querySelector('.h3-review'),slot=root.querySelector('[data-needs-list]');
+   const answeredHere=new Map(),changing=new Set(),saving=new Set(),askOrder=[],askBook=new Map();
+   let leases=[],failed=false,loading=false,again=false;
+   let requestedAsk=ctx.query.ask;
+   /** The questions waiting, in the order they first appeared. One answered here keeps its place; one that is gone from
+       the list because something else settled it drops out. */
+   function syncAsks(needs){
+    const fresh=new Map((needs.asks||[]).filter(a=>a.status==='open'||a.status==='defaulted').map(a=>[a.id,a]));
+    for(const [id,a] of fresh){askBook.set(id,a);if(!askOrder.includes(id))askOrder.push(id);}
+    for(let i=askOrder.length-1;i>=0;i--){const id=askOrder[i];if(!fresh.has(id)&&!answeredHere.has(id)&&!changing.has(id)&&!saving.has(id)){askOrder.splice(i,1);askBook.delete(id);}}
+   }
+   function paintNeeds(){
+    const human=v2.isHuman(),shown=askOrder.map(id=>askBook.get(id)).filter(Boolean);
+    const steer=shown.filter(a=>a.status==='open'&&a.band==='steer'&&a.default&&!answeredHere.has(a.id)).length;
+    const carrying=[carryingOn(leases),steer?`${plural(steer,'question')} will take ${steer===1?'its':'their'} default unless you choose.`:''].filter(Boolean).join(' ');
+    const rows=shown.map(a=>{
+     const off=human?(saving.has(a.id)?' disabled':''):' disabled title="Only Adrian answers these."';
+     const done=answeredHere.get(a.id)||(a.status==='defaulted'?{choice:a.resolution?.choice||a.default,auto:true}:null);
+     const about=a.about?`<small class="h3-about">${esc(a.about)}</small>`:'';
+     if(done&&!changing.has(a.id))return `<li class="ok" data-ask="${esc(a.id)}" tabindex="-1">${icon('check')}<p><span class="h3-state">${done.auto?'Applied by default':'Answered'}</span><b>${esc(a.question)}</b>${about}<span class="h3-said">${esc(done.choice||done.text||'')}</span></p><span class="h3-acts"><button type="button" class="${CQ} h3-q" data-ask-change="${esc(a.id)}"${off}>Change it</button></span></li>`;
+     const recording=isRecordingAsk(a);
+     const link=askLinks(a).map(({href,label})=>`<a class="h3-act" href="${esc(href)}">${esc(label)}${icon('right')}</a>`).join('');
+     const current=done?.choice;
+     const choices=recording?'':(a.choices||[]).map(c=>`<button type="button" class="${CB} h3-btn" data-ask-id="${esc(a.id)}" data-ask-choice="${esc(c)}"${current===c?' aria-pressed="true"':''}${off}>${esc(c)}${a.default===c&&!current?'<small>default</small>':''}</button>`).join('');
+     const due=a.band==='steer'&&a.applyAt&&a.status==='open'?`<span class="h3-due">Takes its default ${esc(dueAt(a.applyAt))} unless you choose.</span>`:'';
+     return `<li data-ask="${esc(a.id)}" tabindex="-1"><p><b>${esc(a.question)}</b>${about}${due}</p>${choices||link?`<span class="h3-acts">${choices}${link}</span>`:''}</li>`;
+    }).join('');
+    const active=document.activeElement,focused=slot.contains(active)?active:null;
+    slot.innerHTML=`${failed?`<div><p class="h3-quiet" role="status">The list could not be read.</p><button type="button" class="${CB} h3-btn" data-ask-retry>Try again</button></div>`:''}${rows?`<ul>${rows}</ul>`:(failed?'':'<p class="h3-quiet">Nothing needs you right now.</p>')}${carrying?`<p class="h3-quiet">${esc(carrying)}</p>`:''}${rows&&!human?'<p class="h3-quiet h3-reason">Only Adrian answers these.</p>':''}`;
+    if(focused?.isConnected===false){
+     const id=focused.closest('[data-ask]')?.dataset.ask;
+     const next=[...slot.querySelectorAll('[data-ask] button:not(:disabled),[data-ask] a')].find(b=>
+      b.closest('[data-ask]').dataset.ask===id&&b.dataset.askChoice===focused.dataset.askChoice&&
+      b.dataset.askChange===focused.dataset.askChange&&b.getAttribute('href')===focused.getAttribute('href'));
+     const row=focused.matches('[data-ask]')?findAsk(id):null;
+     (next||row||root.querySelector('h1')).focus({preventScroll:true});
+    }
+   }
+   function findAsk(id){
+    return [...slot.querySelectorAll('[data-ask]')].find(row=>row.dataset.ask===id);
+   }
+   async function answer(id,choice){
+    if(!v2.isHuman()||!askBook.has(id)||saving.has(id))return;
+    saving.add(id);
+    for(const b of root.querySelectorAll('[data-ask] button'))if(b.closest('[data-ask]').dataset.ask===id)b.disabled=true;
+    try{const saved=await v2.call('needs-you.answer',{id,choice});answeredHere.set(id,{choice:saved?.resolution?.choice||choice});changing.delete(id);
+     if(ctx.signal.aborted)return;
+     if(saved?.id===id)askBook.set(id,saved);saving.delete(id);paintNeeds();
+     [...root.querySelectorAll('[data-ask-change]')].find(b=>b.dataset.askChange===id)?.focus({preventScroll:true});v2.needs.refresh();}
+    catch(error){if(!ctx.signal.aborted)v2.ui.say(error.message,{tone:'bad'});}
+    finally{saving.delete(id);if(!ctx.signal.aborted)for(const b of root.querySelectorAll('[data-ask] button'))if(b.closest('[data-ask]').dataset.ask===id)b.disabled=false;}
+   }
+
+   async function load(){
+    if(loading){again=true;return;}
+    loading=true;
+    try{
+     const [needs,work]=await Promise.all([readNeeds(),readLeases()]);
+     if(ctx.signal.aborted)return;
+     syncAsks(needs);leases=work?.leases||[];failed=false;
+    }catch{failed=true;}
+    finally{loading=false;}
+    if(ctx.signal.aborted)return;
+    paintNeeds();
+    if(requestedAsk&&!failed){
+     const row=findAsk(requestedAsk);
+     requestedAsk=null;
+     if(row&&(document.activeElement===el||document.activeElement===document.body)){
+      row.focus({preventScroll:true});
+      row.scrollIntoView?.({block:'nearest'});
+     }
+    }
+    if(again){again=false;await load();}
+   }
+   root.addEventListener('click',e=>{
+    const t=e.target.closest?.('button');
+    if(!t||t.disabled)return;
+    if(t.hasAttribute('data-ask-retry')){t.disabled=true;void load();}
+    if(t.dataset.askChoice)return void answer(t.dataset.askId,t.dataset.askChoice);
+    if(t.dataset.askChange&&v2.isHuman()){
+     const id=t.dataset.askChange;changing.add(id);paintNeeds();
+     [...root.querySelectorAll('[data-ask-choice]')].find(b=>b.dataset.askId===id)?.focus();
+    }
+   });
+   ctx.on({kinds:['needs-you*','lease*']},e=>{if(!e?.reset)void load();});
+   ctx.on({},e=>{if(e?.reset&&!loading)void load();});
+   ctx.setAdvanced({section:'home'});
+   await load();
+  }
  });
 })(window.v2);

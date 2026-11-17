@@ -26,6 +26,8 @@ Except the Magazine check, each of these runs in a fresh worktree against `npm r
 
 ## Needs Adrian, or its own agreed scope
 
+- [ ] Needs you on Home (C02/C05). A small heading sits above compact tiles with icons and short labels. The tiles wrap when space is tight. A tile opens the existing review directly where possible, or focuses the question that needs an answer. Check compact height and readable labels on desktop and phone in both themes.
+
 - [ ] Before asking Adrian about angle and title, marked wording, Carousel words and photos, or translations, re-read those records; old counts may be stale. Agents may prepare alternatives; he accepts.
 - [ ] Review the saved footage-selection handoff before connecting chosen ranges to Media and Arrange. One calibration example does not approve a whole batch of footage.
 - [ ] Connecting more agent entry points or remote approval to his real data needs Adrian to ask for it. The earlier Claude and ChatGPT test used invented data and is closed.
