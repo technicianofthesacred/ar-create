@@ -331,7 +331,7 @@ dialog.v2-sheet .wr-asides .wr-pr{margin:0;font:400 var(--v2-t15)/1.6 var(--v2-s
 }
 
 .wr .wr-questions{margin:0 0 24px;padding:14px 0;border-block:1px solid var(--c3-line2);overflow-wrap:anywhere}
-.wr .wr-questions h2{margin:0;font:600 var(--v2-t16)/1.4 var(--ar-ui);color:var(--ink)}
+.wr .wr-questions h2{margin:0;font:600 var(--v2-t15)/1.4 var(--ar-ui);color:var(--ink)}
 .wr .wr-question{display:grid;gap:5px;margin:12px 0 0;min-width:0}
 .wr .wr-question h3,.wr .wr-question p{margin:0;font-size:var(--v2-t14)}
 .wr .wr-question p:empty{display:none}
