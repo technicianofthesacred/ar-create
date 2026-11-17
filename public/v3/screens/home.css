@@ -1,10 +1,8 @@
 /* Version three: Home, in the approved look (design/2026-11-write/NOTES.md, the third pass). Every rule starts with
    .v3-home, so nothing here reaches another screen; every class is h3- so it cannot meet version two's Home.
    The system, in short: the interface face only; 14 (everything ordinary) and 13 (quiet details); weights 400 and 600;
-   three text tones (--ink main, --dim quiet, --warm the accent, kept for what needs him: the Needs you dot and label and
-   the border of the panel while it asks him); corners 6 for controls and 8 for surfaces, only dots and the progress
-   ring are round; the page is the desk, and the Needs you panel, each desk card and each folder group are paper with a
-   hairline, 8 apart; three kinds of button, all 32 tall (44 on a phone where version two's were): main (filled dark, one
+   two text tones (--ink main, --dim quiet); corners 6 for controls and 8 for surfaces, only dots and the progress
+   ring are round; each desk card and each folder group is paper with a hairline, 8 apart; three kinds of button, all 32 tall (44 on a phone where version two's were): main (filled dark, one
    per item), ordinary (quiet grey fill), quiet text (no fill); navigation is plain text with a line under the chosen one;
    nothing changes size or place on hover or focus. Colours are the app's own tokens (c3-theme.css) and the frame's (--v3-fill, --v3-fill2, --v3-edge). */
 
@@ -50,7 +48,7 @@
  .v3-home .h3-find input{border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;min-height:0!important;height:100%!important;font:400 14px/20px var(--ar-ui)!important;color:var(--ink)!important;outline:0!important}
  .v3-home .h3-find input::placeholder{color:var(--dim);opacity:1}
  /* "Show all" lines its words up with the text above it (its padding is 12) */
- .v3-home .h3-needs>button.h3-more,.v3-home .h3-group>button.h3-more{margin-left:-12px!important}
+ .v3-home .h3-group>button.h3-more{margin-left:-12px!important}
  /* the sheets Home opens (New subject, New folder, Move to a folder, File in a subject) sit outside the page, in a dialog */
  .v3-home.h3-form :is(input,select){box-sizing:border-box!important;width:100%!important;min-width:0!important;height:32px!important;min-height:32px!important;padding:0 10px!important;border:1px solid var(--v3-edge)!important;border-radius:6px!important;background:var(--paper)!important;color:var(--ink)!important;box-shadow:none!important;font:400 14px/1.3 var(--ar-ui)!important}
  .v3-home.h3-form button[type="submit"]{background:var(--ink)!important;color:var(--paper)!important}
@@ -62,8 +60,6 @@
   .v3-home .h3-acts button{height:auto!important;min-height:44px!important}
   .v3-home button.h3-ic:not(.coss),.v3-home .v2-move button:not(.coss){width:36px!important;height:44px!important;min-height:44px!important}
   .v3-home .h3-card .v2-move button:not(.coss){width:32px!important}
-  .v3-home .h3-needs>button.h3-more{margin-top:-8px!important;margin-bottom:-8px!important}
-  .v3-home .h3-needs>button.h3-more:last-child{margin-bottom:-12px!important}
   .v3-home.h3-form :is(input,select){height:44px!important;min-height:44px!important}
  }
 }
@@ -90,25 +86,36 @@
 .v3-home .v2-drop{box-shadow:inset 0 2px 0 var(--ink)}
 .v3-home .h3-card.v2-drop{box-shadow:inset 3px 0 0 var(--ink)}
 
-/* ---------- Needs you: one piece of paper, with the accent border while it asks him ---------- */
-.v3-home .h3-needs{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
-.v3-home .h3-needs.h3-asking{border-color:var(--warm)}
-.v3-home .h3-label{display:flex;align-items:center;gap:8px;margin:0;font:600 14px/1.4 var(--ar-ui);color:var(--warm)}
-.v3-home .h3-pip{display:block;width:8px;height:8px;border-radius:50%;background:var(--warm);flex:none}
+/* ---------- Needs you: a small label above tiles that wrap when needed ---------- */
+.v3-home .h3-needs-slot{max-inline-size:720px}
+.v3-home .h3-needs-shelf{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 8px}
+.v3-home .h3-needs-title{margin:0;font:400 13px/1.4 var(--ar-ui);letter-spacing:0;color:var(--dim);white-space:nowrap}
+.v3-home .h3-needs-preview{grid-row:2;grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;max-inline-size:636px;margin:0;padding:0;list-style:none;min-width:0}
+.v3-home .h3-needs-preview li{flex:1 1 104px;min-width:0;max-inline-size:208px}
+.v3-home .h3-needs-link{display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 8px;box-sizing:border-box;border-radius:6px;background:var(--v3-fill);color:var(--ink);font:400 13px/1.25 var(--ar-ui)}
+.v3-home .h3-needs-link:hover{background:var(--v3-fill2)}
+.v3-home .h3-needs-link .v2-ic{color:var(--dim)}
+.v3-home .h3-needs-copy{min-width:0}
+.v3-home .h3-needs-copy>*{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v3-home .h3-needs-copy small{color:var(--dim);font:400 13px/1.25 var(--ar-ui)}
+.v3-home .h3-needs-all{display:inline-flex;align-items:center;justify-content:flex-end;gap:4px;min-height:24px;color:var(--dim);white-space:nowrap;font:400 13px/1.25 var(--ar-ui)}
+.v3-home .h3-needs-all:hover{color:var(--ink);text-decoration:underline}
+.v3-home.h3-review>header,.v3-home .h3-needs{max-inline-size:720px}
+.v3-home .h3-back{display:inline-flex;align-items:center;gap:4px;min-height:32px;margin-bottom:8px;color:var(--dim);font:400 13px/1.4 var(--ar-ui)}
+.v3-home .h3-back:hover{color:var(--ink);text-decoration:underline}
+.v3-home .h3-needs{display:grid;gap:12px}
 .v3-home .h3-needs ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr)}
-.v3-home .h3-needs li{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:8px 0;min-width:0}
+.v3-home .h3-needs li{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:12px 0;min-width:0;scroll-margin-top:64px}
 .v3-home .h3-needs li:first-child{padding-top:0}
 .v3-home .h3-needs li:last-child{padding-bottom:0}
 .v3-home .h3-needs li+li{border-top:1px solid var(--line)}
 .v3-home .h3-needs li>p{flex:1 1 240px;min-width:0;margin:0;overflow-wrap:anywhere}
-.v3-home .h3-needs li b{font-weight:600}
+.v3-home .h3-needs li b{font-weight:400}
 .v3-home .h3-about,.v3-home .h3-state,.v3-home .h3-due{display:block;margin:0;font:400 13px/1.45 var(--ar-ui);color:var(--dim)}
 .v3-home .h3-said{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:8px;background:var(--v3-fill);color:var(--ink);font:400 14px/1.4 var(--ar-ui);overflow-wrap:anywhere}
 .v3-home .h3-needs li.ok>.v2-ic{color:var(--dim)}
 .v3-home .h3-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0;max-width:100%}
-.v3-home .h3-needs>.h3-more{align-self:flex-start}
 .v3-home .h3-needs>.h3-quiet{margin:0}
-.v3-home .h3-carry{margin:0}
 
 /* ---------- On your desk: each card is paper; with no cover picture it is its name, its station and its next step ---------- */
 .v3-home .h3-desk{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
@@ -209,7 +216,10 @@
 }
 @media (max-width:850px){
  .v3-home.v2-page{gap:24px}
- /* the Needs you panel is tight: the same 12 inside and 8 between, the question over its answers, no empty gap above Show all */
+ .v3-home .h3-back,.v3-home .h3-needs a.h3-act{min-height:44px}
+ .v3-home .h3-needs-link{display:grid;grid-template-columns:auto minmax(0,1fr);align-content:center;column-gap:4px;row-gap:0;padding-inline:6px}
+ .v3-home .h3-needs-copy{display:contents}
+ .v3-home .h3-needs-copy small{grid-column:1/-1}
  .v3-home .h3-needs li>p,.v3-home .h3-needs li>.h3-acts{flex-basis:100%}
  .v3-home .h3-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
  .v3-home .h3-card-next{min-height:44px;padding:5px 4px 5px 8px;gap:4px}

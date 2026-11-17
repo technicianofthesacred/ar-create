@@ -14,7 +14,7 @@ const require=createRequire(new URL('../runtime/package.json',import.meta.url)),
 const repo=path.resolve(import.meta.dirname,'..'),v3dir=path.join(repo,'public/v3'),v2dir=path.join(repo,'public/v2');
 const read=file=>fs.readFileSync(path.join(repo,file),'utf8');
 const SCREENS=['home','subject','slides','looks','research','write','read','check'];
-const ROUTES={home:'','subject':'subject/:id',slides:'slides/:id',looks:'looks',research:'research','research-group':'research/group/:id','research-topic':'research/topic/:id',write:'write/:id',read:'read/:id',check:'check/:id'};
+const ROUTES={home:'',needs:'needs-you','subject':'subject/:id',slides:'slides/:id',looks:'looks',research:'research','research-group':'research/group/:id','research-topic':'research/topic/:id',write:'write/:id',read:'read/:id',check:'check/:id'};
 const scriptsOf=html=>[...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1]);
 const stylesOf=html=>[...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(m=>m[1]);
 const fileOf=(src,dir)=>src.startsWith('/')?path.join(repo,'public',src):path.join(dir,src);

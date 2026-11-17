@@ -26,8 +26,8 @@
   const s=String(q);return WORKSPACE+(s?'?'+s:'');
  }
  /** The same place in version two: both fronts share the routes, so the subject, the piece and the section (write, read,
-     check, slides...) carry as they are. The assistant's name carries too. */
- function versionTwo(){const here=String(root.location.hash||'');return VERSION_TWO+actorQuery()+(here&&here!=='#'&&here!=='#/'?here:'');}
+     check, slides...) carry as they are. Version two still shows its Needs you list on Home. */
+ function versionTwo(){const here=String(root.location.hash||'');return VERSION_TWO+actorQuery()+(here&&here!=='#'&&here!=='#/'&&active?.screen.route!=='needs-you'?here:'');}
 
  // Every hand-off to the existing workspace names the address he is leaving, so its way back returns there (the
  // workspace reads ?v2from=; both fronts share the routes). Added as the link is followed, never to advanced(). The
@@ -148,7 +148,7 @@
  <nav class="v3-desk" data-v2-desk aria-label="On your desk" hidden></nav>
  <span class="v3-grow"></span>
  <button type="button" class="v3-wide ${coss({variant:'ghost',size:'sm'})}" data-v2-ask aria-label="Find" title="Find a subject, or words in the Library">${icon('search')}<kbd class="pointer-events-none inline-flex h-5 min-w-5 select-none items-center justify-center gap-1 rounded-[.25rem] bg-muted px-1 font-medium font-sans text-muted-foreground text-xs [&_svg:not([class*='size-'])]:size-3">⌘K</kbd></button>
- <a class="v3-wide v3-needs ${coss({variant:'ghost',size:'sm'})}" data-v2-needs href="#/" hidden><i aria-hidden="true"></i><span>Needs you · <b data-v2-needs-count>0</b></span></a>
+ <a class="v3-wide v3-needs ${coss({variant:'ghost',size:'sm'})}" data-v2-needs href="#/needs-you" hidden><i aria-hidden="true"></i><span>Needs you · <b data-v2-needs-count>0</b></span></a>
  <button type="button" class="v3-wide ${coss({variant:'ghost',size:'sm'})}" data-v2-capture>${icon('plus')}<span>Capture</span></button>
  <button type="button" class="${coss({variant:'ghost',size:'icon-sm'})}" data-v2-theme aria-label="Switch theme">${icon('sun')}</button>
  <a class="v3-other ${coss({variant:'ghost',size:'sm'})}" data-v3-two href="${esc(versionTwo())}" title="The same place in version two">Version two</a>
@@ -162,7 +162,7 @@
  <a class="v3-pq" href="#/" data-v3-place="home">${icon('home')}<span>Home</span></a>
  <a class="v3-pq" href="#/research" data-v3-place="research">${icon('search')}<span>Research</span></a>
  <button type="button" class="v3-pq" data-v2-capture>${icon('plus')}<span>Capture</span></button>
- <a class="v3-pq" href="#/" data-v2-needs-phone>${icon('ask')}<span>Needs you</span><em data-v2-needs-badge hidden></em></a>
+ <a class="v3-pq" href="#/needs-you" data-v2-needs-phone>${icon('ask')}<span>Needs you</span><em data-v2-needs-badge hidden></em></a>
 </nav>`;
  }
  function paintTheme(){const b=doc.querySelector('[data-v2-theme]');if(!b)return;const dark=doc.documentElement.dataset.theme==='dark';b.innerHTML=icon(dark?'sun':'moon');b.setAttribute('aria-label',dark?'Switch to light theme':'Switch to dark theme');b.title=dark?'Light theme':'Dark theme';}
@@ -176,6 +176,7 @@
   const two=doc.querySelector('[data-v3-two]');if(two)two.href=versionTwo();
   doc.title=(ctx?.title?ctx.title+' · ':'')+'AR Create';
   paintDesk();
+  paintNeedsLink();
  }
 
  // ---------- On your desk: the subjects in hand, in the band on a computer ----------
@@ -222,9 +223,17 @@
  // ---------- Needs you: the count ----------
  let needs=0;
  const needsFeed=C.createNeedsFeed(client),refreshNeeds=needsFeed.refresh;
+ function paintNeedsLink(){
+  const route=active?.screen.route,onList=route==='needs-you';
+  for(const a of doc.querySelectorAll('[data-v2-needs],[data-v2-needs-phone]')){
+   if(onList)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
+   if(a.hasAttribute('data-v2-needs'))a.hidden=!needs||route===''||onList;
+  }
+ }
  function paintNeeds(r){
   needs=Number(r?.counts?.open??r?.asks?.filter(a=>a.status==='open').length??0)||0;
-  const a=doc.querySelector('[data-v2-needs]');if(a){a.hidden=!needs;a.querySelector('[data-v2-needs-count]').textContent=String(needs);a.setAttribute('aria-label',`Needs you: ${needs}`);}
+  const a=doc.querySelector('[data-v2-needs]');if(a){a.querySelector('[data-v2-needs-count]').textContent=String(needs);a.setAttribute('aria-label',`Needs you: ${needs}`);}
+  paintNeedsLink();
   const badge=doc.querySelector('[data-v2-needs-badge]');if(badge){badge.hidden=!needs;badge.textContent=String(needs);}
   const phone=doc.querySelector('[data-v2-needs-phone]');phone?.setAttribute('aria-label',needs?`Needs you: ${needs}`:'Needs you');}
 
