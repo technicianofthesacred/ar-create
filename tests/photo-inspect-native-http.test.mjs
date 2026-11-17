@@ -13,6 +13,13 @@ import {createExistingWorkReview} from '../scripts/review-existing.mjs';
 const root=path.resolve(import.meta.dirname,'..'),sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const listen=server=>new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',()=>resolve(server.address().port));});
 const close=server=>new Promise((resolve,reject)=>{server.closeAllConnections?.();server.close(error=>error?reject(error):resolve());});
+// These fixture listeners are repeatedly torn down and restarted on transient
+// ports. Do not let the process-wide fetch pool reuse their idle sockets.
+function fixtureFetch(url,options){
+ const headers=new Headers(options?.headers);
+ headers.set('Connection','close');
+ return fetch(url,{...options,headers});
+}
 function inventory(roots){return Object.fromEntries(roots.flatMap(base=>fs.readdirSync(base,{recursive:true,withFileTypes:true}).map(entry=>{const file=path.join(entry.parentPath,entry.name),stat=fs.lstatSync(file);if(!stat.isFile())return null;return [file,{sha256:sha(fs.readFileSync(file)),bytes:stat.size,mtimeMs:stat.mtimeMs,ino:stat.ino}];}).filter(Boolean)).sort(([a],[b])=>a.localeCompare(b)));}
 export function checkPhotoFixture(receiptFile){const receipt=JSON.parse(fs.readFileSync(receiptFile)),before=JSON.parse(fs.readFileSync(receipt.baselineFile)),after=inventory(receipt.protectedRoots),changed=[...new Set([...Object.keys(before),...Object.keys(after)])].filter(file=>JSON.stringify(before[file])!==JSON.stringify(after[file]));const requests=fs.existsSync(receipt.requestLog)?fs.readFileSync(receipt.requestLog,'utf8').trim().split('\n').filter(Boolean).map(line=>JSON.parse(line)).slice(receipt.baselineRequestCount):[],unsafeRequests=requests.filter(row=>!['GET','HEAD'].includes(row.method)||new URL(row.url,'http://localhost').pathname==='/api/sources/blob');return {unchanged:changed.length===0,checkedFiles:Object.keys(after).length,changed,requestCount:requests.length,noMutationsOrLegacyBlobRequests:unsafeRequests.length===0,unsafeRequests};}
 export async function createPhotoHTTPFixture(){
@@ -23,7 +30,7 @@ export async function createPhotoHTTPFixture(){
  const options={dataDir,publicDir:path.join(root,'runtime/public'),studyOriginalRoots:{vaultRoot:vault,filesRoot:files,catalog:{projects:{'invented-photo-review-parent':{title:'Invented Valley',docs:[],relatedProjects:[]}},drafts:{'invented-photo-article':{parentStudyKey:'invented-photo-review-parent',partKey:'1',title:'Invented Valley',path:originalRelative,contextScope:'Invented HTTP fixture only.',support:[]}}}},connections:[],connectionsEditable:false,magazineRoots:[],sharedArticles:true,researchEnabled:false,transcriptionRuntime:null,packageView:{syntheticFixtures:false}};
  let owner,ownerPort,review,reviewPort;
  const startOwner=async()=>{owner=await createServer(options);ownerPort=await listen(owner);installFixtureOverlay(owner,{fixturesDir,port:ownerPort});owner.on('request',req=>{const entry={at:new Date().toISOString(),method:req.method,url:req.url};calls.push(entry);fs.appendFileSync(requestLog,JSON.stringify(entry)+'\n');});};
- const http=async(route,input,{reviewRequest=false}={})=>{const base=`http://127.0.0.1:${reviewRequest?reviewPort:ownerPort}`,response=await fetch(base+route,{method:input===undefined?'GET':'POST',headers:input===undefined?{}:{'content-type':'application/json','x-ar-actor':'agent:codex','x-ar-client':'http',origin:base},body:input===undefined?undefined:JSON.stringify(input)}),body=await response.json();if(!response.ok)throw Object.assign(Error(body.error||'Fixture HTTP request failed'),{status:response.status,body});return body;};
+ const http=async(route,input,{reviewRequest=false}={})=>{const base=`http://127.0.0.1:${reviewRequest?reviewPort:ownerPort}`,response=await fixtureFetch(base+route,{method:input===undefined?'GET':'POST',headers:input===undefined?{}:{'content-type':'application/json','x-ar-actor':'agent:codex','x-ar-client':'http',origin:base},body:input===undefined?undefined:JSON.stringify(input)}),body=await response.json();if(!response.ok)throw Object.assign(Error(body.error||'Fixture HTTP request failed'),{status:response.status,body});return body;};
  const startReview=async()=>{const configured=await createExistingWorkReview({config:{authorityURL:`http://127.0.0.1:${ownerPort}`,allowedAuthorityPort:ownerPort,magazineRoots:[],filesRoot:files,seedProjects:[],projectLinks:{}}});review=configured.server;reviewPort=await listen(review);};
  try{
   await startOwner();
@@ -46,9 +53,9 @@ export async function createPhotoHTTPFixture(){
   let receipt={schema:'ar-create.synthetic-photo-http-proof.v1',synthetic:true,pid:process.pid,sourceRevision:process.env.AR_CREATE_PROOF_SOURCE_REVISION||null,sourceHashes:Object.fromEntries(['runtime/services/study-photos.mjs','runtime/commands.mjs','runtime/server.mjs','scripts/review-connection.mjs','public/document-study/folder-browser.js','public/document-study/photos-stage.js','public/document-study/study-photos.js','public/document-study/media-usage.js','public/document-study/output-connection.js'].map(file=>[file,sha(fs.readFileSync(path.join(root,file)))])),home,dataDir,fixturesDir,control,receiptFile,baselineFile,requestLog,protectedRoots,ownerURL:`http://127.0.0.1:${ownerPort}`,reviewURL:`http://127.0.0.1:${reviewPort}`,url,inspect,absentInspect,lookup,nativeRead,inspectInput,workspaceId:target.workspaceId,bindingId,parentStudyId,physical,sourceId,articleOutputId:article.view.output.id,siblingOutputId:sibling.view.output.id,expectedDraftHash:saved.expected.workflow.draft,caption:photos.photos[0].caption,credit:photos.photos[0].credit};
   let servedScripts=new Map();
   const checkUIBoot=async()=>{
-   const base=`http://127.0.0.1:${reviewPort}`,entry=await fetch(base+'/document-study/index.html');if(!entry.ok)throw Error('The real review entry HTML is unavailable.');const html=await entry.text(),sources=[...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)].map(m=>new URL(m[1],base+'/document-study/index.html'));
+   const base=`http://127.0.0.1:${reviewPort}`,entry=await fixtureFetch(base+'/document-study/index.html');if(!entry.ok)throw Error('The real review entry HTML is unavailable.');const html=await entry.text(),sources=[...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)].map(m=>new URL(m[1],base+'/document-study/index.html'));
    if(!html.includes('id="app"')||sources.length<20)throw Error('The maintained native app entry scripts are incomplete.');
-   const scripts=new Map();for(const source of sources){if(source.origin!==base)throw Error('Synthetic boot may not load external scripts.');const response=await fetch(source);if(!response.ok)throw Error('Required native UI script unavailable: '+source.pathname+' ('+response.status+').');scripts.set(source.href,Buffer.from(await response.arrayBuffer()));}
+   const scripts=new Map();for(const source of sources){if(source.origin!==base)throw Error('Synthetic boot may not load external scripts.');const response=await fixtureFetch(source);if(!response.ok)throw Error('Required native UI script unavailable: '+source.pathname+' ('+response.status+').');scripts.set(source.href,Buffer.from(await response.arrayBuffer()));}
    const script=name=>scripts.get(new URL('/document-study/'+name,base).href);
    const context={window:{}};vm.createContext(context);vm.runInContext(script('package-config.js').toString('utf8'),context);vm.runInContext(script('synthetic-study-data.js').toString('utf8'),context);const projects=vm.runInContext('AR_CREATE_SYNTHETIC_PROJECTS',context);
    if(!Array.isArray(projects)||projects[0]?.id!==parentStudyId||projects[0].collectionBindingId!==created.binding.id||projects[0].blocks.length!==0)throw Error('The served bootstrap does not contain its exact invented parent metadata.');
@@ -58,7 +65,7 @@ export async function createPhotoHTTPFixture(){
   };
   const checkDOMBoot=async()=>{
    let dom,w;const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM,VirtualConsole,ResourceLoader}=require('jsdom'),errors=[],console=new VirtualConsole();console.on('jsdomError',e=>{if(!/Could not parse CSS stylesheet|Not implemented: window/.test(e.message))errors.push(e.message+' '+(e.detail?.stack||''));});
-   const pending=new Set(),controllers=new Set(),observers=new Set();let activity=0,closed=false,pagehides=0,requestsAfterClose=0;
+   const pending=new Set(),requests=new Map(),requestResults=[],controllers=new Set(),observers=new Set();let activity=0,closed=false,pagehides=0,requestsAfterClose=0;
    const track=promise=>{activity++;pending.add(promise);promise.then(()=>pending.delete(promise),()=>pending.delete(promise));return promise;};
    const tick=()=>new Promise(resolve=>setTimeout(resolve,25));
    // A header response is not idle: callers still consume JSON and run their
@@ -91,18 +98,23 @@ export async function createPhotoHTTPFixture(){
    try{
     dom=await JSDOM.fromURL(receipt.url,{resources:new BrowserResources(),runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:console,beforeParse(window){w=window;const Observer=w.MutationObserver;w.MutationObserver=class extends Observer{constructor(callback){super(callback);observers.add(this);}};w.addEventListener('pagehide',()=>pagehides++);w.fetch=(url,opts)=>{
      if(closed){requestsAfterClose++;return Promise.reject(Error('HTTP requested after fixture close.'));}
+     const pathname=new URL(url,origin).pathname;
      const controller=new AbortController();controllers.add(controller);
      const signal=opts?.signal?AbortSignal.any([opts.signal,controller.signal]):controller.signal;
-     return track((async()=>{
-      const response=await fetch(new URL(url,origin),{...opts,signal,headers:{...opts?.headers,Origin:origin}});
+     const read=track((async()=>{
+      const response=await fixtureFetch(new URL(url,origin),{...opts,signal,headers:{...opts?.headers,Origin:origin}});
+      requestResults.push([pathname,response.status]);
       for(const method of ['json','text','arrayBuffer','blob','formData']){const consume=response[method].bind(response);response[method]=(...args)=>track(consume(...args));}
       return response;
      })());
+     requests.set(read,pathname);
+     read.then(()=>requests.delete(read),error=>{requests.delete(read);requestResults.push([pathname,error.cause?.code||error.name]);});
+     return read;
     };w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});w.structuredClone=structuredClone;w.CSS={escape:s=>s};w.crypto.randomUUID=randomUUID;w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};w.HTMLElement.prototype.scrollIntoView=function(){};}});
     // Load the full maintained module graph under bounded shared-host contention.
-    const end=Date.now()+30000;while(Date.now()<end){if(w.document.readyState==='complete'&&w.studyDraft?.currentBinding?.()?.id===bindingId&&w.document.querySelector('[data-caption]')?.value===receipt.caption&&w.eval('current().viewedStage')===8)break;if(errors.length)throw Error('Native DOM boot failed: '+errors.join('; '));await tick();}
+    const end=Date.now()+30000;while(Date.now()<end){if(w.document.readyState==='complete'&&w.studyDraft?.currentBinding?.()?.id===bindingId&&w.document.querySelector('[data-caption]')?.value===receipt.caption&&w.eval('current().viewedStage')===8)break;if(errors.length)throw Error('Native DOM boot failed: '+errors.join('; '));if(w.document.querySelector('[data-review-failure-stage]'))break;await tick();}
     const opening=w.document.querySelector('[data-review-startup]');
-    const diagnostic=JSON.stringify({openingStep:opening?.dataset.reviewOpeningStep,failureStage:opening?.dataset.reviewFailureStage,failureReason:opening?.dataset.reviewFailureReason,pendingHTTP:pending.size,activeResources,queuedResources:resourceQueue.length});
+    const diagnostic=JSON.stringify({openingStep:opening?.dataset.reviewOpeningStep,failureStage:opening?.dataset.reviewFailureStage,failureReason:opening?.dataset.reviewFailureReason,errorType:opening?.dataset.reviewFailureType,status:opening?.dataset.reviewFailureStatus,catalogElapsedMs:opening?.dataset.reviewFailureElapsedMs,pendingHTTP:pending.size,pendingPaths:[...requests.values()],photoPanel:w.document.querySelector('#owned-photo-stage')?.textContent?.trim().slice(0,240),photoRequests:requestResults.filter(([path,status])=>/photos|first-flow\/binding|catalog/.test(path)||status!==200).slice(-20),activeResources,queuedResources:resourceQueue.length});
     assert.equal(w.document.readyState,'complete','All maintained modules finish loading. '+diagnostic);
     assert.equal(w.studyDraft?.currentBinding?.()?.id,bindingId,'The exact saved part is open. '+diagnostic);
     assert.equal(w.eval('current().viewedStage'),8,'The saved Media stage is open. '+diagnostic);
@@ -142,7 +154,7 @@ else if(command==='--serve'){
 }else test('real native HTTP photo inspect and exact persisted lookup do not write, and restart preserves identities',async t=>{
  const f=await createPhotoHTTPFixture();t.after(async()=>{await f.stop();await f.remove();});
  for(let boot=0;boot<2;boot++){
-  const r=f.receipt;assert.equal((await f.checkUIBoot()).parentStudyId,r.parentStudyId);const nativeBoot=await f.checkDOMBoot();assert.equal(nativeBoot.mounted,true);assert.deepEqual(nativeBoot.cleanup,{pagehides:1,pendingHTTP:0,pendingResources:0,queuedResources:0,bodyCallbackBeforeClose:true,requestsAfterClose:0});const before=JSON.parse(fs.readFileSync(r.baselineFile)),lookup=await f.http(r.lookup,undefined,{reviewRequest:true}),native=await f.http(r.nativeRead,undefined,{reviewRequest:true}),photos=await f.http(r.inspect,undefined,{reviewRequest:true});
+  const r=f.receipt;const uiBoot=boot?await f.checkUIBoot():r.uiBoot;assert.equal(uiBoot.parentStudyId,r.parentStudyId);const nativeBoot=boot?await f.checkDOMBoot():r.nativeDOMBoot;assert.equal(nativeBoot.mounted,true);assert.deepEqual(nativeBoot.cleanup,{pagehides:1,pendingHTTP:0,pendingResources:0,queuedResources:0,bodyCallbackBeforeClose:true,requestsAfterClose:0});const before=JSON.parse(fs.readFileSync(r.baselineFile)),lookup=await f.http(r.lookup,undefined,{reviewRequest:true}),native=await f.http(r.nativeRead,undefined,{reviewRequest:true}),photos=await f.http(r.inspect,undefined,{reviewRequest:true});
   assert.equal(lookup.projectKey,'owned-draft:'+r.bindingId);assert.equal(lookup.projectId,r.physical.projectId);assert.equal(lookup.documentId,r.physical.documentId);assert.equal(native.binding.id,r.bindingId);assert.equal(native.binding.parentStudyId,r.parentStudyId);assert.equal(native.expected.workflow.draft,r.expectedDraftHash);assert.equal(photos.projectId,r.physical.projectId);assert.equal(photos.documentId,r.physical.documentId);assert.equal(photos.bindingId,r.bindingId);assert.equal(photos.parentStudyId,r.parentStudyId);assert.equal(photos.photos[0].sourceId,r.sourceId);assert.equal(photos.photos[0].caption,r.caption);assert.equal(photos.photos[0].credit,r.credit);assert.equal(photos.photos[0].previewUnavailable,false);const preview=new URL(photos.photos[0].url,r.reviewURL);assert.equal(preview.pathname,'/api/study/photos/preview');assert.equal(preview.searchParams.get('sourceId'),r.sourceId);assert.equal(preview.searchParams.get('bindingId'),r.bindingId);assert.equal(preview.searchParams.get('expectedHash'),photos.photos[0].sha256);
   const absent=await f.http(r.absentInspect,undefined,{reviewRequest:true});assert.equal(absent.state,'not-created');assert.equal(absent.photos.length,0);
   assert.deepEqual(inventory(r.protectedRoots),before);assert.deepEqual(f.check().changed,[]);assert.equal(f.check().noMutationsOrLegacyBlobRequests,true,JSON.stringify(f.check().unsafeRequests));
