@@ -200,28 +200,33 @@ test('the app\'s own address and /v3 open version three with the query kept; ver
  }
 });
 
-test('a missing research group response does not touch the next screen after navigation',async()=>{
+test('late Research and Looks responses leave the next screen and its address alone',async()=>{
  const {base}=await theWorld();
- const {promise:releaseResponse,resolve:release}=Promise.withResolvers();
- let status;
+ const group=Promise.withResolvers(),look=Promise.withResolvers();
+ let status,lookPending=false;
  const hash='#/research/group/none';
  const {w,doc,errors}=await page({url:base+'/v3/index.html'+hash,base,beforeResponse:(pathname,responseStatus)=>{
-  if(pathname!=='/api/research-topics/group')return;
-  status=responseStatus;
-  return releaseResponse;
+  if(pathname==='/api/research-topics/group'){status=responseStatus;return group.promise;}
+  if(pathname==='/api/look/assets'){lookPending=true;return look.promise;}
  }});
  try{
   assert.equal(await until(()=>status),404);
   assert.match(doc.querySelector('[data-rs-main]').textContent,/Reading the group/);
   await goHash(w,'#/looks');
+  await until(()=>lookPending);
+  group.resolve();
+  await settle(0);
   assert.equal(w.v2.route().id,'looks');
   assert.equal(doc.querySelector('[data-rs-main]'),null);
- }finally{release();}
- await settle(0);
- assert.deepEqual(errors.filter(e=>!/Not implemented|scrollTo/.test(e)),[],'no error after the missing group response arrives');
- await goHash(w,hash);
- const problem=await until(()=>doc.querySelector('[data-rs-main] .v2-msg[data-tone="bad"]'));
- assert.ok(problem.textContent.trim(),'the active group still shows the error');
+  await goHash(w,hash);
+  const problem=await until(()=>doc.querySelector('[data-rs-main] .v2-msg[data-tone="bad"]'));
+  assert.ok(problem.textContent.trim(),'the active group still shows the error');
+  look.resolve();
+  await settle();
+  assert.equal(w.location.hash,hash,'a late Looks response keeps the Research address');
+  assert.equal(w.v2.route().id,'research-group');
+  assert.deepEqual(errors.filter(e=>!/Not implemented|scrollTo/.test(e)),[]);
+ }finally{group.resolve();look.resolve();}
 });
 
 test('every version two screen opens and draws inside the frame against the real server, and a link drawn by a borrowed screen stays in version three',async()=>{
