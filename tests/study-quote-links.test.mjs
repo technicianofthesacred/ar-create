@@ -1,0 +1,44 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {createStudyQuoteLinks} from '../runtime/services/study-quote-links.mjs';
+import {digest} from '../runtime/services/files.mjs';
+import {withActor} from '../runtime/services/actor.mjs';
+
+test('exact quote receipts replay safely, never mutate words, and refuse revision, range, source and scope drift',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'quote-link-test-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ const bindingId=randomUUID(),scope={bindingId,parentStudyId:'invented-cup'},quote='Keep the crack.',raw='Mira: '+quote+' A seam remains.',blockHash=digest(quote),sourceId='source-1';
+ let doc={binding:{id:bindingId,parentStudyId:scope.parentStudyId},raw:quote,expected:{workflow:{draft:digest(quote),edits:'1'}},projection:[{id:'p1',words:quote,blockHash,safe:true}],context:{records:[{id:sourceId,role:'source',raw,copiedHash:digest(raw),sourcePath:'SRC - Invented.md'}]}};
+ const owner={read:async s=>{assert.deepEqual(s,scope);return structuredClone(doc);}};
+ const links=createStudyQuoteLinks({dataDir:dir,drafts:owner});
+ const input={...scope,operationId:randomUUID(),expected:doc.expected,paragraph:{id:'p1',blockHash,from:0,to:quote.length,text:quote},source:{id:sourceId,hash:digest(raw),from:6,to:6+quote.length,quote}};
+ const actor={actor:'agent:codex',client:'cli'},create=i=>withActor(actor,()=>links.create(i));
+ const before=structuredClone(doc);
+ await assert.rejects(links.create(input),/X-AR-Actor/);
+ assert.equal((await create(input)).link.active,true);assert.equal((await create(input)).replay,true);assert.deepEqual(doc,before);
+ assert.equal((await links.source({...scope,id:input.operationId})).source.quote,quote);
+ await assert.rejects(create({...input,source:{...input.source,from:5}}),/different quote link/);
+ await assert.rejects(create({...input,operationId:randomUUID(),source:{...input.source,from:5}}),/source revision or exact passage/);
+ await assert.rejects(create({...input,operationId:randomUUID(),paragraph:{...input.paragraph,to:quote.length-1}}),/paragraph or exact words/);
+ doc.expected={workflow:{draft:'newer',edits:'2'}};
+ assert.equal((await links.list(scope)).links[0].active,false);
+ await assert.rejects(links.source({...scope,id:input.operationId}),/draft revision changed/);
+ doc=structuredClone(before);doc.context.records[0].raw='Changed source';
+ assert.equal((await links.list(scope)).links[0].active,false);
+ await assert.rejects(links.source({...scope,id:input.operationId}),/source revision or exact passage/);
+ await assert.rejects(links.source({...scope,parentStudyId:'other',id:input.operationId}),/unavailable/);
+});
+
+test('HTTP uses existing captured source bytes and exact native projection without changing manuscript',async t=>{
+ const {coherentFixture,op,words}=await import('./helpers/coherent-journey-fixture.mjs');
+ const f=await coherentFixture(t),d=await f.native(),row=d.projection.find(r=>r.safe!==false&&r.words?.includes(words.phrase)),source=d.context.records.find(r=>r.role==='source'&&r.raw?.includes(words.phrase));
+ assert.ok(row&&source);
+ const from=row.words.indexOf(words.phrase),start=source.raw.indexOf(words.phrase);
+ const input={...f.scope,operationId:op(),expected:d.expected,paragraph:{id:row.id,blockHash:row.blockHash,from,to:from+words.phrase.length,text:words.phrase},source:{id:source.id,hash:source.copiedHash,from:start,to:start+words.phrase.length,quote:words.phrase}};
+ const created=await f.request('/api/study-draft/quote-link',input);assert.equal(created.link.active,true);
+ const result=await f.request('/api/study-draft/quote-link/source?'+new URLSearchParams({...f.scope,id:input.operationId}));assert.equal(result.source.quote,words.phrase);
+ assert.equal((await f.native()).raw,d.raw);
+});
