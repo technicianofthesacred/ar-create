@@ -217,9 +217,16 @@
   if(projectId)for(const x of folderFiles(rec.tree,'Projects/'+projectId))add(x.id||x.sourceId,{title:x.name});
   for(const pr of rec.planRecords||[]){if(!ok(pr))continue;for(const x of pr.material?.transcripts||[])add(x.sourceId,{title:x.title,kind:'transcript',hash:x.sourceHash});for(const x of pr.material?.photos||[])add(x.sourceId,{title:x.caption,kind:'image'});}
   const out={total:0,recordings:0,notes:0,links:0,photos:0,items:[]};
-  for(const s of seen.values()){const k=kindOf(s);out[k]++;out.total++;out.items.push({...s,kind:k});}
+  for(const s of seen.values()){const k=kindOf(s);out[k]++;out.total++;out.items.push({...s,sourceKind:s.kind,kind:k});}
   const rank={recordings:0,notes:1,links:2,photos:3};out.items.sort((a,b)=>rank[a.kind]-rank[b.kind]);
   return out;
+ }
+ function carouselMaterial(items){
+  const transcripts=items.filter(x=>x.hash&&(x.kind==='notes'||x.sourceKind.toLowerCase()==='transcript'))
+   .map(x=>({sourceId:x.id,sourceHash:x.hash}));
+  const photos=items.filter(x=>x.kind==='photos')
+   .map(x=>({sourceId:x.id,...(x.title&&x.title!=='Untitled'?{caption:x.title.slice(0,200)}:{})}));
+  return {transcripts,photos};
  }
  /** Parts of the writing: a heading starts a part; with no headings the whole is one part. */
  function partsOf(blocks){
@@ -313,7 +320,7 @@
   return adoptedWords(direction?.body);
  }
 
- const pure=Object.freeze({isMagazine,pieceFor,magazineHref,inMagazine,topicStatus,topicLine,topicNote,recordingView,registeredJobs,adoptedWords,adoptedRaw,sentenceOf,TWELVE,SECTION_LABEL,GROUPS,HANDOFFS,STEP_OUT,STATE_SAY,KINDS,READS,STEP_READS,ownHandoff,stepView,chooseForm,stepsOfForm,firstOpen,pillView,pieceOf,tellApart,outputStudio,findingsOf,factsView,transcriptAct,sourceRefusal,concerns,addable,materialFrom,partsOf,kindOf,touched,plural});
+ const pure=Object.freeze({isMagazine,pieceFor,magazineHref,inMagazine,topicStatus,topicLine,topicNote,recordingView,registeredJobs,adoptedWords,adoptedRaw,sentenceOf,TWELVE,SECTION_LABEL,GROUPS,HANDOFFS,STEP_OUT,STATE_SAY,KINDS,READS,STEP_READS,ownHandoff,stepView,chooseForm,stepsOfForm,firstOpen,pillView,pieceOf,tellApart,outputStudio,findingsOf,factsView,transcriptAct,sourceRefusal,concerns,addable,materialFrom,carouselMaterial,partsOf,kindOf,touched,plural});
  if(typeof module==='object'&&module.exports)module.exports=pure;
  const v2=root.v2;if(!v2||typeof v2.screen!=='function')return;
 
@@ -1326,9 +1333,9 @@
    if(kind==='carousel'){
     const [tree,brief,plans]=await Promise.all(['tree','brief','planRecords'].map(k=>ask(k,true)));
     const items=materialFrom({tree,brief,planRecords:Array.isArray(plans)?plans:[]},f.projectId).items;
-    const transcripts=items.filter(x=>(x.kind==='recordings'||x.kind==='notes')&&x.hash).map(x=>({sourceId:x.id,sourceHash:x.hash})),photos=items.filter(x=>x.kind==='photos').map(x=>({sourceId:x.id,...(x.title&&x.title!=='Untitled'?{caption:x.title.slice(0,200)}:{})}));
-    if(!transcripts.length)throw new v2.Error('Add a recording or a note first.');
-    const plan=await v2.call('instagram.plan.post',{subject:id,title:st.standing.title,material:{transcripts,photos}});return 'ig:'+plan.id;
+    const material=carouselMaterial(items);
+    if(!material.transcripts.length)throw new v2.Error('Keep a transcript or add a note first.');
+    const plan=await v2.call('instagram.plan.post',{subject:id,title:st.standing.title,material});return 'ig:'+plan.id;
    }
    const scope={rootBindingId:f.bindingId,parentStudyId:id};
    const [native,outs]=await Promise.all([v2.call('study-draft.read',{bindingId:f.bindingId,parentStudyId:id}),v2.call('study.outputs',scope)]);

@@ -115,6 +115,15 @@ test('material is sorted from what the records hold: folder, research sources, p
  assert.deepEqual(S.partsOf([{blockKind:'paragraph',words:'x'},{blockKind:'heading',words:'Part'},{blockKind:'paragraph',words:'y'},{blockKind:'paragraph',words:'z'}]),[{name:'Opening',paragraphs:1},{name:'Part',paragraphs:2}]);
 });
 
+test('Carousel takes kept transcript text and notes, without submitting raw recordings as text',()=>{
+ const rec={tree:{sources:[{id:'note',kind:'note',hash:'note-hash'},{id:'photo',kind:'image',title:'Cup'}]},
+  brief:{materials:[{sourceId:'audio',kind:'audio',hash:'audio-hash'},{sourceId:'video',kind:'video',hash:'video-hash'},{sourceId:'transcript',kind:'transcript',hash:'transcript-hash'}],sourceIds:['note','photo']}};
+ assert.deepEqual(S.carouselMaterial(S.materialFrom(rec).items),{
+  transcripts:[{sourceId:'transcript',sourceHash:'transcript-hash'},{sourceId:'note',sourceHash:'note-hash'}],
+  photos:[{sourceId:'photo',caption:'Cup'}],
+ });
+});
+
 test('a recording says where it is: saved, transcript being made, ready, or not set up on this machine',()=>{
  const job=state=>({id:'j1',sourceId:'a',state,transcriptReady:state==='done'});
  const v=(state,ready,registered)=>S.recordingView(job(state),{ready},registered);
