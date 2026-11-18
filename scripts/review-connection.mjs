@@ -52,6 +52,9 @@ function validateCarouselCorrection(pathname,bytes){
 // These are existing owner operations, admitted only by the two installed native grants.
 const NATIVE_EDITION_PATHS=new Set(['/api/study/outputs/create','/api/study/outputs/refresh','/api/study/outputs/export']);
 const NATIVE_EXPORT_BODY=32*1024*1024,NATIVE_EXPORT_REQUEST=33*1024*1024;
+// The maintained owner renders 1–40 slides in sequence. Each renderer has a 30s
+// deadline plus bounded cleanup; reserve 35s per saved slide and the normal I/O margin.
+const CAROUSEL_EXPORT_MAX_SLIDES=40,CAROUSEL_EXPORT_SLIDE_MS=35000;
 function validateNativeReview(pathname,bytes,{articleSave=false,view=null}={}){
  const input=JSON.parse(bytes.toString('utf8')),object=v=>!!v&&typeof v==='object'&&!Array.isArray(v),fields=(v,required,optional=[])=>object(v)&&required.every(k=>Object.hasOwn(v,k))&&Object.keys(v).every(k=>required.includes(k)||optional.includes(k)),uuid=v=>typeof v==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v),hash=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v),nullable=v=>v===null||hash(v),revision=v=>Number.isSafeInteger(v)&&v>=0,id=v=>typeof v==='string'&&v.trim()===v&&!!v&&v.length<=256&&!/[\x00-\x1f\x7f]/.test(v),fail=()=>{throw Object.assign(Error('Use the exact saved native output and complete current owner proof.'),{status:400});};
  const outputProof=v=>fields(v,['revision','hash'])&&revision(v.revision)&&hash(v.hash);
@@ -237,7 +240,7 @@ async function staticRead(publicDir,pathname){
   return {bytes:await fs.readFile(current),type:TYPES[path.extname(current).toLowerCase()]||'application/octet-stream'};
  }catch(error){if(['ENOENT','ENOTDIR'].includes(error.code))return null;throw error;}
 }
-export function createReviewConnection({publicDir=path.join(root,'public'),runtimePublicDir=path.join(root,'runtime/public'),authorityURL='http://127.0.0.1:8841',allowedAuthorityPort=8841,timeoutMs=10000,readOverrides=new Map(),actualWorkReview=false,readPostPaths=[],sourceCorrections=false,libraryFolderCorrections=false,changeLibraryFolders=null,changePhotoAlbums=null,studyDraftCorrections=false,studyDraftApprovals=false,browserCarouselCorrections=false,nativeCarouselCorrections=false,nativeOutputExports=false,nativeArticleComposition=false,reviewPhotoReads=[],magazineDraftCorrections=false,magazineFeedbackCorrections=false,magazineCheckReceipts=false,catalogCacheScope=null,translationProposals=null,translationPermissionCurrent=null,translationAdmissionDataDir=null}={}){
+export function createReviewConnection({publicDir=path.join(root,'public'),runtimePublicDir=path.join(root,'runtime/public'),authorityURL='http://127.0.0.1:8841',allowedAuthorityPort=8841,timeoutMs=10000,nativeCarouselExportTimeoutMs=null,readOverrides=new Map(),actualWorkReview=false,readPostPaths=[],sourceCorrections=false,libraryFolderCorrections=false,changeLibraryFolders=null,changePhotoAlbums=null,studyDraftCorrections=false,studyDraftApprovals=false,browserCarouselCorrections=false,nativeCarouselCorrections=false,nativeOutputExports=false,nativeArticleComposition=false,reviewPhotoReads=[],magazineDraftCorrections=false,magazineFeedbackCorrections=false,magazineCheckReceipts=false,catalogCacheScope=null,translationProposals=null,translationPermissionCurrent=null,translationAdmissionDataDir=null}={}){
  const upstream=authority(authorityURL,allowedAuthorityPort);
  if(changePhotoAlbums!==null&&typeof changePhotoAlbums!=='function')throw Error('Photo album corrections require a trusted callback.');
  if(typeof libraryFolderCorrections!=='boolean'||libraryFolderCorrections&&(!actualWorkReview||typeof changeLibraryFolders!=='function'))throw Error('Library folder corrections require a trusted actual-work structural transport.');
@@ -260,6 +263,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
  const overrides=new Map(readOverrides);
  for(const [name,handler] of overrides)if(typeof handler!=='function'||!(/^\/api\/review\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/.test(name)||['/api/magazine/portfolio','/api/magazine/artifact',...(actualWorkReview?['/api/sources/tree','/api/library/folders','/api/sources/file','/api/collections','/api/collection-relationships','/api/evidence']:[])].includes(name)))throw Error('Review overrides must name a permitted exact read path.');
  if(!Number.isFinite(timeoutMs)||timeoutMs<=0)throw Error('Use a positive upstream timeout.');
+ if(nativeCarouselExportTimeoutMs!==null&&(!Number.isFinite(nativeCarouselExportTimeoutMs)||nativeCarouselExportTimeoutMs<=0||nativeCarouselExportTimeoutMs>CAROUSEL_EXPORT_MAX_SLIDES*CAROUSEL_EXPORT_SLIDE_MS+timeoutMs))throw Error('Use a bounded native Carousel export timeout.');
  const server=http.createServer(async(req,res)=>{
   for(const [key,value] of Object.entries(SECURITY))res.setHeader(key,value);
   const fail=(status,message)=>{if(res.headersSent||res.destroyed)return;res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(req.method==='HEAD'?undefined:JSON.stringify({error:message,readOnly:true}));};
@@ -327,7 +331,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   const magazineCorrection=magazineDraftCorrections&&magazineCorrectionPath&&req.method==='POST';
   const carouselCorrection=(nativeCarouselCorrections&&carouselCorrectionPath||articleCompositionPath)&&req.method==='POST';
   if(carouselCorrection&&['/api/study/outputs/stand-in-review-words','/api/study/outputs/stand-in-save','/api/study/outputs/stand-in-refresh'].includes(pathname)&&!AGENT_ACTORS.includes(requestActor)){req.resume();return fail(403,'Test-copy stand-ins require the actual agent actor.');}
-  const nativeSave=carouselCorrection&&pathname==='/api/study/outputs/save';let nativeArticleSave=false;
+  const nativeSave=carouselCorrection&&pathname==='/api/study/outputs/save';let nativeArticleSave=false,nativeCarouselExportDeadline=null;
   if(nativeSave&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Saved composition changes require the author’s exact local workspace.');}
   const magazineFeedbackCorrection=magazineFeedbackCorrections&&magazineFeedbackPath&&req.method==='POST';
   if(magazineFeedbackCorrection&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Feedback wording changes require the author’s local workspace.');}
@@ -526,6 +530,11 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
     if(pathname.endsWith('/refresh')||pathname.endsWith('/export')){
      const view=await nativeOutputSnapshot(upstream,timeoutMs,input),kind=pathname.endsWith('/refresh')?'article':input.kind;
      if(view?.scope?.rootBindingId!==input.rootBindingId||view.scope.parentStudyId!==input.parentStudyId||view.output?.id!==input.selectedOutputId||view.output.kind!==kind||kind==='article'&&view.writingProof?.kind!=='native')throw Object.assign(Error('Select this exact saved native Article or Carousel before continuing.'),{status:409});
+     if(pathname.endsWith('/export')&&kind==='carousel'){
+      const count=Array.isArray(view.output.slides)?view.output.slides.length:null;
+      if(!Number.isSafeInteger(count)||count<1||count>CAROUSEL_EXPORT_MAX_SLIDES)throw Object.assign(Error('Select a saved Carousel with 1–40 slides before exporting.'),{status:409});
+      nativeCarouselExportDeadline=nativeCarouselExportTimeoutMs??timeoutMs+count*CAROUSEL_EXPORT_SLIDE_MS;
+     }
     }
    }
    if(sourceCorrection)validateCorrection(pathname,readBody);
@@ -575,10 +584,11 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
     owner.on('error',()=>{if(!retired)res.destroy();});
     if(req.method==='HEAD'){owner.resume();res.end();}else owner.pipe(res);
    });
-   // Generation has a wall deadline as well as socket inactivity protection.
-   const generationTimer=translationProposal?setTimeout(()=>pending.destroy(Error('timeout')),translationDeadline):null;
-   if(generationTimer)pending.once('close',()=>clearTimeout(generationTimer));
-   pending.setTimeout(translationProposal?translationDeadline:timeoutMs,()=>pending.destroy(Error('timeout')));
+   // Rendering and generation have wall deadlines as well as socket inactivity protection.
+   const operationDeadline=translationProposal?translationDeadline:nativeCarouselExportDeadline;
+   const operationTimer=operationDeadline?setTimeout(()=>pending.destroy(Error('timeout')),operationDeadline):null;
+   if(operationTimer)pending.once('close',()=>clearTimeout(operationTimer));
+   pending.setTimeout(operationDeadline??timeoutMs,()=>pending.destroy(Error('timeout')));
    pending.on('error',()=>fail(502,translationProposal?'English proposals could not be confirmed. Your source wording is unchanged.':correction?'The existing work authority could not confirm this correction. Keep this operation ID when retrying; reload to check its saved result.':'The existing work authority is unavailable. Your saved work has not changed.'));
    res.on('close',()=>pending.destroy());pending.end(readBody);
   }catch(error){fail(error.status||500,error.status?error.message:'This review could not read the requested file. Your saved work has not changed.');}
