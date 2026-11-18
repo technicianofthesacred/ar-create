@@ -41,3 +41,7 @@ Use the Graphite button/field/dropdown/box family recorded in [HUMAN-EXPERIENCE]
 S07; C01/C03–C06. Adrian approved VR-04 v1 Article Check and VR-07 v3 Carousel Check in the eight-comparison review. Article Check presents the current selected work's retained decisions and mechanical findings with exact revision context; semantic accuracy remains an explicit human judgment. Open a passage only when the existing owner and anchor guards establish the exact target. Carousel Check retains its separate saved wording and checks rather than borrowing Article findings. Existing Write/Read and check/refresh actions use the adopted Graphite control family.
 
 Finish criterion: actual connected reads/actions and truthful stale/unavailable states on desktop/phone light/dark, exact selected owner and saved words preserved, no fabricated approvals, and focused race/navigation tests. The visual approval is implementation authority, not completion proof.
+
+## 18 November — Pending words across piece modes
+
+S05–S07, C02/C04/C06. Use the [saved-version notice contract](06-read-refine.md#18-november--saved-version-notice-after-an-interrupted-save) when Write has retained unsaved words. Read and Check keep their saved revision and identify it without applying recovery or merging tab variants.

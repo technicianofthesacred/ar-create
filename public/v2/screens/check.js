@@ -188,10 +188,7 @@
    if(!human)return false;
    if(st.story){try{return v2.shared.read?.storyUnsaved?.(st.story)||false;}catch{return false;}}
    if(!st.loc?.bindingId)return false;
-   try{
-    const kept=JSON.parse(root.localStorage.getItem('ar-v2-write:'+st.loc.bindingId)||'null');
-    return !!kept&&(Array.isArray(kept.edits)&&kept.edits.length>0||Array.isArray(kept.added)&&kept.added.some(a=>String(a?.text||'').trim()));
-   }catch{return false;}
+   return v2.shared.read?.unsavedForBinding?.(root.localStorage,st.loc.bindingId,st.read?.projection||[])||false;
   }
 
   // ---------- drawing ----------
@@ -505,6 +502,8 @@
    else if(act==='passage')void reviewPassage(b.dataset.n);
   }
   page.addEventListener('click',onClick);
+  const onStorage=e=>{if(e?.key&&(st.story?String(e.key).startsWith(v2.shared.writeStory?.STORY_KEY(st.story)||'\0'):v2.shared.read?.draftSlot?.(e.key,st.loc?.bindingId)))paintRun();};
+  root.addEventListener('storage',onStorage);
   // capture sources: the Sources list inside the details is read and drawn once they are opened
   const onToggle=e=>{const d=e.target;if(!d?.matches?.('details.ck-proof')||st.proofOpen===d.open)return;st.proofOpen=d.open;if(d.open&&cs)paintRun();};
   page.addEventListener('toggle',onToggle,true);
@@ -546,7 +545,7 @@
    }catch(error){if(aborted())return;plain(error.message||'This piece could not be opened.');}
   }
   function leave(){
-   gone=true;clearTimeout(timer);page.removeEventListener('click',onClick);page.removeEventListener('toggle',onToggle,true);
+    gone=true;clearTimeout(timer);page.removeEventListener('click',onClick);page.removeEventListener('toggle',onToggle,true);root.removeEventListener('storage',onStorage);
   }
   return {ready:ready(),leave,state:st};
  }

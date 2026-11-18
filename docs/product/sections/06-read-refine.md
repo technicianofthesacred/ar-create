@@ -47,3 +47,9 @@ Read is a mode of the same selected output used by Write and Check. Return to it
 ## Recovery comparison — adopted 6 November 2026
 
 S05/S06, C01/C04/C05/C06. VR-08 v2 is approved for implementation by the all-eight approval. Recover writing opens a focused workspace comparison, with Saved manuscript and the selected retained copy side by side on desktop and a dedicated stacked phone task above ordinary bottom navigation. One native selector preserves every distinct unsaved tab identity and the earlier browser copy, even when their words match. Native Recover these words and legacy Bring it in / Discard earlier writing retain their existing separate meanings. Nothing applies on entry, selection or return. Back to Write / Esc returns to the held editor and position. Revision guards, exact interrupted request IDs and saved Undo remain under the existing manuscript owner. Implementation and native synthetic evidence are separate from installed release or acceptance.
+
+## 18 November — Saved-version notice after an interrupted save
+
+S05/S06/S07, C02/C04/C06. Adopt the compact saved-version notice as routine recovery feedback. Read identifies that it shows the saved version whenever the exact selected native piece has newer words retained in any of this device’s Write tab slots. Open Write returns to retry or review those words. Check states that its findings cover the saved draft only. The notices read recovery state without saving it, choosing a tab’s version, or transferring another piece’s words. Preserve each tab’s exact text, native revision guards and recovery authority.
+
+Finish criterion: a refused save leaves saved bytes unchanged, Read and Check identify saved words, returning or reloading Write preserves exact pending text, separate tabs retain distinct words, and unrelated pieces and assistant views do not acquire the human notice. Candidate verification and live installation remain separate.
