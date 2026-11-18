@@ -106,7 +106,7 @@ Private content lives in the home's `data/`, never in this repository and never 
 
 Never add real interviews/transcripts, manuscript copies, photographs/audio, immutable source captures, saved decisions/request histories, provider payloads, model weights, personal guidance, proof screenshots/logs or backups. In particular, `workflow-records.js` and `reference-data.js` were content bundles, not safe application code. Use invented fixtures for design and tests.
 
-The runtime and the SDK have separate locks. Preserve the Tiptap/ProseMirror repair pinned in the `overrides` of `runtime/package.json`. Runtime has a low Readability residual; the separate development SDK client has a high OAuth advisory. No OAuth/provider setup is included. SDK compatibility remediation and complete terminal/ASR/export acceptance remain separate work.
+The runtime and the SDK have separate locks. Preserve the Tiptap/ProseMirror repair pinned in the `overrides` of `runtime/package.json`. Readability 0.6.0 and MCP SDK 2.4.0 address the earlier advisories. Audit each lock separately before changing dependencies. Complete terminal, ASR and export acceptance remain separate work.
 
 ## Private storage and offline direction: planned, not installed
 

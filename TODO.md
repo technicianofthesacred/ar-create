@@ -22,7 +22,7 @@ Except the Magazine check, each of these runs in a fresh worktree against `npm r
 - [ ] Try to reproduce the old console 409 on the history request before Direction, before changing anything; PR160's fix was reverted in PR161. If it no longer happens, leave the current words and context as they are. (C02/C04, S04 to S06)
 - [ ] Check the remaining Magazine command and editorial paths against the single-writer lock, using the installed CLI and exact revisions. Originals stay read-only. (C04/C06)
 - [ ] Measure transcript correction accuracy on one small example before adding an extra grading pass. (C03/C04, S02)
-- [ ] Refresh the dependency audit before any compatibility fix. The MCP SDK is already on 2.4.0, so the old 2.0.0 warning no longer applies. Recheck the old Readability finding without broad upgrades. (C04/C06)
+- [x] Refresh the dependency audit and verify web article extraction with the patched Readability 0.6.0. Runtime, MCP SDK and UI kit reported zero production findings after the update. (C04/C06)
 
 ## Needs Adrian, or its own agreed scope
 

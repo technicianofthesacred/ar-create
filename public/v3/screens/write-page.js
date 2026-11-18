@@ -19,6 +19,51 @@
   const sameRevision=(...a)=>W.sameRevision(...a);
   const undoOp=(...a)=>W.undoOp(...a);
 
+   // Source links never enter the text saved by the editor. Only exact saved ranges are marked.
+   let quoteRevision='',quoteLinks=[],quoteRead=0,sourceRead=0;
+   function quoteHTML(row){
+    const links=dirty()||quoteRevision!==JSON.stringify(st.base?.expected)?[]:quoteLinks.filter(l=>l.active&&l.paragraph.id===row.id&&l.paragraph.text===row.text.slice(l.paragraph.from,l.paragraph.to)).sort((a,b)=>a.paragraph.from-b.paragraph.from);
+    let at=0,html='';
+    for(const link of links){const p=link.paragraph;if(p.from<at||p.from<0||p.to>row.text.length||p.to<=p.from)continue;
+     const left=p.from>at&&/[“\"‘']/.test(row.text[p.from-1])?p.from-1:p.from,right=p.to<row.text.length&&/[”\"’']/.test(row.text[p.to])?p.to+1:p.to;
+     html+=esc(row.text.slice(at,left));
+     const kept=(st.kept||[]).some(k=>k.id===row.id&&row.text.indexOf(k.text)>=0&&row.text.indexOf(k.text)===row.text.lastIndexOf(k.text)&&row.text.indexOf(k.text)<p.to&&row.text.indexOf(k.text)+k.text.length>p.from);
+     html+=`<span class="wr-source-quote" data-quote-link="${esc(link.id)}" role="link" tabindex="0" aria-label="Open original source passage"><span>${esc(row.text.slice(left,p.from))}<span class="wr-source-dots${kept?' wr-source-dots-below':''}">${esc(p.text)}</span>${esc(row.text.slice(p.to,right))}</span></span>`;at=right;
+    }
+    return html+esc(row.text.slice(at));
+   }
+   function invalidateQuotes(){
+    quoteRead++;sourceRead++;quoteLinks=[];quoteRevision='';
+    // Unwrap in place. Native selection and manuscript nodes stay where the author left them.
+    for(const span of page.querySelectorAll('[data-quote-link]'))span.replaceWith(...span.childNodes);
+    for(const span of page.querySelectorAll('.wr-source-dots'))span.replaceWith(...span.childNodes);
+   }
+   async function loadQuoteLinks(){
+    if(!st.bindingId||dirty()||clk.gone)return;
+    const revision=JSON.stringify(st.base?.expected);if(revision===quoteRevision)return;quoteRevision=revision;quoteLinks=[];
+    const ticket=++quoteRead;
+    try{const result=await v2.call('study-draft.quote-link.get',scope());
+     if(ticket!==quoteRead||clk.gone||ctx.signal.aborted||dirty()||revision!==JSON.stringify(st.base?.expected))return;
+     quoteLinks=JSON.stringify(result.expected)===revision&&Array.isArray(result.links)?result.links:[];if(quoteLinks.some(l=>l.active))paintText();
+    }catch{/* An unavailable source link never changes or decorates manuscript words. */}
+   }
+   async function openQuote(linkId){
+    if(dirty()||clk.gone)return;
+    const ticket=++sourceRead,revision=JSON.stringify(st.base?.expected);
+    st.src=true;const work=$('.wr-work');if(work)work.dataset.src='open';
+    const box=$('[data-wr-src]');if(!box)return;
+    box.innerHTML='<p role="status">Checking the original passage…</p>';
+    try{const result=await v2.call('study-draft.quote-link.source',{...scope(),id:linkId});
+     if(ticket!==sourceRead||clk.gone||ctx.signal.aborted||dirty()||revision!==JSON.stringify(st.base?.expected))return;
+     if(JSON.stringify(result.expected)!==revision){invalidateQuotes();return;}
+     const source=result.source;
+     box.innerHTML=`<div class="wr-src-h"><h2>${esc(source.title||'Source')}</h2><button type="button" class="wr-btn" data-quote-close>Close source</button></div><p class="wr-dim">Original source · read only</p><pre class="wr-quote-source">${esc(source.before)}<mark>${esc(source.quote)}</mark>${esc(source.after)}</pre>`;
+    }catch(error){if(ticket!==sourceRead||clk.gone||ctx.signal.aborted)return;invalidateQuotes();box.innerHTML=`<p role="status">${esc(error.message)}</p>`;}
+   }
+   const onQuoteClick=e=>{const link=e.target.closest?.('[data-quote-link]');if(link){e.preventDefault();void openQuote(link.dataset.quoteLink);}else if(e.target.closest?.('[data-quote-close]')){sourceRead++;W.paintSources();}};
+   page.addEventListener('click',onQuoteClick);
+   page.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches?.('[data-quote-link]')){e.preventDefault();e.stopImmediatePropagation();void openQuote(e.target.dataset.quoteLink);}},true);
+
    // ---------- one paragraph, one editable line of the page ----------
    // Each paragraph is its own contenteditable="plaintext-only" element. What it holds is read as text only: a ring (any
    // node marked data-ring, never editable) is skipped, so nothing but his words ever reaches the save. The element is given
@@ -148,7 +193,7 @@
     const cls=r.kind==='heading'?' wr-h':r.kind==='blockquote'?' wr-q':'';
     if(st.plain)return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><textarea class="wr-ed${cls}" rows="1" data-ed="${esc(r.id)}" aria-label="${esc(label)}" spellcheck="true"${st.human?'':' readonly'}${r.fresh&&!r.text?' placeholder="Write here"':''}>${esc(r.text)}</textarea><div class="wr-drafts"></div></div><aside class="wr-margin"></aside></div>`;
     const tag=r.kind==='heading'?'h2':'p';
-    return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><${tag} class="wr-ed${cls}" data-ed="${esc(r.id)}" role="textbox" aria-multiline="false" aria-label="${esc(label)}" spellcheck="true" tabindex="0" contenteditable="${st.human?'plaintext-only':'false'}"${st.human?'':' aria-readonly="true"'}${r.fresh?' data-placeholder="Write here"':''}${r.text?'':' data-empty=""'}>${esc(r.text)}</${tag}><div class="wr-drafts"></div></div><aside class="wr-margin"></aside></div>`;
+    return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><${tag} class="wr-ed${cls}" data-ed="${esc(r.id)}" role="textbox" aria-multiline="false" aria-label="${esc(label)}" spellcheck="true" tabindex="0" contenteditable="${st.human?'plaintext-only':'false'}"${st.human?'':' aria-readonly="true"'}${r.fresh?' data-placeholder="Write here"':''}${r.text?'':' data-empty=""'}>${quoteHTML(r)}</${tag}><div class="wr-drafts"></div></div><aside class="wr-margin"></aside></div>`;
    }
    function paintText(){
     const box=$('[data-wr-text]');if(!box)return;
@@ -161,7 +206,7 @@
     for(const a of st.recovered?.added||[]){const at=(a.afterId&&box.querySelector(`[data-row="${CSS.escape(a.afterId)}"]`))||[...box.querySelectorAll('[data-row]')].at(-1);const html=recHTML({id:'rec-'+uuid(),kind:'paragraph'},a.text);if(at)at.insertAdjacentHTML('afterend',html);else box.insertAdjacentHTML('beforeend',html);}
     box.querySelectorAll('[data-ed]').forEach(editable);
     box.querySelectorAll('textarea').forEach(fit);
-    paintNotes();paintKept();paintConflict();
+    paintNotes();paintKept();paintConflict();void loadQuoteLinks();
     if(keep){const t=box.querySelector(`[data-ed="${CSS.escape(keep.id)}"]`);if(t){t.focus({preventScroll:true});try{t.setSelectionRange(keep.a,keep.b);}catch{}}}
    }
    function fit(t){if(t.tagName!=='TEXTAREA')return;t.style.height='auto';t.style.height=(t.scrollHeight+1)+'px';}
@@ -866,6 +911,7 @@
    // ---------- typing ----------
    function onInput(t){
     if(!st.human)return;
+    invalidateQuotes();
     const rid=t.dataset.ed,raw=t.value,value=flat(raw);
     // A newline that arrived with nothing to say it was one (some phone keyboards): it is Enter at that place, not a space.
     {const row=st.rows.find(r=>r.id===rid),a=row?null:st.added.find(x=>x.id===rid),prev=row?(st.edits.get(rid)?.text??row.words):a?String(a.text??''):null;
@@ -960,6 +1006,6 @@
    }
 
   return {claim,closedTab,forget,letAllGo,TAB,foreign,setAside,sendAsides,loadAsides,deviceAsides,classify,keepVersion,useEarlier,offerRecovered,decideRecovered,offerNext,sideHTML,sideAct,pairHTML,recHTML,marked,countLine,
-   textOf,offsetOf,pointAt,editable,status,paintFail,tryAgain,allWords,copyAll,loadKept,paintKept,undoLast,undoState,noteSave,paintAsk,noAsk,yesAsk,putBack,loadBack,endBack,takeBack,undoOp:takeBack,KEY,stash,unstash,ensureTail,order,removeAdded,rowHTML,paintText,fit,paintSaved,paintConflict,noticeNewer,useSaved,keepMine,wordsMap,foldAdded,adopt,carryAt,settleSent,takeOwn,say403,settled,save,run,startArticle,schedule,onInput,focusEditor,enter,join,refresh,onChange};
+   quoteHTML,invalidateQuotes,loadQuoteLinks,openQuote,textOf,offsetOf,pointAt,editable,status,paintFail,tryAgain,allWords,copyAll,loadKept,paintKept,undoLast,undoState,noteSave,paintAsk,noAsk,yesAsk,putBack,loadBack,endBack,takeBack,undoOp:takeBack,KEY,stash,unstash,ensureTail,order,removeAdded,rowHTML,paintText,fit,paintSaved,paintConflict,noticeNewer,useSaved,keepMine,wordsMap,foldAdded,adopt,carryAt,settleSent,takeOwn,say403,settled,save,run,startArticle,schedule,onInput,focusEditor,enter,join,refresh,onChange};
  };
 })(window.v2);

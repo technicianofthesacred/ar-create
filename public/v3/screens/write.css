@@ -339,3 +339,9 @@ dialog.v2-sheet .wr-asides .wr-pr{margin:0;font:400 var(--v2-t15)/1.6 var(--v2-s
 .wr .wr-question-input textarea,.wr .wr-question-input select{flex:1 1 12rem;min-width:0;max-width:100%;padding:6px 8px;border:1px solid var(--c3-line2);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
 .wr .wr-question-input textarea{resize:vertical}
 .wr .wr-question-answer{color:var(--dim)}
+
+/* The approved quote dots cover the exact wording, leaving quotation marks outside the mark. */
+.wr-source-quote{cursor:pointer}
+.wr-source-dots{text-decoration:underline dotted;text-decoration-thickness:1px;text-underline-offset:5px;text-decoration-color:color-mix(in srgb,var(--ink) 55%,transparent)}
+.wr-source-dots-below,.wr-source-dots:has(:is(.kept,u)),:is(.kept,u) .wr-source-dots{text-underline-offset:8px}
+.wr-quote-source{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.6}

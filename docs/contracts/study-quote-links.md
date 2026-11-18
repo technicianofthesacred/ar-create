@@ -1,0 +1,9 @@
+# Exact native text quote links
+
+POST `/api/study-draft/quote-link` accepts the exact native `bindingId`, `parentStudyId`, saved `expected` revision, a fresh UUID `operationId`, `paragraph:{id,blockHash,from,to,text}`, and `source:{id,hash,from,to,quote}`. Ranges use UTF-16 offsets and cannot divide a surrogate pair. The paragraph text and source quote must be identical. Creation requires an actor, never changes manuscript/source bytes, and writes an exclusive traceability receipt. Exact operation replay is allowed; changed input or another actor cannot reuse it.
+
+The source authority is the existing draft owner's verified immutable capture, including its identity and copied hash. A mutable external original is not silently substituted. Only source/transcript roles qualify. Unknown source IDs, ambiguous captures, changed bytes, out-of-bounds ranges, mismatched quoted words and stale manuscript revisions refuse with 409. No audio playback or timing is implied.
+
+GET the same endpoint with exact native scope returns `links`, each with `active` and an inactive `reason`. Any full saved revision change conservatively makes existing receipts inactive, even when another paragraph changed. No range is moved or inferred. GET `/api/study-draft/quote-link/source` with scope and `id` revalidates both ends and returns the captured passage as `before`, `quote`, `after`, plus exact source ID/hash/range/title. It refuses stale links rather than opening a guessed passage. Read-only lookup never saves words.
+
+Endpoints are available in capabilities as `study-draft.quote-link.get`, `study-draft.quote-link.post`, `study-draft.quote-link.source`. The Write surface must additionally hide marks immediately when its local unsaved paragraph diverges. Persisting traceability establishes a byte-exact quotation, not factual truth, editorial acceptance, or source consent.
