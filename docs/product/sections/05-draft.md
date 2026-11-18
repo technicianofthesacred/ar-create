@@ -133,3 +133,7 @@ The previous Open path kept earlier browser words separate; the reviewed startup
 ## 6 November — resume with exact words and guarded proposals
 
 C01/C02/C04/C06, S05/S06. The [current-work contract](../../contracts/current-work.md) returns the exact selected piece, protected wording, rejected alternatives and current app revision. Prepared text remains unchanged beside newer app context when stale; a matching context fingerprint still grants no apply permission. Existing native acceptance and Finish remain human actions. Provider presence, actual successful execution, proposed wording and accepted prose remain separate facts. Finish: cross-client pickup preserves owner/sibling identity and exact words, while app-only generation/review and live-provider evidence are qualified separately in TODO/CURRENT.
+
+## 18 November — Pending words across piece modes
+
+S05–S07, C02/C04/C06. Use the [saved-version notice contract](06-read-refine.md#18-november--saved-version-notice-after-an-interrupted-save) when Write has retained unsaved words. Read and Check keep their saved revision and identify it without applying recovery or merging tab variants.
