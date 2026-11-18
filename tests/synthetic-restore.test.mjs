@@ -15,6 +15,14 @@ import {createStudyOriginals} from '../runtime/services/study-originals.mjs';
 
 test('bounded clean-home restore: same native IDs, words, decisions, pending proposals, history, exports and exact Undo',async t=>{
  const f=await coherentFixture(t),base=await f.native(),operationId=op();
+ // Quote receipts are a separate bounded owner. Preserve their exact locators, never retarget on restore.
+ const quoteRow=base.projection.find(r=>r.safe!==false&&r.words.includes(words.phrase)),quoteSource=base.context.records.find(r=>r.role==='source'&&r.raw?.includes(words.phrase));
+ assert.ok(quoteRow&&quoteSource);
+ const quoteFrom=quoteRow.words.indexOf(words.phrase),sourceFrom=quoteSource.raw.indexOf(words.phrase);
+ const quoteInput={...f.scope,operationId:op(),expected:base.expected,paragraph:{id:quoteRow.id,blockHash:quoteRow.blockHash,from:quoteFrom,to:quoteFrom+words.phrase.length,text:words.phrase},source:{id:quoteSource.id,hash:quoteSource.copiedHash,from:sourceFrom,to:sourceFrom+words.phrase.length,quote:words.phrase}};
+ const quoteReceipt=(await f.request('/api/study-draft/quote-link',quoteInput)).link;
+ assert.equal(quoteReceipt.active,true);
+ assert.equal((await f.request(f.query('/api/study-draft/quote-link/source',{...f.scope,id:quoteReceipt.id}))).source.quote,words.phrase);
  const edit=await f.request('/api/study-draft/save',{...f.scope,expected:base.expected,operationId,operations:[{kind:'insert',id:op(),beforeId:null,raw:'Invented saved edit eligible for Undo after restoration.'}]},200,'human:adrian');
  await f.consent('people/answer',{personId:f.person.id,state:'yes'},'human:adrian');
  const ar=await f.request(f.query('/api/study/outputs',{...f.group,selectedOutputId:f.article.output.id}));
@@ -33,6 +41,7 @@ test('bounded clean-home restore: same native IDs, words, decisions, pending pro
  const pendingOperation={...f.scope,expected:edit.expected,operationId:op(),operations:[{kind:'insert',id:op(),beforeId:null,raw:'Interrupted native words retained exactly.'}]};
  await assert.rejects(owner.save(pendingOperation),/lost native acknowledgement/);assert.equal(interrupted,true);
  const snapshot=syntheticSnapshot(f,{sourceRevision:sourceRevision});
+ const quoteSnapshot=snapshot.rows.find(r=>r.kind==='file'&&r.path.startsWith('owned/study-quote-links/')&&r.path.endsWith('/'+quoteReceipt.id+'.json'));assert.ok(quoteSnapshot,'Snapshot retains the populated quote receipt owner');
  const destination=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'w8-restored-')));t.after(()=>fs.rmSync(destination,{recursive:true,force:true}));
  const restored=restoreSynthetic(snapshot,destination);
  // Make every old original/data path unavailable, so accidental old-root reads fail.
@@ -43,6 +52,15 @@ test('bounded clean-home restore: same native IDs, words, decisions, pending pro
  const pendingRead=await api(f.query('/api/study-draft/read',f.scope));assert.equal(pendingRead.readiness.ready,false);
  const recoveredOperation=await api('/api/study-draft/recover',{...f.scope,operationId:pendingOperation.operationId});assert.equal(recoveredOperation.readiness.ready,true);assert.ok(recoveredOperation.raw.includes('Interrupted native words retained exactly.'));
  const native=await api('/api/study-draft/undo',{...f.scope,expected:recoveredOperation.expected,operationId:op(),undoOperationId:pendingOperation.operationId});assert.equal(native.raw,edit.raw);assert.deepEqual(native.projection,edit.projection);
+ assert.equal(digest(fs.readFileSync(path.join(destination,quoteSnapshot.path))),quoteSnapshot.hash,'Quote receipt bytes are restored exactly');
+ const restoredQuote=(await api(f.query('/api/study-draft/quote-link',f.scope))).links.find(l=>l.id===quoteReceipt.id);
+ assert.ok(restoredQuote);assert.deepEqual(restoredQuote.paragraph,quoteReceipt.paragraph);assert.deepEqual(restoredQuote.source,quoteReceipt.source);assert.equal(restoredQuote.active,false,'A later draft revision never retargets an old quotation');
+ await api(f.query('/api/study-draft/quote-link/source',{...f.scope,id:quoteReceipt.id}),undefined,409);
+ const freshQuoteRow=native.projection.find(r=>r.id===quoteRow.id),freshQuoteInput={...quoteInput,operationId:op(),expected:native.expected,paragraph:{...quoteInput.paragraph,blockHash:freshQuoteRow.blockHash}};
+ const freshQuote=(await api('/api/study-draft/quote-link',freshQuoteInput)).link;
+ const restoredPassage=(await api(f.query('/api/study-draft/quote-link/source',{...f.scope,id:freshQuote.id}))).source;
+ assert.equal(restoredPassage.quote,words.phrase);assert.equal(restoredPassage.hash,quoteSource.copiedHash);assert.equal(restoredPassage.id,quoteSource.id);assert.equal(restoredPassage.before+restoredPassage.quote+restoredPassage.after,quoteSource.raw,'Fresh exact link reads the relocated capture with old roots unavailable');
+ assert.equal((await api(f.query('/api/study-draft/read',f.scope))).raw,native.raw,'Relinking never changes restored manuscript');
  assert.deepEqual(await api(f.query('/api/study-ai/contracts',f.scope)),before.contracts);
  assert.equal((await api('/api/concept?parentStudyId=hk')).authorThoughts,words.note);
  assert.deepEqual((await api('/api/simmer/board?subject=hk')).groups,before.board.groups);
@@ -69,7 +87,7 @@ test('synthetic restore validates before writes and leaves failed partial files 
  const f=await coherentFixture(t);assert.throws(()=>syntheticSnapshot(f,{sourceRevision:'a'.repeat(40)}),/Close fixture/);await f.close();const snapshot=syntheticSnapshot(f,{sourceRevision:'a'.repeat(40)});
  const parent=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'w8-restore-negative-')));t.after(()=>fs.rmSync(parent,{recursive:true,force:true}));
  const privateFixture=()=>{const dir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'w8-restored-')));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return dir;};
- for(const mutate of [s=>s.rows.find(r=>r.kind==='file').bytes='Y2hhbmdlZA==',s=>s.rows[0].path='../escape',s=>s.rows[0].path='owned/oauth',s=>s.rows.push({...s.rows[0]}),s=>s.inventoryHash='0'.repeat(64)]){const s=structuredClone(snapshot);mutate(s);const dest=privateFixture(),stamp=fs.statSync(dest);assert.throws(()=>restoreSynthetic(s,dest));assert.deepEqual(fs.readdirSync(dest),[]);assert.equal(fs.statSync(dest).ino,stamp.ino);}
+ for(const mutate of [s=>s.rows.find(r=>r.kind==='file').bytes='Y2hhbmdlZA==',s=>s.rows[0].path='../escape',s=>s.rows[0].path='owned/oauth',s=>s.rows.push({path:'owned/unregistered-owner',kind:'directory'}),s=>s.rows.push({...s.rows[0]}),s=>s.inventoryHash='0'.repeat(64)]){const s=structuredClone(snapshot);mutate(s);const dest=privateFixture(),stamp=fs.statSync(dest);assert.throws(()=>restoreSynthetic(s,dest));assert.deepEqual(fs.readdirSync(dest),[]);assert.equal(fs.statSync(dest).ino,stamp.ino);}
  const missing=path.join(parent,'missing');assert.throws(()=>restoreSynthetic(snapshot,missing),/ENOENT/);assert.equal(fs.existsSync(missing),false,'Helper never creates a destination');
  const occupied=privateFixture();fs.writeFileSync(path.join(occupied,'keep'),'Unrelated exact bytes.');assert.throws(()=>restoreSynthetic(snapshot,occupied),/destination refused/);assert.deepEqual(fs.readdirSync(occupied),['keep']);assert.equal(fs.readFileSync(path.join(occupied,'keep'),'utf8'),'Unrelated exact bytes.');
  const broken=structuredClone(snapshot),binding=broken.rows.find(r=>/metadata\/ar-project-folder-bindings\/[a-f0-9-]+\.json$/.test(r.path));assert.ok(binding);const invalid=Buffer.from('{broken binding json');binding.bytes=invalid.toString('base64');binding.size=invalid.length;binding.hash=digest(invalid);broken.inventoryHash=digest(JSON.stringify(broken.rows.map(({bytes,...r})=>r)));const failed=privateFixture(),failedStamp=fs.statSync(failed);assert.throws(()=>restoreSynthetic(broken,failed),SyntaxError);assert.equal(fs.statSync(failed).ino,failedStamp.ino);assert.deepEqual(fs.readFileSync(path.join(failed,binding.path)),invalid,'Failed partial fixture remains for caller inspection');for(const row of broken.rows.filter(r=>r.kind==='file'))assert.equal(digest(fs.readFileSync(path.join(failed,row.path))),row.hash,'No helper rollback deletes partial files');assert.equal(fs.readFileSync(path.join(occupied,'keep'),'utf8'),'Unrelated exact bytes.');
