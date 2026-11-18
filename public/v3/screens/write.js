@@ -532,7 +532,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   const adv=section=>v2.advanced({subject:id,piece:story.pieceId,section});
   const readStory=()=>v2.call('magazine.working-draft.read',sel);
   const questionScope={storyId:story.storyId,pieceId:story.pieceId};
-  let questionRecord=null,answering=false;
+  let questionRecord=null,answering=false,questionsOpen=false,selectedQuestion=null;
   const answerRequests=new Map();
 
   const all=()=>[...st.edits.values()];
@@ -604,48 +604,73 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const out=$('.wr-todo .v2-out');if(out)out.setAttribute('data-wr-advanced','');
    paintText();paintSaved();paintConflict();paintProps();
   }
+  function questionLabel(q){
+   const labels=[[/title/i,'Title'],[/read the draft/i,'Draft'],[/remember/i,'Memory'],[/when.*visit|when was/i,'Visit'],[/introduce|introduced/i,'Person']];
+   return labels.find(([pattern])=>pattern.test(q.title))?.[1]||q.title;
+  }
   function questionHTML(q,editable){
    const id='wr-question-'+q.index;
    const label=q.text?'Your answer':q.otherLabel||'Your own answer';
-   return `<form class="wr-question" data-wr-question="${q.index}" aria-labelledby="${id}">
+   return `<form class="wr-question" data-wr-question="${q.index}" aria-labelledby="${id}" id="${id}-form" ${q.index===selectedQuestion?'':'hidden'}>
     <h3 id="${id}">${esc(q.title)}</h3>
     ${q.context.map(line=>`<p class="wr-dim">${esc(line)}</p>`).join('')}
     ${q.answered?`<p class="wr-question-answer">Answered: ${esc(q.value)}</p>`:
       editable?`<div class="wr-question-input">
-       ${q.options.length?`<select name="choice" aria-labelledby="${id}"><option value="">Choose an answer</option>${q.options.map(option=>`<option value="${esc(option.label)}">${esc(option.label)}</option>`).join('')}</select>`:''}
-       ${q.text||q.other?`<textarea name="answer" rows="2" maxlength="2000" aria-labelledby="${id}" placeholder="${esc(label)}"></textarea>`:''}
-       <button type="submit" class="${CP}">Save answer</button>
+       ${q.options.length?`<input type="hidden" name="choice" value=""><div class="wr-question-choices" role="group" aria-labelledby="${id}">${q.options.map(option=>`<button type="button" class="${CB}" data-wr-question-choice="${esc(option.label)}" aria-pressed="false">${esc(option.label)}</button>`).join('')}</div>`:''}
+       ${q.text||q.other?`<textarea name="answer" rows="3" maxlength="2000" aria-labelledby="${id}" placeholder="${esc(label)}"></textarea>`:''}
+       <div class="wr-question-actions"><button type="submit" class="${CP}">Save answer</button></div>
       </div>`:''}
     <p class="wr-dim" role="status" data-wr-question-status></p>
    </form>`;
   }
+  function paintQuestionBar(){
+   const box=$('[data-wr-questions]');
+   if(!box||!questionRecord)return;
+   const questions=questionRecord.questions.filter(q=>q.text||q.options.length||q.other);
+   const open=questions.filter(q=>!q.answered).length;
+   const toggle=box.querySelector('[data-wr-question-toggle]');
+   toggle.setAttribute('aria-expanded',String(questionsOpen));
+   toggle.querySelector('[data-wr-question-count]').textContent=open?open+' open':'All answered';
+   toggle.querySelector('[data-wr-question-action]').textContent=questionsOpen?'Close ×':'Review →';
+   box.querySelector('[data-wr-question-body]').hidden=!questionsOpen;
+   for(const button of box.querySelectorAll('[data-wr-question-select]')){
+    const index=Number(button.dataset.wrQuestionSelect),q=questions.find(item=>item.index===index);
+    button.setAttribute('aria-pressed',String(index===selectedQuestion));
+    button.setAttribute('aria-label',q.title+(q.answered?', answered':''));
+   }
+   for(const form of box.querySelectorAll('[data-wr-question]'))form.hidden=Number(form.dataset.wrQuestion)!==selectedQuestion;
+  }
   async function loadQuestions(){
    const box=$('[data-wr-questions]');
    if(!box)return;
-   const entered=[...box.querySelectorAll('[data-wr-question]')].map(form=>({
-    title:form.querySelector('h3').textContent,
-    choice:form.elements.choice?.value,
-    answer:form.elements.answer?.value
-   }));
    try{
     const record=await v2.call('magazine.article-questions',questionScope);
     if(gone||ctx.signal.aborted||!box.isConnected)return;
+    const entered=[...box.querySelectorAll('[data-wr-question]')].map(form=>({
+     title:form.querySelector('h3').textContent,
+     choice:form.elements.choice?.value,
+     answer:form.elements.answer?.value
+    }));
     questionRecord=record;
     const questions=record.questions.filter(q=>q.text||q.options.length||q.other);
     if(!questions.length){box.hidden=true;return;}
-    box.innerHTML='<h2>Questions for this article</h2>'+questions.map(q=>questionHTML(q,human&&record.editable)).join('');
+    if(!questions.some(q=>q.index===selectedQuestion))selectedQuestion=(questions.find(q=>!q.answered)||questions[0]).index;
+    box.innerHTML=`<button type="button" class="${coss({variant:'ghost',size:'sm',className:'w-full justify-between h-auto py-2 px-0'})} wr-question-toggle" data-wr-question-toggle aria-expanded="false" aria-controls="wr-question-body"><span>Questions <span class="wr-dim" data-wr-question-count></span></span><span data-wr-question-action></span></button>
+     <div id="wr-question-body" data-wr-question-body hidden><div class="wr-question-nav" role="group" aria-label="Choose a question">${questions.map(q=>`<button type="button" class="${CQ}" data-wr-question-select="${q.index}" aria-controls="wr-question-${q.index}-form" aria-pressed="false">${esc(questionLabel(q))}</button>`).join('')}</div>${questions.map(q=>questionHTML(q,human&&record.editable)).join('')}</div>`;
     for(const form of box.querySelectorAll('[data-wr-question]')){
      const matching=entered.filter(entry=>entry.title===form.querySelector('h3').textContent);
      if(matching.length!==1)continue;
      const old=matching[0];
      if(form.elements.choice&&old.choice)form.elements.choice.value=old.choice;
      if(form.elements.answer&&old.answer)form.elements.answer.value=old.answer;
+     for(const button of form.querySelectorAll('[data-wr-question-choice]'))button.setAttribute('aria-pressed',String(button.dataset.wrQuestionChoice===form.elements.choice?.value));
     }
     box.hidden=false;
+    paintQuestionBar();
    }catch(error){
     if(gone||ctx.signal.aborted||!box.isConnected)return;
     if(questionRecord){
-     const status=box.querySelector('[data-wr-question-status]');
+     const status=box.querySelector('[data-wr-question]:not([hidden]) [data-wr-question-status]');
      if(status)status.textContent='The questions could not be refreshed. Your unsaved answers are still here.';
      return;
     }
@@ -675,6 +700,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     questionRecord.hash=saved.hash;
     answerRequests.delete(key);
     form.outerHTML=questionHTML(q,true);
+    paintQuestionBar();
    }catch(error){
     if(!gone&&!ctx.signal.aborted&&form.isConnected){
      status.textContent=storyWords(error)||'Your answer could not be saved. Your words are still here.';
@@ -688,6 +714,15 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   page.addEventListener('submit',answerQuestion);
   page.addEventListener('click',event=>{
    if(event.target.closest('[data-wr-question-retry]'))void loadQuestions();
+   if(event.target.closest('[data-wr-question-toggle]')){questionsOpen=!questionsOpen;paintQuestionBar();}
+   const selected=event.target.closest('[data-wr-question-select]');
+   if(selected){selectedQuestion=Number(selected.dataset.wrQuestionSelect);paintQuestionBar();}
+   const choice=event.target.closest('[data-wr-question-choice]');
+   if(choice){
+    const form=choice.closest('[data-wr-question]');
+    form.elements.choice.value=choice.dataset.wrQuestionChoice;
+    for(const button of form.querySelectorAll('[data-wr-question-choice]'))button.setAttribute('aria-pressed',String(button===choice));
+   }
   });
   /** Why the whole page is read only, when it is for a reason other than being an assistant's: the switch, or the Magazine. */
   function paintLocked(){
