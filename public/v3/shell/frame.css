@@ -8,9 +8,9 @@
    place on hover or focus; the band keeps one line at one height. */
 
 :root,:root[data-theme="light"]{
- --v3-band:color-mix(in srgb,var(--bg) 92%,var(--ink));--v3-edge:var(--c3-line2);
+ --v3-band:var(--band);--v3-edge:var(--line-strong);
  --v3-fill:color-mix(in srgb,var(--ink) 7%,var(--v3-band));--v3-fill2:color-mix(in srgb,var(--ink) 12%,var(--v3-band));
- --v3-top:48px;--v3-phone:60px}
+ --v3-phone:60px}
 :root[data-theme="dark"]{
  --v3-band:color-mix(in srgb,var(--bg) 55%,#000);
  --v3-fill:color-mix(in srgb,var(--ink) 11%,var(--v3-band));--v3-fill2:color-mix(in srgb,var(--ink) 17%,var(--v3-band))}

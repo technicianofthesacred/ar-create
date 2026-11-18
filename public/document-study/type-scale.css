@@ -7,12 +7,11 @@
    ids and !important, and this is the one place the scale has to win. */
 :root:root:root{
  --z:1;
- --t-label:calc(13px * var(--z));
- --t-body:calc(15px * var(--z));
- --t-reading:calc(16px * var(--z));
- --t-head:calc(15px * var(--z));
- --t-title:calc(17px * var(--z));
- --lh-ui:1.45;--lh-read:1.65;
+ /* sizes come from the master style file (/ui/tokens.css), which scales them by --z */
+ --t-label:var(--t-detail);
+ --t-reading:var(--t-page);
+ --t-head:var(--t-body);
+ --lh-read:var(--lh-page);
  --measure:calc(640px * var(--z));
  --wb-doc-left:64px;--wb-doc-top:48px;
  /* The C3 tokens every look module already reads now come from the one scale. */

@@ -2,21 +2,15 @@
    The important layer wins over legacy unlayered control overrides without
    escalating selector specificity. It does not change page or editor layout. */
 @layer graphite-controls {
+  /* Graphite's settings read the master style file (/ui/tokens.css). */
   :root {
-    --graphite-ink: #292e28;
-    --graphite-inverse: #faf9f5;
-    --graphite-secondary: #e9e8e2;
-    --graphite-field: #faf9f5;
-    --graphite-border: #d8d7cf;
-    --graphite-radius: 6px;
-    --graphite-field-height: 28px;
-  }
-  :root[data-theme="dark"] {
-    --graphite-ink: #eeeee7;
-    --graphite-inverse: #20231f;
-    --graphite-secondary: #30352d;
-    --graphite-field: #20231f;
-    --graphite-border: #3c4139;
+    --graphite-ink: var(--ink);
+    --graphite-inverse: var(--paper);
+    --graphite-secondary: var(--fill);
+    --graphite-field: var(--paper);
+    --graphite-border: var(--grey-5);
+    --graphite-radius: var(--r-control);
+    --graphite-field-height: var(--ctl-h);
   }
 
   /* Keep navigation, photo tiles, drag handles and document text geometry.
@@ -29,7 +23,7 @@
     --graphite-button: var(--graphite-secondary);
     --graphite-label: var(--graphite-ink);
     box-sizing: border-box !important;
-    min-height: 28px !important;
+    min-height: var(--ctl-h) !important;
     height: auto !important;
     padding: 3px 10px !important;
     border: 1px solid transparent !important;
@@ -37,7 +31,7 @@
     background: var(--graphite-button) !important;
     color: var(--graphite-label) !important;
     box-shadow: none !important;
-    font: 600 13px/20px var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    font: var(--w-strong) var(--t-detail)/20px var(--font-ui) !important;
     letter-spacing: normal !important;
     text-transform: none !important;
     white-space: nowrap !important;

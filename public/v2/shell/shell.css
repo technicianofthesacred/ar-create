@@ -8,8 +8,8 @@
 @font-face{font-family:'AR Atlas Lora';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/lora-400-normal-latin.woff2') format('woff2')}
 @font-face{font-family:'AR Atlas Lora';font-style:italic;font-weight:400;font-display:swap;src:url('/assets/fonts/lora-400-italic-latin.woff2') format('woff2')}
 
-:root{--v2-t12:12px;--v2-t13:13px;--v2-t14:14px;--v2-t15:15px;--v2-t18:18px;--v2-t22:22px;
- --v2-speech:'AR Atlas Lora',Lora,Georgia,serif;--v2-top:48px;--v2-gutter:40px;--v2-width:1320px;
+:root{/* type sizes, the Lora face and the bar height come from /ui/tokens.css */
+ --v2-gutter:40px;--v2-width:1320px;
  --v2-brand:transparent;--v2-br:var(--warm);--v2-sec:var(--graphite-secondary,var(--c3-sel))}
 html[data-brand]{--v2-br:color-mix(in oklab,var(--v2-brand) 76%,var(--ink))}
 html{background:var(--bg)}

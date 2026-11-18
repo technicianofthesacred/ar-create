@@ -74,7 +74,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: var(--r-control); /* every corner from the master style file, /ui/tokens.css */
   --background: var(--paper);
   --foreground: var(--ink);
   --card: var(--paper);
@@ -83,14 +83,14 @@
   --popover-foreground: var(--ink);
   --primary: var(--ink);
   --primary-foreground: var(--paper);
-  --secondary: color-mix(in srgb, var(--ink) 6%, transparent);
+  --secondary: var(--fill);
   --secondary-foreground: var(--ink);
   --muted: color-mix(in srgb, var(--ink) 5%, transparent);
   --muted-foreground: var(--dim);
   --accent: color-mix(in srgb, var(--ink) 6%, transparent);
   --accent-foreground: var(--ink);
-  --border: color-mix(in srgb, var(--ink) 10%, transparent);
-  --input: color-mix(in srgb, var(--ink) 14%, transparent);
+  --border: var(--grey-3);
+  --input: var(--grey-5);
   --ring: var(--warm);
   --destructive: var(--c3-bad);
   --destructive-foreground: var(--c3-bad);
@@ -105,15 +105,15 @@
 }
 
 /* Graphite, the app's older default for every plain button and field, retuned to coss's quiet look in version three:
-   a faint fill instead of the greenish grey, coss's rounder corners, the app's own text colours, and field edges in the
+   a faint fill instead of the greenish grey, the master corner (6), the app's own text colours, and field edges in the
    quiet tone. Graphite keeps drawing the buttons; only its settings change, so every unstyled button matches. */
 :root {
   --graphite-ink: var(--ink);
   --graphite-inverse: var(--paper);
-  --graphite-secondary: color-mix(in srgb, var(--ink) 6%, transparent);
+  --graphite-secondary: var(--fill);
   --graphite-field: color-mix(in srgb, var(--ink) 3%, var(--paper));
-  --graphite-border: color-mix(in srgb, var(--ink) 14%, transparent);
-  --graphite-radius: 10px;
+  --graphite-border: var(--grey-5);
+  --graphite-radius: var(--r-control);
 }
 
 /* The small part of coss's page-wide reset its parts rely on, applied only to elements that opt in (class "coss"),
