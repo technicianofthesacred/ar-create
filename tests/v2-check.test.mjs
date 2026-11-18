@@ -247,18 +247,24 @@ test('without Write\'s shared helpers, Check says so plainly and does not fail',
 });
 
 // ---------- the real server ----------
-let world=null;
+let worldPromise=null,closeWorld=null;
 async function theWorld(){
- if(world)return world;
- const fixture=syntheticHome(),config=JSON.parse(fs.readFileSync(fixture.config,'utf8'));
- const s=await createServer({dataDir:config.dataDir,publicDir:path.join(repo,'public'),studyOriginalRoots:config.studyOriginalRoots,sharedArticles:true,researchEnabled:false,packageView:{syntheticFixtures:true}});
- await new Promise(r=>s.listen(0,'127.0.0.1',r));
- const url='http://127.0.0.1:'+s.address().port;
- const filled=await fillDemo(url,{only:[CHECKED.slug,'the-first-cup']});
- world={base:url,filled,close:async()=>{await new Promise(r=>s.close(r));fs.rmSync(fixture.dir,{recursive:true,force:true});}};
- return world;
+ // Cache initialization itself: a timed-out caller must not start a second fixture and lose the first server.
+ if(!worldPromise)worldPromise=(async()=>{
+  const fixture=syntheticHome(),config=JSON.parse(fs.readFileSync(fixture.config,'utf8'));
+  let s=null;
+  closeWorld=async()=>{if(s?.listening){const closed=new Promise((resolve,reject)=>s.close(error=>error?reject(error):resolve()));s.closeAllConnections();await closed;}fs.rmSync(fixture.dir,{recursive:true,force:true});};
+  try{
+   s=await createServer({dataDir:config.dataDir,publicDir:path.join(repo,'public'),studyOriginalRoots:config.studyOriginalRoots,sharedArticles:true,researchEnabled:false,packageView:{syntheticFixtures:true}});
+   await new Promise(r=>s.listen(0,'127.0.0.1',r));
+   const url='http://127.0.0.1:'+s.address().port;
+   const filled=await fillDemo(url,{only:[CHECKED.slug,'the-first-cup']});
+   return {base:url,filled};
+  }catch(error){await closeWorld();throw error;}
+ })();
+ return worldPromise;
 }
-after(async()=>{if(world)await world.close();});
+after(async()=>{if(worldPromise)await worldPromise.catch(()=>{});await closeWorld?.();});
 const getJSON=async(b,p,actor='agent:claude-code')=>{const r=await fetch(b+p,{headers:{'X-AR-Actor':actor,'X-AR-Client':'http'}});return r.json();};
 const postJSON=async(b,p,body,actor='agent:claude-code')=>{const r=await fetch(b+p,{method:'POST',headers:{'Content-Type':'application/json','X-AR-Actor':actor,'X-AR-Client':'http',Origin:b},body:JSON.stringify(body)});return {status:r.status,body:await r.json()};};
 const subjectOf=async(b,slug)=>{const st=await getJSON(b,'/api/subject/standing?parentStudyId=demo-'+slug);return {id:'demo-'+slug,root:st.facts.bindingId,piece:st.forms.find(f=>f.kind==='article').id,title:st.title};};

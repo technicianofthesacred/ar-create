@@ -69,6 +69,6 @@ try{
  console.log('ok - failed save retains exact words and two tabs stay separate; Read and Check warning visible:',expectWarning);
 }finally{
  await browser?.close();
- if(server.listening)await new Promise(r=>server.close(r));
+ if(server.listening){const closed=new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve()));server.closeAllConnections();await closed;}
  fs.rmSync(fixture.dir,{recursive:true,force:true});
 }

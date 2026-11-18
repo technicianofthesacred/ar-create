@@ -241,18 +241,24 @@ test('Read is a screen of its own: index.html loads it after write, before check
 });
 
 // ---- the same commands against the real server ----
-let world=null;
+let worldPromise=null,closeWorld=null;
 async function theWorld(){
- if(world)return world;
- const fixture=syntheticHome(),config=JSON.parse(fs.readFileSync(fixture.config,'utf8'));
- const s=await createServer({dataDir:config.dataDir,publicDir:path.join(repo,'public'),studyOriginalRoots:config.studyOriginalRoots,sharedArticles:true,researchEnabled:false,packageView:{syntheticFixtures:true}});
- await new Promise(r=>s.listen(0,'127.0.0.1',r));
- const base='http://127.0.0.1:'+s.address().port;
- await fillDemo(base,{only:['straw-over-the-rows','the-first-cup','circle-of-twelve']});
- world={base,close:async()=>{await new Promise(r=>s.close(r));fs.rmSync(fixture.dir,{recursive:true,force:true});}};
- return world;
+ // Cache initialization itself: a timed-out caller must not start a second fixture and lose the first server.
+ if(!worldPromise)worldPromise=(async()=>{
+  const fixture=syntheticHome(),config=JSON.parse(fs.readFileSync(fixture.config,'utf8'));
+  let s=null;
+  closeWorld=async()=>{if(s?.listening){const closed=new Promise((resolve,reject)=>s.close(error=>error?reject(error):resolve()));s.closeAllConnections();await closed;}fs.rmSync(fixture.dir,{recursive:true,force:true});};
+  try{
+   s=await createServer({dataDir:config.dataDir,publicDir:path.join(repo,'public'),studyOriginalRoots:config.studyOriginalRoots,sharedArticles:true,researchEnabled:false,packageView:{syntheticFixtures:true}});
+   await new Promise(r=>s.listen(0,'127.0.0.1',r));
+   const base='http://127.0.0.1:'+s.address().port;
+   await fillDemo(base,{only:['straw-over-the-rows','the-first-cup','circle-of-twelve']});
+   return {base};
+  }catch(error){await closeWorld();throw error;}
+ })();
+ return worldPromise;
 }
-after(async()=>{if(world)await world.close();});
+after(async()=>{if(worldPromise)await worldPromise.catch(()=>{});await closeWorld?.();});
 const getJSON=async(base,p)=>(await fetch(base+p)).json();
 async function subjectOf(base,slug){const st=await getJSON(base,'/api/subject/standing?parentStudyId=demo-'+slug);return {id:'demo-'+slug,binding:st.facts.bindingId,piece:st.forms.find(f=>f.kind==='article').id};}
 const draftOf=(base,sub)=>getJSON(base,`/api/study-draft/read?bindingId=${sub.binding}&parentStudyId=${sub.id}`);
