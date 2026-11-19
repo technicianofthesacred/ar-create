@@ -9,8 +9,8 @@ function boot(n=5){
  const calls=[];w.current=()=>p;w.c3Shell={register(_name,fn){this.paint=fn;}};w.projectLibrary={async close(){calls.push('close');d.querySelector('dialog').removeAttribute('open');}};w.combinedSubjects={async open(){calls.push('subjects');d.querySelector('dialog').setAttribute('data-combined-subjects','');d.querySelector('dialog').setAttribute('open','');}};
  w.workspaceNavigation={async changeMode(mode){calls.push(mode);}};d.querySelector('[data-tr-home]').onclick=()=>calls.push('home');[...d.querySelectorAll('.workflowStep')].forEach((b,i)=>b.onclick=()=>calls.push('stage:'+String(i+1)));w.eval(code);return {w,d,p,calls,close:()=>w.close()};
 }
-test('Combined rail exposes exactly twelve entrances while retaining every original handler',async()=>{
- const f=boot();assert.deepEqual([...f.d.querySelectorAll('.combined-rail [data-combined-nav]')].map(n=>n.textContent),['Home','Library','Material','Source','Research','Direction','Write','Check','Media','Arrange','Audience','Share','Outputs']);assert.equal(f.d.querySelectorAll('.workflowStep').length,12);
+test('Combined rail retains all checkpoints and exposes independent learning',async()=>{
+ const f=boot();assert.deepEqual([...f.d.querySelectorAll('.combined-rail [data-combined-nav]')].map(n=>n.textContent),['Home','Library','Material','Source','Research','Learning','Direction','Write','Check','Media','Arrange','Audience','Share','Outputs']);assert.equal(f.d.querySelectorAll('.workflowStep').length,12);
  await f.w.combinedNavigation.go('arrange');assert.deepEqual(f.calls,['arrange']);await f.w.combinedNavigation.go('subjects');assert.deepEqual(f.calls,['arrange','subjects']);assert.equal(f.d.querySelector('[data-combined-nav="subjects"]').getAttribute('aria-current'),'page');f.close();
 });
 test('piece Write and Read switch through the maintained selected-piece mode owner',async()=>{
@@ -25,7 +25,7 @@ test('rail keyboard navigation changes focus, never the selected work',()=>{
 });
 
 test('phone groups expose the same guarded entrances and Escape returns focus',async()=>{
- const f=boot(),button=f.d.querySelector('[data-combined-group="develop"]');button.click();assert.deepEqual([...f.d.querySelectorAll('#combined-phone-sheet button')].map(b=>b.textContent),['Library','Source','Research','Direction']);f.d.activeElement.dispatchEvent(new f.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));assert.equal(f.d.querySelector('#combined-phone-sheet'),null);assert.equal(f.d.activeElement,button);assert.deepEqual(f.calls,[]);f.close();
+ const f=boot(),button=f.d.querySelector('[data-combined-group="develop"]');button.click();assert.deepEqual([...f.d.querySelectorAll('#combined-phone-sheet button')].map(b=>b.textContent),['Library','Source','Research','Learning library','Direction']);f.d.activeElement.dispatchEvent(new f.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));assert.equal(f.d.querySelector('#combined-phone-sheet'),null);assert.equal(f.d.activeElement,button);assert.deepEqual(f.calls,[]);f.close();
 });
 test('a Source sheet captured before group navigation closes that group and Escape returns directly to the writer',async()=>{const f=boot();try{f.p.view='article';f.p.viewedStage=5;const owner={kind:'magazine',storyId:'saved-story',pieceId:'saved-piece',path:'Workflow/3-Develop/DEV - Synthetic.md'},H='a'.repeat(64);f.w.studyDraft={currentOwner:()=>owner,currentProof:()=>({owner,parentStudyId:f.p.id,draftHash:H,expected:{workflow:{draft:H}},sequence:2,dirty:true}),holdForContext:()=>({bufferToken:'kept-buffer'}),releaseContext:()=>({sameEditorNode:true})};const app=f.d.createElement('div');app.id='app';app.innerHTML='<main id="workspace"><div id="manuscript" contenteditable="true"><p>Exact unsaved writer words.</p></div></main>';f.d.body.append(app);const editor=f.d.getElementById('manuscript');f.w.eval(fs.readFileSync(new URL('../public/document-study/combined-sheets.js',import.meta.url),'utf8'));f.w.combinedSheets.registerOwner('source',({container})=>{container.textContent='Retained source reading';return {};});f.d.querySelector('[data-combined-group="develop"]').click();assert.ok(f.d.getElementById('combined-phone-sheet'));f.d.querySelector('#combined-phone-sheet [data-combined-nav="source"]').click();await new Promise(resolve=>setTimeout(resolve,0));assert.ok(f.d.getElementById('combined-sheet'));assert.equal(f.d.getElementById('combined-phone-sheet'),null);assert.equal(f.d.activeElement.hasAttribute('data-combined-sheet-close'),true);f.d.dispatchEvent(new f.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));await new Promise(resolve=>setTimeout(resolve,0));assert.equal(f.d.getElementById('combined-sheet'),null);assert.equal(f.d.getElementById('combined-phone-sheet'),null);assert.equal(f.d.getElementById('manuscript'),editor);assert.equal(editor.textContent,'Exact unsaved writer words.');assert.deepEqual(f.calls,[]);}finally{f.close();}});
 
@@ -121,4 +121,33 @@ test('Research returns to the same browser draft before a working file is bound'
  } finally {
   f.close();
  }
+});
+
+
+test('Learning library opens the maintained inquiry owner while keeping the exact draft and selection',async()=>{
+ const f=boot(5);try{
+  const editor=f.d.createElement('div');editor.id='manuscript';editor.contentEditable='true';editor.textContent='Exact unsaved inquiry detour words';f.d.body.append(editor);
+  const range=f.d.createRange();range.setStart(editor.firstChild,6);range.setEnd(editor.firstChild,13);f.w.getSelection().addRange(range);editor.scrollTop=23;let saves=0;
+  f.w.studyDraft={flush:async()=>{saves++;}};f.w.connectedWorkspace={openContext:async(...args)=>f.calls.push(args)};f.w.combinedNavigation.decorate();
+  const entry=f.d.querySelector('.combined-rail-band[data-band="develop"] [data-combined-nav="learning"]');assert.ok(entry,'Develop exposes Learning library');
+  assert.equal(entry.textContent,'Learning');assert.equal(entry.getAttribute('aria-label'),'Learning library');assert.equal(await f.w.combinedNavigation.go('learning'),true);
+  assert.deepEqual(f.calls,[['inquiries']]);assert.equal(saves,0);assert.strictEqual(f.d.getElementById('manuscript'),editor);assert.equal(editor.textContent,'Exact unsaved inquiry detour words');assert.equal(f.w.getSelection().toString(),'unsaved');assert.equal(editor.scrollTop,23);
+  f.d.querySelector('[data-combined-group="develop"]').click();assert.ok(f.d.querySelector('#combined-phone-sheet [data-combined-nav="learning"]'));
+ }finally{f.close();}
+});
+
+test('Learning library refuses an unavailable inquiry owner without changing the selected work',async()=>{const f=boot();try{assert.equal(await f.w.combinedNavigation.go('learning'),false);assert.match(f.d.querySelector('[role="status"]').textContent,/Learning library is not connected/);assert.deepEqual(f.calls,[]);assert.equal(f.p.viewedStage,5);}finally{f.close();}});
+
+test('the visible i64 OS exit uses only the maintained return validator and its original navigation link',async()=>{
+ const f=boot();try{
+  f.w.history.replaceState(null,'','?i64osReturn='+encodeURIComponent('http://localhost:8888/writing/tea'));
+  const api={exports:{}};new Function('module','window','document',fs.readFileSync(new URL('../public/document-study/i64-return.js',import.meta.url),'utf8'))(api,undefined,undefined);f.w.ArI64Return=api.exports;
+  const bar=f.d.createElement('header');bar.className='topbar';f.d.body.append(bar);f.w.ArI64Return.install(f.d,'http://localhost:8888/writing/tea');
+  let navigations=0;bar.querySelector('.i64-return').onclick=event=>{event.preventDefault();navigations++;};f.w.combinedNavigation.decorate();
+  const exit=f.d.querySelector('.combined-rail [data-combined-nav="os"]');assert.ok(exit,'OS exit is in visible rail');assert.equal(exit.textContent,'i64 OS');
+  assert.equal(await f.w.combinedNavigation.go('os'),true);assert.equal(navigations,1);
+  f.d.querySelector('[data-combined-group="develop"]').click();assert.ok(f.d.querySelector('#combined-phone-sheet [data-combined-nav="os"]'));
+  bar.querySelector('.i64-return').href='https://example.com/writing/tea';f.w.combinedNavigation.decorate();
+  assert.equal(f.d.querySelector('.combined-rail [data-combined-nav="os"]'),null);assert.equal(await f.w.combinedNavigation.go('os'),false);assert.equal(navigations,1);
+ }finally{f.close();}
 });
