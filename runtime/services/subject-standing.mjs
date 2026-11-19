@@ -77,7 +77,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
 
  // ---------- shared lists, read once and kept until a change of their kind ----------
  const READERS = {
-  catalog: async () => drafts.catalog(),
+  catalog: async () => drafts.catalog({purpose: 'navigation'}),
   library: async () => {const tree = await library.tree(); const byId = new Map(), byFolder = new Map(); for (const s of tree.sources || []) {if (!s?.id) continue; byId.set(s.id, s); if (s.rootId === 'library' && typeof s.rel_path === 'string') {const m = s.rel_path.match(/^Projects\/([^/]+)\//); if (m) {if (!byFolder.has(m[1])) byFolder.set(m[1], []); byFolder.get(m[1]).push(s);}}} return {byId, byFolder};},
   requests: async () => requestIndex(),
   plans: async () => instagram ? (await instagram.plans({})).plans || [] : [],

@@ -216,7 +216,7 @@ test('an assistant opens the page: the paragraphs are read only, nothing is kept
  const {w,doc,calls}=await page({hash:'#/write/s1?piece=o1',answers,search:'?reviewActor=agent:claude-code'});await settle(200);
  assert.match(doc.querySelector('.wr-draft').textContent,/Better words\./,'the proposal shows where the passage is, dim');
  assert.match(doc.querySelector('.wr-note').textContent,/Claude suggests new words/);
- assert.match(doc.querySelector('.wr-ro').textContent,/Opened as Claude\. Only Adrian writes here/);
+ assert.equal(doc.querySelector('.wr-ro'),null,'routine actor explanation stays out of the writing');
  doc.querySelector('[data-act="accept"]').click();await settle(120);
  assert.equal(doc.querySelector('#v2-messages').textContent.includes('Only Adrian can decide this. Claude can propose it, not do it.'),true);
  for(const t of doc.querySelectorAll('.wr-ed'))assert.ok(t.readOnly,'every paragraph is read only for an assistant');
