@@ -140,7 +140,8 @@ export function createStudyOriginals({ vaultRoot, filesRoot, catalog={projects:{
     },
     catalog() {
       return Object.entries(DRAFTS).map(([id, config]) => {
-        const { current } = draftRecords(vault, config);
+        // Discovery needs only the draft's metadata, not every supporting source.
+        const current = originalDraft(vault, config);
         return { id, parentStudyKey: config.parentStudyKey, partKey: config.partKey, title: current.title, originalHash: current.hash, path: config.path, modifiedAt: current.modifiedAt, contextScope: config.contextScope };
       });
     },

@@ -182,7 +182,7 @@
  // ---------- On your desk: the subjects in hand, in the band on a computer ----------
  let desk=[],deskSource=null,deskToken=0;
  async function defaultDesk(){
-  const [places,catalog]=await Promise.all([client.call('subject-places',{}),client.call('study-draft.catalog',{}).catch(()=>null)]);
+  const [places,catalog]=await Promise.all([client.call('subject-places',{}),client.call('study-draft.catalog',{purpose:'navigation'}).catch(()=>null)]);
   const names=new Map();for(const row of [...(catalog?.collections||[]),...(catalog?.drafts||[])])for(const key of [row?.parentStudyId,row?.parentStudyKey])if(key&&row.title&&!names.has(key))names.set(key,row.title);
   return (places?.places||[]).filter(p=>p.pinnedAt&&!p.archived).sort((a,b)=>(a.order??1e9)-(b.order??1e9)||String(a.pinnedAt).localeCompare(String(b.pinnedAt))).slice(0,5)
    .map(p=>({id:p.parentStudyId,title:names.get(p.parentStudyId)||p.parentStudyId}));

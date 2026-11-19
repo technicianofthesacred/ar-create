@@ -91,7 +91,7 @@
     text.innerHTML=`<p class="rd-empty" role="status">This piece has no saved words yet.</p>`;
     $('[data-rd-foot]').innerHTML=`<a class="wr-btn rd-edit-foot" href="${esc(to('write'))}">Write the first words</a>`;
    }else{
-    text.innerHTML=st.rows.map(rowHTML).join('');
+    text.innerHTML=st.rows.map(r=>st.story&&root.studyReadableMarkdown?`<div data-row="${esc(r.id)}">${root.V2Parts.storyProse(r)}</div>`:rowHTML(r)).join('');
     $('[data-rd-foot]').innerHTML=`<a class="wr-btn rd-edit-foot" href="${esc(to('write'))}">Edit words</a><a class="wr-btn" href="${esc(to('check'))}">Check this piece</a>`;
    }
   }

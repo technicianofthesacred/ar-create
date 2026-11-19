@@ -96,5 +96,22 @@
   return ()=>{for(const [t,f] of [['click',onClick],['keydown',onKey],['dragstart',onStart],['dragover',onOver],['drop',onDrop],['dragend',end]])container.removeEventListener(t,f);};
  }
 
- root.V2Parts=Object.freeze({esc,icon,ring,step,notBuilt,say,undo,sheet,reorder});
+ // Display only the visible projection; original-only metadata never enters the renderer.
+ function storyProse(row){
+  const renderer=root.studyReadableMarkdown,box=doc.createElement('div');box.className='rd';
+  const words=String(row.words??'');
+  if(!renderer){const p=doc.createElement('p');p.className='rd-p';p.textContent=words;box.append(p);}
+  else{
+   const visible=node=>node?.type==='text'?String(node.text||''):node?.type==='hardBreak'?'\n':(node?.content||[]).map(visible).join('');
+   if(row.doc&&visible(row.doc)===words)box.innerHTML=renderer.renderDocument(row.doc);
+   else if(row.kind==='heading'){
+    const level=Number(row.level)===3?3:2;
+    box.innerHTML='<h'+level+'>'+renderer.inline(words).replace(/\n/g,'<br>')+'</h'+level+'>';
+   }else if(row.kind==='blockquote')box.innerHTML='<blockquote>'+renderer.inline(words).replace(/\n/g,'<br>')+'</blockquote>';
+   else box.innerHTML=renderer.render(words);
+   for(const node of box.querySelectorAll('p,h1,h2,h3,blockquote,ul,ol'))node.classList.add(/^H/.test(node.tagName)?'rd-h':node.closest('blockquote')?'rd-q':'rd-p');
+  }
+  return box.outerHTML;
+ }
+ root.V2Parts=Object.freeze({esc,icon,ring,step,notBuilt,say,undo,sheet,reorder,storyProse});
 })(window);

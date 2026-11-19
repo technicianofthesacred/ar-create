@@ -10,6 +10,8 @@ Reconciled 10 November 2026; installed release refreshed 13 November 2026 (versi
 | Real Article to its own Carousel (C01/C04/C06, S05/S06/S10) | **After Adrian's review, when he asks for it.** Delivery assigns who builds it. | On the accepted real Article: direct edits, save, reopen, exact Undo where allowed, and a separate Carousel created and reopened, with the Article, its sources and sibling pieces unchanged. Already shown on invented data. |
 | Whole editorial journey and output fidelity (C01 to C06, S01 to S12) | **Open.** Delivery picks one piece and edition. The 18 November separate notice candidate identifies saved words in Read/Check after a refused v3 save and retains both tab variants; focused and disposable browser proof passed, installation remains pending. | Detours to Source, Research and Direction return to the same writing; Media, Arrange, Check and the downloaded Article and Carousel match the chosen saved edition, consent holds still apply, and publication stays a separate step. |
 
+- [ ] Review the 19 November writing-opening and Magazine formatting repair on invented data, then authorize integration and installation; measure the real article again after installation. The candidate avoids full capture validation for navigation and restores existing manuscript formatting in v3 Write and Read. See [repair evidence](docs/status/WRITING-OPENING-2026-11-19.md).
+
 ## Agent work, ready to pick up
 
 Except the Magazine check, each of these runs in a fresh worktree against `npm run demo` without asking. Check the result by eye in the demo and include screenshots in the report. The Magazine check reads real records through the installed CLI: take a lease on any record you write.
