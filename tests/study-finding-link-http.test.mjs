@@ -21,7 +21,7 @@ test('public commands save a proposed finding and reconnect an existing brief wi
  const quote=source.raw.trim(),from=source.raw.indexOf(quote);
  const original={...scope,operationId:randomUUID(),findingId:'prior-anchor-without-finding',title:'Proposed invented video brief',sourcePath:source.path,sourceHash:source.hash,from,to:from+quote.length,quote};
  const added=await request('/api/study/video-briefs',original);assert.equal(added.status,200);
- const saved=await request('/api/study-research/findings',{...scope,operationId:randomUUID(),expectedExportHash:null,title:'Proposed invented finding',sourcePath:source.path,sourceHash:source.hash,from,to:original.to,quote,speaker:'Invented speaker',location:'Invented transcript; no media timing established',clarity:{supported:'These words exist in the original.',uncertain:'No real recording exists.',storyImplication:'Test a proposed source anchor.'}});
+ const saved=await request('/api/study-research/findings/save',{...scope,operationId:randomUUID(),expectedExportHash:null,title:'Proposed invented finding',sourcePath:source.path,sourceHash:source.hash,from,to:original.to,quote,speaker:'Invented speaker',location:'Invented transcript; no media timing established',clarity:{supported:'These words exist in the original.',uncertain:'No real recording exists.',storyImplication:'Test a proposed source anchor.'}});
  assert.equal(saved.status,200);const point=saved.value.points[0];assert.equal(point.provenance.actor,'agent:codex');
  const link={...scope,id:original.operationId,operationId:randomUUID(),expectedFindingId:original.findingId,findingId:point.id};
  assert.equal((await request('/api/study/video-briefs/relink',link)).status,200);
@@ -30,5 +30,6 @@ test('public commands save a proposed finding and reconnect an existing brief wi
  assert.equal(read.value.briefs.length,1);assert.equal(read.value.briefs[0].id,original.operationId);assert.equal(read.value.briefs[0].findingId,point.id);
  assert.equal((await request('/api/study-research/findings?projectKey=hk&parentStudyId=hk')).value.points[0].id,point.id);
  const capabilities=(await request('/api/capabilities')).value.commands;
- for(const route of ['/api/study-research/findings','/api/study/video-briefs/relink'])assert(capabilities.some(c=>c.route===route&&c.method==='POST'&&!c.readOnly));
+ assert(capabilities.some(c=>c.name==='study-research.findings'&&c.method==='GET'),'Preserve the existing public read command name.');
+ for(const route of ['/api/study-research/findings/save','/api/study/video-briefs/relink'])assert(capabilities.some(c=>c.route===route&&c.method==='POST'&&!c.readOnly));
 });

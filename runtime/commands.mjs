@@ -93,7 +93,7 @@ const BODY = {
   '/api/study/outputs/stand-in-save':['rootBindingId','parentStudyId','selectedOutputId','operationId','expectedOutput','expectedNative?','changes'],
   '/api/study/video-briefs':['projectKey','parentStudyId','operationId','findingId','title','sourcePath','sourceHash','from','to','quote'],
   '/api/study/video-briefs/relink':['projectKey','parentStudyId','id','operationId','expectedFindingId','findingId'],
-  '/api/study-research/findings':['projectKey','parentStudyId','operationId','expectedExportHash','title','sourcePath','sourceHash','from','to','quote','speaker','location','clarity'],
+  '/api/study-research/findings/save':['projectKey','parentStudyId','operationId','expectedExportHash','title','sourcePath','sourceHash','from','to','quote','speaker','location','clarity'],
   '/api/study/footage/ranges':['bindingId','parentStudyId','operationId','expected','sourceId','sourceHash','metadataHash','inTicks','outTicks','label','decision','rangeId?'],
   '/api/study/outputs/visual-review':['rootBindingId','parentStudyId','selectedOutputId','exportId','operationId','expectedOutput','expectedManifestHash','reviewedFiles','humanDecision'],
   '/api/study/structure-tests/visual-review':['rootBindingId','parentStudyId','selectedOutputId','exportId','operationId','expectedOutput','expectedManifestHash','reviewedFiles'],
@@ -470,8 +470,8 @@ export function createRouteMap(services) {
       '/api/study/photos/available': {GET:()=>draftCall(()=>studyPhotos.available({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId'),bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')}))},
       '/api/study/photos/add': {POST:input=>draftCall(()=>studyPhotos.add(input))},
       '/api/study/photos/update': {POST:input=>draftCall(()=>studyPhotos.update(input))},
-      '/api/study-research/findings': {
-        GET:()=>draftCall(()=>{const projectKey=url.searchParams.get('projectKey'),parentStudyId=url.searchParams.get('parentStudyId');if(projectKey?.startsWith('structure-test-')){if(projectKey!==parentStudyId)throw new StateError('Choose the exact copy Research scope.',400);return structureTestRecords.findings({parentStudyId});}return studyDerivedFindings.read({projectKey,parentStudyId});}),
+      '/api/study-research/findings': {GET:()=>draftCall(()=>{const projectKey=url.searchParams.get('projectKey'),parentStudyId=url.searchParams.get('parentStudyId');if(projectKey?.startsWith('structure-test-')){if(projectKey!==parentStudyId)throw new StateError('Choose the exact copy Research scope.',400);return structureTestRecords.findings({parentStudyId});}return studyDerivedFindings.read({projectKey,parentStudyId});})},
+      '/api/study-research/findings/save': {
         POST:input=>draftCall(()=>{
           if(url.search)throw new StateError('Use the exact Research finding-save command.',400);
           if(!studyDerivedFindings)throw new StateError('Research findings are unavailable.',503);

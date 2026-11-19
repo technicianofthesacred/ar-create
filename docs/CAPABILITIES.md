@@ -442,8 +442,8 @@
 | `research.atlas.search` | `POST /api/research/atlas/search` | any | read |
 | `study-research.choices.get` | `GET /api/study-research/choices` | any | read |
 | `study-research.choices.post` | `POST /api/study-research/choices` | any | write |
-| `study-research.findings.get` | `GET /api/study-research/findings` | any | read |
-| `study-research.findings.post` | `POST /api/study-research/findings` | any | write |
+| `study-research.findings` | `GET /api/study-research/findings` | any | read |
+| `study-research.findings.save` | `POST /api/study-research/findings/save` | any | write |
 | `study.research` | `GET /api/study/research` | any | read |
 | `study.research.answer` | `GET /api/study/research/answer` | any | read |
 | `study.research.brief` | `GET /api/study/research/brief` | any | read |
