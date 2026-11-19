@@ -1,24 +1,24 @@
 @layer workbench-share {
 /* Share adopts V.share's measure and mine geometry; saved fields remain in their owner. */
-html body.wbf-on #app #workspace.wb-share .wb-invitation{display:block!important;box-sizing:border-box!important;width:auto!important;max-width:var(--measure,40rem)!important;margin:0 32px 32px!important;padding:0!important;font-size:var(--t-body)!important;line-height:1.5!important}
+html body.wbf-on #app #workspace.wb-share .wb-invitation{display:block!important;box-sizing:border-box!important;width:auto!important;max-width:var(--measure,40rem)!important;margin:0 32px 32px!important;padding:0!important;font-size:var(--size-body)!important;line-height:var(--lh-ui)!important}
 html body.wbf-on #app #workspace.wb-share .wb-invitation> *{order:0!important;min-height:0}
 html body.wbf-on #app #workspace.wb-share .wb-invitation>.oss-heading{display:none!important}
-html body.wbf-on #app #workspace.wb-share .wb-share-intro{margin:0 0 14px!important;font-size:var(--t-body)!important;line-height:1.5!important;color:var(--dim)}
-html body.wbf-on #app #workspace.wb-share .wb-invitation>.mine{display:block!important;box-sizing:border-box!important;width:100%!important;max-width:none!important;height:auto!important;min-height:121px!important;margin:0!important;padding:10px 12px!important;border:1px solid color-mix(in srgb,var(--warm) 45%,var(--line))!important;border-radius:9px!important;background:var(--paper)!important}
-html body.wbf-on #app #workspace.wb-share .mine .who{display:flex;font:500 var(--t-label)/1.5 var(--ar-ui);color:var(--warm)}
-html body.wbf-on #app #workspace.wb-share .mine textarea{display:block!important;box-sizing:border-box!important;width:100%!important;min-height:74px!important;height:74px;max-width:100%!important;margin:0!important;padding:4px 0 0!important;border:0!important;border-radius:0!important;background:none!important;font:400 var(--t-body)/1.5 var(--ar-ui)!important;color:var(--ink)!important;resize:vertical}
+html body.wbf-on #app #workspace.wb-share .wb-share-intro{margin:0 0 14px!important;font-size:var(--size-body)!important;line-height:var(--lh-ui)!important;color:var(--fg-muted)}
+html body.wbf-on #app #workspace.wb-share .wb-invitation>.mine{display:block!important;box-sizing:border-box!important;width:100%!important;max-width:none!important;height:auto!important;min-height:121px!important;margin:0!important;padding:10px 12px!important;border:1px solid color-mix(in srgb,var(--edge-accent) 45%,var(--edge))!important;border-radius:9px!important;background:var(--surface-card)!important}
+html body.wbf-on #app #workspace.wb-share .mine .who{display:flex;font:500 var(--size-detail)/var(--lh-ui) var(--font-ui);color:var(--fg-accent)}
+html body.wbf-on #app #workspace.wb-share .mine textarea{display:block!important;box-sizing:border-box!important;width:100%!important;min-height:74px!important;height:74px;max-width:100%!important;margin:0!important;padding:4px 0 0!important;border:0!important;border-radius:0!important;background:none!important;font:400 var(--size-body)/var(--lh-ui) var(--font-ui)!important;color:var(--fg-main)!important;resize:vertical}
 html body.wbf-on #app #workspace.wb-share .wb-share-actions{margin:12px 0!important;gap:8px}
 html body.wbf-on #app #workspace.wb-share .wb-share-link{margin:12px 0 0!important}
-html body.wbf-on #app #workspace.wb-share .wb-share-link button{background:var(--warm)!important;color:var(--bg)!important;border-color:var(--warm)!important}
-html body.wbf-on #app #workspace.wb-share .wb-share-privacy{margin:8px 0 18px!important;color:var(--dim);font-size:var(--t-label)!important}
-html body.wbf-on #app #workspace.wb-share .wb-correspondence{margin:0!important;padding:0!important;border:0!important;border-top:1px solid var(--line)!important;background:none!important;border-radius:0!important}
-html body.wbf-on #app #workspace.wb-share .wb-correspondence>summary{display:list-item!important;width:auto!important;padding:10px 0!important;border:0!important;border-radius:0!important;background:none!important;font:500 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim)!important}
-html body.wbf-on #app #workspace.wb-share .oss-status{margin:10px 0!important;padding:0!important;font-size:var(--t-label)!important;color:var(--dim)}
+html body.wbf-on #app #workspace.wb-share .wb-share-link button{background:var(--warm)!important;color:var(--bg)!important;border-color:var(--edge-accent)!important}
+html body.wbf-on #app #workspace.wb-share .wb-share-privacy{margin:8px 0 18px!important;color:var(--fg-muted);font-size:var(--size-detail)!important}
+html body.wbf-on #app #workspace.wb-share .wb-correspondence{margin:0!important;padding:0!important;border:0!important;border-top:1px solid var(--edge)!important;background:none!important;border-radius:0!important}
+html body.wbf-on #app #workspace.wb-share .wb-correspondence>summary{display:list-item!important;width:auto!important;padding:10px 0!important;border:0!important;border-radius:0!important;background:none!important;font:500 var(--size-detail)/var(--lh-ui) var(--font-ui)!important;color:var(--fg-muted)!important}
+html body.wbf-on #app #workspace.wb-share .oss-status{margin:10px 0!important;padding:0!important;font-size:var(--size-detail)!important;color:var(--fg-muted)}
 html body.wbf-on #app #workspace.wb-share :is(input,select){max-width:100%;min-width:0}
 html body.wbf-on #app #workspace.wb-share .oss-output{flex:1 1 240px}
 html body.wbf-on #app #workspace.wb-share .oss-output select{flex:1;min-width:0}
-html body.wbf-on #app #workspace.wb-share :is(button,summary):hover:not(:disabled){border-color:color-mix(in srgb,var(--warm) 50%,var(--line))!important;color:var(--ink)}
-html body.wbf-on #app #workspace.wb-share :is(button,summary,input,select,textarea):focus-visible{outline:2px solid var(--warm)!important;outline-offset:2px!important}
+html body.wbf-on #app #workspace.wb-share :is(button,summary):hover:not(:disabled){border-color:color-mix(in srgb,var(--edge-accent) 50%,var(--edge))!important;color:var(--fg-main)}
+html body.wbf-on #app #workspace.wb-share :is(button,summary,input,select,textarea):focus-visible{outline:2px solid var(--edge-accent)!important;outline-offset:2px!important}
 @media(max-width:760px){html body.wbf-on #app #workspace.wb-share .wb-invitation{margin:0 16px 32px!important;max-width:calc(100% - 32px)!important}.wb-share .wb-share-actions{gap:6px}}
 
 html body.wbf-on #app #workspace.wb-share .wb-invitation[data-c3-empty-hidden]{display:none!important}
@@ -27,13 +27,13 @@ html body.wbf-on #app #workspace.wb-share .wb-invitation[data-c3-empty-hidden]{d
 
 /* The board's three columns: people in this piece, the message, replies. */
 .share-board{display:grid;grid-template-columns:200px minmax(0,1fr) minmax(0,320px);gap:20px;align-items:start;margin-top:10px}
-.share-people h3{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--dim,#8f897c)}
+.share-people h3{margin:0 0 8px;font-size:var(--size-detail);font-weight:600;color:var(--fg-muted)}
 .share-people ul{list-style:none;margin:0 0 8px;padding:0}
-.share-people .share-person{display:block;width:100%;text-align:left;padding:7px 8px;border:0;border-radius:5px;background:none;color:inherit;font:inherit;font-size:13.5px;cursor:pointer}
-.share-people .share-person.is-current{background:var(--paper,rgba(255,255,255,.05));font-weight:600}
+.share-people .share-person{display:block;width:100%;text-align:left;padding:7px 8px;border:0;border-radius:5px;background:none;color:inherit;font:inherit;font-size:var(--size-detail);cursor:pointer}
+.share-people .share-person.is-current{background:var(--surface-card);font-weight:600}
 .share-people-select{display:none}
 .share-message,.share-replies{min-width:0}
-.share-replies{border-left:1px solid var(--line,#3a362f);padding-left:16px}
+.share-replies{border-left:1px solid var(--edge);padding-left:16px}
 @media(max-width:1100px){.share-board{grid-template-columns:minmax(0,1fr)}.share-replies{border-left:0;padding-left:0}.share-people ul{display:flex;flex-wrap:wrap;gap:4px}.share-people .share-person{width:auto}}
 @layer workbench-share {
 /* The board layout needs the full width; the reading measure applies only to the message itself. */
@@ -42,12 +42,12 @@ html body.wbf-on #app #workspace.wb-share .wb-invitation .share-message .mine{ma
 }
 
 /* Share, once opened without a saved piece: the line and the Feedback record use the shared type and sit in the page flow. */
-html body.wbf-on #app #workspace.wb-share .wb-invitation{font-family:var(--ar-ui)}
-html body.wbf-on #app #workspace.wb-share .wb-invitation>p{font:400 var(--t-body)/1.5 var(--ar-ui);color:var(--dim)}
-html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained{box-sizing:border-box;width:auto;max-width:var(--measure,40rem);margin:24px 32px 32px!important;padding:16px 0 0!important;border-top:1px solid var(--line);font:400 var(--t-body)/1.5 var(--ar-ui)}
-html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained :is(h2,h3,p,section,article){font-family:var(--ar-ui);max-width:none;margin-left:0!important;margin-right:0!important;padding-left:0;padding-right:0}
-html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained h3{font:600 var(--t-label)/1.5 var(--ar-ui);color:var(--dim);margin:0 0 8px}
-html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained h2{font:600 var(--t-head)/1.5 var(--ar-ui);margin:0 0 6px}
-html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained p{font:400 var(--t-body)/1.5 var(--ar-ui);margin:0 0 8px}
+html body.wbf-on #app #workspace.wb-share .wb-invitation{font-family:var(--font-ui)}
+html body.wbf-on #app #workspace.wb-share .wb-invitation>p{font:400 var(--size-body)/var(--lh-ui) var(--font-ui);color:var(--fg-muted)}
+html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained{box-sizing:border-box;width:auto;max-width:var(--measure,40rem);margin:24px 32px 32px!important;padding:16px 0 0!important;border-top:1px solid var(--edge);font:400 var(--size-body)/var(--lh-ui) var(--font-ui)}
+html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained :is(h2,h3,p,section,article){font-family:var(--font-ui);max-width:none;margin-left:0!important;margin-right:0!important;padding-left:0;padding-right:0}
+html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained h3{font:600 var(--size-detail)/var(--lh-ui) var(--font-ui);color:var(--fg-muted);margin:0 0 8px}
+html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained h2{font:600 var(--t-head)/var(--lh-ui) var(--font-ui);margin:0 0 6px}
+html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained p{font:400 var(--size-body)/var(--lh-ui) var(--font-ui);margin:0 0 8px}
 html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained :is(.phaseReader,.recordPage){padding-inline:0!important;margin-inline:0!important;max-width:none!important}
 html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained{margin-left:26px!important}

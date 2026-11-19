@@ -2,26 +2,26 @@
    spoken transcripts, saved content and each tool's controls keep their owner. */
 @layer tool-refinement {
   body.wbf-on :is(.popover, .catalogDrawer, .footage-ranges) {
-    font: 400 var(--t-body, 15px)/var(--lh-ui, 1.45) var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
-    color: var(--ink) !important;
-    background: var(--paper) !important;
-    border-color: var(--line) !important;
+    font: 400 var(--t-body, var(--size-body))/var(--lh-ui, 1.45) var(--font-ui) !important;
+    color: var(--fg-main) !important;
+    background: var(--surface-card) !important;
+    border-color: var(--edge) !important;
     box-shadow: none !important;
     overflow-wrap: anywhere;
   }
   body.wbf-on :is(.popover h2, .catalogDrawer h2, .footage-ranges h2) {
-    font: 600 var(--t-title, 17px)/1.5 var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
-    color: var(--ink) !important;
+    font: 600 var(--t-title, var(--t-title, 17px))/1.5 var(--font-ui) !important;
+    color: var(--fg-main) !important;
     margin: 0 0 12px !important;
     padding: 0 !important;
   }
   body.wbf-on :is(.popover p, .popover label, .catalogDrawer .small, .cropInputs label, .footage-context) {
-    font: 400 var(--t-label, 13px)/1.5 var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
-    color: var(--dim) !important;
+    font: 400 var(--t-label, var(--size-detail))/1.5 var(--font-ui) !important;
+    color: var(--fg-muted) !important;
   }
   body.wbf-on .popover .context {
-    font: 400 var(--t-reading, 16px)/var(--lh-read, 1.65) var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
-    color: var(--ink) !important;
+    font: 400 var(--t-reading, var(--t-reading, 16px))/var(--lh-read, 1.65) var(--font-ui) !important;
+    color: var(--fg-main) !important;
     background: transparent !important;
     border: 0 !important;
     padding: 0 !important;
@@ -29,13 +29,13 @@
   }
   /* Caption editing is authored working text, outside the slide artwork. */
   body.wbf-on .caption > .words {
-    font: 400 var(--t-reading, 16px)/var(--lh-read, 1.65) var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
-    color: var(--ink) !important;
-    caret-color: var(--ink);
+    font: 400 var(--t-reading, var(--t-reading, 16px))/var(--lh-read, 1.65) var(--font-ui) !important;
+    color: var(--fg-main) !important;
+    caret-color: var(--fg-main);
   }
   body.wbf-on .catalogDrawer h3 {
-    font: 600 var(--t-head, 15px)/1.5 var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
-    color: var(--ink) !important;
+    font: 600 var(--t-head, var(--t-head, 15px))/1.5 var(--font-ui) !important;
+    color: var(--fg-main) !important;
   }
   body.wbf-on .footage-ranges {
     border-radius: var(--graphite-radius, 6px) !important;
@@ -46,15 +46,15 @@
     gap: 8px 16px;
   }
   body.wbf-on .footage-range {
-    border-color: var(--line) !important;
+    border-color: var(--edge) !important;
     min-width: 0;
   }
   body.wbf-on .footage-range strong {
     font-weight: 500 !important;
   }
   body.wbf-on .footage-range small {
-    font-size: var(--t-label, 13px) !important;
-    color: var(--dim) !important;
+    font-size: var(--size-detail) !important;
+    color: var(--fg-muted) !important;
   }
   body.wbf-on .footage-form label {
     min-width: 0;
@@ -63,7 +63,7 @@
     font-variant-numeric: tabular-nums;
   }
   body.wbf-on .source-continuation {
-    font: 400 var(--t-body, 15px)/var(--lh-ui, 1.45) var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    font: 400 var(--t-body, var(--size-body))/var(--lh-ui, 1.45) var(--font-ui) !important;
   }
   body.wbf-on .source-continuation-reader {
     width: 100% !important;
@@ -71,7 +71,7 @@
     min-width: 0;
   }
   body.wbf-on .source-continuation-reader-heading {
-    font: 400 var(--t-label, 13px)/1.5 var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    font: 400 var(--t-label, var(--size-detail))/1.5 var(--font-ui) !important;
   }
   body.wbf-on .source-continuation-reader-heading strong {
     font-weight: 500 !important;
@@ -80,12 +80,12 @@
      and actual transcript speech keep their original reading typography. */
   body.wbf-on .source-continuation-reader[data-source-kind='text'] :is(.source-continuation-prose, .source-continuation-prose :is(p, li, blockquote, pre, del, ins)),
   body.wbf-on .source-continuation-reader[data-source-kind='text'] > pre {
-    font: 400 var(--t-reading, 16px)/var(--lh-read, 1.65) var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    font: 400 var(--t-reading, var(--t-reading, 16px))/var(--lh-read, 1.65) var(--font-ui) !important;
     letter-spacing: normal !important;
     max-width: 70ch !important;
   }
   body.wbf-on .source-continuation-reader[data-source-kind='text'] .source-continuation-prose :is(h1, h2, h3, h4, h5, h6) {
-    font: 600 var(--t-title, 17px)/1.5 var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    font: 600 var(--t-title, var(--t-title, 17px))/1.5 var(--font-ui) !important;
     letter-spacing: normal !important;
   }
   body.wbf-on .source-continuation-prose {
@@ -93,6 +93,6 @@
   }
   body.wbf-on :is(.popover, .catalogDrawer, .footage-ranges) ::selection {
     background: color-mix(in srgb, var(--warm) 20%, transparent);
-    color: var(--ink);
+    color: var(--fg-main);
   }
 }

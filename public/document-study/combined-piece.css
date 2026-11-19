@@ -3,39 +3,39 @@ html body.wbf-on.combined-piece-on #c3-tabstrip.wbf-top>.combined-piece-switch{d
 html body.wbf-on.combined-piece-on #c3-surface-bar{display:none!important}
 html body.wbf-on.combined-piece-on #app{margin-top:48px!important;height:calc(100dvh - 48px)!important}
 html body.wbf-on.combined-piece-on #workspace{--measure:620px;--t-reading:calc(16.5px * var(--z,1));--lh-read:1.72;min-width:0!important}
-html body.wbf-on.combined-piece-on #workspace>#combined-piece-frame.cp-top{position:sticky;top:0;z-index:16;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto auto;align-items:center;gap:8px;order:-11;flex:none;box-sizing:border-box;width:auto;max-width:1120px;margin:16px 24px 8px;padding:0 0 8px;background:var(--bg);font:400 13px/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif);color:var(--ink)}
-.cp-top button,.cp-strip button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:6px;padding:3px 10px;min-height:28px;white-space:nowrap;cursor:pointer}
-.cp-top .cp-tool{grid-column:1;grid-row:1;font:650 20px/1.4 var(--ar-ui)}
-.cp-top .cp-subject{grid-column:2;grid-row:1;justify-self:start;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;text-align:left;font-weight:500;color:var(--dim);border:0}
-.cp-top .cp-subject::before{content:'· ';color:var(--dim)}
+html body.wbf-on.combined-piece-on #workspace>#combined-piece-frame.cp-top{position:sticky;top:0;z-index:16;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto auto;align-items:center;gap:8px;order:-11;flex:none;box-sizing:border-box;width:auto;max-width:1120px;margin:16px 24px 8px;padding:0 0 8px;background:var(--surface-page);font:400 var(--size-detail)/var(--lh-ui) var(--font-ui);color:var(--fg-main)}
+.cp-top button,.cp-strip button{font:inherit;color:var(--fg-main);background:transparent;border:1px solid var(--edge);border-radius:6px;padding:3px 10px;min-height:28px;white-space:nowrap;cursor:pointer}
+.cp-top .cp-tool{grid-column:1;grid-row:1;font:650 var(--size-section)/var(--lh-snug) var(--font-ui)}
+.cp-top .cp-subject{grid-column:2;grid-row:1;justify-self:start;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;text-align:left;font-weight:500;color:var(--fg-muted);border:0}
+.cp-top .cp-subject::before{content:'· ';color:var(--fg-muted)}
 .cp-top .cp-sep{display:none}
 .cp-tabs{grid-column:3/-1;grid-row:1;display:flex;align-items:center;min-width:0;gap:4px;justify-self:end}
 /* Many pieces: the tabs wrap onto more lines inside the space the tools below give them, right-aligned, instead of
    spilling left over the title and pushing the tools onto each other. Their own width no longer sizes the columns. */
 @media(min-width:801px){.cp-tabs{flex-wrap:wrap;justify-content:flex-end;justify-self:stretch;contain:inline-size}}
 .cp-tabs .cp-in-l{display:none}
-.cp-tabs .cp-tab{padding:4px 8px;border:0;border-bottom:2px solid transparent;border-radius:0;color:var(--dim)}
-.cp-tabs .cp-current{border-bottom-color:var(--warm);color:var(--ink)}
-.cp-tabs .cp-new{border:0;color:var(--warm);font-size:18px}
-.cp-modes{grid-column:1/3;grid-row:2;justify-self:start;display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:6px;gap:2px;padding:2px}
-.cp-modes button{border:0;border-radius:4px;color:var(--dim)}
+.cp-tabs .cp-tab{padding:4px 8px;border:0;border-bottom:2px solid transparent;border-radius:0;color:var(--fg-muted)}
+.cp-tabs .cp-current{border-bottom-color:var(--edge-accent);color:var(--fg-main)}
+.cp-tabs .cp-new{border:0;color:var(--fg-accent);font-size:var(--size-card-title)}
+.cp-modes{grid-column:1/3;grid-row:2;justify-self:start;display:inline-flex;align-items:center;border:1px solid var(--edge);border-radius:6px;gap:2px;padding:2px}
+.cp-modes button{border:0;border-radius:4px;color:var(--fg-muted)}
 .cp-checks{grid-column:3;grid-row:2;display:flex}
-.cp-saved{grid-column:4;grid-row:2;min-width:0;font-size:12px;color:var(--dim);white-space:normal}
+.cp-saved{grid-column:4;grid-row:2;min-width:0;font-size:var(--size-caption);color:var(--fg-muted);white-space:normal}
 .cp-main-tool{grid-column:5;grid-row:2;justify-self:end}
 .cp-more{grid-column:6;grid-row:2;justify-self:end}
-.cp-strip{min-height:32px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:4px 24px;border-bottom:1px solid var(--line);background:var(--rail);font:400 12px/1.5 var(--ar-ui);color:var(--dim);min-width:0;order:-10;flex:none}
-.cp-strip em{font-style:normal;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.cp-strip>button{margin-left:auto;color:var(--warm);border:0;flex:none}
+.cp-strip{min-height:32px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:4px 24px;border-bottom:1px solid var(--edge);background:var(--surface-panel);font:400 var(--size-caption)/var(--lh-ui) var(--font-ui);color:var(--fg-muted);min-width:0;order:-10;flex:none}
+.cp-strip em{font-style:normal;color:var(--fg-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.cp-strip>button{margin-left:auto;color:var(--fg-accent);border:0;flex:none}
 .cp-strip>span{flex:none}
-.cp-menu{position:fixed;z-index:100;top:110px;right:12px;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px;display:grid;gap:8px;max-height:calc(100dvh - 180px);overflow:auto;min-width:210px;max-width:calc(100vw - 24px);box-sizing:border-box}
+.cp-menu{position:fixed;z-index:100;top:110px;right:12px;background:var(--surface-card);color:var(--fg-main);border:1px solid var(--edge);border-radius:6px;padding:8px;display:grid;gap:8px;max-height:calc(100dvh - 180px);overflow:auto;min-width:210px;max-width:calc(100vw - 24px);box-sizing:border-box}
 .cp-menu button{text-align:left;white-space:normal}
-.cp-menu label{display:grid;gap:4px;color:var(--dim)}
-.cp-menu select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:6px;max-width:100%;padding:4px}
-.cp-status{grid-column:1/-1;grid-row:3;margin:0;padding:8px 0;color:var(--bad);font-size:13px;white-space:normal}
+.cp-menu label{display:grid;gap:4px;color:var(--fg-muted)}
+.cp-menu select{font:inherit;color:var(--fg-main);background:var(--surface-card);border:1px solid var(--edge);border-radius:6px;max-width:100%;padding:4px}
+.cp-status{grid-column:1/-1;grid-row:3;margin:0;padding:8px 0;color:var(--fg-danger);font-size:var(--size-detail);white-space:normal}
 /* Retain the same manuscript geometry and typography in Edit and Read. */
 html body.wbf-on.combined-piece-on #app #workspace .desk{display:grid!important;grid-template-columns:minmax(0,620px) minmax(0,200px)!important;gap:26px!important;max-width:none!important;width:100%!important;box-sizing:border-box!important;padding:24px 24px 0 max(24px,calc((100% - 620px)/2))!important;margin:0!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace .doc :is(#manuscript,.draft-read-words,.manuscript-prose) :is(p,div),html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace .doc .draft-read-words>section>p{font:400 calc(16.5px * var(--z,1))/1.72 var(--ar-ui)!important;margin:0 0 24px!important;padding:0!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace .doc>h1{font:600 calc(17px * var(--z,1))/1.5 var(--ar-ui)!important;margin:0 0 14px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace .doc :is(#manuscript,.draft-read-words,.manuscript-prose) :is(p,div),html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace .doc .draft-read-words>section>p{font:400 calc(16.5px * var(--z,1))/1.72 var(--font-ui)!important;margin:0 0 24px!important;padding:0!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace .doc>h1{font:600 calc(17px * var(--z,1))/1.5 var(--font-ui)!important;margin:0 0 14px!important}
 html body.wbf-on.combined-piece-on #app #workspace .doc>.wbf-doc-by{display:none!important}
 html body.wbf-on.combined-piece-on #app #workspace .desk>#margin{padding:24px 0 0!important;min-width:0!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace#workspace>.phaseReader.c3-read,html body.wbf-on.combined-piece-on[data-c3-stage="7"] #app #workspace .wn-check-layout{padding:24px 24px 0 max(24px,calc((100% - 620px)/2))!important;box-sizing:border-box!important}
@@ -46,22 +46,22 @@ html body.wbf-on.combined-piece-on[data-draft-focus=true] #app #workspace .desk>
  html body.wbf-on.combined-piece-on #workspace>#combined-piece-frame.cp-top{margin:16px 16px 8px;grid-template-columns:auto minmax(0,1fr) auto auto auto;column-gap:6px;row-gap:8px}
  .cp-top .cp-main-tool{display:none}
  .cp-top .cp-more{grid-column:5}
- .cp-top .cp-saved{grid-column:4;font-size:12px}
+ .cp-top .cp-saved{grid-column:4;font-size:var(--size-caption)}
  .cp-menu{top:150px}
 }
 @media(max-width:800px){
  html body.wbf-on.combined-piece-on #app{margin-top:var(--combined-phone-top)!important;height:calc(100dvh - var(--combined-phone-top) - var(--combined-phone-bottom))!important}
  html body.wbf-on.combined-piece-on #c3-tabstrip.wbf-top>:is(.ht-switch,.ht-theme,.wbf-top-actions){visibility:visible!important}
  html body.wbf-on.combined-piece-on #workspace>#combined-piece-frame.cp-top{height:auto!important;min-height:0!important;display:grid!important;margin:12px 12px 4px!important;padding:0!important;grid-template-columns:auto minmax(0,1fr) auto auto;gap:4px 6px!important}
- .cp-top .cp-tool{font-size:18px}
- .cp-top .cp-subject{font-size:13px}
+ .cp-top .cp-tool{font-size:var(--size-card-title)}
+ .cp-top .cp-subject{font-size:var(--size-detail)}
  .cp-top .cp-tabs{grid-column:3/-1;gap:0}
  .cp-tabs .cp-tab:not(.cp-current){display:none}
  .cp-top .cp-modes{grid-column:1;grid-row:2}
  .cp-top .cp-checks{grid-column:2;grid-row:2;justify-self:start}
  .cp-top .cp-saved{grid-column:3;grid-row:2}
  .cp-top .cp-more{grid-column:4;grid-row:2}
- .cp-strip{padding:4px 12px;font-size:12px;gap:6px}
+ .cp-strip{padding:4px 12px;font-size:var(--size-caption);gap:6px}
  .cp-strip>span:first-child{display:none}
  .cp-strip>button{min-height:44px}
  .cp-menu{top:192px;max-height:calc(100dvh - 260px)}
@@ -71,13 +71,13 @@ html body.wbf-on.combined-piece-on[data-draft-focus=true] #app #workspace .desk>
 }
 /* Ordinary groups retain distinct owner actions without a flat command wall. */
 .cp-menu{width:min(34rem,calc(100vw - 24px));gap:16px}
-.cp-menu-group{display:flex;flex-wrap:wrap;gap:6px;min-width:0;padding-top:10px;border-top:1px solid var(--line)}
+.cp-menu-group{display:flex;flex-wrap:wrap;gap:6px;min-width:0;padding-top:10px;border-top:1px solid var(--edge)}
 .cp-menu-group:first-child{padding-top:0;border-top:0}
-.cp-menu-group h3{flex:1 0 100%;font:600 13px/1.5 var(--ar-ui);margin:0 0 2px}
+.cp-menu-group h3{flex:1 0 100%;font:600 var(--size-detail)/var(--lh-ui) var(--font-ui);margin:0 0 2px}
 .cp-menu-group button{flex:1 1 140px;min-width:0}
 .cp-menu-group label{flex:1 1 100%;min-width:0}
 .cp-menu-group select{width:100%;min-width:0}
-.cp-menu :is(button,select):focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+.cp-menu :is(button,select):focus-visible{outline:2px solid var(--edge-accent);outline-offset:2px}
 @media(max-width:800px){.cp-menu{width:calc(100vw - 24px);max-height:calc(100dvh - 260px)}}
 @media(min-width:801px){.cp-menu-group[data-cp-menu-group="Other pieces"]{display:none}}
 

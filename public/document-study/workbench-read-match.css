@@ -10,13 +10,13 @@ html body.wbf-on[data-c3-stage="6"] #c3-surface-bar .sb-mode{display:none!import
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="6"] #c3-surface-bar :is(#wbf-tools button,#wbf-document-actions button:not(.wbf-mode-switch button)){
  display:inline-flex!important;align-items:center;justify-content:center;gap:7px;
  flex:0 0 auto!important;width:auto!important;min-width:0!important;height:34px!important;
- padding:0 12px!important;border:1px solid var(--line)!important;border-radius:7px!important;
- background:var(--paper)!important;color:var(--ink)!important;
- font:500 var(--t-label)/1.5 var(--ar-ui)!important;white-space:nowrap!important;
+ padding:0 12px!important;border:1px solid var(--edge)!important;border-radius:7px!important;
+ background:var(--surface-card)!important;color:var(--fg-main)!important;
+ font:500 var(--size-button)/var(--lh-ui) var(--font-ui)!important;white-space:nowrap!important;
 }
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="6"] #c3-surface-bar :is(#wbf-tools button,#wbf-document-actions button:not(.wbf-mode-switch button)):hover{
- background:var(--paper)!important;border-color:color-mix(in srgb,var(--warm) 50%,var(--line))!important;
+ background:var(--surface-card)!important;border-color:color-mix(in srgb,var(--edge-accent) 50%,var(--edge))!important;
 }
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="6"] #c3-surface-bar :is(#wbf-tools button,#wbf-document-actions button:not(.wbf-mode-switch button)):focus-visible{
- outline:2px solid var(--warm)!important;outline-offset:2px!important;
+ outline:2px solid var(--edge-accent)!important;outline-offset:2px!important;
 }

@@ -19,7 +19,15 @@
   if(!s||(s.v!==1&&s.v!==2)||!Array.isArray(s.edits)||!Array.isArray(s.added))return false;
   const saved=new Map((rows||[]).map(r=>[r.id,r]));
   if(s.added.some(a=>a&&typeof a.text==='string'&&a.text.trim()))return true;
-  return s.edits.some(([rid,text])=>{const r=saved.get(rid);return r&&r.safe&&String(text)!==r.words;});
+  return s.edits.some(([rid,text,original])=>{const r=saved.get(rid);return r?String(text)!==r.words:String(text)!==String(original??'');});
+ }
+ /** Version three keeps each live tab's words in its own slot. Read and Check inspect every slot of this exact draft. */
+ const draftSlot=(key,bindingId)=>key==='ar-v2-write:'+bindingId||key==='ar-v3-write:'+bindingId||
+  key.startsWith('ar-v3-write:'+bindingId+':')&&/^\d+$/.test(key.slice(('ar-v3-write:'+bindingId+':').length));
+ function unsavedForBinding(storage,bindingId,rows){
+  if(!storage||!bindingId)return false;
+  try{for(let i=0;i<storage.length;i++){const key=storage.key(i);if(key&&draftSlot(key,bindingId)&&unsavedIn(storage.getItem(key),rows))return true;}}catch{return false;}
+  return false;
  }
  /** Whether the words Write keeps on this device for a Magazine story (one entry for each paragraph) are not in the Magazine yet. */
  function storyUnsaved(story){
@@ -33,7 +41,7 @@
  }
  /** Whether a change of this kind alters the saved words (a save, undo, restore, recover); a check, inspect or read does not. */
  const changesWords=kind=>/^study-draft[.-]/.test(String(kind||''))&&!/^study-draft[.-](check|inspect|read|catalog|history-preview|root-recovery\.get)/.test(String(kind));
- v2.shared.read=Object.freeze({wordCount,countLabel,unsavedIn,storyUnsaved,rowHTML,changesWords});
+ v2.shared.read=Object.freeze({wordCount,countLabel,unsavedIn,unsavedForBinding,draftSlot,storyUnsaved,rowHTML,changesWords});
 
  v2.screen({id:'read',route:'read/:id',title:'Read',
   render:()=>'<div class="v2-page wr rd" data-rd><p class="wr-wait" role="status">Opening the reading.</p></div>',
@@ -55,8 +63,6 @@
   const sameRevision=(a,b)=>st.story?a?.document?.hash===b?.document?.hash:JSON.stringify(a?.expected)===JSON.stringify(b?.expected);
   const rowsOf=read=>st.story?write().storyRows(read):write().rowsOf(read);
   const watching=()=>st.story?st.story.storyId:st.bindingId;
-  const KEY=()=>st.story?'ar-v2-write-story:'+st.story.storyId+':'+st.story.pieceId:'ar-v2-write:'+st.bindingId;
-  const stored=()=>{if(!v2.isHuman())return '';try{return root.localStorage.getItem(KEY())||'';}catch{return '';}};
 
   function plain(text,{advanced=true}={}){
    page.innerHTML=`<div class="wr-none"><p role="status">${esc(text)}</p><p><a class="wr-btn" href="${esc(v2.href('subject/:id',{id}))}">${icon('back')}Back to the subject</a>${advanced?` <a class="wr-btn" href="${esc(adv('read'))}">Open in Advanced${icon('out')}</a>`:''}</p></div>`;
@@ -78,9 +84,9 @@
    const text=$('[data-rd-text]');if(!text||st.none)return;
    const words=wordCount(st.rows);
    page.querySelectorAll('[data-rd-count]').forEach(n=>{n.textContent=st.rows.length?countLabel(words):'';});
-   st.unsaved=!!watching()&&(st.story?v2.isHuman()&&storyUnsaved(st.story):unsavedIn(stored(),st.rows));
+   st.unsaved=!!watching()&&v2.isHuman()&&(st.story?storyUnsaved(st.story):unsavedForBinding(root.localStorage,st.bindingId,st.rows));
    const un=$('[data-rd-unsaved]');
-   if(un){un.hidden=!st.unsaved;un.innerHTML=st.unsaved?`You have unsaved words in Write on this device, so what you see here is older than what you typed. <a href="${esc(to('write'))}">Open Write</a> to carry on, and they save by themselves.`:'';}
+   if(un){un.hidden=!st.unsaved;un.innerHTML=st.unsaved?`You have unsaved words in Write on this device. This page shows the saved version.&nbsp;<a href="${esc(to('write'))}">Open Write</a> to retry or review them.`:'';}
    if(!st.rows.length){
     text.innerHTML=`<p class="rd-empty" role="status">This piece has no saved words yet.</p>`;
     $('[data-rd-foot]').innerHTML=`<a class="wr-btn rd-edit-foot" href="${esc(to('write'))}">Write the first words</a>`;
@@ -115,7 +121,7 @@
    clearTimeout(timer);timer=setTimeout(refresh,250);};
   const onRetry=e=>{if(e.target.closest?.('[data-rd-retry]')){clearTimeout(timer);void refresh();}};
   page.addEventListener('click',onRetry);
-  const onStorage=e=>{if(!e||!e.key||(st.story?String(e.key).startsWith(v2.shared.writeStory?.STORY_KEY(st.story)||'\0'):e.key===KEY()))paint();};
+  const onStorage=e=>{if(!e||!e.key||(st.story?String(e.key).startsWith(v2.shared.writeStory?.STORY_KEY(st.story)||'\0'):draftSlot(e.key,st.bindingId)))paint();};
 
   ctx.on({kinds:['study-draft*','magazine*']},onChange);
   ctx.on({},e=>{if(e.reset)onChange();});

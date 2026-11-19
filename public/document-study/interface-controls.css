@@ -6,15 +6,15 @@
     --graphite-button: transparent !important;
     --graphite-label: var(--ink) !important;
     background: transparent !important;
-    color: var(--ink) !important;
+    color: var(--fg-main) !important;
     border: 1px solid transparent !important;
     box-shadow: none !important;
     font-weight: 500 !important;
   }
   :is(.ar-destination,.ar-title-link,.cp-subject,.cp-tabs .cp-tab,.cp-tabs .cp-new,
     .wbf-top-actions .tbtn,.ht-theme,.cp-main-tool,.cp-more):not(:disabled):hover {
-    background: var(--sel) !important;
-    color: var(--ink) !important;
+    background: var(--surface-chosen) !important;
+    color: var(--fg-main) !important;
     filter: none;
   }
   :is(.ar-action,.cp-checks button) {
@@ -32,13 +32,13 @@
     align-items: center;
     gap: 2px;
     padding: 2px;
-    background: var(--rail) !important;
+    background: var(--surface-panel) !important;
     border: 1px solid var(--graphite-border) !important;
     border-radius: var(--graphite-radius) !important;
   }
   :is(.ar-mode-group,.cp-modes,.combined-piece-switch,.wbf-mode-switch)>button {
     background: transparent !important;
-    color: var(--dim) !important;
+    color: var(--fg-muted) !important;
     border: 1px solid transparent !important;
     box-shadow: none !important;
     border-radius: 4px !important;
@@ -50,13 +50,13 @@
     font-weight: 600 !important;
   }
   .cp-tabs .cp-tab {border-radius:0 !important;border-bottom:2px solid transparent !important;}
-  .cp-tabs .cp-current {border-bottom-color:var(--warm) !important;color:var(--ink) !important;font-weight:600 !important;}
-  .cp-tabs .cp-new {color:var(--warm) !important;}
-  .cp-saved {font-weight:500 !important;color:var(--dim) !important;}
-  button.cp-saved {background:var(--graphite-secondary) !important;color:var(--ink) !important;white-space:normal !important;}
+  .cp-tabs .cp-current {border-bottom-color:var(--edge-accent) !important;color:var(--fg-main) !important;font-weight:600 !important;}
+  .cp-tabs .cp-new {color:var(--fg-accent) !important;}
+  .cp-saved {font-weight:500 !important;color:var(--fg-muted) !important;}
+  button.cp-saved {background:var(--graphite-secondary) !important;color:var(--fg-main) !important;white-space:normal !important;}
   :is(.ar-icon-button,.ht-theme) {display:inline-flex !important;align-items:center;justify-content:center;flex:none;}
   :is(.ar-destination,.ar-title-link,.ar-action,.ar-icon-button,.cp-top button,.wbf-top-actions button,.ht-theme):disabled {opacity:.5 !important;cursor:default !important;}
-  :is(.ar-destination,.ar-title-link,.ar-action,.ar-icon-button,.cp-top button,.wbf-top-actions button,.ht-theme):focus-visible {outline:2px solid var(--warm) !important;outline-offset:2px !important;}
+  :is(.ar-destination,.ar-title-link,.ar-action,.ar-icon-button,.cp-top button,.wbf-top-actions button,.ht-theme):focus-visible {outline:2px solid var(--edge-accent) !important;outline-offset:2px !important;}
 
   /* The global header always keeps its actual subject and distinct utilities.
      Phone targets are physical 44px boxes, without transparent-border tricks. */
@@ -81,7 +81,7 @@
 
 @layer graphite-controls {
  @media(max-width:800px){
-  #c3-tabstrip.wbf-top .wbf-top-actions>:is([data-wbf-thought],[data-wbf-tool]){width:100% !important;min-width:0 !important;gap:6px;padding-inline:4px !important;font-size:13px !important;}
+  #c3-tabstrip.wbf-top .wbf-top-actions>:is([data-wbf-thought],[data-wbf-tool]){width:100% !important;min-width:0 !important;gap:6px;padding-inline:4px !important;font-size:var(--size-detail) !important;}
   #c3-tabstrip.wbf-top .wbf-top-actions .lbl-wide{display:inline !important;}
   #c3-tabstrip.wbf-top .wbf-top-actions .sizer{justify-self:end;}
  }
@@ -90,16 +90,16 @@
  @media(max-width:800px){
   #workspace>#combined-piece-frame.cp-top{display:grid !important;grid-template-columns:auto minmax(0,1fr) auto auto !important;width:auto !important;height:auto !important;min-height:0 !important;align-content:normal !important;gap:4px 6px !important;}
   #workspace>#combined-piece-frame.cp-top::before{content:none !important;}
-  #workspace>#combined-piece-frame.cp-top>.cp-subject{max-width:100% !important;font-size:13px !important;}
+  #workspace>#combined-piece-frame.cp-top>.cp-subject{max-width:100% !important;font-size:var(--size-detail) !important;}
   #workspace>#combined-piece-frame.cp-top>.cp-tabs{max-width:none !important;flex-wrap:nowrap !important;}
   #workspace>#combined-piece-frame.cp-top>.cp-checks{display:flex !important;}
   #workspace>#combined-piece-frame.cp-top>.cp-sep{display:none !important;}
   #workspace>#combined-piece-frame.cp-top .cp-tabs .cp-tab:not(.cp-current){display:none !important;}
-  #workspace>#combined-piece-frame.cp-top>.cp-saved{font-size:12px !important;min-height:0 !important;}
+  #workspace>#combined-piece-frame.cp-top>.cp-saved{font-size:var(--size-caption) !important;min-height:0 !important;}
   #workspace>#combined-piece-frame.cp-top>.cp-modes{min-height:0 !important;justify-content:start !important;}
   #workspace>#combined-piece-frame.cp-top>.cp-main-tool{display:none !important;}
   #workspace>#combined-piece-frame.cp-top>.cp-menu{top:192px !important;max-height:calc(100dvh - 260px) !important;}
-  #workspace>#combined-piece-inherits>em{font-size:12px !important;}
+  #workspace>#combined-piece-inherits>em{font-size:var(--size-caption) !important;}
   #workspace>#combined-piece-inherits>button{min-height:44px !important;}
  }
 }

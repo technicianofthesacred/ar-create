@@ -27,7 +27,7 @@ test('C02: full current tile targets Write with a panel open or closed, never an
  for(const panel of [false,true]){const f=fixture({panel});try{
   const selected=f.filled();assert.ok(selected.includes(f.d.querySelector('#write')));assert.ok(!selected.includes(f.d.querySelector('#read')));
   assert.equal(f.d.querySelector('#write').getAttribute('aria-current'),'step');
-  const style=f.w.getComputedStyle(f.d.querySelector('#write'));assert.equal(style.background,'var(--wb-current)');assert.equal(style.color,'var(--ink)');
+  const style=f.w.getComputedStyle(f.d.querySelector('#write'));assert.equal(style.background,'var(--wb-current)');assert.match(style.color,/^var\(--(ink|fg-main)\)$/);
   for(const child of f.d.querySelectorAll('#write svg,#write .stepName'))assert.equal(f.w.getComputedStyle(child).color,'inherit');
  }finally{f.close();}}
 });

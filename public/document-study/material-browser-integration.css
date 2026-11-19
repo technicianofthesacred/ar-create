@@ -2,5 +2,5 @@
 .material-browser-mounted .sws-secondary:has(>.material-reading){display:none}
 .material-browser-mounted .material-layout{display:block}
 .material-browser-mounted [data-material-browser-host]{min-width:0;margin:12px 0}
-.material-browser-mounted .mrb-reading{font-family:var(--shared-prose-font,'AR Atlas Lora',Georgia,serif);font-size:18px;line-height:1.8;max-width:680px;margin-inline:auto}
+.material-browser-mounted .mrb-reading{font-family:var(--font-words);font-size:var(--size-card-title);line-height:var(--lh-loose);max-width:680px;margin-inline:auto}
 @media(max-width:650px){.material-browser-mounted .mrb-browser{min-width:0}}

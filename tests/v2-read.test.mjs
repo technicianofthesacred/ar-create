@@ -126,6 +126,23 @@ test('words kept in Write on this device are said plainly; Read keeps showing th
  assert.equal(asst.doc.querySelector('[data-rd-unsaved]').hidden,true);
 });
 
+test('Read sees every version three tab slot for this exact piece and updates after another tab types',async()=>{
+ const answers={'/api/subject/standing':standing,...owned,'/api/study-draft/read':draft([row('r0','Saved words.')])};
+ const {w,doc}=await page({hash:'#/read/s1?piece=o1',answers});await settle(150);
+ const key='ar-v3-write:b1:1',kept=JSON.stringify({v:2,edits:[['r0','Newer words.','Saved words.']],added:[]});
+ assert.equal(doc.querySelector('[data-rd-unsaved]').hidden,true);
+ w.localStorage.setItem('ar-v3-write:another:1',kept);
+ w.dispatchEvent(new w.StorageEvent('storage',{key:'ar-v3-write:another:1'}));
+ assert.equal(doc.querySelector('[data-rd-unsaved]').hidden,true,'another piece cannot affect this one');
+ w.localStorage.setItem(key,kept);
+ w.dispatchEvent(new w.StorageEvent('storage',{key}));
+ assert.equal(doc.querySelector('[data-rd-unsaved]').hidden,false);
+ assert.equal(doc.querySelector('.rd-p').textContent,'Saved words.');
+ w.localStorage.removeItem(key);
+ w.dispatchEvent(new w.StorageEvent('storage',{key}));
+ assert.equal(doc.querySelector('[data-rd-unsaved]').hidden,true);
+});
+
 test('when the saved draft changes while Read is open, the new words are shown',async()=>{
  const answers={'/api/subject/standing':standing,...owned,'/api/study-draft/read':draft([row('r0','Before.')])};
  const {doc,sources}=await page({hash:'#/read/s1?piece=o1',answers});await settle(150);
@@ -193,7 +210,7 @@ test('a failed re-read says newer words exist only when a save was announced; ot
 
 test('the page leaves no grey band under a short piece on a phone',()=>{
  const css=read('public/v2/screens/read.css');
- assert.match(css,/@media \(max-width:850px\)\{[^@]*\.rd\.v2-page\{[^}]*background:var\(--paper\)[^}]*min-height:calc\(100dvh - var\(--v2-top\)\)/);
+ assert.match(css,/@media \(max-width:850px\)\{[^@]*\.rd\.v2-page\{[^}]*background:var\(--(?:paper|surface-card)\)[^}]*min-height:calc\(100dvh - var\(--v2-top\)\)/);
 });
 
 test('Edit words is in one place per width: the bar on a computer, under the text on a phone',()=>{
@@ -224,18 +241,24 @@ test('Read is a screen of its own: index.html loads it after write, before check
 });
 
 // ---- the same commands against the real server ----
-let world=null;
+let worldPromise=null,closeWorld=null;
 async function theWorld(){
- if(world)return world;
- const fixture=syntheticHome(),config=JSON.parse(fs.readFileSync(fixture.config,'utf8'));
- const s=await createServer({dataDir:config.dataDir,publicDir:path.join(repo,'public'),studyOriginalRoots:config.studyOriginalRoots,sharedArticles:true,researchEnabled:false,packageView:{syntheticFixtures:true}});
- await new Promise(r=>s.listen(0,'127.0.0.1',r));
- const base='http://127.0.0.1:'+s.address().port;
- await fillDemo(base,{only:['straw-over-the-rows','the-first-cup','circle-of-twelve']});
- world={base,close:async()=>{await new Promise(r=>s.close(r));fs.rmSync(fixture.dir,{recursive:true,force:true});}};
- return world;
+ // Cache initialization itself: a timed-out caller must not start a second fixture and lose the first server.
+ if(!worldPromise)worldPromise=(async()=>{
+  const fixture=syntheticHome(),config=JSON.parse(fs.readFileSync(fixture.config,'utf8'));
+  let s=null;
+  closeWorld=async()=>{if(s?.listening){const closed=new Promise((resolve,reject)=>s.close(error=>error?reject(error):resolve()));s.closeAllConnections();await closed;}fs.rmSync(fixture.dir,{recursive:true,force:true});};
+  try{
+   s=await createServer({dataDir:config.dataDir,publicDir:path.join(repo,'public'),studyOriginalRoots:config.studyOriginalRoots,sharedArticles:true,researchEnabled:false,packageView:{syntheticFixtures:true}});
+   await new Promise(r=>s.listen(0,'127.0.0.1',r));
+   const base='http://127.0.0.1:'+s.address().port;
+   await fillDemo(base,{only:['straw-over-the-rows','the-first-cup','circle-of-twelve']});
+   return {base};
+  }catch(error){await closeWorld();throw error;}
+ })();
+ return worldPromise;
 }
-after(async()=>{if(world)await world.close();});
+after(async()=>{if(worldPromise)await worldPromise.catch(()=>{});await closeWorld?.();});
 const getJSON=async(base,p)=>(await fetch(base+p)).json();
 async function subjectOf(base,slug){const st=await getJSON(base,'/api/subject/standing?parentStudyId=demo-'+slug);return {id:'demo-'+slug,binding:st.facts.bindingId,piece:st.forms.find(f=>f.kind==='article').id};}
 const draftOf=(base,sub)=>getJSON(base,`/api/study-draft/read?bindingId=${sub.binding}&parentStudyId=${sub.id}`);

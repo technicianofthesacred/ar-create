@@ -155,15 +155,15 @@
 
 /* The current item in a list (the subject page's steps, the chosen form): coss marks it with a soft filled
    background and slightly heavier text, never a bright ring. */
-:is(#v2-app, #v3-frame) .subj button.v2-current { box-shadow: none !important; background: color-mix(in srgb, var(--ink) 7%, transparent) !important; }
-:is(#v2-app, #v3-frame) .subj-form.on { border-color: color-mix(in srgb, var(--ink) 14%, transparent) !important; background: color-mix(in srgb, var(--ink) 5%, transparent) !important; }
+:is(#v2-app, #v3-frame) .subj button.v2-current { box-shadow: none !important; background: color-mix(in srgb, var(--surface-ink) 7%, transparent) !important; }
+:is(#v2-app, #v3-frame) .subj-form.on { border-color: color-mix(in srgb, var(--edge-ink) 14%, transparent) !important; background: color-mix(in srgb, var(--surface-ink) 5%, transparent) !important; }
 /* Pop-up sheets (New subject, Find): coss's dialog backdrop, dimmed and softly blurred, and its quiet edge. */
-dialog.v2-sheet { border-color: color-mix(in srgb, var(--ink) 10%, transparent) !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .25), 0 4px 6px -4px rgba(0, 0, 0, .2) !important; }
+dialog.v2-sheet { border-color: color-mix(in srgb, var(--edge-ink) 10%, transparent) !important; box-shadow: var(--shadow-pop) !important; }
 dialog.v2-sheet::backdrop { background: rgba(10, 9, 7, .45) !important; backdrop-filter: blur(4px); }
 
 /* The chosen chip in a row of choices (Looks' brand pills): coss's selected segment, a soft raised fill and a quiet
    edge, instead of a ring in the accent colour. */
-:is(#v2-app, #v3-frame) .lk .lk-pills button[aria-pressed="true"] { background: color-mix(in srgb, var(--ink) 9%, transparent) !important; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 14%, transparent) !important; }
+:is(#v2-app, #v3-frame) .lk .lk-pills button[aria-pressed="true"] { background: color-mix(in srgb, var(--surface-ink) 9%, transparent) !important; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 14%, transparent) !important; }
 
 /* Looks' pair of actions under a brand ("Change it by talking", "Open the folder"): coss's button-group spacing, so
    the pair stays on one line in the side column. */

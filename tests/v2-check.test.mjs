@@ -62,10 +62,11 @@ function boot(w,{coverage=true}={}){
 }
 
 // ---- a page whose commands are answered from a table: route -> body, [status, body] or function(url, body) ----
-async function page({hash='',answers={},search='',cover=null}={}){
+async function page({hash='',answers={},search='',cover=null,storage={}}={}){
  const html=read('public/v2/index.html');
  const dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:'http://local.test/v2/index.html'+search+hash,runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,calls=[];windows.push(w);w.__sources=[];
+ for(const [key,value] of Object.entries(storage))w.localStorage.setItem(key,value);
  w.fetch=async(input,options={})=>{const u=new URL(String(input),w.location.href),body=options.body?JSON.parse(options.body):null;calls.push({path:u.pathname,method:options.method||'GET',body,search:u.search});
   let answer=u.pathname==='/api/capabilities'?{commands:COMMANDS}:answers[u.pathname]??{};if(typeof answer==='function')answer=answer(u,body);
   const [status,out]=Array.isArray(answer)?answer:[200,answer];
@@ -138,6 +139,16 @@ test('Check opens the saved words read only and, with no saved check, offers to 
  assert.ok(!calls.some(c=>c.method==='POST'&&/study-draft\/save/.test(c.path)),'Check never changes the draft');
  assert.match(doc.querySelector('.ck-more').textContent,/Not built yet/,'comparing versions says it is not built');
  assert.ok([...doc.querySelectorAll('.ck-more a')].some(a=>/section=check/.test(a.getAttribute('href'))),'with Open in Advanced');
+});
+
+test('Check identifies unsaved version three words in another tab without changing the saved draft',async()=>{
+ const key='ar-v3-write:root1:1',kept=JSON.stringify({v:2,edits:[['p1','Newer words.','First, with "Exact words." in it.']],added:[]});
+ const {w,doc,calls}=await page({hash:'#/check/s1?piece=o1',answers:base(),storage:{[key]:kept}});await ready(doc);
+ assert.match(doc.querySelector('.ck-note').textContent,/unsaved words in Write/);
+ assert.match(doc.querySelector('.ck-text').textContent,/First, with "Exact words."/);
+ assert.ok(!calls.some(c=>c.method==='POST'&&/study-draft\/save/.test(c.path)));
+ w.localStorage.removeItem(key);w.dispatchEvent(new w.StorageEvent('storage',{key}));
+ assert.equal(doc.querySelector('.ck-note'),null);
 });
 
 test('pressing Check saved draft posts the revision he read with an operation id, then shows the finding and brings its words into view',async()=>{
@@ -236,18 +247,24 @@ test('without Write\'s shared helpers, Check says so plainly and does not fail',
 });
 
 // ---------- the real server ----------
-let world=null;
+let worldPromise=null,closeWorld=null;
 async function theWorld(){
- if(world)return world;
- const fixture=syntheticHome(),config=JSON.parse(fs.readFileSync(fixture.config,'utf8'));
- const s=await createServer({dataDir:config.dataDir,publicDir:path.join(repo,'public'),studyOriginalRoots:config.studyOriginalRoots,sharedArticles:true,researchEnabled:false,packageView:{syntheticFixtures:true}});
- await new Promise(r=>s.listen(0,'127.0.0.1',r));
- const url='http://127.0.0.1:'+s.address().port;
- const filled=await fillDemo(url,{only:[CHECKED.slug,'the-first-cup']});
- world={base:url,filled,close:async()=>{await new Promise(r=>s.close(r));fs.rmSync(fixture.dir,{recursive:true,force:true});}};
- return world;
+ // Cache initialization itself: a timed-out caller must not start a second fixture and lose the first server.
+ if(!worldPromise)worldPromise=(async()=>{
+  const fixture=syntheticHome(),config=JSON.parse(fs.readFileSync(fixture.config,'utf8'));
+  let s=null;
+  closeWorld=async()=>{if(s?.listening){const closed=new Promise((resolve,reject)=>s.close(error=>error?reject(error):resolve()));s.closeAllConnections();await closed;}fs.rmSync(fixture.dir,{recursive:true,force:true});};
+  try{
+   s=await createServer({dataDir:config.dataDir,publicDir:path.join(repo,'public'),studyOriginalRoots:config.studyOriginalRoots,sharedArticles:true,researchEnabled:false,packageView:{syntheticFixtures:true}});
+   await new Promise(r=>s.listen(0,'127.0.0.1',r));
+   const url='http://127.0.0.1:'+s.address().port;
+   const filled=await fillDemo(url,{only:[CHECKED.slug,'the-first-cup']});
+   return {base:url,filled};
+  }catch(error){await closeWorld();throw error;}
+ })();
+ return worldPromise;
 }
-after(async()=>{if(world)await world.close();});
+after(async()=>{if(worldPromise)await worldPromise.catch(()=>{});await closeWorld?.();});
 const getJSON=async(b,p,actor='agent:claude-code')=>{const r=await fetch(b+p,{headers:{'X-AR-Actor':actor,'X-AR-Client':'http'}});return r.json();};
 const postJSON=async(b,p,body,actor='agent:claude-code')=>{const r=await fetch(b+p,{method:'POST',headers:{'Content-Type':'application/json','X-AR-Actor':actor,'X-AR-Client':'http',Origin:b},body:JSON.stringify(body)});return {status:r.status,body:await r.json()};};
 const subjectOf=async(b,slug)=>{const st=await getJSON(b,'/api/subject/standing?parentStudyId=demo-'+slug);return {id:'demo-'+slug,root:st.facts.bindingId,piece:st.forms.find(f=>f.kind==='article').id,title:st.title};};
@@ -343,7 +360,7 @@ test('real server: a save made elsewhere arrives from the stream and the saved c
 
 test('Check follows the house rules: six sizes, no em dash, no fetch, escaped records, no speech, nothing written but the check',()=>{
  const css=read('public/v2/screens/check.css'),js=read('public/v2/screens/check.js');
- for(const m of css.matchAll(/font-size:\s*([^;}]+)/g))assert.match(m[1],/^var\(--v2-t(12|13|14|15|18|22)\)$/,m[0]);
+ for(const m of css.matchAll(/font-size:\s*([^;}]+)/g))assert.match(m[1],/^var\(--(?:v2-t(12|13|14|15|18|22)|size-(caption|detail|button|table|ui|nav|body|card-title|page-title))\)$/,m[0]);
  for(const m of css.matchAll(/font:[^;}]*?(var\(--v2-t\d+\))/g))assert.match(m[1],/--v2-t(12|13|14|15|18|22)\)/);
  assert.deepEqual([...css.matchAll(/font:\s*(?:italic\s+)?\d{3}\s+(\d+(?:\.\d+)?px)/g)].map(m=>m[1]),[],'every size is a --v2-t token');
  assert.doesNotMatch(css+js,/\u2014/,'no em dash');

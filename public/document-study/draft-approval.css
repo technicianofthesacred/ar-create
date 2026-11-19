@@ -2,15 +2,15 @@
 .draft-approval-layout{position:relative;display:flow-root;min-width:0}
 .draft-approval-rail{position:absolute;inset:0;pointer-events:none;min-width:0}
 .draft-mark-approvals{position:absolute;left:0;right:0;display:grid;gap:4px;min-width:0;pointer-events:auto}
-.draft-mark-approval{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;min-width:0;padding:0 0 4px;font-family:inherit;font-size:13px;line-height:1.5;color:var(--dim)}
+.draft-mark-approval{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;min-width:0;padding:0 0 4px;font-family:inherit;font-size:var(--size-detail);line-height:var(--lh-ui);color:var(--fg-muted)}
 .draft-mark-preview{flex:1 1 160px;min-width:0;overflow-wrap:anywhere}
 .draft-mark-preview::before{content:'“'}
 .draft-mark-preview::after{content:'”'}
-.draft-mark-label{flex:1 1 auto;font-size:12px}
-.draft-mark-context{flex:0 0 100%;min-width:0;font:12px/1.6 var(--font-ui,system-ui,sans-serif)}
-.draft-mark-context>summary{cursor:pointer;min-height:32px;display:flex;align-items:center;width:max-content;max-width:100%;color:var(--dim)}
+.draft-mark-label{flex:1 1 auto;font-size:var(--size-caption)}
+.draft-mark-context{flex:0 0 100%;min-width:0;font:var(--size-caption)/var(--lh-page) var(--font-ui,system-ui,sans-serif)}
+.draft-mark-context>summary{cursor:pointer;min-height:32px;display:flex;align-items:center;width:max-content;max-width:100%;color:var(--fg-muted)}
 .draft-mark-context>p{font:inherit!important;margin:5px 0!important;max-width:65ch}
-.draft-mark-context>.draft-mark-preview{display:block;margin:8px 0;color:var(--ink);white-space:pre-wrap}
+.draft-mark-context>.draft-mark-preview{display:block;margin:8px 0;color:var(--fg-main);white-space:pre-wrap}
 .draft-mark-context>summary:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 .draft-mark-approval .draft-action{flex:0 0 auto;min-height:44px!important;max-width:100%;white-space:normal;touch-action:manipulation}
 .draft-mark-approval .draft-action:disabled{opacity:.55;cursor:default}

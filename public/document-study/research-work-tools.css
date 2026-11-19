@@ -1,20 +1,20 @@
-.research-work-tools{font-family:var(--sans,sans-serif);font-size:14px}
+.research-work-tools{font-family:var(--sans,sans-serif);font-size:var(--size-ui)}
 .research-work-tools summary,.research-work-brief>summary{cursor:pointer}
 .research-work-actions{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .research-work-actions button{font:inherit;padding:6px 10px;min-height:34px}
 .research-work-actions button[aria-pressed="true"]{border-color:var(--gold,#a78a50)}
 .research-work-panel:empty{display:none}
 .research-work-panel{padding:12px 0;max-width:680px}
-.research-work-panel p{margin:6px 0 10px;line-height:1.6}
+.research-work-panel p{margin:6px 0 10px;line-height:var(--lh-page)}
 .research-work-panel blockquote{margin:10px 0;padding-left:12px;border-left:2px solid var(--gold,#a78a50)}
-.research-work-brief{margin:10px 0 22px;font:14px/1.6 var(--sans,sans-serif)}
+.research-work-brief{margin:10px 0 22px;font:var(--size-ui)/var(--lh-page) var(--sans,sans-serif)}
 .research-work-brief-prose{white-space:pre-wrap;overflow-wrap:anywhere;max-width:680px}
-.research-work-brief h2{font-size:20px}
-.research-work-panel .rpb-prose,.research-work-panel .rpb-detail :is(p,blockquote){font-family:var(--shared-prose-font,'AR Atlas Lora',Georgia,serif);font-size:18px;line-height:1.8}
-.research-work-panel .rpb-meta,.research-work-panel .rpb-status{font-family:var(--sans,system-ui,sans-serif)!important;font-size:13px!important;line-height:1.5!important}
+.research-work-brief h2{font-size:var(--size-section)}
+.research-work-panel .rpb-prose,.research-work-panel .rpb-detail :is(p,blockquote){font-family:var(--font-words);font-size:var(--size-card-title);line-height:var(--lh-loose)}
+.research-work-panel .rpb-meta,.research-work-panel .rpb-status{font-family:var(--sans,system-ui,sans-serif)!important;font-size:var(--size-detail)!important;line-height:var(--lh-ui)!important}
 .research-work-panel .rpb-heading{margin-bottom:12px}
 .research-work-panel>.rpb{margin-bottom:12px}
 [data-research-point-active="true"]>h2{scroll-margin-block:70px}
 
-.research-work-tools>button{font:inherit;min-height:36px}.research-work-brief>h2{font:600 16px/1.5 var(--ar-ui,system-ui,sans-serif);margin:12px 0 6px}
-.research-work-panel :is(.rpb-sources,[data-discussion-disclosure])>h3{font:600 13px/1.5 var(--ar-ui,system-ui,sans-serif);margin:12px 0 6px}
+.research-work-tools>button{font:inherit;min-height:36px}.research-work-brief>h2{font:600 var(--size-reading)/var(--lh-ui) var(--font-ui);margin:12px 0 6px}
+.research-work-panel :is(.rpb-sources,[data-discussion-disclosure])>h3{font:600 var(--size-detail)/var(--lh-ui) var(--font-ui);margin:12px 0 6px}

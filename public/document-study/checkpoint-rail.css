@@ -3,17 +3,17 @@
  body.c3-rail-on #app>.shell{grid-template-columns:184px minmax(0,1fr)}
  body.c3-rail-on.c3-tabs #app>.shell>.rail:not(.open){display:none}
 }
-body.c3-rail-on .shell>.workflowNavigation.c3-rail{box-sizing:border-box;min-width:0;overflow:auto;margin:0;padding:10px 8px;border:0;border-right:1px solid var(--line);background:var(--bg);display:flex;flex-direction:column;gap:0}
+body.c3-rail-on .shell>.workflowNavigation.c3-rail{box-sizing:border-box;min-width:0;overflow:auto;margin:0;padding:10px 8px;border:0;border-right:1px solid var(--edge);background:var(--surface-page);display:flex;flex-direction:column;gap:0}
 .workflowNavigation.c3-rail .workflowLegend{display:none}
 .workflowNavigation.c3-rail .workflowSteps[data-work-groups]{display:flex;flex-direction:column;gap:0;grid-template-columns:none}
-.workflowNavigation.c3-rail .wn-family{display:flex;flex-direction:column;padding:6px 0;border-top:1px solid var(--line)}
+.workflowNavigation.c3-rail .wn-family{display:flex;flex-direction:column;padding:6px 0;border-top:1px solid var(--edge)}
 .workflowNavigation.c3-rail .wn-family:first-child{border-top:0;padding-top:0}
 .workflowNavigation.c3-rail .wn-family-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .workflowNavigation.c3-rail .wn-family-steps{display:flex;flex-direction:column;gap:1px;grid-template-columns:none}
-.workflowNavigation.c3-rail .workflowStep{position:relative;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:9px;width:100%;min-width:0;min-height:34px;margin:0;padding:0 8px;border:0;border-radius:6px;background:none;color:var(--dim);font:500 13px/1.3 var(--ar-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif);text-align:left;outline:0;box-shadow:none}
-.workflowNavigation.c3-rail .workflowStep:hover{background:color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink)}
-.workflowNavigation.c3-rail .workflowStep:focus-visible{outline:2px solid var(--warm);outline-offset:-2px}
-.workflowNavigation.c3-rail .workflowStep[aria-current]{background:color-mix(in srgb,var(--warm) 18%,transparent);color:var(--ink);font-weight:600}
+.workflowNavigation.c3-rail .workflowStep{position:relative;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:9px;width:100%;min-width:0;min-height:34px;margin:0;padding:0 8px;border:0;border-radius:6px;background:none;color:var(--fg-muted);font:500 var(--size-detail)/var(--lh-snug) var(--font-ui);text-align:left;outline:0;box-shadow:none}
+.workflowNavigation.c3-rail .workflowStep:hover{background:color-mix(in srgb,var(--surface-ink) 6%,transparent);color:var(--fg-main)}
+.workflowNavigation.c3-rail .workflowStep:focus-visible{outline:2px solid var(--edge-accent);outline-offset:-2px}
+.workflowNavigation.c3-rail .workflowStep[aria-current]{background:color-mix(in srgb,var(--warm) 18%,transparent);color:var(--fg-main);font-weight:600}
 .workflowNavigation.c3-rail .cr-icon{flex:none}
 .workflowNavigation.c3-rail .stepName{flex:1 1 auto;min-width:0;font:inherit!important;color:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .workflowNavigation.c3-rail :is(.stepNumber,.currentMark){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -30,17 +30,17 @@ body.c3-rail-on .shell>.workflowNavigation.c3-rail{box-sizing:border-box;min-wid
 @media(max-width:650px){
  body.c3-rail-on #app>.shell{display:flex;flex-direction:column}
  body.c3-rail-on #app>.shell>.workspace{flex:1 1 auto;min-height:0;height:auto}
- body.c3-rail-on .shell>.workflowNavigation.c3-rail{flex:none;position:relative;overflow:visible;padding:4px 8px;border-right:0;border-bottom:1px solid var(--line);z-index:30}
- .workflowNavigation.c3-rail .cr-picker{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:44px;padding:0 8px;border:0;border-radius:6px;background:none;color:var(--ink);font:inherit;text-align:left}
- .workflowNavigation.c3-rail .cr-picker-text{display:flex;flex-direction:column;line-height:1.25}
- .workflowNavigation.c3-rail .cr-picker-count{font-size:12px;color:var(--dim)}
+ body.c3-rail-on .shell>.workflowNavigation.c3-rail{flex:none;position:relative;overflow:visible;padding:4px 8px;border-right:0;border-bottom:1px solid var(--edge);z-index:30}
+ .workflowNavigation.c3-rail .cr-picker{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:44px;padding:0 8px;border:0;border-radius:6px;background:none;color:var(--fg-main);font:inherit;text-align:left}
+ .workflowNavigation.c3-rail .cr-picker-text{display:flex;flex-direction:column;line-height:var(--lh-tight)}
+ .workflowNavigation.c3-rail .cr-picker-count{font-size:var(--size-caption);color:var(--fg-muted)}
  .workflowNavigation.c3-rail .workflowSteps[data-work-groups]{display:none}
- .workflowNavigation.c3-rail.cr-open .workflowSteps[data-work-groups]{display:flex;position:absolute;left:8px;right:8px;top:calc(100% + 4px);max-height:min(70dvh,560px);overflow:auto;padding:6px;background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 30px #0003}
+ .workflowNavigation.c3-rail.cr-open .workflowSteps[data-work-groups]{display:flex;position:absolute;left:8px;right:8px;top:calc(100% + 4px);max-height:min(70dvh,560px);overflow:auto;padding:6px;background:var(--surface-card);border:1px solid var(--edge);border-radius:8px;box-shadow:var(--shadow-sheet)}
  .workflowNavigation.c3-rail .workflowStep{min-height:44px}
 }
 /* One state word per step, from the one piece state (piece-state.js). Quiet; "needs you" and "unsaved" carry a tone. */
-.workflowNavigation.c3-rail .tr-state{flex:none;margin-left:auto;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 11px/1.2 var(--ar-ui);color:var(--dim)}
-.workflowNavigation.c3-rail .workflowStep:is([data-state="needs you"],[data-state="unsaved"],[data-state="browser only"]) .tr-state{color:var(--c3-warn)}
+.workflowNavigation.c3-rail .tr-state{flex:none;margin-left:auto;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 var(--size-label)/var(--lh-tight) var(--font-ui);color:var(--fg-muted)}
+.workflowNavigation.c3-rail .workflowStep:is([data-state="needs you"],[data-state="unsaved"],[data-state="browser only"]) .tr-state{color:var(--fg-warn)}
 body.c3-tree-slim .workflowNavigation.c3-rail .tr-state{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
 /* Phone (review A10): the sidebar is a sheet opened from the step name in the bar. It holds everything the desktop
@@ -48,7 +48,7 @@ body.c3-tree-slim .workflowNavigation.c3-rail .tr-state{position:absolute;width:
    History and the theme. */
 @media(max-width:650px){
  .workflowNavigation.c3-rail:not(.cr-open)>:is(#c3-tabstrip,.tr-head,.tr-find){display:none!important}
- body.c3-rail-on #app>.shell>.workflowNavigation.c3-rail.cr-open{position:fixed!important;inset:0 auto 0 0!important;width:min(320px,88vw)!important;height:auto!important;min-height:100dvh;overflow:auto!important;padding:10px 10px 24px!important;background:var(--bg)!important;border-right:1px solid var(--line)!important;z-index:80!important;display:flex!important;flex-direction:column;gap:4px;box-shadow:0 0 0 100vmax rgba(0,0,0,.5)}
+ body.c3-rail-on #app>.shell>.workflowNavigation.c3-rail.cr-open{position:fixed!important;inset:0 auto 0 0!important;width:min(320px,88vw)!important;height:auto!important;min-height:100dvh;overflow:auto!important;padding:10px 10px 24px!important;background:var(--surface-page)!important;border-right:1px solid var(--edge)!important;z-index:80!important;display:flex!important;flex-direction:column;gap:4px;box-shadow:0 0 0 100vmax rgba(0,0,0,.5)}
  .workflowNavigation.c3-rail.cr-open>.cr-picker{position:static!important;max-width:none!important;width:100%!important;margin-bottom:6px}
  .workflowNavigation.c3-rail.cr-open>:is(.tr-head,.tr-find){display:flex!important}
  .workflowNavigation.c3-rail.cr-open>#c3-tabstrip{display:flex!important}

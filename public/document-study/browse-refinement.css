@@ -16,19 +16,19 @@
  #workspace .k-media.wfb-contact-mode .wfb-vrow>.wfb-type-icon svg {width:32px;height:32px;}
  #workspace .k-media.wfb-contact-mode .wfb-vrow>.wfb-title {
   display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;
-  font:400 var(--t-body,15px)/1.5 var(--ar-ui,sans-serif)!important;
+  font:400 var(--size-body)/var(--lh-ui) var(--font-ui)!important;
   white-space:normal!important;overflow:hidden!important;overflow-wrap:anywhere;
   min-height:0!important;max-height:3em!important;padding:0!important;
   align-self:center!important;text-align:left!important;
  }
  #workspace .k-media.wfb-contact-mode .wfb-filename {display:none;}
- #workspace .k-media.wfb-contact-mode .wfb-vrow>:is(.wfb-kind,.wfb-date) {font-size:var(--t-label,13px);color:var(--dim);}
+ #workspace .k-media.wfb-contact-mode .wfb-vrow>:is(.wfb-kind,.wfb-date) {font-size:var(--size-detail);color:var(--fg-muted);}
  #workspace .k-media.wfb-contact-mode :is(.wfb-vrow,.wfb-vhead)>.wfb-kind {display:block!important;}
- #workspace .k-media.wfb-contact-mode .wfb-vhead {min-height:36px;font-weight:400;color:var(--dim);}
+ #workspace .k-media.wfb-contact-mode .wfb-vhead {min-height:36px;font-weight:400;color:var(--fg-muted);}
  #workspace :is(.wbp-row,.wfb-tn).on,
  #workspace .wbp-panel nav>button.on {
-  background:color-mix(in srgb,var(--ink) 5%,transparent)!important;
-  color:var(--ink)!important;box-shadow:none!important;border-radius:6px;
+  background:color-mix(in srgb,var(--surface-ink) 5%,transparent)!important;
+  color:var(--fg-main)!important;box-shadow:none!important;border-radius:6px;
  }
  #workspace .wbp-panel nav>button.on {border-color:transparent!important;}
  #workspace .wbp-panel nav>button.on::before {display:none!important;}
@@ -67,7 +67,7 @@
   #workspace .k-media .wfb-media-toolbar>.wfb-fsearch,
   #workspace .k-media .wfb-media-toolbar>.wfb-contact-selection {grid-column:1/-1;}
   #workspace .k-media .wfb-media-sort {font-size:0;display:block!important;}
-  #workspace .k-media .wfb-media-sort select {width:100%;font-size:var(--t-label,13px)!important;}
+  #workspace .k-media .wfb-media-sort select {width:100%;font-size:var(--size-detail)!important;}
   #workspace .k-media .wfb-mtog {min-width:0;justify-content:center;}
   #workspace .k-media .wfb-mtog>button {padding-inline:6px!important;gap:4px!important;}
  }

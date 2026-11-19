@@ -75,7 +75,7 @@
   }
   :is(select, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="color"])) {
     padding-block: 3px !important;
-    font-size: 13px !important;
+    font-size: var(--size-detail) !important;
     line-height: 20px !important;
   }
   :is(select, input, textarea):disabled { opacity: .6 !important; }

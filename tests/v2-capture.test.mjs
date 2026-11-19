@@ -347,7 +347,8 @@ test('the sheet is keyboard-friendly and honest: a dialog with a title, focus in
  assert.doesNotMatch(js,/\bfetch\s*\(/,'a command goes through v2.call only');
  assert.doesNotMatch(js+css,/—/,'no em dash');
  for(const size of css.matchAll(/(?<![\w-])(\d+(?:\.\d+)?)px/g)){}
- const fontSizes=[...css.matchAll(/font(?:-size)?:[^;}]*?(?:var\(--v2-t(\d+)\)|(\d+)px)/g)].map(m=>m[1]||m[2]);
+ const ROLE={caption:'12',detail:'13',button:'13',table:'13',ui:'14',nav:'14',body:'15','card-title':'18','page-title':'22'};// the master's size roles, by the v2 step each one replaced
+ const fontSizes=[...css.matchAll(/font(?:-size)?:[^;}]*?(?:var\(--v2-t(\d+)\)|var\(--size-([a-z-]+)\)|(\d+)px)/g)].map(m=>m[1]||(m[2]&&(ROLE[m[2]]||m[2]))||m[3]);
  assert.ok(fontSizes.length>0);for(const s of fontSizes)assert.ok(['12','13','14','15','18','22'].includes(s),'type size '+s+' is one of the six');
  assert.doesNotMatch(css,/#[0-9a-fA-F]{3,8}\b/,'no hard-coded colour');
 });
@@ -470,7 +471,7 @@ test('the tiles and the done line keep the sample\'s measures, and the destinati
  const css=read('public/v2/shell/capture.css');
  assert.doesNotMatch(css,/min-height:9[26]px/,'the tile has no taller floor than the sample');
  assert.match(css,/padding:18px 6px 14px/);
- assert.match(css,/\.v2-cap-to b\{[^}]*color:var\(--ink\)[^}]*font-weight:(600|700)/);
+ assert.match(css,/\.v2-cap-to b\{[^}]*color:var\(--(?:ink|fg-main)\)[^}]*font-weight:(600|700)/);
  assert.match(css,/\.v2-cap-done \.v2-ic\{[^}]*width:16px/);
 });
 
