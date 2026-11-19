@@ -16,7 +16,7 @@
    url.searchParams.delete('i64osReturn');if(target)url.searchParams.set('i64osReturn',target);return url.href;
   }catch{return null;}
  }
- function install(doc,href){href=validateReturnTarget(href);if(!href)return;for(const bar of doc.querySelectorAll('.topbar,.video-brief-page .video-brief-actions')){let link=bar.querySelector('.i64-return');if(!link){link=doc.createElement('a');link.className=bar.classList.contains('video-brief-actions')?'i64-return btn quiet':'i64-return';link.textContent='i64 OS';link.setAttribute('aria-label','Return to i64 OS');bar.append(link);}if(link.getAttribute('href')!==href)link.setAttribute('href',href);}}
+ function install(doc,href){href=validateReturnTarget(href);if(!href)return;for(const bar of doc.querySelectorAll('.topbar,.video-brief-page nav.video-brief-actions')){let link=bar.querySelector('.i64-return');if(!link){link=doc.createElement('a');link.className=bar.classList.contains('video-brief-actions')?'i64-return btn quiet':'i64-return';link.textContent='i64 OS';link.setAttribute('aria-label','Return to i64 OS');bar.append(link);}if(link.getAttribute('href')!==href)link.setAttribute('href',href);}}
  if(typeof window!=='undefined'&&typeof document!=='undefined'){
   const values=new URLSearchParams(window.location.search).getAll('i64osReturn'),href=values.length===1?validateReturnTarget(values[0]):null;
   if(href){install(document,href);const observer=new MutationObserver(()=>install(document,href));observer.observe(document.getElementById('app')||document.body,{childList:true,subtree:true});window.addEventListener('pagehide',event=>{if(!event.persisted)observer.disconnect();});}

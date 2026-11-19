@@ -17,7 +17,7 @@ async function fixture({linked=true,unavailable=false}={}){
   else if(url.startsWith('/api/inquiries/catalog')){if(unavailable)return {ok:false,json:async()=>({error:'Library unavailable'})};value={collections:[{id:collectionId,name:'Why the kettle matters',sourceIds:[]}]};}
   else throw Error('Unexpected request '+url);
   return {ok:true,json:async()=>structuredClone(value)};
- };w.eval(code);for(let i=0;i<8;i++)await tick();return {w,dom,calls,brief,close:()=>w.close()};
+ };w.eval(fs.readFileSync(new URL('../public/document-study/video-handoff-recovery.js',import.meta.url),'utf8'));w.eval(code);for(let i=0;i<8;i++)await tick();return {w,dom,calls,brief,close:()=>w.close()};
 }
 test('a reopened brief exposes its exact saved inquiry without choosing the remembered topic',async()=>{
  const f=await fixture();try{const resume=[...f.w.document.querySelectorAll('a')].find(a=>a.textContent==='Resume inquiry');assert.ok(resume);const url=new URL(resume.href);assert.equal(url.searchParams.get('collection'),collectionId);assert.equal(url.searchParams.get('subject'),'hk');assert.match(f.w.document.body.textContent,/Why the kettle matters/);assert.equal(f.calls.some(c=>c.options.method==='POST'),false);}finally{f.close();}
