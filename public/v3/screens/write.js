@@ -34,7 +34,7 @@
  // ---------- pure helpers (pinned by tests/v2-write.test.mjs) ----------
  /** The passages he can see: an empty protected placeholder is hidden, as in the existing workspace. */
  function rowsOf(read){
-  return (read?.projection||[]).filter(b=>!(b.safe===false&&String(b.words||'')==='')).map(b=>({id:b.id,kind:b.blockKind||'paragraph',level:Number(b.level||b.frame?.level)||2,words:String(b.words||''),safe:b.safe!==false,hash:b.blockHash}));
+  return (read?.projection||[]).filter(b=>!(b.safe===false&&String(b.words||'')==='')).map(b=>({id:b.id,kind:b.blockKind||'paragraph',level:Number(b.level||b.frame?.level)||2,words:String(b.words||''),safe:b.safe!==false,hash:b.blockHash,...(b.doc?{doc:b.doc}:{})}));
  }
  /** The smallest change from one text to another: {from,to,insert}, or null when they are the same. */
  function minimalDiff(before,after){
@@ -112,7 +112,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   // A rule between the parts of the file (---) is not words and is not shown.
   return (read?.projection||[]).filter(b=>!(b.safe===false&&(String(b.words||'')===''||/^\s*([-*_])\1{2,}\s*$/.test(String(b.words||''))))).map(b=>{
    const words=String(b.words||''),safe=b.safe!==false,raw=String(b.raw||'');
-   const row={id:b.id,kind:b.blockKind||'paragraph',level:Number(b.level||b.frame?.level)||2,words,safe,hash:b.blockHash,edit:null,lock:''};
+   const row={id:b.id,kind:b.blockKind||'paragraph',level:Number(b.level||b.frame?.level)||2,words,safe,hash:b.blockHash,edit:null,lock:'',...(b.doc?{doc:b.doc}:{})};
    if(!safe)return row;
    let j=-1;for(let i=at;i<paras.length;i++){if(paras[i]&&paras[i].text===words){j=i;break;}}
    if(j<0){row.lock='other';return row;}
@@ -270,7 +270,6 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
      <div class="wr-fail" data-wr-undo hidden role="status"></div>
      <div class="wr-conflict" data-wr-conflict hidden></div>
      <h1 class="wr-title">${esc(st.form?.title||st.standing?.title||'')}</h1>
-     ${st.human?'':`<p class="wr-ro" role="status">${esc('Opened as '+v2.actorName(v2.actor())+'. Only Adrian writes here. '+v2.actorName(v2.actor())+' can propose words, and Adrian decides.')}</p>`}
      ${st.starting&&!st.human?'<p class="wr-dim" role="status">No Article has been started for this subject. Adrian starts it by writing the first words.</p>':''}
      <div class="wr-text" data-wr-text></div>
      <div class="wr-loose" data-wr-loose></div>
@@ -592,8 +591,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     <article class="wr-paper"><div class="wr-sheet">
      <div class="wr-conflict" data-wr-conflict hidden></div>
      <p class="wr-saved wr-saved-m" data-wr-saved role="status"></p>
-     <h1 class="wr-title">${esc(st.read?.authority?.title||st.form?.title||st.standing?.title||'')}</h1>
-     ${st.human?'':`<p class="wr-ro" role="status">${esc('Opened as '+v2.actorName(v2.actor())+'. Only Adrian writes here. '+v2.actorName(v2.actor())+' can propose words, and Adrian decides.')}</p>`}
+     <header class="wr-src-h" data-wr-story-heading><h1 class="wr-title">${esc(st.read?.authority?.title||st.form?.title||st.standing?.title||'')}</h1>${!STORY_EDITING?`<a class="wr-btn" href="${esc(adv('write'))}">Edit in Magazine${icon('out')}</a>`:''}</header>
      <p class="wr-ro" data-wr-locked role="status" hidden></p>
      <div class="wr-loose wr-props" data-wr-props></div>
      <section class="wr-questions" data-wr-questions aria-label="Article questions" hidden></section>
@@ -728,12 +726,12 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   function paintLocked(){
    const n=$('[data-wr-locked]');if(!n)return;
    let html='';
-   if(!STORY_EDITING)html=`${esc('A Magazine story’s words are changed in the Magazine, not here.')} <a class="wr-btn" href="${esc(adv('write'))}">Open in Advanced${icon('out')}</a>`;
-   else if(st.human&&st.read?.editable===false)html=esc((st.read.unavailableReason||'The Magazine is not open for editing right now.')+' These words are read only until it is.');
+   if(STORY_EDITING&&st.human&&st.read?.editable===false)html=esc((st.read.unavailableReason||'The Magazine is not open for editing right now.')+' These words are read only until it is.');
    n.hidden=!html;n.innerHTML=html;
   }
   function rowHTML(r,n){
    const label=r.kind==='heading'?'Heading':'Paragraph '+n;
+   if(root.studyReadableMarkdown&&(!canWrite()||!r.safe||!r.edit))return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main">${root.V2Parts.storyProse(r)}${r.lock==='pending'?'<p class="wr-dim wr-lock-why">Waiting for a review decision in the Magazine.</p>':''}</div><aside class="wr-margin"></aside></div>`;
    if(!r.safe||!r.edit)return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><p class="wr-lock"${r.lock==='pending'?' title="This line is waiting for a review decision in the Magazine. Decide it there."':' title="This passage is kept as it is. Change it in the Magazine."'}>${esc(r.words)}</p>${r.lock==='pending'?'<p class="wr-dim wr-lock-why">Waiting for a review decision in the Magazine.</p>':''}</div><aside class="wr-margin"></aside></div>`;
    const e=editFor(r),cls=r.kind==='heading'?' wr-h':r.kind==='blockquote'?' wr-q':'';
    return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><textarea class="wr-ed${cls}" rows="1" data-ed="${esc(r.id)}" aria-label="${esc(label)}" spellcheck="true"${canWrite()?'':' readonly'}>${esc(e?e.text:r.words)}</textarea></div><aside class="wr-margin"></aside></div>`;
@@ -1002,7 +1000,6 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     if(ctx.query.piece&&!st.form){plainText('This piece is not one of this subject’s Articles, or it does not exist. Go back to the subject to choose one.',false);return;}
     let read;
     const none=async()=>{st.none=true;shell();$('[data-wr-text]').innerHTML=`<p class="wr-dim" role="status">${esc('This story has no draft yet, so there are no words to write on here. A draft is started in the Magazine; it is not started from here.')}</p>`;$('.wr-todo')?.remove();};
-    if(await storyHasNoDraft(story)){if(!ctx.signal.aborted)await none();return;}
     try{read=await readStory();}
     catch(error){
      if(ctx.signal.aborted)return;

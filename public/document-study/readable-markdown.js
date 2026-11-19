@@ -27,5 +27,23 @@
   }
   para();closeList();closeQuote();if(code!==null)html+='<pre><code>'+esc(code.join('\n'))+'</code></pre>';return html;
  }
- window.studyReadableMarkdown=Object.freeze({render});
+ // Native projections carry a donor-verified document for supported passages.
+ // Escape text and whitelist semantics; never render original Markdown or arbitrary HTML.
+ function renderDocument(node){
+  if(!node)return '';
+  if(node.type==='text'){
+   let html=esc(node.text||'');
+   for(const mark of node.marks||[]){
+    const tag={bold:'strong',italic:'em',code:'code'}[mark.type];
+    if(tag)html='<'+tag+'>'+html+'</'+tag+'>';
+    else if(mark.type==='link'&&/^(?:https?:\/\/|mailto:|#|\/(?!\/))/i.test(mark.attrs?.href||''))html='<a href="'+esc(mark.attrs.href)+'" rel="noopener noreferrer">'+html+'</a>';
+   }
+   return html;
+  }
+  if(node.type==='hardBreak')return '<br>';
+  const html=(node.content||[]).map(renderDocument).join('');
+  const tag=node.type==='heading'?'h'+Math.max(1,Math.min(3,Number(node.attrs?.level)||2)):{paragraph:'p',blockquote:'blockquote',bulletList:'ul',orderedList:'ol',listItem:'li'}[node.type];
+  return tag?'<'+tag+'>'+html+'</'+tag+'>':html;
+ }
+ window.studyReadableMarkdown=Object.freeze({render,inline,renderDocument});
 })();

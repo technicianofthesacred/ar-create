@@ -101,7 +101,8 @@ test('an assistant sees the empty page read only, cannot write or start the Arti
  const pg=await livePage(base,id,{search:'?reviewActor=agent:codex'});
  await settle(300);
  assert.equal([...pg.doc.querySelectorAll('textarea.wr-ed')].filter(t=>!t.readOnly).length,0,'nothing to type into');
- assert.match(pg.doc.body.textContent,/Only Adrian writes here/);
+ assert.equal(pg.doc.querySelector('.wr-ro'),null,'the removed routine actor explanation stays out of the page');
+ assert.match(pg.doc.body.textContent,/No Article has been started for this subject\. Adrian starts it by writing the first words\./);
  assert.deepEqual(pg.calls.filter(c=>c.method==='POST'&&/study-draft\/save|outputs\/create/.test(c.path)),[],'nothing was sent');
  assert.equal(pg.w.localStorage.length,0,'nothing kept as his');
  assert.deepEqual(await articlesOf(base,id),[]);
