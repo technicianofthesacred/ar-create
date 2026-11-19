@@ -1,7 +1,7 @@
 # Writing opening and Magazine formatting repair
 
 Candidate branch: `codex/article-opening-formatting`, based on `b67a80f1`.
-This repair is not installed. Visual approval, integration and installation are separate remaining steps.
+Adrian approved immediate installation. This repair is not installed yet. Qualification and installation run through the existing durable writing-formatting publisher.
 
 ## Observed behavior
 
@@ -16,7 +16,7 @@ Write displayed some passages in read-only textareas and other passages as escap
 - Write opens the exact selected Magazine draft directly; missing drafts still use the established catalog fallback.
 - v3 Magazine Write and Read display semantic paragraphs, headings, quotations, emphasis and lists using existing reading classes. Native formatting is displayed only when its text exactly matches the visible projection. Original-only metadata is not passed to the renderer. Existing wording, answers and edit guards remain unchanged.
 - On Adrian’s follow-up, removed the routine actor explanation from v3 Write and the Magazine editing-location paragraph. The existing destination is a compact “Edit in Magazine” link beside the story title. Author-only editing/decisions and actual error messages remain enforced.
-- No CSS values, colors, button styles or global navigation were changed. The design card's named master file and guard test are absent from this source revision, so this repair reuses the existing reading classes instead.
+- No CSS values, colors, button styles or global navigation were changed. The original candidate predated the master-style integration. The current candidate preserves the installed master style file and reuses its existing reading classes; the master-style guard passes.
 
 ## Verification and limits
 
@@ -34,3 +34,10 @@ The rebased release candidate's 198-file local run hit the publisher's 90-minute
 The candidate's complete v3 starting-Article diagnostic exposed one stale UI expectation: the assistant-empty-page test still required the routine actor paragraph Adrian asked to remove. Its expectation now checks that paragraph is absent and that the useful empty-Article guidance remains. Every existing read-only, no-save, no-local-storage and no-article-creation assertion is retained. The corrected focused guard passed. This is a test expectation repair for the approved interface, not permission to change author-only behavior.
 
 The same durable publisher retains the interrupted log and control diagnostics. Its one recovery run waits for host capacity before starting the complete affected suite, with cleanup diagnostics retained. Assertion timeouts, required GitHub CI, the publication lock, exact-revision checks and real-article preservation checks remain enforced. No local timeout is treated as success.
+
+
+## Hosted qualification after capacity recovery
+
+The Mac could not reliably finish the duplicate affected-suite run while several builds and the CI virtual machine were competing for resources. The original timeout is retained as a failed/incomplete local run. The repaired source is integrated with the already installed Pillars and master-style version, preserving that release.
+
+The existing publisher now uses the same hosted-full-suite qualification pattern as the installed Pillars publisher: focused local integration, permission, formatting and master-style checks plus the complete required GitHub CI suite on the exact candidate. Every affected file must be covered by the full CI file set, all four hosted test shards must pass, and the required aggregate `ci` check must be green before installation. No interrupted local run is counted as a pass, and no test assertion or timeout is relaxed. The real article is still checked read-only after installation, with manuscript and question hashes preserved.
