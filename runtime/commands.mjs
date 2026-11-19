@@ -93,6 +93,7 @@ const BODY = {
   '/api/study/outputs/stand-in-save':['rootBindingId','parentStudyId','selectedOutputId','operationId','expectedOutput','expectedNative?','changes'],
   '/api/study/video-briefs':['projectKey','parentStudyId','operationId','findingId','title','sourcePath','sourceHash','from','to','quote'],
   '/api/study/video-briefs/relink':['projectKey','parentStudyId','id','operationId','expectedFindingId','findingId'],
+  '/api/study/video-briefs/inquiry':['projectKey','parentStudyId','id','operationId','expectedCollectionId','collectionId'],
   '/api/study-research/findings/save':['projectKey','parentStudyId','operationId','expectedExportHash','title','sourcePath','sourceHash','from','to','quote','speaker','location','clarity'],
   '/api/study/footage/ranges':['bindingId','parentStudyId','operationId','expected','sourceId','sourceHash','metadataHash','inTicks','outTicks','label','decision','rangeId?'],
   '/api/study/outputs/visual-review':['rootBindingId','parentStudyId','selectedOutputId','exportId','operationId','expectedOutput','expectedManifestHash','reviewedFiles','humanDecision'],
@@ -428,6 +429,11 @@ export function createRouteMap(services) {
         if(url.search)throw new StateError('Use the exact Video Editing finding-link command.',400);
         if(!studyVideoBriefs)throw new StateError('Video Editing briefs are unavailable.',503);
         return studyVideoBriefs.relink(input);
+      })},
+      '/api/study/video-briefs/inquiry': {POST:input=>draftCall(()=>{
+        if(url.search)throw new StateError('Use the exact Video Editing inquiry-link command.',400);
+        if(!studyVideoBriefs)throw new StateError('Video Editing briefs are unavailable.',503);
+        return studyVideoBriefs.linkInquiry(input);
       })},
       '/api/study/footage': {GET:()=>draftCall(()=>{if([...url.searchParams.keys()].sort().join(',')!=='bindingId,parentStudyId')throw new StateError('Choose one exact native footage scope.',400);if(!studyFootage)throw new StateError('Footage is unavailable.',503);return studyFootage.list({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')});})},
       '/api/study/footage/ranges': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact footage range command.',400);if(!studyFootage)throw new StateError('Footage is unavailable.',503);return studyFootage.save(input);})},

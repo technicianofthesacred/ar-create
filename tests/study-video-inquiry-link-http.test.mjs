@@ -1,0 +1,32 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {randomUUID} from 'node:crypto';
+import {createServer} from '../runtime/server.mjs';
+import {syntheticHome} from '../scripts/demo.mjs';
+
+test('the agent command links one independent saved inquiry to an existing brief with preserved original and learning',async t=>{
+ const home=syntheticHome();t.after(()=>fs.rmSync(home.dir,{recursive:true,force:true}));
+ const config=JSON.parse(fs.readFileSync(home.config));
+ const server=await createServer({dataDir:config.dataDir,studyOriginalRoots:config.studyOriginalRoots,researchEnabled:false});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ t.after(async()=>{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
+ const base='http://127.0.0.1:'+server.address().port;
+ const request=async(route,body)=>{const response=await fetch(base+route,{method:body?'POST':'GET',headers:{Connection:'close','X-AR-Actor':'agent:codex','X-AR-Client':'cli','Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});return{status:response.status,value:await response.json()};};
+ const scope={projectKey:'hk',parentStudyId:'hk'},source=(await request('/api/study-originals?projectKey=hk')).value.records.find(r=>r.role==='source'),quote=source.raw.trim(),from=source.raw.indexOf(quote);
+ const original={...scope,operationId:randomUUID(),findingId:'invented-retained-finding',title:'Invented existing brief',sourcePath:source.path,sourceHash:source.hash,from,to:from+quote.length,quote};
+ assert.equal((await request('/api/study/video-briefs',original)).status,200);
+ assert.equal((await request('/api/sources/tree')).status,200);
+ const catalog=(await request('/api/inquiries/catalog?input=%7B%7D')).value;
+ const created=await request('/api/inquiries/create',{name:'Invented independent inquiry',sourceIds:[],expectedRevision:catalog.revision});assert.equal(created.status,200,JSON.stringify({created,catalog}));
+ const collectionId=created.value.collection.id,readRoute='/api/inquiries/read?input='+encodeURIComponent(JSON.stringify({collectionId}));
+ const before=await request(readRoute);assert.equal(before.status,200);
+ const command={...scope,id:original.operationId,operationId:randomUUID(),expectedCollectionId:null,collectionId};
+ const linked=await request('/api/study/video-briefs/inquiry',command);assert.equal(linked.status,200);assert.equal(linked.value.brief.collectionId,collectionId);assert.equal(linked.value.brief.inquiryLink.operations[0].provenance.actor,'agent:codex');
+ assert.equal((await request('/api/study/video-briefs/inquiry?foreign=1',command)).status,400);
+ assert.equal((await request('/api/study/video-briefs/inquiry',{...command,operationId:randomUUID(),parentStudyId:'ref-an-cha'})).status,409);
+ assert.deepEqual((await request(readRoute)).value,before.value);
+ const briefs=(await request('/api/study/video-briefs?projectKey=hk&parentStudyId=hk')).value.briefs;assert.equal(briefs.length,1);assert.equal(briefs[0].id,original.operationId);assert.equal(briefs[0].collectionId,collectionId);
+ const citation=await request('/api/study/video-briefs/source?'+new URLSearchParams({...scope,id:original.operationId}));assert.equal(citation.value.source.hash,source.hash);assert.equal(citation.value.source.quote,quote);
+ const capabilities=(await request('/api/capabilities')).value.commands,exposed=capabilities.find(c=>c.route==='/api/study/video-briefs/inquiry'&&c.method==='POST');assert(exposed);assert.deepEqual(exposed.actors,['any']);assert(!exposed.readOnly);assert.deepEqual(exposed.schema.body,['projectKey','parentStudyId','id','operationId','expectedCollectionId','collectionId']);
+});
