@@ -13,6 +13,13 @@ Finish criterion is a disposable native Article with a saved link, inline click 
 On Write, show the registered Magazine article’s questions alongside its manuscript. Answer through the existing human-only decision record. An answer saves against the question revision shown and leaves the manuscript unchanged. A different article, a carousel and Home do not inherit these questions. Verify both prompts, saving and reopening, stale refusal and a second article without questions. Sending a notification and verifying a manuscript change remain separate steps.
 
 
+### Question bar — adopted 18 November 2026
+
+C01/C04/C06, S05. Adrian chose Question bar from the three layout samples. Start with one compact row showing Questions, the remaining count and Review. Clicking opens short question selectors and exactly one answer editor. Keep the answer field full width with one Save answer action aligned right. Closing or switching questions retains typed answers in the current page. Saved answers reopen through the existing Magazine decision owner and exact revision guards. The article stays directly below the bar. This click-to-open interaction is approved for this question workspace.
+
+Finish criterion is the actual synthetic Write page at desktop and phone widths, light and dark, with the closed and open states visible. Verify choice answers, custom text, switching, closing, save and reload, stale answer refusal and refresh preserving typed text, unchanged manuscript bytes and a second article with no questions. Adrian approved this built layout for installation on 19 November 2026. Release through the normal installer and verify the existing five questions, answers and manuscript in the actual Article before calling it installed.
+
+
 ## Installed checkpoint — 10 November 2026
 
 PR230 has an installed, real existing-account initial-Article generation result awaiting human read-through. Separate blank creation retains exact non-draft source captures without copying or clearing the original manuscript. PR229 also repaired exact plain multiline AI targets. Acceptance, real-content follow-through and remaining work are recorded in [CURRENT](../../status/CURRENT.md) and [TODO](../../../TODO.md); the detailed boundaries are in [November releases](../../status/RELEASES-2026-11.md). This is a result update, not new product intent or editorial approval.
