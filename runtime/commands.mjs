@@ -92,6 +92,8 @@ const BODY = {
   '/api/study/outputs/stand-in-create':['rootBindingId','parentStudyId','operationId','expectedOutput','kind','sourceBindingId','expectedNative'],
   '/api/study/outputs/stand-in-save':['rootBindingId','parentStudyId','selectedOutputId','operationId','expectedOutput','expectedNative?','changes'],
   '/api/study/video-briefs':['projectKey','parentStudyId','operationId','findingId','title','sourcePath','sourceHash','from','to','quote'],
+  '/api/study/video-briefs/relink':['projectKey','parentStudyId','id','operationId','expectedFindingId','findingId'],
+  '/api/study-research/findings/save':['projectKey','parentStudyId','operationId','expectedExportHash','title','sourcePath','sourceHash','from','to','quote','speaker','location','clarity'],
   '/api/study/footage/ranges':['bindingId','parentStudyId','operationId','expected','sourceId','sourceHash','metadataHash','inTicks','outTicks','label','decision','rangeId?'],
   '/api/study/outputs/visual-review':['rootBindingId','parentStudyId','selectedOutputId','exportId','operationId','expectedOutput','expectedManifestHash','reviewedFiles','humanDecision'],
   '/api/study/structure-tests/visual-review':['rootBindingId','parentStudyId','selectedOutputId','exportId','operationId','expectedOutput','expectedManifestHash','reviewedFiles'],
@@ -422,6 +424,11 @@ export function createRouteMap(services) {
         const projectKey=url.searchParams.get('projectKey'),parentStudyId=url.searchParams.get('parentStudyId'),id=url.searchParams.get('id');
         return studyVideoBriefs.resolve({projectKey,parentStudyId,id});
       })},
+      '/api/study/video-briefs/relink': {POST:input=>draftCall(()=>{
+        if(url.search)throw new StateError('Use the exact Video Editing finding-link command.',400);
+        if(!studyVideoBriefs)throw new StateError('Video Editing briefs are unavailable.',503);
+        return studyVideoBriefs.relink(input);
+      })},
       '/api/study/footage': {GET:()=>draftCall(()=>{if([...url.searchParams.keys()].sort().join(',')!=='bindingId,parentStudyId')throw new StateError('Choose one exact native footage scope.',400);if(!studyFootage)throw new StateError('Footage is unavailable.',503);return studyFootage.list({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')});})},
       '/api/study/footage/ranges': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact footage range command.',400);if(!studyFootage)throw new StateError('Footage is unavailable.',503);return studyFootage.save(input);})},
       '/api/study/outputs/visual-review': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use one exact Carousel visual review.',400);return studyOutputExports.reviewCarouselVisual(input);})},
@@ -464,6 +471,13 @@ export function createRouteMap(services) {
       '/api/study/photos/add': {POST:input=>draftCall(()=>studyPhotos.add(input))},
       '/api/study/photos/update': {POST:input=>draftCall(()=>studyPhotos.update(input))},
       '/api/study-research/findings': {GET:()=>draftCall(()=>{const projectKey=url.searchParams.get('projectKey'),parentStudyId=url.searchParams.get('parentStudyId');if(projectKey?.startsWith('structure-test-')){if(projectKey!==parentStudyId)throw new StateError('Choose the exact copy Research scope.',400);return structureTestRecords.findings({parentStudyId});}return studyDerivedFindings.read({projectKey,parentStudyId});})},
+      '/api/study-research/findings/save': {
+        POST:input=>draftCall(()=>{
+          if(url.search)throw new StateError('Use the exact Research finding-save command.',400);
+          if(!studyDerivedFindings)throw new StateError('Research findings are unavailable.',503);
+          return studyDerivedFindings.save(input);
+        }),
+      },
       '/api/study-research/choices': {GET:()=>draftCall(()=>studyResearchChoices.read({projectKey:url.searchParams.get('projectKey'),bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})),POST:input=>draftCall(()=>studyResearchChoices.save(input))},
       '/api/study-draft/root-recovery': {GET:()=>draftCall(()=>studyDrafts.inspectRoots({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})),POST:input=>draftCall(()=>studyDrafts.recoverRoots(input))},
       '/api/study/source-context': {GET:async()=>{if([...url.searchParams.keys()].some(key=>key!=='id')||url.searchParams.getAll('id').length!==1)throw new StateError('Select one existing Library source.',400);const source=await library.snapshot(url.searchParams.get('id'),{includeBody:true});return {sourceId:source.id,hash:source.hash,title:source.title||source.name||'Source',text:typeof source.text==='string'?source.text:null,missing:!!source.missing};}},

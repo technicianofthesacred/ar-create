@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {StateError} from '../store.mjs';
 import {provenance} from './actor.mjs';
-import {atomicWrite, digest, ensurePrivateDirectory, readJson, resolveInside, safeRel} from './files.mjs';
+import {atomicWrite, digest, ensurePrivateDirectory, readJson, resolveInside, safeRel, regular} from './files.mjs';
 
 const PARENTS = Object.freeze({hk: 'hk', ancha: 'ref-an-cha', collector: 'ref-collector'});
 const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
@@ -44,13 +44,17 @@ function briefFields({operationId, title, findingId, sourcePath, sourceHash, fro
 
 function readBrief(file, id, projectKey) {
   const record = readJson(file, null);
+  return briefIn(record,id,projectKey);
+}
+
+function briefIn(record,id,projectKey) {
   if (record && (record.schema !== 'ar-create.study-video-brief.v1' || record.projectKey !== projectKey || record.brief?.id !== id)) {
     fail('Saved Video Editing brief identity changed. Existing data was preserved.');
   }
   return record?.brief ?? null;
 }
 
-export function createStudyVideoBriefs({dataDir, originals} = {}) {
+export function createStudyVideoBriefs({dataDir, originals, findings} = {}) {
   if (!dataDir || !originals?.list) throw new TypeError('Private data and the original source catalog are required.');
 
   function directory(projectKey, create = false) {
@@ -97,7 +101,8 @@ export function createStudyVideoBriefs({dataDir, originals} = {}) {
     scope(input, ADD_FIELDS);
     const fields = briefFields(input);
     function replay(prior) {
-      if (Object.entries(fields).some(([key, value]) => prior[key] !== value)) {
+      if (Object.entries(fields).some(([key, value]) =>
+        (key==='findingId'?(prior.findingLink?.createdFindingId??prior.findingId):prior[key])!==value)) {
         fail('This operation already saved a different Video Editing brief.');
       }
       return {brief: prior};
@@ -137,5 +142,44 @@ export function createStudyVideoBriefs({dataDir, originals} = {}) {
     };
   }
 
-  return {list, add, resolve};
+  let pending=Promise.resolve();
+  function relink(input) {
+    const task=pending.then(async()=>{
+      scope(input,['id','operationId','expectedFindingId','findingId']);
+      const id=identity(input.id);identity(input.operationId);
+      for(const key of ['expectedFindingId','findingId']){
+        if(typeof input[key]!=='string'||!input[key].trim()||input[key].length>256||/[\u0000-\u001f\u007f]/.test(input[key]))fail('Choose one exact Research finding.',400);
+      }
+      if(!findings?.read)fail('Research finding linking is unavailable.',503);
+      const room=directory(input.projectKey);
+      if(!room)fail('This Video Editing brief could not be found.',404);
+      const file=path.join(room,id+'.json');
+      if(!fs.existsSync(file))fail('This Video Editing brief could not be found.',404);
+      regular(file);
+      const bytes=fs.readFileSync(file),envelope=JSON.parse(bytes.toString('utf8'));
+      const prior=briefIn(envelope,id,input.projectKey);
+      if(!prior)fail('This Video Editing brief could not be found.',404);
+      const expectedHash=digest(bytes);
+      const requestHash=digest(JSON.stringify([input.projectKey,input.parentStudyId,id,input.expectedFindingId,input.findingId]));
+      const operations=prior.findingLink?.operations|| (prior.findingLink?[{operationId:prior.findingLink.operationId,requestHash:prior.findingLink.requestHash}]:[]);
+      const committed=operations.find(operation=>operation.operationId===input.operationId);
+      if(committed){
+        if(committed.requestHash!==requestHash)fail('This operation already linked a different finding.');
+        return {brief:prior};
+      }
+      if(prior.findingId!==input.expectedFindingId)fail('The brief finding changed. Refresh before linking.');
+      await original(input.projectKey,prior);
+      const available=await findings.read({projectKey:input.projectKey,parentStudyId:input.parentStudyId});
+      const matches=available.available&&!available.stale?available.points.filter(point=>point.id===input.findingId):[];
+      if(matches.length!==1)fail('Choose one current saved Research finding.');
+      const [point]=matches;
+      if(!point.spoken?.some(span=>span.sourcePath===prior.sourcePath&&span.sourceHash===prior.sourceHash&&span.sourceRange?.from===prior.from&&span.sourceRange?.to===prior.to&&span.quote===prior.quote))fail('The finding does not match this brief\'s exact source anchor.');
+      const author=provenance();
+      const brief={...prior,findingId:input.findingId,findingLink:{operationId:input.operationId,requestHash,createdFindingId:prior.findingLink?.createdFindingId||prior.findingId,previousFindingId:prior.findingId,provenance:author,operations:[...operations,{operationId:input.operationId,requestHash,from:prior.findingId,to:input.findingId,provenance:author}]}};
+      atomicWrite(file,JSON.stringify({...envelope,brief},null,2)+'\n',{expectedHash});
+      return {brief};
+    });
+    pending=task.catch(()=>{});return task;
+  }
+  return {list, add, resolve, relink};
 }
