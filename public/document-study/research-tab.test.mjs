@@ -7,7 +7,7 @@ const code=fs.readFileSync(new URL('./research-tab.js',import.meta.url),'utf8');
 const point=(id,kind,extra={})=>({id,title:'Finding '+id,kind,clarity:{supported:'Said twice.',uncertain:''},spoken:[{quote:'Words '+id,speaker:'Invented speaker',location:'00:01'}],sources:[{name:'Invented transcript.md',lineStart:1,lineEnd:3}],originalText:'Invented passage.',...extra});
 function fixture({findings={},status=200}={}){
  const dom=new JSDOM('<header id="c3-tabstrip"><button data-ht-research>R</button><button data-ht-home>H</button></header><div id="app"><main class="workspace"><div id="manuscript" contenteditable="true">Unsaved human writing</div></main></div>',{url:'http://localhost',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;
- w.state={project:'hk',projects:[{id:'hk',name:'Invented piece one'},{id:'ref-an-cha',name:'Invented piece two'},{id:'other',name:'Not connected piece'}]};
+ w.state={project:'hk',projects:[{id:'hk',name:'Invented piece one',view:'article',viewedStage:5},{id:'ref-an-cha',name:'Invented piece two'},{id:'other',name:'Not connected piece'}]};
  const calls=[],posts=[];let fail=false;
  w.current=()=>w.state.projects.find(p=>p.id===w.state.project);
  w.viewPhase=async n=>{calls.push(['viewPhase',n]);};
@@ -117,3 +117,33 @@ for(const refuse of [false,true])test('Research restores scroll after revealing 
 });
 
 test('failed research reads show recovery rather than empty findings, then retry to exact saved results',async()=>{const f=fixture({status:503});try{f.d.querySelector('[data-ht-research]').click();await f.settle();assert.match(f.d.querySelector('.rt-board').textContent,/Findings could not all be read/);assert.doesNotMatch(f.d.querySelector('.rt-board').textContent,/No saved findings yet/);const old=f.w.fetch;f.w.fetch=async(url,options)=>{const result=await old(url,options);return {...result,ok:true,json:async()=>({available:true,points:[point('recovered','fact')]})};};f.d.querySelector('[data-rt-retry]').click();await f.settle();assert.equal(f.d.querySelectorAll('.rt-card').length,2);assert.equal(f.d.querySelector('[data-rt-retry]'),null);assert.equal(f.posts.length,0);assert.equal(f.d.querySelector('#manuscript').textContent,'Unsaved human writing');}finally{f.w.close();}});
+
+test('a saved finding opens without reading unrelated subjects',async()=>{
+ const f=fixture({findings:{hk:{available:true,points:[point('saved-target','fact')]}}});
+ let release,opening;const gate=new Promise(resolve=>{release=resolve;}),original=f.w.fetch;
+ try{
+  f.w.history.replaceState(null,'','?subject=hk&section=research&finding=saved-target');
+  f.w.fetch=async(url,options)=>{if(new URL(url,'http://localhost').searchParams.get('parentStudyId')==='ref-an-cha')await gate;return original(url,options);};
+  let opened=false;opening=f.w.c3Research.openLearning({parentStudyId:'hk'}).then(()=>{opened=true;});
+  for(let i=0;i<30;i++)await Promise.resolve();
+  assert.equal(opened,true,'the target opens without waiting on an unrelated source read');
+  assert.match(f.d.querySelector('[role="dialog"][aria-label="Finding reader"]').textContent,/Words saved-target/);
+  assert.equal(f.calls.some(call=>call[2]==='ref-an-cha'),false);
+  release();await opening;
+ }finally{release();await opening;await f.w.c3Research.whenIdle();f.w.close();}
+});
+
+test('a finding return does not join a global load stalled on another subject',async()=>{
+ const f=fixture({findings:{hk:{available:true,points:[point('saved-target','fact')]}}});
+ let release,opening;const gate=new Promise(resolve=>{release=resolve;}),original=f.w.fetch;
+ try{
+  f.w.fetch=async(url,options)=>{if(new URL(url,'http://localhost').searchParams.get('parentStudyId')==='ref-an-cha')await gate;return original(url,options);};
+  f.w.c3Research.show();for(let i=0;i<30;i++)await Promise.resolve();
+  f.w.history.replaceState(null,'','?subject=hk&section=research&finding=saved-target');
+  let opened=false;opening=f.w.c3Research.openLearning({parentStudyId:'hk'}).then(()=>{opened=true;});
+  for(let i=0;i<40;i++)await Promise.resolve();
+  assert.equal(opened,true,'the scoped return is independent of an earlier global read');
+  assert.match(f.d.querySelector('[role="dialog"][aria-label="Finding reader"]').textContent,/Words saved-target/);
+  release();await opening;await f.w.c3Research.whenIdle();
+ }finally{release();await opening;await f.w.c3Research.whenIdle();f.w.close();}
+});
