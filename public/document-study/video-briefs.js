@@ -27,8 +27,8 @@
       const render=()=>{
         host.replaceChildren(node('h3','Working inquiry'));
         const selected=catalog.collections.find(row=>row.id===brief.collectionId);
-        if(selected)host.append(node('p',selected.name),link('Resume inquiry',collectionAddress(scope.parentStudyId,selected.id)));
-        const label=node('label','Working inquiry '),select=node('select');select.setAttribute('aria-label','Working inquiry');
+        if(selected){const resume=node('div');resume.className='video-brief-actions';resume.append(link('Resume inquiry',collectionAddress(scope.parentStudyId,selected.id)));host.append(node('p',selected.name),resume);}
+        const label=node('label','Choose inquiry '),select=node('select');select.setAttribute('aria-label','Working inquiry');
         select.append(Object.assign(node('option','Choose a saved inquiry'),{value:''}));
         for(const row of catalog.collections)select.append(Object.assign(node('option',row.name),{value:row.id}));
         select.value=brief.collectionId||'';label.append(select);
