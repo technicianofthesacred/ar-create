@@ -1,0 +1,374 @@
+/* AR Create's master style file. Every front (version three, version two, Advanced) links it first; every other
+   stylesheet reads its values from here. Change a value here and the whole app follows.
+
+   It owns:
+     1. colour (light and dark), the grey ramp, type, spacing, corners, control heights and shadows;
+     2. the roles every section uses: font size by role, text colour by role, page and surface colours, borders,
+        line heights and motion. Stylesheets name a role, never a raw size or colour;
+     3. the nine button styles, and only these: primary, secondary, quiet, icon, tab, nav, chip, link, field.
+
+   "Change this, and this changes", and what still keeps its own values and why, are in docs/design/MASTER-STYLE.md.
+
+   The written rules behind it are in design/2026-11-write/NOTES.md. The test tests/master-style-file.test.mjs keeps
+   new hard-coded colours and button sizes from growing back; its ceilings are today's counts.
+
+   Why the odd selectors:
+   - The palette sits on ":root:root:root" (and on body) so it outranks the older sheets that still carry a copy
+     (study.css, workbench-frame.css). Those copies hold the same values; this file is the one that counts.
+   - The button styles sit in the layer "ar-master", declared here before any other layer. An important rule in the
+     first layer outranks every later layer and every unlayered sheet, so a button style here wins over the app's
+     ninety older control rules without raising any selector's weight. */
+
+@layer ar-master, v2-controls, graphite-controls;
+
+/* ---------- 1. tokens ---------- */
+
+:root:root:root,
+:root:root:root[data-theme="light"],
+:root:root:root[data-theme="light"] > body {
+  /* colour: one name each */
+  --bg: #efede6;            /* the page behind everything */
+  --paper: #fffefb;         /* cards, sheets, the writing page */
+  --rail: #f7f5ef;          /* side columns */
+  --ink: #2d302a;           /* main text */
+  --ink-2: #51564b;         /* secondary text */
+  --dim: #5e6257;           /* quiet text */
+  --faint: #a39e8e;         /* hints, placeholders */
+  --line: #e2e0d8;          /* hairline edge */
+  --line-strong: #cfcdc3;   /* edge that must be seen */
+  --warm: #7a5a30;          /* the accent, only for what needs Adrian */
+  --sel: #e9e4d7;           /* the chosen row */
+  --good: #3f6146; --good-bg: #e2ead9;
+  --warn: #94600f; --warn-bg: #f4e6c6;
+  --bad: #a23b2a;
+
+  /* shadows */
+  --shadow-1: 0 1px 2px rgba(40, 35, 25, .08);
+  --shadow-pop: 0 6px 16px rgba(40, 35, 25, .16);
+  --shadow-sheet: 0 18px 50px rgba(40, 35, 25, .18);
+  --scrollbar: rgba(122, 90, 48, .42); --scrollbar-hover: rgba(122, 90, 48, .7);
+}
+:root:root:root[data-theme="dark"],
+:root:root:root[data-theme="dark"] > body {
+  --bg: #141310;
+  --paper: #1d1b16;
+  --rail: #191813;
+  --ink: #e7e1d3;
+  --ink-2: #c3bdad;
+  --dim: #a39e8e;
+  --faint: #6f6a5d;
+  --line: #2d2a23;
+  --line-strong: #423e34;
+  --warm: #c9a874;
+  --sel: #2c2a22;
+  --good: #8fb08a; --good-bg: #2b3326;
+  --warn: #d9a95a; --warn-bg: #423a23;
+  --bad: #e08a74;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-pop: 0 6px 16px rgba(0, 0, 0, .45);
+  --shadow-sheet: 0 18px 50px rgba(0, 0, 0, .55);
+  --scrollbar: rgba(191, 169, 140, .4); --scrollbar-hover: rgba(211, 192, 166, .7);
+}
+
+:root {
+  /* the grey ramp: ink laid over whatever is behind, so it works on paper, page and band, light and dark */
+  --grey-1: color-mix(in srgb, var(--ink) 3%, transparent);
+  --grey-2: color-mix(in srgb, var(--ink) 6%, transparent);
+  --grey-3: color-mix(in srgb, var(--ink) 9%, transparent);
+  --grey-4: color-mix(in srgb, var(--ink) 12%, transparent);
+  --grey-5: color-mix(in srgb, var(--ink) 16%, transparent);
+  --grey-6: color-mix(in srgb, var(--ink) 24%, transparent);
+  --grey-7: color-mix(in srgb, var(--ink) 40%, transparent);
+  --grey-8: color-mix(in srgb, var(--ink) 64%, transparent);
+  --fill: var(--grey-2);          /* a secondary button, a hovered row */
+  --fill-strong: var(--grey-4);   /* pressed, current */
+  --band: color-mix(in srgb, var(--bg) 92%, var(--ink));
+
+  /* type: two faces, the interface sizes, two weights. --z is Advanced's A- / A+ (1 everywhere else). */
+  --font-ui: 'AR Plus Jakarta Sans', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-words: 'AR Atlas Lora', Lora, Georgia, serif;
+  --t-micro: calc(10px * var(--z, 1));
+  --t-tiny: calc(11px * var(--z, 1));
+  --t-small: calc(12px * var(--z, 1));    /* counts and badges only */
+  --t-detail: calc(13px * var(--z, 1));   /* quiet text, buttons */
+  --t-ui: calc(14px * var(--z, 1));       /* everything else in the interface */
+  --t-body: calc(15px * var(--z, 1));     /* longer interface text */
+  --t-page: calc(16px * var(--z, 1));     /* the writing page */
+  --t-title: calc(17px * var(--z, 1));
+  --t-heading: calc(20px * var(--z, 1));
+  --t-display: calc(22px * var(--z, 1));  /* a screen's one heading */
+  --t-hero: calc(28px * var(--z, 1));
+  --t-poster: calc(34px * var(--z, 1));
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --w-text: 400; --w-strong: 600;
+
+  /* spacing: 4 / 8 / 12 / 16 / 24 / 32 / 48 */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+
+  /* corners */
+  --r-control: 6px;   /* every button, field, chip and tab */
+  --r-surface: 8px;   /* cards, sheets, pop-ups */
+  --r-round: 999px;   /* dots and avatars only, never a button */
+
+  /* control heights: 28 small, 32 default, 44 on touch only */
+  --h-control-sm: 28px;
+  --h-control: 32px;
+  --h-chip: 24px;
+  --h-band: 48px;
+  --h-touch: 44px;
+  --pad-control: 10px;
+  --pad-primary: 12px;
+  --icon: 16px;
+  /* the height every button style uses; dense Advanced takes the small one, touch screens the large one */
+  --ctl-h: var(--h-control);
+
+
+  /* ---------- roles: what every section uses. Change a role here to change that kind of thing everywhere; change
+     a value above to change everything that reads it. No stylesheet outside this file names a raw size or colour. */
+
+  /* font sizes by role, each one a step on the scale above */
+  --size-micro: var(--t-micro);           /* tiny counts on thumbnails */
+  --size-label: var(--t-tiny);            /* small capital labels over a group */
+  --size-caption: var(--t-small);         /* small text, captions, badges */
+  --size-detail: var(--t-detail);         /* quiet secondary text */
+  --size-button: var(--t-detail);         /* every button, chip and field */
+  --size-table: var(--t-detail);          /* lists, results and tables (Advanced's dense rows) */
+  --size-ui: var(--t-ui);                 /* interface body text */
+  --size-nav: var(--t-ui);                /* places, tabs and rails */
+  --size-body: var(--t-body);             /* longer interface text */
+  --size-reading: var(--t-page);          /* the writing page */
+  --size-card-title: var(--t-title);      /* a card's or panel's title */
+  --size-section: var(--t-heading);       /* a section heading */
+  --size-page-title: var(--t-display);    /* a screen's one heading */
+  --size-display: var(--t-hero);          /* a large number or cover title */
+  --size-poster: var(--t-poster);         /* the biggest words on an empty screen */
+
+  /* text colours by role */
+  --fg-main: var(--ink);                  /* main text */
+  --fg-soft: var(--ink-2);                /* secondary text */
+  --fg-muted: var(--dim);                 /* muted text */
+  --fg-hint: var(--faint);                /* hints and placeholders */
+  --fg-link: var(--warm);                 /* links */
+  --fg-accent: var(--warm);               /* the accent: only what needs Adrian */
+  --fg-good: var(--good);
+  --fg-warn: var(--warn);
+  --fg-danger: var(--bad);                /* danger and errors */
+  --fg-on-ink: var(--paper);              /* text on a primary (ink) fill; follows the theme */
+  --fg-on-accent: var(--bg);              /* text on the accent colour */
+  --fg-on-dark: #fffefb;                  /* text on a photo or a fixed dark surface; never changes with the theme */
+
+  /* page and surface colours by role */
+  --surface-page: var(--bg);              /* the page behind everything */
+  --surface-band: var(--band);            /* the top band and section bands */
+  --surface-card: var(--paper);           /* cards, sheets, the writing page */
+  --surface-panel: var(--rail);           /* side panels and rails */
+  --surface-advanced: var(--bg);          /* Advanced's working area (AR Create's admin view) */
+  --surface-chosen: var(--sel);           /* the chosen row */
+  --surface-ink: var(--ink);              /* a primary button's fill */
+  --surface-good: var(--good-bg);
+  --surface-warn: var(--warn-bg);
+  --surface-dark: #141310;                /* fixed dark: photo scrims, terminals; never changes with the theme */
+  --edge: var(--line);                    /* borders: hairline */
+  --edge-strong: var(--line-strong);      /* borders that must be seen */
+  --edge-accent: var(--warm);
+  --edge-ink: var(--ink);
+
+  /* line heights */
+  --lh-solid: 1;      /* icons and single-line badges */
+  --lh-tight: 1.2;    /* headings */
+  --lh-snug: 1.35;    /* labels, two-line buttons */
+  --lh-ui: 1.5;       /* interface text */
+  --lh-page: 1.65;    /* reading */
+  --lh-loose: 1.8;    /* airy reading */
+
+  /* motion */
+  --dur-fast: 120ms;  /* hover, press */
+  --dur: 200ms;       /* open, close, slide */
+  --ease: cubic-bezier(.2, 0, 0, 1);
+
+  /* the older names, kept so nothing breaks; each one reads the master value */
+  --ar-ui: var(--font-ui); --v2-speech: var(--font-words);
+  --c3-ink2: var(--ink-2); --c3-line2: var(--line-strong); --c3-lift: var(--rail); --c3-sel: var(--sel);
+  --c3-good: var(--good); --c3-warn: var(--warn); --c3-bad: var(--bad); --c3-pend: var(--warn-bg); --c3-okbg: var(--good-bg);
+  --c3-sbt: var(--scrollbar); --c3-sbh: var(--scrollbar-hover); --c3-shadow: var(--shadow-sheet);
+  --ar-ui-muted: var(--dim); --ar-ui-focus: var(--warm); --draft-active: var(--sel); --mrb-accent: var(--warm); --rpb-accent: var(--warm);
+  --green: var(--good);
+  --c3-t1: var(--t-detail); --c3-t2: var(--t-body); --c3-r: var(--r-surface);
+  --v2-t12: var(--t-small); --v2-t13: var(--t-detail); --v2-t14: var(--t-ui); --v2-t15: var(--t-body); --v2-t18: var(--t-title); --v2-t22: var(--t-display);
+  --v2-top: var(--h-band); --v3-top: var(--h-band);
+}
+body.c3-tabs { --ctl-h: var(--h-control-sm); }
+@media (pointer: coarse) { :root, body.c3-tabs { --ctl-h: var(--h-touch); } }
+
+/* ---------- 2. the nine button styles ----------
+   Each style is a class (ar-primary, ar-secondary, ar-quiet, ar-icon, ar-tab, ar-nav, ar-chip, ar-link, ar-field)
+   followed by the older class names that now draw the same way. A new control takes one of the nine classes; it never
+   gets its own look. The mapping of all 84 measured looks is in docs/design/BUTTONS.md. */
+
+@layer ar-master {
+  /* what every button style shares: one height, one corner, one type size and weight, nothing moves on hover */
+  :is(.ar-primary, .ar-secondary, .ar-quiet, .ar-icon,
+      :is(button, a).coss:not(.underline-offset-4),
+      .subj-btn, button.pri, .home-new, .v2-phone button.v2-cap,
+      .wr-btn, .lk-link, .sb-btn, .ht-find-all, .btn,
+      .v2-ghost, .tbtn,
+      .cp-subject, .cp-main-tool, .cp-more, .cp-saved, .cp-new, .ht-place.ht-theme, .combined-rail > button) {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    height: var(--ctl-h) !important;
+    min-height: var(--ctl-h) !important;
+    padding: 0 var(--pad-control) !important;
+    border-radius: var(--r-control) !important;
+    font: var(--w-strong) var(--t-detail)/1 var(--font-ui) !important;
+    letter-spacing: normal !important;
+    white-space: nowrap !important;
+    transform: none !important;
+  }
+  :is(.ar-primary, .ar-secondary, .ar-quiet, .ar-icon, .coss, .v2-ghost, .tbtn, .cp-subject, .cp-main-tool, .cp-more, .cp-new, .ht-place.ht-theme, .combined-rail > button) svg { width: var(--icon); height: var(--icon); }
+
+  /* primary: ink fill, paper text. One per area. */
+  :is(.ar-primary, :is(button, a).coss.bg-primary, .subj-btn.pri, button.pri, .home-new, .v2-phone button.v2-cap) {
+    padding: 0 var(--pad-primary) !important;
+    border: 1px solid var(--ink) !important;
+    background: var(--ink) !important;
+    color: var(--paper) !important;
+    box-shadow: none !important;
+  }
+  :is(.ar-primary, :is(button, a).coss.bg-primary, .subj-btn.pri, button.pri, .home-new, .v2-phone button.v2-cap):hover {
+    background: color-mix(in srgb, var(--ink) 88%, var(--paper)) !important;
+  }
+
+  /* secondary: a soft grey fill, ink text, no edge. Ordinary actions. */
+  :is(.ar-secondary, :is(button, a).coss:is(.bg-popover, .bg-secondary), .subj-btn:not(.pri), .wr-btn, .lk-link, .sb-btn, .ht-find-all, .btn, .cp-saved) {
+    border: 1px solid transparent !important;
+    background: var(--fill) !important;
+    color: var(--ink) !important;
+    box-shadow: none !important;
+  }
+  :is(.ar-secondary, :is(button, a).coss:is(.bg-popover, .bg-secondary), .subj-btn:not(.pri), .wr-btn, .lk-link, .sb-btn, .ht-find-all, .btn, .cp-saved):hover {
+    background: var(--fill-strong) !important;
+  }
+
+  /* quiet: no fill, quiet text, ink on hover */
+  :is(.ar-quiet, .ar-icon, :is(button, a).coss.border-transparent:not(.bg-secondary, .bg-primary), .v2-ghost, .tbtn, .cp-subject, .cp-main-tool, .cp-more, .cp-new, .ht-place.ht-theme, .combined-rail > button) {
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    color: var(--dim) !important;
+    box-shadow: none !important;
+  }
+  :is(.ar-quiet, .ar-icon, :is(button, a).coss.border-transparent:not(.bg-secondary, .bg-primary), .v2-ghost, .tbtn, .cp-subject, .cp-main-tool, .cp-more, .cp-new, .ht-place.ht-theme, .combined-rail > button):is(:hover, [aria-pressed="true"], [aria-expanded="true"], .on) {
+    background: var(--fill) !important;
+    color: var(--ink) !important;
+  }
+
+  /* icon: quiet, square */
+  :is(.ar-icon, .v2-icon-btn, :is(button, a).coss:is(.size-6, .size-7, .size-8, .size-9, .size-10), .cp-new, .ht-place.ht-theme) {
+    width: var(--ctl-h) !important;
+    min-width: var(--ctl-h) !important;
+    padding: 0 !important;
+  }
+
+  /* tab: text, a 2px line under the current one, control height */
+  :is(.ar-tab, .h3-nav, .wr-tabs > a, .lk .lk-pills button, .home .home-seg button, .cp-tabs > .cp-tab, .cp-modes > button) {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    height: var(--ctl-h) !important;
+    min-height: var(--ctl-h) !important;
+    padding: 0 var(--pad-control) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: var(--dim) !important;
+    box-shadow: none !important;
+    font: var(--w-strong) var(--t-ui)/1 var(--font-ui) !important;
+  }
+  :is(.ar-tab, .h3-nav, .wr-tabs > a, .lk .lk-pills button, .home .home-seg button, .cp-tabs > .cp-tab, .cp-modes > button):hover { color: var(--ink) !important; }
+  :is(.ar-tab, .h3-nav, .wr-tabs > a, .lk .lk-pills button, .home .home-seg button, .cp-tabs > .cp-tab, .cp-modes > button):is([aria-current]:not([aria-current="false"]), [aria-selected="true"], [aria-pressed="true"], .on, .cp-current) {
+    color: var(--ink) !important;
+    box-shadow: inset 0 -2px 0 var(--ink) !important;
+  }
+  /* "add" at the end of a row of tabs keeps a dashed edge so it reads as an action */
+  .lk .lk-pills button.lk-add { border: 1px dashed var(--line-strong) !important; border-radius: var(--r-control) !important; }
+
+  /* nav: a tab at band height; on the phone bar it stacks the icon over the label at touch height */
+  :is(.ar-nav, .v3-place, .combined-band-tools > button) {
+    box-sizing: border-box !important;
+    height: var(--nav-h, var(--h-band)) !important;
+    min-height: var(--nav-h, var(--h-band)) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 var(--pad-control) !important;
+    font: var(--w-strong) var(--t-ui)/1 var(--font-ui) !important;
+    color: var(--dim) !important;
+  }
+  :is(.ar-nav, .v3-place, .combined-band-tools > button):is(:hover, [aria-current]:not([aria-current="false"]), [aria-pressed="true"], .on) { color: var(--ink) !important; }
+  /* in a side rail a place is a row: control height, the current one filled instead of underlined */
+  .combined-band-tools { --nav-h: var(--ctl-h); }
+  .combined-band-tools > button { border-radius: var(--r-control) !important; }
+  .combined-band-tools > button:is([aria-current]:not([aria-current="false"]), [aria-pressed="true"], .on) { background: var(--fill-strong) !important; }
+  .v3-pq { height: var(--h-touch) !important; border-radius: var(--r-control) !important; font: var(--w-strong) var(--t-detail)/16px var(--font-ui) !important; }
+
+  /* chip: small, hairline edge, control corner. Dashed only for "add". */
+  :is(.ar-chip, .subj button.subj-form, .subj .subj-form.none, .home .home-chips button, .sl .sl-chips button, .sl .sl-looks2 button, .rs-pick .rs-chips label, .lk-used span) {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    height: var(--h-chip) !important;
+    min-height: var(--h-chip) !important;
+    padding: 0 var(--s2) !important;
+    border: 1px solid var(--line-strong) !important;
+    border-radius: var(--r-control) !important;
+    background: transparent !important;
+    color: var(--ink) !important;
+    box-shadow: none !important;
+    font: var(--w-strong) var(--t-detail)/1 var(--font-ui) !important;
+  }
+  :is(.ar-chip, .subj button.subj-form, .home .home-chips button, .sl .sl-chips button, .sl .sl-looks2 button):is(:hover, .on, [aria-pressed="true"], [aria-current]:not([aria-current="false"])) {
+    background: var(--fill) !important;
+  }
+  :is(.subj .subj-form.none, .subj button.subj-form.add) { border-style: dashed !important; color: var(--dim) !important; }
+  @media (pointer: coarse) {
+    :is(.ar-chip, .subj button.subj-form, .home .home-chips button, .sl .sl-chips button, .sl .sl-looks2 button) { height: var(--h-control) !important; min-height: var(--h-control) !important; }
+  }
+
+  /* link: the accent colour, no box */
+  :is(.ar-link, .subj-link, :is(button, a).coss.underline-offset-4) {
+    display: inline !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: none !important;
+    color: var(--warm) !important;
+    box-shadow: none !important;
+    font: var(--w-strong) var(--t-detail)/var(--lh-ui) var(--font-ui) !important;
+  }
+  :is(.ar-link, .subj-link, :is(button, a).coss.underline-offset-4):hover { text-decoration: underline !important; text-underline-offset: 3px; }
+
+  /* field: same height and corner as a button, paper fill, hairline edge */
+  :is(.ar-field,
+      :is(#v2-app, #v3-frame, dialog.v2-sheet) :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="hidden"]), select):not(:is(.h3-find, .v2-find-box) *),
+      .h3-find, .v2-find-box) {
+    box-sizing: border-box !important;
+    height: var(--ctl-h) !important;
+    min-height: var(--ctl-h) !important;
+    border: 1px solid var(--grey-5) !important;
+    border-radius: var(--r-control) !important;
+    background-color: var(--paper) !important;
+    color: var(--ink) !important;
+    font: var(--w-text) var(--t-ui)/1.2 var(--font-ui) !important;
+  }
+  :is(#v2-app, #v3-frame, dialog.v2-sheet) :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="hidden"]), select):not(:is(.h3-find, .v2-find-box) *) {
+    padding: 0 var(--pad-control) !important;
+  }
+}

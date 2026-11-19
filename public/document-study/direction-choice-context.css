@@ -1,11 +1,11 @@
 #c3-surface-bar:has(>[data-direction-choice-context]){flex-wrap:wrap}
-.direction-choice-context{flex:1 1 100%;min-width:0;font:400 13px/1.5 var(--ar-ui,sans-serif);overflow-wrap:anywhere;color:var(--text-muted,var(--dim))}
+.direction-choice-context{flex:1 1 100%;min-width:0;font:400 var(--size-detail)/var(--lh-ui) var(--font-ui);overflow-wrap:anywhere;color:var(--text-muted,var(--dim))}
 .direction-choice-line{margin:0}.direction-choice-line strong{font-weight:600}.direction-choice-unavailable{color:var(--text-muted,var(--dim))}
 .direction-choice-rejection p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}
-[data-understanding="rejected"] h3{font:600 var(--t-head,15px)/1.5 var(--ar-ui,sans-serif);margin:12px 0 6px}
+[data-understanding="rejected"] h3{font:600 var(--t-head,15px)/var(--lh-ui) var(--font-ui);margin:12px 0 6px}
 
 .direction-piece-grid table{table-layout:fixed;width:100%;border-collapse:collapse}.direction-piece-grid th,.direction-piece-grid td{vertical-align:top;overflow-wrap:anywhere;padding:8px}.direction-piece-grid td input,.direction-piece-grid td select{display:block;box-sizing:border-box;width:100%;min-width:0;margin:5px 0}.direction-piece-actions{display:flex;flex-wrap:wrap;gap:5px}.direction-piece-actions button{border-radius:5px}.direction-piece-grid small{display:block}.direction-piece-grid td p{margin:0 0 6px}
-@media(max-width:800px){.direction-piece-grid table,.direction-piece-grid tbody,.direction-piece-grid tr,.direction-piece-grid td,.direction-piece-grid th{display:block;width:auto}.direction-piece-grid thead{display:flex;flex-wrap:wrap;gap:5px}.direction-piece-grid thead tr{display:contents}.direction-piece-grid thead td{display:none}.direction-piece-grid tbody td:before{content:attr(data-piece);display:block;font-weight:600}.direction-piece-grid tbody tr{margin-top:12px}.direction-piece-grid tbody td{border-top:1px solid var(--line,#ddd)}}
+@media(max-width:800px){.direction-piece-grid table,.direction-piece-grid tbody,.direction-piece-grid tr,.direction-piece-grid td,.direction-piece-grid th{display:block;width:auto}.direction-piece-grid thead{display:flex;flex-wrap:wrap;gap:5px}.direction-piece-grid thead tr{display:contents}.direction-piece-grid thead td{display:none}.direction-piece-grid tbody td:before{content:attr(data-piece);display:block;font-weight:600}.direction-piece-grid tbody tr{margin-top:12px}.direction-piece-grid tbody td{border-top:1px solid var(--edge)}}
 /* The top bar never wraps (c3-theme), so the direction sentence is clipped to its share instead of running under the controls beside it. */
 #c3-surface-bar>.direction-choice-context{flex:1 1 0;overflow:hidden}
 #c3-surface-bar>.direction-choice-context .direction-choice-line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

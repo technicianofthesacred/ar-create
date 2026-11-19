@@ -1,38 +1,38 @@
 /* The approved Workbench frame and document geometry; owners keep their nodes and events. */
-body.wbf-on{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--lift:#191813;--sel:#2c2a22;--good:#8fb08a;--warnc:#d9a95a;--bad:#e08a74;--hl:rgba(201,168,116,.28);--gut:32px;--top:24px;--c3-lift:var(--rail);--c3-sel:var(--sel);--wb-rail-bg:var(--rail);--wb-panel:var(--rail);--c3-doc-font:var(--ar-ui);font-family:var(--ar-ui);line-height:1.5}
-html[data-theme="light"] body.wbf-on{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#5e6257;--line:#e2e0d8;--warm:#7a5a30;--rail:#f7f5ef;--lift:#f7f5ef;--sel:#e9e4d7;--good:#3f6146;--warnc:#94600f;--bad:#a23b2a;--hl:rgba(122,90,48,.2)}
-body.wbf-on ::selection{background:var(--hl);color:var(--ink)}
-body.wbf-on :focus-visible{outline:2px solid var(--warm);outline-offset:2px;border-radius:4px}
+body.wbf-on{--lift:var(--surface-panel);--warnc:var(--fg-warn);--hl:color-mix(in srgb,var(--warm) 26%,transparent);--gut:32px;--top:24px;--c3-lift:var(--rail);--c3-sel:var(--sel);--wb-rail-bg:var(--rail);--wb-panel:var(--rail);--c3-doc-font:var(--ar-ui);font-family:var(--font-ui);line-height:var(--lh-ui)}
+
+body.wbf-on ::selection{background:var(--hl);color:var(--fg-main)}
+body.wbf-on :focus-visible{outline:2px solid var(--edge-accent);outline-offset:2px;border-radius:4px}
 html body.wbf-on{--wb-doc-left:32px;--wb-doc-top:0px}
 html body.wbf-on #app{height:calc(100dvh - 48px)!important;margin-top:48px!important}
-html body.wbf-on #app>.shell{height:100%!important;min-height:0!important;background:var(--bg)!important}
-html body.wbf-on #workspace{background:var(--bg)!important;padding:0!important;overflow-x:hidden!important}
-html body.wbf-on #c3-tabstrip.wbf-top{position:fixed!important;inset:0 0 auto!important;z-index:75!important;width:100%!important;height:48px!important;min-height:48px!important;padding:0 12px!important;display:flex!important;align-items:center!important;gap:6px!important;border:0!important;border-bottom:1px solid var(--line)!important;background:var(--rail)!important;color:var(--ink)!important;box-sizing:border-box!important}
+html body.wbf-on #app>.shell{height:100%!important;min-height:0!important;background:var(--surface-page)!important}
+html body.wbf-on #workspace{background:var(--surface-page)!important;padding:0!important;overflow-x:hidden!important}
+html body.wbf-on #c3-tabstrip.wbf-top{position:fixed!important;inset:0 0 auto!important;z-index:75!important;width:100%!important;height:48px!important;min-height:48px!important;padding:0 12px!important;display:flex!important;align-items:center!important;gap:6px!important;border:0!important;border-bottom:1px solid var(--edge)!important;background:var(--surface-panel)!important;color:var(--fg-main)!important;box-sizing:border-box!important}
 html body.wbf-on #c3-tabstrip.wbf-top>:is(.ht-place:not(.ht-theme),.ht-tabs,.ht-sep,.ht-more,.ht-grow,.ht-plus){display:none!important}
 html body.wbf-on #c3-tabstrip.wbf-top>.ht-switch{display:block!important;order:0;max-width:340px;min-width:0;margin:0!important}
-html body.wbf-on #c3-tabstrip.wbf-top>.ht-switch>summary{display:flex!important;flex-direction:row!important;align-items:center;gap:9px;min-height:34px!important;height:34px!important;width:auto!important;max-width:340px;padding:0 10px 0 8px!important;font:600 var(--t-body)/1.5 var(--ar-ui)!important;color:var(--ink)!important;border:0!important;background:none!important}
+html body.wbf-on #c3-tabstrip.wbf-top>.ht-switch>summary{display:flex!important;flex-direction:row!important;align-items:center;gap:9px;min-height:34px!important;height:34px!important;width:auto!important;max-width:340px;padding:0 10px 0 8px!important;font:600 var(--size-body)/var(--lh-ui) var(--font-ui)!important;color:var(--fg-main)!important;border:0!important;background:none!important}
 html body.wbf-on #c3-tabstrip.wbf-top .ht-switch-label{display:block!important;position:static!important;width:auto!important;height:auto!important;clip:auto!important;max-width:240px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 html body.wbf-on #c3-tabstrip.wbf-top .ht-switch>summary::after{content:none!important}
 html body.wbf-on #c3-tabstrip.wbf-top>.ht-theme{order:3;display:inline-flex!important;flex:none;min-width:32px!important;height:32px!important;margin:0!important;border:0!important}
 html body.wbf-on #c3-tabstrip .ht-switch-menu{position:fixed!important;left:12px!important;top:44px!important;z-index:90!important;max-height:calc(100dvh - 80px);overflow:auto}
 .wbf-top-actions{display:flex;align-items:center;gap:6px;margin-left:auto;order:2}
-.wbf-top-actions .tbtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 9px;border:0;border-radius:7px;background:none;color:var(--dim);font:500 var(--t-label)/1.5 var(--ar-ui);white-space:nowrap;cursor:pointer}
-.wbf-top-actions .tbtn:hover{color:var(--ink);background:var(--sel)}
-.wbf-top-actions .sizer{display:inline-flex;align-items:center;height:32px;border:1px solid var(--line);border-radius:7px}
+.wbf-top-actions .tbtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 9px;border:0;border-radius:7px;background:none;color:var(--fg-muted);font:500 var(--size-button)/var(--lh-ui) var(--font-ui);white-space:nowrap;cursor:pointer}
+.wbf-top-actions .tbtn:hover{color:var(--fg-main);background:var(--surface-chosen)}
+.wbf-top-actions .sizer{display:inline-flex;align-items:center;height:32px;border:1px solid var(--edge);border-radius:7px}
 .wbf-top-actions .sizer .tbtn{height:30px;padding:0 8px}
-.wbf-top-actions .pct{font-size:var(--t-label);min-width:3.2em;text-align:center;color:var(--dim)}
+.wbf-top-actions .pct{font-size:var(--size-detail);min-width:3.2em;text-align:center;color:var(--fg-muted)}
 /* A title/action line above the work; metadata no longer occupies a second banner. */
-html body.wbf-on #c3-surface-bar{position:relative!important;top:auto!important;min-height:34px!important;height:auto!important;max-width:1120px;margin:24px 32px 20px!important;padding:0!important;display:flex!important;flex-wrap:wrap;align-items:center;gap:8px!important;border:0!important;background:var(--bg)!important;box-shadow:none!important;z-index:15!important}
+html body.wbf-on #c3-surface-bar{position:relative!important;top:auto!important;min-height:34px!important;height:auto!important;max-width:1120px;margin:24px 32px 20px!important;padding:0!important;display:flex!important;flex-wrap:wrap;align-items:center;gap:8px!important;border:0!important;background:var(--surface-page)!important;box-shadow:none!important;z-index:15!important}
 html body.wbf-on #c3-surface-bar .sb-left{display:flex!important;gap:10px;min-width:0;flex:1 1 auto}
 html body.wbf-on #c3-surface-bar .sb-where{display:flex;flex-direction:row-reverse!important;gap:6px;min-width:0;align-items:baseline}
 html body.wbf-on #c3-surface-bar :is(.sb-cp-n,.sb-sep2,.sb-on,.sb-ret,.cb-size,.sb-insp,.sb-margin){display:none!important}
-html body.wbf-on #c3-surface-bar .sb-cp-name{font:600 var(--t-title)/1.5 var(--ar-ui)!important}
-html body.wbf-on #c3-surface-bar .sb-piece{font:400 var(--t-title)/1.5 var(--ar-ui)!important;color:var(--dim)}
-html body.wbf-on #c3-surface-bar .sb-piece::before{content:'· ';color:var(--dim)}
+html body.wbf-on #c3-surface-bar .sb-cp-name{font:600 var(--t-title)/var(--lh-ui) var(--font-ui)!important}
+html body.wbf-on #c3-surface-bar .sb-piece{font:400 var(--t-title)/var(--lh-ui) var(--font-ui)!important;color:var(--fg-muted)}
+html body.wbf-on #c3-surface-bar .sb-piece::before{content:'· ';color:var(--fg-muted)}
 html body.wbf-on #c3-surface-bar .sb-right{margin-left:auto!important;display:flex!important;gap:8px!important;flex-wrap:wrap}
-html body.wbf-on #c3-surface-bar .sb-status{font:400 var(--t-label)/1.5 var(--ar-ui)!important;max-width:15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-html body.wbf-on #c3-surface-bar .sb-btn,html body.wbf-on #c3-surface-bar .sb-icon{height:34px!important;min-height:34px!important;border:1px solid var(--line)!important;border-radius:7px!important;background:var(--paper)!important;padding:0 10px!important;color:var(--ink)!important}
-html body.wbf-on #c3-surface-bar .sb-primary{height:34px!important;min-height:34px!important;padding:0 12px!important;border:1px solid var(--warm)!important;border-radius:7px!important;background:var(--warm)!important;color:var(--bg)!important}
+html body.wbf-on #c3-surface-bar .sb-status{font:400 var(--size-detail)/var(--lh-ui) var(--font-ui)!important;max-width:15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body.wbf-on #c3-surface-bar .sb-btn,html body.wbf-on #c3-surface-bar .sb-icon{height:34px!important;min-height:34px!important;border:1px solid var(--edge)!important;border-radius:7px!important;background:var(--surface-card)!important;padding:0 10px!important;color:var(--fg-main)!important}
+html body.wbf-on #c3-surface-bar .sb-primary{height:34px!important;min-height:34px!important;padding:0 12px!important;border:1px solid var(--edge-accent)!important;border-radius:7px!important;background:var(--warm)!important;color:var(--bg)!important}
 html body.wbf-on #app #workspace .c3-ctitle,html body.wbf-on #app #workspace .c3-page-notes{display:none!important}
 html body.wbf-on .workflowNavigation.wb-rail .workflowStep{min-height:46px!important}
 html body.wbf-on .workflowNavigation.wb-rail .tr-find{display:none!important}
@@ -44,31 +44,31 @@ html body.wbf-on #app #workspace .desk>:is(#c3-insp-head,#c3-insp-decisions,.c3-
 html body.wbf-on #app #workspace .desk>.document{grid-column:1;grid-row:1}
 html body.wbf-on #app #workspace .desk>#margin{display:block!important;grid-column:2;grid-row:1;position:relative!important;inset:auto!important;width:auto!important;min-width:0!important;max-width:none!important;border:0!important;background:none!important;padding:42px 0 0!important;margin:0!important;transform:none!important;height:auto!important;overflow:visible!important}
 html body.wbf-on #app #margin :is(.draft-surface-margin-head,.draft-surface-margin-summary){display:none!important}
-html body.wbf-on #app #margin :is(.discussion,.note,.marginNote){padding:4px 0 4px 10px!important;margin:0 0 8px!important;border:0!important;border-left:2px solid var(--line)!important;border-radius:0!important;background:none!important;box-shadow:none!important;font-size:var(--t-label)!important}
-html body.wbf-on #app #margin :is(.head,.head strong,p,.why,.sourceGuard){font-size:var(--t-label)!important;line-height:1.5!important}
+html body.wbf-on #app #margin :is(.discussion,.note,.marginNote){padding:4px 0 4px 10px!important;margin:0 0 8px!important;border:0!important;border-left:2px solid var(--edge)!important;border-radius:0!important;background:none!important;box-shadow:none!important;font-size:var(--size-detail)!important}
+html body.wbf-on #app #margin :is(.head,.head strong,p,.why,.sourceGuard){font-size:var(--size-detail)!important;line-height:var(--lh-ui)!important}
 html body.wbf-on #app #workspace .phaseReader.c3-read{display:block!important;padding:0 32px!important;max-width:none!important}
 html body.wbf-on #app #workspace .phaseReader.c3-read>#c3-read-insp{display:none!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc>h1{font:600 var(--t-head)/1.5 var(--ar-ui)!important;margin:0 0 2px!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc>.wbf-doc-by{font:400 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim)!important;margin:0 0 20px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc>h1{font:600 var(--t-head)/var(--lh-ui) var(--font-ui)!important;margin:0 0 2px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc>.wbf-doc-by{font:400 var(--size-detail)/var(--lh-ui) var(--font-ui)!important;color:var(--fg-muted)!important;margin:0 0 20px!important}
 html body.wbf-on #app #workspace .doc>:is(.subtitle,.draft-surface-document-meta,.reference,.docfooter){display:none!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc :is(#manuscript,.draft-read-words,.manuscript-prose)>:is(p,div),html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc .draft-read-words>section>p{font:400 var(--t-reading)/1.65 var(--ar-ui)!important;margin:0 0 var(--t-reading)!important;padding:1px 4px!important;margin-left:-4px!important;border:0!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc :is(#manuscript,.draft-read-words,.manuscript-prose)>:is(p,div),html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc .draft-read-words>section>p{font:400 var(--t-reading)/var(--lh-page) var(--font-ui)!important;margin:0 0 var(--t-reading)!important;padding:1px 4px!important;margin-left:-4px!important;border:0!important}
 html body.wbf-on #wbf-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:1008px;padding:0 32px;margin:-8px 0 20px}
-html body.wbf-on #wbf-tools .btn{font-size:var(--t-label)!important;min-height:34px}
+html body.wbf-on #wbf-tools .btn{font-size:var(--size-button)!important;min-height:34px}
 /**** One tool drawer, retaining the real controls and unsaved values. ****/
-#wbf-drawer{position:fixed;top:48px;right:0;bottom:0;width:min(380px,100vw);z-index:80;display:flex;flex-direction:column;background:var(--rail);border-left:1px solid var(--line);box-shadow:-18px 0 40px rgba(0,0,0,.3)}
-#wbf-drawer .dr-head{display:flex;align-items:center;padding:12px 12px 12px 18px;min-height:52px;gap:8px;border-bottom:1px solid var(--line)}
-#wbf-drawer .dr-head h2{flex:1;font:600 var(--t-head)/1.5 var(--ar-ui)}
-#wbf-drawer .dr-tabs{display:flex;flex-wrap:wrap;column-gap:14px;padding:0 18px;border-bottom:1px solid var(--line)}
-#wbf-drawer .dr-tabs button{border:0;border-bottom:1.5px solid transparent;background:none;color:var(--dim);padding:9px 0;font:400 var(--t-label)/1.5 var(--ar-ui)}
-#wbf-drawer .dr-tabs button.on{border-color:var(--warm);color:var(--ink)}
-#wbf-drawer .dr-body{flex:1;min-height:0;overflow:auto;padding:16px 18px 48px;font-size:var(--t-body)}
+#wbf-drawer{position:fixed;top:48px;right:0;bottom:0;width:min(380px,100vw);z-index:80;display:flex;flex-direction:column;background:var(--surface-panel);border-left:1px solid var(--edge);box-shadow:var(--shadow-sheet)}
+#wbf-drawer .dr-head{display:flex;align-items:center;padding:12px 12px 12px 18px;min-height:52px;gap:8px;border-bottom:1px solid var(--edge)}
+#wbf-drawer .dr-head h2{flex:1;font:600 var(--t-head)/var(--lh-ui) var(--font-ui)}
+#wbf-drawer .dr-tabs{display:flex;flex-wrap:wrap;column-gap:14px;padding:0 18px;border-bottom:1px solid var(--edge)}
+#wbf-drawer .dr-tabs button{border:0;border-bottom:1.5px solid transparent;background:none;color:var(--fg-muted);padding:9px 0;font:400 var(--size-button)/var(--lh-ui) var(--font-ui)}
+#wbf-drawer .dr-tabs button.on{border-color:var(--edge-accent);color:var(--fg-main)}
+#wbf-drawer .dr-body{flex:1;min-height:0;overflow:auto;padding:16px 18px 48px;font-size:var(--size-body)}
 #wbf-drawer .dr-body :is(input,textarea){max-width:100%;box-sizing:border-box}
 html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-layout{display:block!important;padding:0 32px!important}
-html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-findings{position:fixed!important;top:48px;right:0;bottom:0;z-index:55;width:min(380px,100vw);overflow:auto;padding:16px 18px!important;border-left:1px solid var(--line)!important;background:var(--rail)!important}
+html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-findings{position:fixed!important;top:48px;right:0;bottom:0;z-index:55;width:min(380px,100vw);overflow:auto;padding:16px 18px!important;border-left:1px solid var(--edge)!important;background:var(--surface-panel)!important}
 html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-manuscript{margin-right:380px!important}
 /**** Bench and Pieces are two entrances to the existing project browser. ****/
-html body.wbf-on #project-library.wbf-home{inset:0!important;margin:0!important;max-width:none!important;max-height:none!important;width:100vw!important;height:100dvh!important;padding:0!important;border:0!important;background:var(--bg)!important;color:var(--ink)!important}
-html body.wbf-on #project-library.wbf-home .ht-home-body{display:block!important;padding:24px 32px 96px!important;margin:48px 0 0 66px!important;max-width:1120px!important;border-left:1px solid var(--line)}
+html body.wbf-on #project-library.wbf-home{inset:0!important;margin:0!important;max-width:none!important;max-height:none!important;width:100vw!important;height:100dvh!important;padding:0!important;border:0!important;background:var(--surface-page)!important;color:var(--fg-main)!important}
+html body.wbf-on #project-library.wbf-home .ht-home-body{display:block!important;padding:24px 32px 96px!important;margin:48px 0 0 66px!important;max-width:1120px!important;border-left:1px solid var(--edge)}
 html body.wbf-on #project-library.wbf-home .ht-facets{display:none!important}
 html body.wbf-on #project-library.wbf-home .ht-home-main{padding:0!important;width:100%!important;max-width:calc(var(--measure) + 16rem)!important}
 html body.wbf-on #project-library.wbf-home .ht-homebar{padding:0 32px!important;margin:0 0 0 66px!important;background:none!important;border:0!important}
@@ -76,14 +76,14 @@ html body.wbf-on #project-library.wbf-home .ht-homebar-actions{position:fixed;to
 html body.wbf-on #project-library.wbf-home :is(.ht-cover,.ht-views,.pl-results-head small){display:none!important}
 html body.wbf-on #project-library.wbf-home .pl-results{display:block!important;max-width:calc(var(--measure) + 16rem)!important}
 html body.wbf-on #project-library.wbf-home .pl-library-row{display:flex!important;align-items:center;min-height:58px!important;background:none!important;border:0!important;border-radius:6px!important;box-shadow:none!important;padding:0!important}
-html body.wbf-on #project-library.wbf-home .pl-library-row:hover{background:var(--sel)!important}
+html body.wbf-on #project-library.wbf-home .pl-library-row:hover{background:var(--surface-chosen)!important}
 html body.wbf-on #project-library.wbf-home .pl-open{display:flex!important;flex-direction:column;align-items:flex-start;gap:2px;flex:1;padding:8px!important;background:none!important;border:0!important;min-width:0!important}
-html body.wbf-on #project-library.wbf-home .pl-open strong{font:500 var(--t-body)/1.5 var(--ar-ui)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-html body.wbf-on #project-library.wbf-home .pl-open>span{font:400 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim)!important}
+html body.wbf-on #project-library.wbf-home .pl-open strong{font:500 var(--size-body)/var(--lh-ui) var(--font-ui)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+html body.wbf-on #project-library.wbf-home .pl-open>span{font:400 var(--size-detail)/var(--lh-ui) var(--font-ui)!important;color:var(--fg-muted)!important}
 html body.wbf-on #project-library.wbf-home .ht-card-more{position:relative!important;inset:auto!important;flex:none}
 html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"] .wbf-bench{display:none!important}
 html body.wbf-on #project-library.wbf-home .pickup{max-width:calc(var(--measure) + 16rem)}
-html body.wbf-on #project-library.wbf-home .pickup .meta{font-size:var(--t-label)}
+html body.wbf-on #project-library.wbf-home .pickup .meta{font-size:var(--size-detail)}
 html body.wbf-on #project-library.wbf-home .wbf-bench>.block{margin-top:32px}
 html body.wbf-on #project-library.wbf-home .move .w{display:block}
 html body.wbf-on[data-draft-focus="true"] #app,html[data-draft-focus="true"] body.wbf-on #app{height:100dvh!important;margin-top:0!important}
@@ -108,18 +108,18 @@ html body.wbf-on[data-draft-focus="true"] #margin,html[data-draft-focus="true"] 
  html body.wbf-on #project-library.wbf-home .ht-homebar{margin:0!important;padding:0 16px!important}
  html body.wbf-on #project-library.wbf-home .ht-homebar-actions{position:static;margin:0}
  html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-manuscript{margin:0!important}
- html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-findings{position:relative!important;width:auto!important;top:auto!important;bottom:auto!important;margin:0 -16px!important;border:0!important;border-top:1px solid var(--line)!important}
+ html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-findings{position:relative!important;width:auto!important;top:auto!important;bottom:auto!important;margin:0 -16px!important;border:0!important;border-top:1px solid var(--edge)!important}
  html body.wbf-on #app>.shell>.workflowNavigation.wb-rail:not(.cr-open)>.cr-picker{display:none!important}
 }
 /* Document tools share the single title/action line, as in the prototype. */
 html body.wbf-on #c3-surface-bar #wbf-tools{padding:0!important;margin:0!important;gap:8px}
-html body.wbf-on #wbf-parts{position:relative;margin:0;color:var(--dim);font-size:var(--t-label)}
-html body.wbf-on #wbf-parts>summary{display:flex;align-items:center;min-height:34px;padding:0 10px;border:1px solid var(--line);border-radius:7px;cursor:pointer}
-html body.wbf-on #wbf-parts>div{position:absolute;right:0;top:38px;min-width:240px;max-width:calc(100vw - 32px);max-height:60dvh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px;z-index:40;box-shadow:var(--c3-shadow)}
+html body.wbf-on #wbf-parts{position:relative;margin:0;color:var(--fg-muted);font-size:var(--size-detail)}
+html body.wbf-on #wbf-parts>summary{display:flex;align-items:center;min-height:34px;padding:0 10px;border:1px solid var(--edge);border-radius:7px;cursor:pointer}
+html body.wbf-on #wbf-parts>div{position:absolute;right:0;top:38px;min-width:240px;max-width:calc(100vw - 32px);max-height:60dvh;overflow:auto;background:var(--surface-card);border:1px solid var(--edge);border-radius:8px;padding:10px;z-index:40;box-shadow:var(--c3-shadow)}
 html body.wbf-on #app #workspace>.draft-bar{min-height:0!important;margin:0!important;padding:0!important;border:0!important;background:none!important}
 html body.wbf-on #app #workspace .doc{min-height:0!important;height:auto!important}
 @font-face{font-family:'Workbench Lora';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/lora-400-normal-latin.woff2') format('woff2')}
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .workspace :is(.source-turn-speech,.source-turn-text,.source-remark,.rpb-quote,.source-quote,.rs-quote,.research-standard-said blockquote){font-family:'Workbench Lora',Lora,Georgia,serif!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .workspace :is(.source-turn-speech,.source-turn-text,.source-remark,.rpb-quote,.source-quote,.rs-quote,.research-standard-said blockquote){font-family:'Workbench Lora',var(--font-words)!important}
 
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .desk{background:none!important;min-height:0!important;height:auto!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc :is(#manuscript,.draft-read-words)>p,html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc .draft-read-words>section>p{width:calc(100% + 4px)!important;max-width:calc(var(--measure) + 4px)!important}
@@ -135,25 +135,25 @@ html body.wbf-on #project-library.wbf-home .ht-home-main>.wbf-bench{margin:0!imp
 html body.wbf-on #project-library.wbf-home .pl-results-head{min-height:0!important;padding:0!important;margin:0!important}
 html body.wbf-on #project-library.wbf-home .pl-results-head>[data-pl-count]{display:none!important}
 /* The prototype's empty surface is quiet and useful; preserve the real actions, discard the old ghost illustration. */
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty{display:block!important;position:relative!important;inset:auto!important;min-height:0!important;max-width:calc(var(--measure) + 96px)!important;margin:0 32px 24px!important;padding:28px 24px!important;border:1px dashed var(--line)!important;border-radius:10px!important;background:none!important;box-shadow:none!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty{display:block!important;position:relative!important;inset:auto!important;min-height:0!important;max-width:calc(var(--measure) + 96px)!important;margin:0 32px 24px!important;padding:28px 24px!important;border:1px dashed var(--edge)!important;border-radius:10px!important;background:none!important;box-shadow:none!important}
 html body.wbf-on #app .c3-empty :is(.ce-shape,.ce-icon,.ce-steps){display:none!important}
 html body.wbf-on #app .c3-empty .ce-card-wrap{display:block!important;padding:0!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;max-width:none!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty .ce-copy h3{font:600 var(--t-head)/1.5 var(--ar-ui)!important;margin:0 0 6px!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty .ce-copy p{font:400 var(--t-body)/1.5 var(--ar-ui)!important;margin:0 0 12px!important;max-width:var(--measure)}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty .ce-copy h3{font:600 var(--t-head)/var(--lh-ui) var(--font-ui)!important;margin:0 0 6px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty .ce-copy p{font:400 var(--size-body)/var(--lh-ui) var(--font-ui)!important;margin:0 0 12px!important;max-width:var(--measure)}
 @media(max-width:760px){html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty{margin:0 16px 24px!important;padding:20px 16px!important}}
 /* Read's passage wrappers retain their anchors but add no competing geometry. */
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace#workspace>.phaseReader.c3-read{padding:0 32px!important;margin:0!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;max-width:none!important;display:block!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace#workspace .doc :is(#manuscript,.draft-read-words) p{font:400 var(--t-reading)/1.65 var(--ar-ui)!important;padding:1px 4px!important;margin:0 0 var(--t-reading) -4px!important;width:calc(100% + 4px)!important;max-width:calc(var(--measure) + 4px)!important;box-sizing:border-box!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace#workspace .doc :is(#manuscript,.draft-read-words) p{font:400 var(--t-reading)/var(--lh-page) var(--font-ui)!important;padding:1px 4px!important;margin:0 0 var(--t-reading) -4px!important;width:calc(100% + 4px)!important;max-width:calc(var(--measure) + 4px)!important;box-sizing:border-box!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace#workspace .draft-read-words>section{margin:0!important;padding:0!important;width:100%!important;min-width:0!important}
 @media(max-width:760px){html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace#workspace>.phaseReader.c3-read{padding:0 16px!important}}
 .wbf-piece-nav{display:none}
-html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"]>.wbf-piece-nav{position:absolute;display:flex;flex-direction:column;top:0;left:0;bottom:0;width:240px;border-right:1px solid var(--line);background:var(--rail);overflow:auto}
+html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"]>.wbf-piece-nav{position:absolute;display:flex;flex-direction:column;top:0;left:0;bottom:0;width:240px;border-right:1px solid var(--edge);background:var(--surface-panel);overflow:auto}
 html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"] .ht-home-body{margin-left:240px!important}
-.wbf-piece-nav .sph{display:flex;align-items:center;height:40px;padding:0 14px;font-size:var(--t-label);color:var(--dim)}
+.wbf-piece-nav .sph{display:flex;align-items:center;height:40px;padding:0 14px;font-size:var(--size-detail);color:var(--fg-muted)}
 .wbf-piece-nav .spb{padding:0 6px 16px}
-.wbf-piece-nav .rk{display:flex;align-items:center;min-height:34px;width:100%;padding:0 9px;border:0;border-radius:7px;background:none;color:var(--dim);font:400 var(--t-body)/1.5 var(--ar-ui);text-align:left;cursor:pointer}
-.wbf-piece-nav .rk.on,.wbf-piece-nav .rk:hover{background:var(--sel);color:var(--ink)}
-@media(max-width:760px){html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"]>.wbf-piece-nav{position:static;width:auto;border:0;border-bottom:1px solid var(--line);padding:0 16px}.wbf-piece-nav .sph{display:none}.wbf-piece-nav .spb{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0}.wbf-piece-nav .rk{width:auto}html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"] .ht-home-body{margin-left:0!important}}
+.wbf-piece-nav .rk{display:flex;align-items:center;min-height:34px;width:100%;padding:0 9px;border:0;border-radius:7px;background:none;color:var(--fg-muted);font:400 var(--size-body)/var(--lh-ui) var(--font-ui);text-align:left;cursor:pointer}
+.wbf-piece-nav .rk.on,.wbf-piece-nav .rk:hover{background:var(--surface-chosen);color:var(--fg-main)}
+@media(max-width:760px){html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"]>.wbf-piece-nav{position:static;width:auto;border:0;border-bottom:1px solid var(--edge);padding:0 16px}.wbf-piece-nav .sph{display:none}.wbf-piece-nav .spb{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0}.wbf-piece-nav .rk{width:auto}html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"] .ht-home-body{margin-left:0!important}}
 
 /* History is a margin tool, not a second heading above the writing. Its original controls remain in the drawer. */
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .draft-bar>.draft-inspect[data-wbf-history="true"]{display:none!important}
@@ -170,19 +170,19 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty .ce-acts{pos
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-research:has(.wb-shared-research) .c3-empty :is(.ce-copy>h3,.ce-copy>p,.ce-tools){display:none!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-research:has(.wb-shared-research) .c3-empty{padding:0!important;border:0!important;margin:0 32px 16px!important}
 @media(max-width:760px){html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-research:has(.wb-shared-research) .c3-empty{margin:0 16px 16px!important}}
-html body.wbf-on #c3-tabstrip .wbf-top-actions .tbtn{font:500 var(--t-label)/1.5 var(--ar-ui)!important;border-radius:7px!important;color:var(--dim)!important;background:transparent!important}
-html body.wbf-on #c3-tabstrip .wbf-top-actions .tbtn:hover{color:var(--ink)!important;background:var(--sel)!important}
+html body.wbf-on #c3-tabstrip .wbf-top-actions .tbtn{font:500 var(--size-button)/var(--lh-ui) var(--font-ui)!important;border-radius:7px!important;color:var(--fg-muted)!important;background:transparent!important}
+html body.wbf-on #c3-tabstrip .wbf-top-actions .tbtn:hover{color:var(--fg-main)!important;background:var(--surface-chosen)!important}
 html body.wbf-on #c3-tabstrip .wbf-top-actions .tbtn{height:32px!important;min-height:32px!important}
 html body.wbf-on #c3-tabstrip .wbf-top-actions .sizer .tbtn{height:30px!important;min-height:30px!important}
 /* Pieces is an entrance, not a thirteenth workflow checkpoint. */
-html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;min-height:46px;padding:4px 0;border:0;border-radius:6px;background:transparent;color:var(--dim);font:400 var(--t-label)/1.3 var(--ar-ui);cursor:pointer}
-html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces:hover{background:var(--sel);color:var(--ink)}
+html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;min-height:46px;padding:4px 0;border:0;border-radius:6px;background:transparent;color:var(--fg-muted);font:400 var(--size-detail)/var(--lh-snug) var(--font-ui);cursor:pointer}
+html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces:hover{background:var(--surface-chosen);color:var(--fg-main)}
 html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces svg{width:18px;height:18px}
 /* Exact prototype header details; preserve the maintained switcher's real menu. */
 html body.wbf-on #c3-tabstrip .ht-switch>summary>.wbf-project-dot{width:9px;height:9px;flex:none;border-radius:2px;background:var(--warm)}
 html body.wbf-on #c3-tabstrip .ht-switch>summary>svg:first-of-type{display:none!important}
 html body.wbf-on #c3-tabstrip .ht-switch>summary>kbd{margin-left:2px}
-html body.wbf-on #c3-tabstrip .ht-switch>summary:hover{background:var(--sel)!important}
+html body.wbf-on #c3-tabstrip .ht-switch>summary:hover{background:var(--surface-chosen)!important}
 html body.wbf-on #wbf-document-actions{display:flex;align-items:center;gap:8px;order:4}
 html body.wbf-on #c3-surface-bar .sb-morew{order:5}
 html body.wbf-on #c3-surface-bar #wbf-tools{order:1}
@@ -190,7 +190,7 @@ html body.wbf-on #c3-surface-bar .sb-focus{order:2}
 html body.wbf-on #c3-surface-bar .sb-sep{display:none!important}
 html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"],[data-c3-stage="7"]) #c3-surface-bar .sb-right>:is(.sb-pw,.sb-icon[aria-label="Undo"]){display:none!important}
 html body.wbf-on #c3-surface-bar .sb-menu [data-wbf-menu]{display:flex!important}
-html body.wbf-on #c3-surface-bar .sb-cp-name{font:600 var(--t-title)/1.5 var(--ar-ui)!important}
+html body.wbf-on #c3-surface-bar .sb-cp-name{font:600 var(--t-title)/var(--lh-ui) var(--font-ui)!important}
 html body.wbf-on #c3-surface-bar .sb-status[data-tone="ok"]{display:none!important}
 html body.wbf-on #app #workspace .desk>#margin{padding-top:67px!important}
 html body.wbf-on #app #workspace .desk :is(.wbf-doc-by){margin-bottom:20px!important}
@@ -198,9 +198,9 @@ html body.wbf-on #app #workspace .desk :is(.wbf-doc-by){margin-bottom:20px!impor
 @media(max-width:760px){html body.wbf-on #c3-tabstrip .ht-switch>summary>.lbl-wide{display:none!important}html body.wbf-on #wbf-document-actions .wbf-word-count{display:none}html body.wbf-on #wbf-drawer{width:100vw;border-left:0}}
 
 /* The approved edge handle opens the same understanding owner as the header. */
-#wbf-pull{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:20;width:22px;height:72px;border:1px solid var(--line);border-right:0;border-radius:8px 0 0 8px;background:var(--rail);color:var(--dim);display:grid;place-items:center;cursor:pointer}
+#wbf-pull{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:20;width:22px;height:72px;border:1px solid var(--edge);border-right:0;border-radius:8px 0 0 8px;background:var(--surface-panel);color:var(--fg-muted);display:grid;place-items:center;cursor:pointer}
 #wbf-pull svg{transform:rotate(180deg)}
-#wbf-pull:hover{color:var(--ink);width:26px}
+#wbf-pull:hover{color:var(--fg-main);width:26px}
 body.wbf-drawer-open #wbf-pull,body.c3-focus #wbf-pull{display:none}
 @media(max-width:760px){#wbf-pull{display:none}}
 /* Earlier inspector rules must not place the margin in a second grid row. */
@@ -224,47 +224,47 @@ html body.wbf-on #wbf-document-actions>.btn{padding:0 7px!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-manuscript{margin-right:0!important}
 html body.wbf-on #wbf-drawer .wn-check-findings{position:static!important;inset:auto!important;width:auto!important;padding:0!important;border:0!important;overflow:visible!important;background:none!important}
 html body.wbf-on #wbf-drawer .wn-check-findings :is(.phaseReader,.recordPage){padding:0!important;margin:0!important;max-width:none!important;background:none!important;border:0!important;box-shadow:none!important}
-html body.wbf-on #wbf-drawer .wn-check-findings :is(h1,h2,h3,h4){font:600 var(--t-head)/1.5 var(--ar-ui)!important}
-html body.wbf-on #wbf-drawer .wn-check-findings :is(p,button,summary,label,li){font-size:var(--t-label)!important;line-height:1.5!important}
+html body.wbf-on #wbf-drawer .wn-check-findings :is(h1,h2,h3,h4){font:600 var(--t-head)/var(--lh-ui) var(--font-ui)!important}
+html body.wbf-on #wbf-drawer .wn-check-findings :is(p,button,summary,label,li){font-size:var(--size-button)!important;line-height:var(--lh-ui)!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-findings{display:none!important}
 html body.wbf-on #wbf-drawer .wn-check-findings{display:block!important}
 /* Drawer and loading/detail states use the same approved type tokens. */
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #wbf-drawer :is(.small,.draft-check-status>span){font-size:var(--t-label)!important;line-height:1.5!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #workspace:is(.wb-share,.wb-outputs) :is(.oss-loading,.oss-muted,.oo-detail-body) :is(p,strong,span){font-size:var(--t-label)!important;line-height:1.5!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #workspace.wb-share [data-output-stage-surface="11"]>p{font-size:var(--t-label)!important;line-height:1.5!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #wbf-drawer :is(.small,.draft-check-status>span){font-size:var(--size-detail)!important;line-height:var(--lh-ui)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #workspace:is(.wb-share,.wb-outputs) :is(.oss-loading,.oss-muted,.oo-detail-body) :is(p,strong,span){font-size:var(--size-detail)!important;line-height:var(--lh-ui)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #workspace.wb-share [data-output-stage-surface="11"]>p{font-size:var(--size-detail)!important;line-height:var(--lh-ui)!important}
 html[data-draft-focus="true"] body.wbf-on #wbf-drawer,body.wbf-on[data-draft-focus="true"] #wbf-drawer{display:none!important}
 
 /* Bench is outside #app: give its existing home owner the approved typography too. */
-html body.wbf-on #project-library.wbf-home {font:400 var(--t-body)/1.5 var(--ar-ui)!important}
+html body.wbf-on #project-library.wbf-home {font:400 var(--size-body)/var(--lh-ui) var(--font-ui)!important}
 html body.wbf-on #project-library.wbf-home :is(h1,h2,h3,h4,p,blockquote){letter-spacing:normal!important}
-html body.wbf-on #project-library.wbf-home h1{font:600 var(--t-title)/1.5 var(--ar-ui)!important;margin:0!important}
-html body.wbf-on #project-library.wbf-home :is(h2,h3,h4){font:600 var(--t-head)/1.5 var(--ar-ui)!important}
+html body.wbf-on #project-library.wbf-home h1{font:600 var(--t-title)/var(--lh-ui) var(--font-ui)!important;margin:0!important}
+html body.wbf-on #project-library.wbf-home :is(h2,h3,h4){font:600 var(--t-head)/var(--lh-ui) var(--font-ui)!important}
 html body.wbf-on #project-library.wbf-home .thead{min-height:34px!important;height:34px!important;margin:0 0 20px!important;padding:0!important;display:flex;align-items:center}
 html body.wbf-on #project-library.wbf-home .ht-home-main{background:none!important}
 html body.wbf-on #project-library.wbf-home .pickup h2{margin:4px 0 2px!important}
-html body.wbf-on #project-library.wbf-home .pickup .meta{font:400 var(--t-label)/1.5 var(--ar-ui)!important}
-html body.wbf-on #project-library.wbf-home .lab{font:500 var(--t-label)/1.5 var(--ar-ui)!important;letter-spacing:normal!important;text-transform:none!important}
-html body.wbf-on #project-library.wbf-home .sec{font:500 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim);margin:0 0 12px!important}
+html body.wbf-on #project-library.wbf-home .pickup .meta{font:400 var(--size-detail)/var(--lh-ui) var(--font-ui)!important}
+html body.wbf-on #project-library.wbf-home .lab{font:500 var(--size-detail)/var(--lh-ui) var(--font-ui)!important;letter-spacing:normal!important;text-transform:none!important}
+html body.wbf-on #project-library.wbf-home .sec{font:500 var(--size-detail)/var(--lh-ui) var(--font-ui)!important;color:var(--fg-muted);margin:0 0 12px!important}
 html body.wbf-on #project-library.wbf-home .ht-homebar-actions{display:none!important}
-html body.wbf-on #project-library.wbf-home .pickup .lnk,html body.wbf-on #project-library.wbf-home .wbf-active-title .lnk{border:0!important;background:none!important;padding:0!important;color:var(--warm)!important;font:500 var(--t-label)/1.5 var(--ar-ui)!important;min-height:34px}
+html body.wbf-on #project-library.wbf-home .pickup .lnk,html body.wbf-on #project-library.wbf-home .wbf-active-title .lnk{border:0!important;background:none!important;padding:0!important;color:var(--fg-accent)!important;font:500 var(--size-detail)/var(--lh-ui) var(--font-ui)!important;min-height:34px}
 html body.wbf-on #project-library.wbf-home .move{border:0!important;background:none!important;box-shadow:none!important;min-height:0!important}
-html body.wbf-on #project-library.wbf-home .move:hover{background:var(--sel)!important}
+html body.wbf-on #project-library.wbf-home .move:hover{background:var(--surface-chosen)!important}
 html body.wbf-on #project-library.wbf-home .wbf-active-title{display:flex;gap:12px;align-items:baseline;justify-content:space-between}
 html body.wbf-on #project-library.wbf-home .wbf-active-title .sec{margin-bottom:10px!important}
 html body.wbf-on #project-library.wbf-home .ht-homebar .pl-search{flex:1!important}
-html body.wbf-on #project-library.wbf-home .ht-homebar input{font:400 var(--t-body)/1.5 var(--ar-ui)!important}
-html body.wbf-on #project-library.wbf-home .since small{font:400 var(--t-label)/1.5 var(--ar-ui)!important}
+html body.wbf-on #project-library.wbf-home .ht-homebar input{font:400 var(--size-body)/var(--lh-ui) var(--font-ui)!important}
+html body.wbf-on #project-library.wbf-home .since small{font:400 var(--size-detail)/var(--lh-ui) var(--font-ui)!important}
 /* Match the prototype rail's 46px rows; older rail rules had higher specificity. */
 @media(min-width:761px){
-html body.wb-on.wbf-on #app>.shell>.workflowNavigation.wb-rail :is(.workflowStep,.tr-home,.wbf-pieces){height:46px!important;min-height:46px!important;flex:none!important;padding:5px 0 4px!important;gap:3px!important;border-radius:8px!important;font:400 var(--t-label)/1.15 var(--ar-ui)!important;letter-spacing:-.01em!important}
+html body.wb-on.wbf-on #app>.shell>.workflowNavigation.wb-rail :is(.workflowStep,.tr-home,.wbf-pieces){height:46px!important;min-height:46px!important;flex:none!important;padding:5px 0 4px!important;gap:3px!important;border-radius:8px!important;font:400 var(--size-detail)/var(--lh-tight) var(--font-ui)!important;letter-spacing:-.01em!important}
 html body.wb-on.wbf-on #app>.shell>.workflowNavigation.wb-rail .wn-family+.wn-family::before,html body.wb-on.wbf-on #app>.shell>.workflowNavigation.wb-rail>.workflowSteps::before{margin:6px 10px!important}
 }
 @media(min-width:761px){
 html body.wb-on.wbf-on #app>.shell>.workflowNavigation.wb-rail>.workflowSteps::before{margin:6px 10px 7px!important}
 html body.wb-on.wbf-on #app>.shell>.workflowNavigation.wb-rail .wn-family+.wn-family::before{margin:7px 10px!important}
-html body.wbf-on:is([data-wbf-home="bench"],[data-wbf-home="pieces"]) .workflowNavigation.wb-rail .workflowStep[aria-current]{background:none!important;color:var(--dim)!important;font-weight:400!important}
+html body.wbf-on:is([data-wbf-home="bench"],[data-wbf-home="pieces"]) .workflowNavigation.wb-rail .workflowStep[aria-current]{background:none!important;color:var(--fg-muted)!important;font-weight:400!important}
 html body.wbf-on:is([data-wbf-home="bench"],[data-wbf-home="pieces"]) .workflowNavigation.wb-rail .workflowStep[aria-current]::before{display:none!important}
-html body.wbf-on[data-wbf-home="pieces"] .workflowNavigation.wb-rail .wbf-pieces{background:var(--sel)!important;color:var(--ink)!important}
+html body.wbf-on[data-wbf-home="pieces"] .workflowNavigation.wb-rail .wbf-pieces{background:var(--surface-chosen)!important;color:var(--fg-main)!important}
 html body.wbf-on[data-wbf-home="pieces"] .workflowNavigation.wb-rail .wbf-pieces::before{content:'';position:absolute;left:-3px;top:9px;bottom:9px;width:3px;background:var(--warm);border-radius:0 3px 3px 0}
 html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces{position:relative}
 }
@@ -274,12 +274,12 @@ html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-home-main{max-width:none!important;overflow:visible!important}
 html body.wbf-on #project-library.wbf-home .wbf-active-title{max-width:calc(var(--measure) + 16rem)}
 
-@media(min-width:761px){html body.wbf-on[data-wbf-home="bench"] .workflowNavigation.wb-rail [data-tr-home]{background:var(--sel)!important;color:var(--ink)!important}}
+@media(min-width:761px){html body.wbf-on[data-wbf-home="bench"] .workflowNavigation.wb-rail [data-tr-home]{background:var(--surface-chosen)!important;color:var(--fg-main)!important}}
 
 /* Section actions remain reachable in the native More menu; writing geometry is unchanged. */
 html body.wbf-on #c3-surface-bar[data-wbf-section-actions] .sb-right>:is(.sb-mode,.sb-pw){display:none!important}
 html body.wbf-on #c3-surface-bar .sb-menu .wbf-section-action{display:flex!important;width:100%;flex-wrap:wrap;gap:4px}
-html body.wbf-on #c3-surface-bar .sb-menu .wbf-section-action .sb-primary{width:100%;text-align:left;font-size:var(--t-label)!important}
+html body.wbf-on #c3-surface-bar .sb-menu .wbf-section-action .sb-primary{width:100%;text-align:left;font-size:var(--size-detail)!important}
 html body.wbf-on #c3-surface-bar .sb-menu .wbf-section-action .sb-primary::after{display:none!important}
 html body.wbf-on #c3-surface-bar .sb-menu .wbf-section-action .sb-why{white-space:normal;max-width:none}
 @media(min-width:761px){
@@ -298,9 +298,9 @@ html body.wbf-on #c3-surface-bar .sb-menu .wbf-section-action .sb-why{white-spac
  html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:not([data-c3-stage="5"]):not([data-c3-stage="6"]):not([data-c3-stage="7"]) #app #workspace #c3-surface-bar:not([data-ma-owner]){flex-wrap:nowrap!important}
  html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #c3-surface-bar[data-wbf-section-actions]>.sb-right{flex:0 0 auto!important;width:auto!important;justify-content:flex-start!important}
 }
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar .sb-menu .wbf-section-action{width:100%!important;min-width:0!important;height:auto!important;min-height:34px!important;font-size:var(--t-label)!important;display:flex!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar .sb-menu .wbf-section-action{width:100%!important;min-width:0!important;height:auto!important;min-height:34px!important;font-size:var(--size-detail)!important;display:flex!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar .sb-menu .wbf-section-action span{display:inline!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar .sb-menu .wbf-section-action .sb-primary{width:100%!important;max-width:none!important;font-size:var(--t-label)!important;white-space:normal!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar .sb-menu .wbf-section-action .sb-primary{width:100%!important;max-width:none!important;font-size:var(--size-detail)!important;white-space:normal!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar .sb-menu .wbf-section-action .sb-primary::after{display:none!important}
 html body.wbf-on #workspace .wfb-fsearch{gap:3px}
 
@@ -320,7 +320,7 @@ html body.wbf-on #project-library.wbf-home .wbf-active-title>span{display:inline
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar:has(>.sb-right>[data-wbf-make-output])>[data-review-state]{grid-column:2;grid-row:1;margin-left:0!important}
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar:has(>.sb-right>[data-wbf-make-output]) .sb-right>.sb-morew{grid-column:3;grid-row:1;min-width:0}
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar:has(>.sb-right>[data-wbf-make-output]) .sb-right>.sb-pw{grid-column:1;grid-row:2;max-width:100%;min-width:0}
- html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar:has(>.sb-right>[data-wbf-make-output]) .sb-right>.sb-pw .sb-primary{height:auto!important;max-width:100%!important;min-width:0;white-space:normal!important;font-size:var(--t-label)!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar:has(>.sb-right>[data-wbf-make-output]) .sb-right>.sb-pw .sb-primary{height:auto!important;max-width:100%!important;min-width:0;white-space:normal!important;font-size:var(--size-detail)!important}
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar:has(>.sb-right>[data-wbf-make-output]) .sb-right>.sb-pw .sb-primary::after{display:none!important}
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar:has(>.sb-right>[data-wbf-make-output]) .sb-right>[data-wbf-make-output]{grid-column:2/4;grid-row:2;justify-self:end;min-width:0;max-width:100%;height:auto!important;white-space:normal}
 }
@@ -328,10 +328,10 @@ html body.wbf-on #project-library.wbf-home .wbf-active-title>span{display:inline
 /* One Write entrance and a persistent view toggle for the current editor. */
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .workflowNavigation .workflowStep[data-wn-legacy-read][hidden],
 html body.wbf-on #c3-surface-bar .sb-mode[hidden]{display:none!important}
-html body.wbf-on #wbf-document-actions .wbf-mode-switch{display:inline-flex;flex:none;align-items:center;gap:2px;padding:1px 2px;border:1px solid var(--line);border-radius:8px;background:var(--rail)}
-html body.wbf-on #wbf-document-actions .wbf-mode-switch button{height:30px;min-height:30px;padding:0 10px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--dim);font:500 var(--t-label)/1.5 var(--ar-ui);white-space:nowrap;cursor:pointer}
-html body.wbf-on #wbf-document-actions .wbf-mode-switch button[aria-pressed="true"]{background:var(--paper);border-color:var(--line);color:var(--ink);box-shadow:0 1px 2px #0001}
-html body.wbf-on #wbf-document-actions .wbf-mode-switch button:hover{color:var(--ink)}
+html body.wbf-on #wbf-document-actions .wbf-mode-switch{display:inline-flex;flex:none;align-items:center;gap:2px;padding:1px 2px;border:1px solid var(--edge);border-radius:8px;background:var(--surface-panel)}
+html body.wbf-on #wbf-document-actions .wbf-mode-switch button{height:30px;min-height:30px;padding:0 10px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--fg-muted);font:500 var(--size-button)/var(--lh-ui) var(--font-ui);white-space:nowrap;cursor:pointer}
+html body.wbf-on #wbf-document-actions .wbf-mode-switch button[aria-pressed="true"]{background:var(--surface-card);border-color:var(--edge);color:var(--fg-main);box-shadow:var(--shadow-1)}
+html body.wbf-on #wbf-document-actions .wbf-mode-switch button:hover{color:var(--fg-main)}
 @media(max-width:760px){html body.wbf-on #wbf-document-actions .wbf-mode-switch button{padding:0 8px}html body.wbf-on #wbf-document-actions .wbf-mode-switch{margin-left:2px}}
 
 /* Project-wide browsers cover the manuscript without disposing its tools.
@@ -370,10 +370,10 @@ html body.wbf-on[data-wbf-home="pieces"] #wbf-pull{display:none!important}
  html body.wbf-on #app #workspace.wb-direction>#c3-surface-bar{display:grid!important;grid-template-columns:minmax(0,1fr) auto;row-gap:4px!important}
  html body.wbf-on #app #workspace.wb-direction>#c3-surface-bar>.sb-left{grid-column:1;grid-row:1}
  html body.wbf-on #app #workspace.wb-direction>#c3-surface-bar>.sb-right{grid-column:2;grid-row:1}
- html body.wbf-on #app #workspace.wb-direction>#c3-surface-bar>[data-review-state]{grid-column:1/-1;grid-row:2;justify-self:start;margin-left:0!important;font:400 var(--t-label)/1.5 var(--ar-ui)!important}
+ html body.wbf-on #app #workspace.wb-direction>#c3-surface-bar>[data-review-state]{grid-column:1/-1;grid-row:2;justify-self:start;margin-left:0!important;font:400 var(--size-detail)/var(--lh-ui) var(--font-ui)!important}
 }
 
-[data-wbf-check-decisions]{border-top:1px solid var(--line);margin-top:18px;padding-top:12px}[data-wbf-check-decisions]>h3{font:600 15px/1.5 var(--ar-ui);margin:0 0 8px}
+[data-wbf-check-decisions]{border-top:1px solid var(--edge);margin-top:18px;padding-top:12px}[data-wbf-check-decisions]>h3{font:600 var(--size-body)/var(--lh-ui) var(--font-ui);margin:0 0 8px}
 
 /* One stable global row. Context remains in the page rather than replacing it. */
 html body.wbf-on #c3-tabstrip.wbf-top>.ht-switch{flex:1 1 220px;max-width:420px}
@@ -383,7 +383,7 @@ html body.wbf-on #c3-tabstrip.wbf-top .wbf-top-actions svg{display:block;width:1
  html body.wbf-on #c3-tabstrip.wbf-top{height:48px!important;min-height:48px!important;gap:3px!important;padding:0 8px!important;flex-wrap:nowrap!important}
  html body.wbf-on #c3-tabstrip.wbf-top>.ht-switch{flex:1 1 auto;max-width:none!important;min-width:0!important}
  html body.wbf-on #c3-tabstrip.wbf-top>.ht-switch>summary{width:100%!important;max-width:none!important;padding-inline:4px!important;gap:5px!important}
- html body.wbf-on #c3-tabstrip.wbf-top .ht-switch-label{max-width:none!important;flex:1 1 auto;min-width:0;font-size:13px!important}
+ html body.wbf-on #c3-tabstrip.wbf-top .ht-switch-label{max-width:none!important;flex:1 1 auto;min-width:0;font-size:var(--size-detail)!important}
  html body.wbf-on #c3-tabstrip.wbf-top .ht-switch>summary>svg{display:none!important}
  html body.wbf-on #c3-tabstrip.wbf-top .ht-switch>summary>.wbf-project-dot{display:none!important}
  html body.wbf-on #c3-tabstrip.wbf-top .ht-switch>summary>kbd{display:none!important}

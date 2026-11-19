@@ -1,23 +1,23 @@
 /* Version two: Read. Every rule starts with .rd. The page is Write's page (the same face, measure, line and gap between
    paragraphs, the same place on the screen) with nothing to edit. Sizes are the shell's six only. */
 .rd .rd-text{grid-column:1;min-width:0}
-.rd .rd-p,.rd .rd-q,.rd .rd-h{margin:0 0 22px;color:var(--ink);font:400 var(--v2-t18)/1.58 var(--ar-ui);overflow-wrap:anywhere;white-space:pre-wrap}
+.rd .rd-p,.rd .rd-q,.rd .rd-h{margin:0 0 22px;color:var(--fg-main);font:400 var(--size-card-title)/var(--lh-page) var(--font-ui);overflow-wrap:anywhere;white-space:pre-wrap}
 .rd .rd-h{font-weight:700;margin-top:10px}
-.rd .rd-q{color:var(--c3-ink2);font-style:italic}
-.rd .rd-empty{color:var(--dim);font-size:var(--v2-t14);overflow-wrap:anywhere}
-.rd .rd-unsaved{margin:-6px 0 22px;padding:10px 14px;border:1px solid color-mix(in srgb,var(--c3-warn) 55%,var(--line));border-radius:10px;background:var(--c3-lift);font-size:var(--v2-t14);line-height:1.5;overflow-wrap:anywhere}
+.rd .rd-q{color:var(--fg-soft);font-style:italic}
+.rd .rd-empty{color:var(--fg-muted);font-size:var(--size-ui);overflow-wrap:anywhere}
+.rd .rd-unsaved{margin:-6px 0 22px;padding:10px 14px;border:1px solid color-mix(in srgb,var(--c3-warn) 55%,var(--edge));border-radius:10px;background:var(--surface-panel);font-size:var(--size-ui);line-height:var(--lh-ui);overflow-wrap:anywhere}
 .rd .rd-unsaved[hidden]{display:none}
 .rd .rd-unsaved a{text-decoration:underline}
 .rd .rd-foot{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .rd .rd-foot:empty{display:none}
 .rd .rd-edit{flex:none;white-space:nowrap}
 .rd .rd-foot .rd-edit-foot{display:none}
-.rd .rd-stale{margin:-6px 0 22px;padding:10px 14px;border:1px solid color-mix(in srgb,var(--c3-warn) 55%,var(--line));border-radius:10px;background:var(--c3-lift);font-size:var(--v2-t14);line-height:1.5;overflow-wrap:anywhere}
+.rd .rd-stale{margin:-6px 0 22px;padding:10px 14px;border:1px solid color-mix(in srgb,var(--c3-warn) 55%,var(--edge));border-radius:10px;background:var(--surface-panel);font-size:var(--size-ui);line-height:var(--lh-ui);overflow-wrap:anywhere}
 .rd .rd-stale[hidden]{display:none}
 .rd .rd-stale button{margin-left:6px}
 @media (max-width:850px){
  /* a short piece: the page's own paper runs down to the phone bar (it runs under the fixed phone bar, which covers its foot), so no grey band shows */
- .rd.v2-page{background:var(--paper);min-height:calc(100dvh - var(--v2-top))}
+ .rd.v2-page{background:var(--surface-card);min-height:calc(100dvh - var(--v2-top))}
  .rd .rd-edit{display:none}
  .rd .rd-foot .rd-edit-foot{display:inline-flex}
 }

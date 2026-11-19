@@ -2,19 +2,19 @@
 html body.wbf-on #app #workspace.wb-arrange #study-output-arrange#study-output-arrange {
   box-sizing:border-box;width:auto!important;max-width:none!important;
   margin:0 32px 32px!important;padding:0!important;
-  font:400 var(--t-body,15px)/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif);
+  font:400 var(--size-body)/var(--lh-ui) var(--font-ui);
 }
 body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench {
-  --cwb-line:var(--line);--cwb-dim:var(--dim);color:var(--ink);
+  --cwb-line:var(--line);--cwb-dim:var(--dim);color:var(--fg-main);
 }
 body.wbf-on #app #workspace.wb-arrange .car-workspace {
-  font:400 var(--t-body,15px)/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif);
+  font:400 var(--size-body)/var(--lh-ui) var(--font-ui);
 }
 body.wbf-on #app #workspace.wb-arrange .car-workspace .sh2 {min-height:26px;height:26px;}
 body.wbf-on #app #workspace.wb-arrange .car-workspace .sh2 :is(.handle,.tn2) {
-  min-height:26px;height:26px;border:0!important;padding:0!important;color:var(--ink);
+  min-height:26px;height:26px;border:0!important;padding:0!important;color:var(--fg-main);
 }
-body.wbf-on #app #workspace.wb-arrange .car-workspace .sh2 .handle {color:var(--dim);}
+body.wbf-on #app #workspace.wb-arrange .car-workspace .sh2 .handle {color:var(--fg-muted);}
 html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .slide2 .tx2 {
   border:1px solid transparent!important;border-radius:6px;outline:none;background:none;
   padding:4px 6px;box-shadow:none;resize:vertical;
@@ -27,16 +27,16 @@ body.wbf-on #app #workspace.wb-arrange .car-workspace .tseq {scrollbar-color:var
 body.wbf-on #app #workspace.wb-arrange .car-workspace .tseq::-webkit-scrollbar-track {background:transparent;}
 body.wbf-on #app #workspace.wb-arrange .car-workspace .tseq::-webkit-scrollbar-thumb {background:var(--line);border-color:transparent;}
 body.wbf-on #app #workspace.wb-arrange .car-workspace :is(.car-status,.car-messages) {
-  background:none!important;color:var(--dim)!important;border:0!important;
-  font:400 var(--t-label,13px)/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif);
+  background:none!important;color:var(--fg-muted)!important;border:0!important;
+  font:400 var(--size-detail)/var(--lh-ui) var(--font-ui);
 }
 body.wbf-on #app #workspace.wb-arrange .car-workspace .car-status * {color:inherit;}
-body.wbf-on #app #workspace.wb-arrange .cwb-manuscript-receipt:not(.is-stale) {color:var(--dim)!important;}
+body.wbf-on #app #workspace.wb-arrange .cwb-manuscript-receipt:not(.is-stale) {color:var(--fg-muted)!important;}
 body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench :is(.car-more>summary,.cwb-new-output>summary) {
-  background:var(--paper)!important;color:var(--ink)!important;border:1px solid var(--line)!important;
+  background:var(--surface-card)!important;color:var(--fg-main)!important;border:1px solid var(--edge)!important;
 }
 body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .car-more-menu>button[aria-selected=true] {
-  background:var(--sel)!important;color:var(--warm)!important;
+  background:var(--surface-chosen)!important;color:var(--fg-accent)!important;
 }
 body.wbf-on #app #workspace.wb-arrange .car-workspace .slide2 :is(.tn2,.sln,.handle):focus-visible {
   outline:2px solid var(--warm);outline-offset:2px;
@@ -44,34 +44,34 @@ body.wbf-on #app #workspace.wb-arrange .car-workspace .slide2 :is(.tn2,.sln,.han
 @media(max-width:760px) {
   html body.wbf-on #app #workspace.wb-arrange #study-output-arrange#study-output-arrange {margin:0 16px 32px!important;}
 }
-body.wbf-on #app #workspace.wb-arrange .cwb-article-outline {padding:0;color:var(--ink);font:400 var(--t-body)/1.5 var(--ar-ui);}
-body.wbf-on #app #workspace.wb-arrange .cwb-article-outline>.small {font-size:var(--t-label);color:var(--dim);margin:0 0 12px;}
+body.wbf-on #app #workspace.wb-arrange .cwb-article-outline {padding:0;color:var(--fg-main);font:400 var(--size-body)/var(--lh-ui) var(--font-ui);}
+body.wbf-on #app #workspace.wb-arrange .cwb-article-outline>.small {font-size:var(--size-detail);color:var(--fg-muted);margin:0 0 12px;}
 body.wbf-on #app #workspace.wb-arrange .lblocks {display:grid;gap:8px;max-width:calc(var(--measure,40rem) + 6rem);}
-body.wbf-on #app #workspace.wb-arrange .lblock {display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px;align-items:start;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--paper);}
-body.wbf-on #app #workspace.wb-arrange .lblock .x {color:var(--dim);font-size:var(--t-label);}
-body.wbf-on #app #workspace.wb-arrange .tnote {border:1px dashed var(--line);border-radius:10px;padding:14px 16px;color:var(--dim);max-width:calc(var(--measure,40rem) + 10rem);margin-top:14px;}
-body.wbf-on #app #workspace.wb-arrange .tnote b {color:var(--ink);}
-html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-status {background:none!important;color:var(--dim)!important;border:0!important;font:400 var(--t-label)/1.5 var(--ar-ui);padding:6px 0;}
-html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-manuscript-receipt:not(.is-stale) strong {color:var(--dim)!important;font-weight:400;}
-body.wbf-on #app #workspace.wb-arrange .car-arrange-help {font-size:var(--t-label);color:var(--dim);margin:0;line-height:1.5;}
-body.wbf-on #app #workspace.wb-arrange .car-workspace .car-warning {color:var(--warm);}
+body.wbf-on #app #workspace.wb-arrange .lblock {display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px;align-items:start;border:1px solid var(--edge);border-radius:8px;padding:8px 10px;background:var(--surface-card);}
+body.wbf-on #app #workspace.wb-arrange .lblock .x {color:var(--fg-muted);font-size:var(--size-detail);}
+body.wbf-on #app #workspace.wb-arrange .tnote {border:1px dashed var(--edge);border-radius:10px;padding:14px 16px;color:var(--fg-muted);max-width:calc(var(--measure,40rem) + 10rem);margin-top:14px;}
+body.wbf-on #app #workspace.wb-arrange .tnote b {color:var(--fg-main);}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-status {background:none!important;color:var(--fg-muted)!important;border:0!important;font:400 var(--size-detail)/var(--lh-ui) var(--font-ui);padding:6px 0;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-manuscript-receipt:not(.is-stale) strong {color:var(--fg-muted)!important;font-weight:400;}
+body.wbf-on #app #workspace.wb-arrange .car-arrange-help {font-size:var(--size-detail);color:var(--fg-muted);margin:0;line-height:var(--lh-ui);}
+body.wbf-on #app #workspace.wb-arrange .car-workspace .car-warning {color:var(--fg-accent);}
 @media(max-width:560px) {
  body.wbf-on #app #workspace.wb-arrange .car-workspace>.car-tools {padding-right:200px!important;}
  body.wbf-on #app #workspace.wb-arrange .car-workspace .car-more {margin-left:0;}
- body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-back {width:auto;max-width:none;white-space:nowrap;font-size:var(--t-label)!important;}
+ body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-back {width:auto;max-width:none;white-space:nowrap;font-size:var(--size-detail)!important;}
  body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-new-output>summary {padding-inline:7px!important;}
 }
 /* The article outline shares the same quiet page as the carousel. */
-html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace)) {position:relative;display:flex;flex-direction:column;background:none!important;color:var(--ink)!important;border:0!important;font-family:var(--ar-ui)!important;box-shadow:none!important;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace)) {position:relative;display:flex;flex-direction:column;background:none!important;color:var(--fg-main)!important;border:0!important;font-family:var(--font-ui)!important;box-shadow:none!important;}
 html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-toolbar {position:absolute;right:0;top:0;z-index:4;background:none!important;border:0!important;padding:0!important;min-height:34px;gap:6px;}
 body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace)) .cwb-output-identity {display:none;}
-html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-manuscript-receipt {order:3;background:none!important;border:0!important;padding:6px 0!important;font-size:var(--t-label);}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-manuscript-receipt {order:3;background:none!important;border:0!important;padding:6px 0!important;font-size:var(--size-detail);}
 html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-tabs {order:0;background:none!important;border:0!important;padding:0 232px 10px 0!important;min-height:38px;display:flex;gap:6px;flex-wrap:wrap;}
 html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-article-outline {order:1;}
 html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-body {order:1;}
 html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-status {order:4;}
-html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace)) :is(.cwb-tabs>button,.cwb-toolbar>button) {font:400 var(--t-label)/1.5 var(--ar-ui);color:var(--ink)!important;background:var(--paper)!important;border:1px solid var(--line)!important;min-height:30px;padding:4px 9px;}
-html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace)) .cwb-tabs>button[aria-selected=true] {border-color:var(--warm)!important;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace)) :is(.cwb-tabs>button,.cwb-toolbar>button) {font:400 var(--size-button)/var(--lh-ui) var(--font-ui);color:var(--fg-main)!important;background:var(--surface-card)!important;border:1px solid var(--edge)!important;min-height:30px;padding:4px 9px;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace)) .cwb-tabs>button[aria-selected=true] {border-color:var(--edge-accent)!important;}
 @media(max-width:760px) {html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-toolbar {position:static;align-self:flex-end;}html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-tabs {padding-right:0!important;}}
 
 /* Suppress the donor dark button fill in all Workbench template-trigger states. */
@@ -88,22 +88,22 @@ html body.wbf-on #app #workspace.wb-arrange .car-workspace .car-inspector-conten
 html body.wbf-on #workspace.wb-arrange #c3-surface-bar .wb-arrange-owner-actions{display:flex;min-width:0;order:0}
 html body.wbf-on #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions)>.sb-right{overflow:visible!important}
 html body.wbf-on #workspace.wb-arrange #c3-surface-bar .sb-right>.sb-pw{order:2}
-html body.wbf-on #workspace.wb-arrange #c3-surface-bar .wb-arrange-owner-actions .cwb-toolbar{position:static;display:flex;flex-wrap:nowrap;align-items:center;gap:8px;padding:0;min-height:34px;border:0;background:none;--cwb-line:var(--line);--cwb-dim:var(--dim);color:var(--ink)}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .wb-arrange-owner-actions .cwb-toolbar{position:static;display:flex;flex-wrap:nowrap;align-items:center;gap:8px;padding:0;min-height:34px;border:0;background:none;--cwb-line:var(--line);--cwb-dim:var(--dim);color:var(--fg-main)}
 html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-output-identity,html body.wbf-on #workspace.wb-arrange #c3-surface-bar .car-tbar-kind{display:none}
 html body.wbf-on #workspace.wb-arrange #c3-surface-bar .car-tools{display:flex;align-items:center;min-height:34px;margin:0;padding:0;border:0;background:none}
 html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more,.cwb-new-output){margin:0;position:relative}
-html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more,.cwb-new-output)>summary{display:flex;align-items:center;gap:6px;box-sizing:border-box;min-height:34px;padding:0 9px;border:1px solid var(--line);border-radius:7px;background:var(--paper);font:400 var(--t-label)/1.5 var(--ar-ui);white-space:nowrap;color:var(--ink);cursor:pointer}
-html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more-menu,.cwb-new-options){box-sizing:border-box;position:absolute;top:calc(100% + 6px);right:0;left:auto;z-index:20;width:270px;max-width:calc(100vw - 48px);max-height:min(70dvh,560px);overflow:auto;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);box-shadow:0 10px 24px #0002;font:400 var(--t-label)/1.5 var(--ar-ui)}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more,.cwb-new-output)>summary{display:flex;align-items:center;gap:6px;box-sizing:border-box;min-height:34px;padding:0 9px;border:1px solid var(--edge);border-radius:7px;background:var(--surface-card);font:400 var(--size-detail)/var(--lh-ui) var(--font-ui);white-space:nowrap;color:var(--fg-main);cursor:pointer}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more-menu,.cwb-new-options){box-sizing:border-box;position:absolute;top:calc(100% + 6px);right:0;left:auto;z-index:20;width:270px;max-width:calc(100vw - 48px);max-height:min(70dvh,560px);overflow:auto;padding:8px;border:1px solid var(--edge);border-radius:8px;background:var(--surface-card);color:var(--fg-main);box-shadow:var(--shadow-sheet);font:400 var(--size-detail)/var(--lh-ui) var(--font-ui)}
 html body.wbf-on #workspace.wb-arrange #c3-surface-bar .car-more-menu{left:0;right:auto}
-html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more-menu,.cwb-new-options)>button{display:block;width:100%;min-height:34px;padding:6px 8px;border:0;border-radius:5px;background:none;color:var(--ink);text-align:left;font:inherit}
-html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more-menu,.cwb-new-options)>button:hover{background:var(--sel)}
-html body.wbf-on #workspace.wb-arrange #c3-surface-bar .car-more-menu>button[aria-selected=true]{color:var(--warm);font-weight:600}
-html body.wbf-on #workspace.wb-arrange #c3-surface-bar .car-more-help{margin:6px 8px;color:var(--dim)}
-html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-rename{display:grid;gap:4px;margin:0;color:var(--dim)}
-html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-rename input{box-sizing:border-box;width:100%;min-width:0;min-height:34px;border:1px solid var(--line);border-radius:5px;padding:5px 8px;font:inherit;color:var(--ink);background:var(--bg)}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more-menu,.cwb-new-options)>button{display:block;width:100%;min-height:34px;padding:6px 8px;border:0;border-radius:5px;background:none;color:var(--fg-main);text-align:left;font:inherit}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more-menu,.cwb-new-options)>button:hover{background:var(--surface-chosen)}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .car-more-menu>button[aria-selected=true]{color:var(--fg-accent);font-weight:600}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .car-more-help{margin:6px 8px;color:var(--fg-muted)}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-rename{display:grid;gap:4px;margin:0;color:var(--fg-muted)}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-rename input{box-sizing:border-box;width:100%;min-width:0;min-height:34px;border:1px solid var(--edge);border-radius:5px;padding:5px 8px;font:inherit;color:var(--fg-main);background:var(--surface-page)}
 html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-output select{width:100%;max-width:100%}
-html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-menu-label{color:var(--dim);margin:4px 8px 0}
-html body.wbf-on #workspace.wb-arrange #c3-surface-bar summary:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-menu-label{color:var(--fg-muted);margin:4px 8px 0}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar summary:focus-visible{outline:2px solid var(--edge-accent);outline-offset:2px}
 html body.wbf-on #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions)~* .ar-composition-workbench>.cwb-manuscript-receipt.is-stale{margin-top:0!important}
 /* Phone action groups contribute their full height; legacy fixed-height shell
    children must never clip the native title controls. */
@@ -119,17 +119,17 @@ html body.wbf-on #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-act
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) :is(.cwb-carousel-actions,.car-tools,.car-more,.cwb-new-output){min-width:0!important;width:100%!important;max-width:100%;height:auto!important;min-height:0!important;margin:0!important;position:static!important}
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) :is(.car-more,.cwb-new-output)>summary{justify-content:center;min-width:0;width:100%;min-height:44px!important;height:auto!important;padding:6px 8px!important;white-space:normal;overflow-wrap:anywhere}
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-pw{grid-column:1;grid-row:3;display:flex!important;min-width:0;max-width:100%;height:auto!important;min-height:44px!important;flex-wrap:wrap}
- html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-pw .sb-primary{width:100%;max-width:100%!important;min-width:0;height:auto!important;min-height:44px!important;white-space:normal!important;justify-content:center;font-size:var(--t-label)!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-pw .sb-primary{width:100%;max-width:100%!important;min-width:0;height:auto!important;min-height:44px!important;white-space:normal!important;justify-content:center;font-size:var(--size-detail)!important}
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-pw .sb-primary::after{display:none!important}
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-morew{grid-column:2;grid-row:3;min-width:0;width:auto!important;height:auto!important;min-height:44px!important}
- html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-morew>.sb-btn{display:flex!important;gap:6px!important;width:auto!important;max-width:100%;height:auto!important;min-height:44px!important;padding:6px 9px!important;font-size:var(--t-label)!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-morew>.sb-btn{display:flex!important;gap:6px!important;width:auto!important;max-width:100%;height:auto!important;min-height:44px!important;padding:6px 9px!important;font-size:var(--size-button)!important}
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-morew>.sb-btn>span{display:inline!important}
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) :is(.car-more-menu,.cwb-new-options){left:auto;right:0;top:calc(100% + 6px)}
 }
 html body.wbf-on #workspace.wb-arrange:has(#study-output-canvas .ar-composition-workbench) .oss-arrange-limit{display:none}
 
 /* Relationship warnings inherit the current workbench theme, including light. */
-html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-manuscript-receipt.is-stale strong {color:var(--ink)!important;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-manuscript-receipt.is-stale strong {color:var(--fg-main)!important;}
 
 /* Article has one native tools menu, so its phone actions fit one shared row.
    Carousel keeps its additional native controls and its original artwork sizes. */
@@ -146,4 +146,4 @@ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb
 }
 /* A lone section cannot move. Its identical title remains on its block group. */
 html body.wbf-on #workspace.wb-arrange .cwb-article-outline>section[aria-label="Sections · move with their blocks"]:not(:has(.handle)):has(+section[aria-label$=" · blocks"]){display:none}
-html body.wbf-on #workspace.wb-arrange .cwb-article-outline>section>h3{font:500 var(--t-label)/1.5 var(--ar-ui);color:var(--dim);margin:12px 0 4px}
+html body.wbf-on #workspace.wb-arrange .cwb-article-outline>section>h3{font:500 var(--size-detail)/var(--lh-ui) var(--font-ui);color:var(--fg-muted);margin:12px 0 4px}

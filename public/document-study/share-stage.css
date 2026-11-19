@@ -1,38 +1,38 @@
 /* Approved Share layout. Record owners, consent writes and Graphite controls remain shared. */
 html body.wbf-on #app #workspace.wb-share .wb-invitation.share-stage-connected{max-width:1080px!important;width:auto!important;margin:0 32px 32px!important;padding:0!important;background:none!important;border:0!important}
-.share-stage-connected .sp{display:block;margin-top:0;font:14px/1.5 var(--ar-ui,var(--sans,system-ui));color:var(--ink);padding:4px 0 32px;max-width:1080px}
+.share-stage-connected .sp{display:block;margin-top:0;font:var(--size-ui)/var(--lh-ui) var(--font-ui);color:var(--fg-main);padding:4px 0 32px;max-width:1080px}
 .share-stage-connected .sp *{box-sizing:border-box;min-width:0}
 .share-stage-connected .sp h2,.share-stage-connected .sp h3,.share-stage-connected .sp p{margin:0}
 .share-stage-connected .sp-heading{display:flex!important;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 16px}
-.share-stage-connected .sp-heading h2{font-size:21px!important;font-weight:600!important}
+.share-stage-connected .sp-heading h2{font-size:var(--size-section)!important;font-weight:600!important}
 .share-stage-connected .sp .oss-tool-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.share-stage-connected .sp label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--dim)}
+.share-stage-connected .sp label{display:flex;flex-direction:column;gap:6px;font-size:var(--size-caption);color:var(--fg-muted)}
 .share-stage-connected .sp input,.share-stage-connected .sp select,.share-stage-connected .sp textarea{width:100%;max-width:100%}
 .share-stage-connected .sp .oss-output{flex:0 1 auto}
-.share-stage-connected .sp-edition{display:grid;grid-template-columns:minmax(180px,320px) auto 1fr;gap:12px;align-items:end;padding-bottom:16px;border-bottom:1px solid var(--line)}
-.share-stage-connected .sp-edition p{max-width:350px;font-size:12px;line-height:1.5}
+.share-stage-connected .sp-edition{display:grid;grid-template-columns:minmax(180px,320px) auto 1fr;gap:12px;align-items:end;padding-bottom:16px;border-bottom:1px solid var(--edge)}
+.share-stage-connected .sp-edition p{max-width:350px;font-size:var(--size-caption);line-height:var(--lh-ui)}
 .share-stage-connected .sp-columns{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:32px;margin-top:20px;align-items:start}
 .share-stage-connected .sp-context{display:flex;gap:12px;align-items:end}
 .share-stage-connected .sp-context:has(>label){margin-top:12px}
 .share-stage-connected .sp-fields{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:12px}
 .share-stage-connected .sp-main>label{margin:16px 0 0}
-.share-stage-connected .sp textarea[data-share-field="message"]{height:144px;min-height:112px;resize:vertical;font:15px/1.6 var(--ar-ui,var(--sans,system-ui));padding:12px}
+.share-stage-connected .sp textarea[data-share-field="message"]{height:144px;min-height:112px;resize:vertical;font:var(--size-body)/var(--lh-page) var(--font-ui);padding:12px}
 .share-stage-connected .sp-actions{display:flex;gap:12px;margin:12px 0 10px}
-.share-stage-connected .sp .oss-muted{color:var(--dim);font-size:12px;line-height:1.5}
+.share-stage-connected .sp .oss-muted{color:var(--fg-muted);font-size:var(--size-caption);line-height:var(--lh-ui)}
 .share-stage-connected .sp .sp-secondary{margin-top:16px}
-.share-stage-connected .sp-release{border-left:1px solid var(--line);padding-left:24px}
-.share-stage-connected .sp-release>p{font-size:12px;color:var(--dim);margin:8px 0}
+.share-stage-connected .sp-release{border-left:1px solid var(--edge);padding-left:24px}
+.share-stage-connected .sp-release>p{font-size:var(--size-caption);color:var(--fg-muted);margin:8px 0}
 .share-stage-connected .sp-release>button{margin:12px 0}
 .share-stage-connected .sp-section-title{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px}
-.share-stage-connected .sp-section-title h3{font-size:16px;font-weight:600}
-.share-stage-connected .sp-section-title span{font-size:12px;color:var(--warm)}
+.share-stage-connected .sp-section-title h3{font-size:var(--size-reading);font-weight:600}
+.share-stage-connected .sp-section-title span{font-size:var(--size-caption);color:var(--fg-accent)}
 .share-stage-connected .sp dl{margin:16px 0}
-.share-stage-connected .sp dl div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:13px}
-.share-stage-connected .sp dd{margin:0;color:var(--dim)}
-.share-stage-connected .sp-reply-summary{border-top:1px solid var(--line);margin-top:24px;padding-top:16px}
+.share-stage-connected .sp dl div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--edge);font-size:var(--size-detail)}
+.share-stage-connected .sp dd{margin:0;color:var(--fg-muted)}
+.share-stage-connected .sp-reply-summary{border-top:1px solid var(--edge);margin-top:24px;padding-top:16px}
 .share-stage-connected .sp-reply-summary p{margin:6px 0}
 .share-stage-connected .share-replies{border:0;padding:0}
-.share-stage-connected .sp-event,.share-stage-connected .share-replies article{padding:16px 0;border-bottom:1px solid var(--line)}
+.share-stage-connected .sp-event,.share-stage-connected .share-replies article{padding:16px 0;border-bottom:1px solid var(--edge)}
 .share-stage-connected .share-replies article p{margin:8px 0}
 .share-stage-connected .sp-preserve,.share-stage-connected .share-replies p{white-space:pre-wrap;overflow-wrap:anywhere}
 .share-stage-connected .sp-files{display:flex;flex-direction:column;gap:12px;padding-bottom:16px}
@@ -45,29 +45,29 @@ html body.wbf-on #app #workspace.wb-share .wb-invitation.share-stage-connected{m
 #workspace:has(.share-stage-connected[data-share-screen="release"])>[data-consent-desk="share"] details::details-content{display:block;content-visibility:visible}
 @media(max-width:700px){
  html body.wbf-on #app #workspace.wb-share .wb-invitation.share-stage-connected{margin:0 16px 24px!important;max-width:calc(100% - 32px)!important}
- .share-stage-connected .sp-heading{margin:0 0 12px}.share-stage-connected .sp-heading h2{font-size:18px!important}
+ .share-stage-connected .sp-heading{margin:0 0 12px}.share-stage-connected .sp-heading h2{font-size:var(--size-card-title)!important}
  .share-stage-connected .sp-edition{grid-template-columns:minmax(0,1fr) auto;gap:12px;padding-bottom:12px}
  .share-stage-connected .sp-edition p{grid-column:1/-1;max-width:none}
  .share-stage-connected .sp-columns{grid-template-columns:1fr;gap:24px;margin-top:12px}
  .share-stage-connected .sp-fields{grid-template-columns:minmax(0,1fr) 105px;gap:8px}
- .share-stage-connected .sp textarea[data-share-field="message"]{height:112px;font-size:14px}
- .share-stage-connected .sp-release{border-left:0;border-top:1px solid var(--line);padding:18px 0 0}
+ .share-stage-connected .sp textarea[data-share-field="message"]{height:112px;font-size:var(--size-ui)}
+ .share-stage-connected .sp-release{border-left:0;border-top:1px solid var(--edge);padding:18px 0 0}
  .share-stage-connected .sp-actions{margin:6px 0}.share-stage-connected .sp-reply-summary{margin-top:18px}
 }
 .share-stage-connected .sp label{align-items:stretch!important;text-align:left!important}
 .share-stage-connected .sp .oss-tool-row{gap:12px!important}
 .share-stage-connected .sp .mine{border:0!important;background:none!important;padding:0!important;min-height:0!important;margin-top:16px!important;border-radius:0!important}
-.share-stage-connected .sp .mine .who{color:var(--dim)!important;font:400 12px/1.5 var(--ar-ui,var(--sans,system-ui))!important;margin-bottom:6px}
+.share-stage-connected .sp .mine .who{color:var(--fg-muted)!important;font:400 var(--size-caption)/var(--lh-ui) var(--font-ui)!important;margin-bottom:6px}
 .share-stage-connected .sp .mine textarea{border:1px solid var(--graphite-border,var(--line))!important;border-radius:6px!important;background:var(--graphite-field,var(--paper))!important;padding:12px!important}
 .share-stage-connected .sp-mobile-hold{display:none}
-.share-stage-connected .sp-correction{border-left:2px solid var(--warm);padding-left:14px;margin:16px 0}
+.share-stage-connected .sp-correction{border-left:2px solid var(--edge-accent);padding-left:14px;margin:16px 0}
 .share-stage-connected .sp-correction button{margin:12px 0 0}
 #workspace:has(.share-stage-connected)>.oss-retained{display:none!important}
-@media(max-width:700px){.share-stage-connected .sp-mobile-hold{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--warm);font-size:12px;margin-bottom:12px}.share-stage-connected .sp-mobile-hold button{margin:6px 0!important}}
+@media(max-width:700px){.share-stage-connected .sp-mobile-hold{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--edge);border-bottom:1px solid var(--edge);color:var(--fg-accent);font-size:var(--size-caption);margin-bottom:12px}.share-stage-connected .sp-mobile-hold button{margin:6px 0!important}}
 @layer workbench-share {
 /* Neutralize the legacy note wrapper without creating a second control family. */
-html body.wbf-on #app #workspace.wb-share .wb-invitation.share-stage-connected .sp .mine textarea{height:144px!important;min-height:112px!important;padding:12px!important;border:1px solid var(--graphite-border,var(--line))!important;border-radius:var(--graphite-radius,6px)!important;background:var(--graphite-field,var(--paper))!important;color:var(--graphite-ink,var(--ink))!important;font:400 15px/1.6 var(--ar-ui)!important}
-@media(max-width:700px){html body.wbf-on #app #workspace.wb-share .wb-invitation.share-stage-connected .sp .mine textarea{height:112px!important;font-size:14px!important}}
+html body.wbf-on #app #workspace.wb-share .wb-invitation.share-stage-connected .sp .mine textarea{height:144px!important;min-height:112px!important;padding:12px!important;border:1px solid var(--graphite-border,var(--line))!important;border-radius:var(--graphite-radius,6px)!important;background:var(--graphite-field,var(--paper))!important;color:var(--graphite-ink,var(--ink))!important;font:400 var(--size-body)/var(--lh-page) var(--font-ui)!important}
+@media(max-width:700px){html body.wbf-on #app #workspace.wb-share .wb-invitation.share-stage-connected .sp .mine textarea{height:112px!important;font-size:var(--size-ui)!important}}
 }
 .share-stage-connected .sp-main>button{margin-right:12px;margin-top:6px}
 .share-stage-connected .sp-correction button{display:block}

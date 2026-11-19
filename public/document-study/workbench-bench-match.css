@@ -1,35 +1,35 @@
 /* Direct approved Workbench Bench composition. Scope excludes Pieces and all writing surfaces. */
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px 24px;max-width:calc(var(--measure) + 16rem)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup{background:var(--surface-card);border:1px solid var(--edge);border-radius:12px;padding:20px 24px;max-width:calc(var(--measure) + 16rem)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup h2{margin:4px 0 2px}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup .meta{font-size:var(--t-label);color:var(--dim)}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup blockquote{margin:14px 0 16px;padding:0 0 0 14px;border-left:1px solid var(--warm);font-size:var(--t-reading);line-height:var(--lh-read);max-width:var(--measure)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup .meta{font-size:var(--size-detail);color:var(--fg-muted)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup blockquote{margin:14px 0 16px;padding:0 0 0 14px;border-left:1px solid var(--edge-accent);font-size:var(--t-reading);line-height:var(--lh-read);max-width:var(--measure)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup .acts{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since{margin-top:16px;padding-top:14px;border-top:1px solid var(--edge)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since ul{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li{display:grid;grid-template-columns:8px 1fr;gap:10px}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li i{width:7px;height:7px;border-radius:50%;margin-top:8px;background:var(--dim)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li i.agent{background:var(--warm)}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li small{display:block;color:var(--dim)}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .oac{display:inline-flex;align-items:center;gap:6px;color:var(--warm);font-size:var(--t-label);font-weight:500;text-decoration:none;white-space:nowrap}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li small{display:block;color:var(--fg-muted)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .oac{display:inline-flex;align-items:center;gap:6px;color:var(--fg-accent);font-size:var(--size-detail);font-weight:500;text-decoration:none;white-space:nowrap}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .oac:hover{text-decoration:underline}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .oac-note{font-size:var(--t-label);color:var(--dim)}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .moves{list-style:none;margin:0;padding:0;border-top:1px solid var(--line);max-width:calc(var(--measure) + 16rem)}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .moves li{border-bottom:1px solid var(--line)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .oac-note{font-size:var(--size-detail);color:var(--fg-muted)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .moves{list-style:none;margin:0;padding:0;border-top:1px solid var(--edge);max-width:calc(var(--measure) + 16rem)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .moves li{border-bottom:1px solid var(--edge)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move{display:grid;grid-template-columns:22px minmax(0,1fr) 18px;gap:10px;align-items:center;width:100%;text-align:left;padding:10px 6px;border-radius:6px}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move:hover{background:var(--sel)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move:hover{background:var(--surface-chosen)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .t{font-weight:500}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .w{font-size:var(--t-label);color:var(--dim)}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .ic{color:var(--dim)}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .search{display:flex;align-items:center;gap:8px;height:36px;border:1px solid var(--line);border-radius:7px;padding:0 9px;background:var(--paper);margin-bottom:6px;max-width:calc(var(--measure) + 16rem)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .w{font-size:var(--size-detail);color:var(--fg-muted)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .ic{color:var(--fg-muted)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .search{display:flex;align-items:center;gap:8px;height:36px;border:1px solid var(--edge);border-radius:7px;padding:0 9px;background:var(--surface-card);margin-bottom:6px;max-width:calc(var(--measure) + 16rem)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .search input{flex:1;min-width:0;border:0;background:none;outline:none}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .alist{list-style:none;margin:0;padding:0;max-width:calc(var(--measure) + 16rem)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .alist li{display:flex;align-items:center;gap:10px;border-radius:6px}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .alist li:hover{background:var(--sel)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .alist li:hover{background:var(--surface-chosen)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 10px;flex:1;min-width:0;text-align:left;padding:8px 8px;border-radius:6px}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow.sel{background:var(--sel);box-shadow:inset 2px 0 0 var(--warm)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow.sel{background:var(--surface-chosen);box-shadow:inset 2px 0 0 var(--warm)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow .k{font-size:var(--t-label);color:var(--dim);white-space:nowrap}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow .s{grid-column:1/-1;font-size:var(--t-label);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow .k{font-size:var(--size-detail);color:var(--fg-muted);white-space:nowrap}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow .s{grid-column:1/-1;font-size:var(--size-detail);color:var(--fg-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .alist .oac{padding:0 10px 0 0}
 
 
@@ -48,7 +48,7 @@ html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-dot{display:none!important}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-card-more{position:relative!important;inset:auto!important;flex:none!important}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-card-more summary{background:none!important;border:0!important;box-shadow:none!important}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pl-library-row.is-current .arow{background:var(--sel)!important;box-shadow:inset 2px 0 0 var(--warm)!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pl-library-row.is-current .arow{background:var(--surface-chosen)!important;box-shadow:inset 2px 0 0 var(--warm)!important}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) [data-pl-form]:not([hidden]){margin:24px 32px!important}
 @media(max-width:760px){html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap{padding:16px 16px 96px!important}html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup{padding:16px}html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) [data-pl-form]:not([hidden]){margin:16px!important}}
 /* The prior Home question band is not part of the approved Bench. Its owner stays mounted. */
@@ -63,32 +63,32 @@ html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap{display:grid!important;grid-template-columns:minmax(0,1.75fr) minmax(280px,1fr);gap:16px 20px;padding:16px 24px 40px!important;max-width:1440px!important;align-items:start}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench-story{display:contents}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench-story>.thead{grid-column:1;grid-row:1;margin:0!important;min-height:0!important}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench-story>.thead h1{font-size:18px!important;line-height:1.5;margin:0!important}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup{grid-column:1;grid-row:2;min-width:0;max-width:none;border-color:var(--warm);border-radius:8px;padding:12px 14px}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup h2{font-size:15px;line-height:1.5;margin:3px 0}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup blockquote{display:flex;align-items:baseline;gap:6px;background:var(--sel);margin:12px 0;padding:7px 9px;border:0;border-radius:4px;font-size:15.5px;line-height:1.6;max-width:none;overflow-wrap:anywhere}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench-story>.thead h1{font-size:var(--size-card-title)!important;line-height:var(--lh-ui);margin:0!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup{grid-column:1;grid-row:2;min-width:0;max-width:none;border-color:var(--edge-accent);border-radius:8px;padding:12px 14px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup h2{font-size:var(--size-body);line-height:var(--lh-ui);margin:3px 0}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup blockquote{display:flex;align-items:baseline;gap:6px;background:var(--surface-chosen);margin:12px 0;padding:7px 9px;border:0;border-radius:4px;font-size:var(--size-body);line-height:var(--lh-page);max-width:none;overflow-wrap:anywhere}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup blockquote>span:last-child{min-width:0}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-paragraph{font-family:Georgia,serif;font-size:1.1em}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup .acts{gap:8px}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup .btn,html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .lnk{border-radius:5px;min-height:30px;font-size:13px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup .btn,html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .lnk{border-radius:5px;min-height:30px;font-size:var(--size-button)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since{padding-top:10px;margin-top:10px}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li{display:block;font-size:12.5px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li{display:block;font-size:var(--size-caption)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li i{display:none}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li small{display:inline;margin-left:5px;font-size:12px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li small{display:inline;margin-left:5px;font-size:var(--size-caption)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-active{grid-column:1;grid-row:3;min-width:0;max-width:none;margin-top:0!important}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-lists{grid-column:2;grid-row:1/span 4;display:grid;gap:12px;min-width:0}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-list{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:0}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-list h2{font-size:15px;font-weight:600;line-height:1.5;margin:0 0 6px}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-list p{margin:6px 0;font-size:12.5px}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move{display:block;padding:8px 0;border-radius:5px;min-width:0;font-size:13.5px;line-height:1.5;overflow-wrap:anywhere}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .w{display:block;font-size:12px}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) [data-home-decisions] .move{display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;border-top:1px solid var(--line)!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-list{background:var(--surface-card);border:1px solid var(--edge);border-radius:8px;padding:12px 14px;min-width:0}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-list h2{font-size:var(--size-body);font-weight:600;line-height:var(--lh-ui);margin:0 0 6px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-list p{margin:6px 0;font-size:var(--size-caption)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move{display:block;padding:8px 0;border-radius:5px;min-width:0;font-size:var(--size-detail);line-height:var(--lh-ui);overflow-wrap:anywhere}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .w{display:block;font-size:var(--size-caption)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) [data-home-decisions] .move{display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;border-top:1px solid var(--edge)!important}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) [data-home-decisions] li:first-child .move{border-top:0!important}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .go{flex:none;color:var(--dim);font-size:12.5px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .go{flex:none;color:var(--fg-muted);font-size:var(--size-caption)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-handled{list-style:none;padding:0;margin:0}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-handled li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:13px;overflow-wrap:anywhere}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-handled time{flex:none;color:var(--dim);font-size:12px}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-coverage{border-top:1px solid var(--line);padding-top:6px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-handled li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--edge);font-size:var(--size-detail);overflow-wrap:anywhere}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-handled time{flex:none;color:var(--fg-muted);font-size:var(--size-caption)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-coverage{border-top:1px solid var(--edge);padding-top:6px}
 @media(max-width:900px){
  html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap{grid-template-columns:minmax(0,1fr);gap:14px;padding:16px!important}
  html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-lists{display:contents!important}
@@ -98,15 +98,15 @@ html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .
  html body.wbf-on #project-library.wbf-home [data-home-handled]{grid-column:1;grid-row:6}
 }
 html body.wbf-on #project-library .combined-home-subjects{display:grid;gap:10px}
-.combined-home-subject{padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);min-width:0}
+.combined-home-subject{padding:10px 14px;border:1px solid var(--edge);border-radius:8px;background:var(--surface-card);min-width:0}
 .combined-home-subject>header{display:flex;align-items:baseline;gap:8px;justify-content:space-between}
 .combined-home-subject>header strong{font-weight:600;overflow-wrap:anywhere}
 .combined-home-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;min-width:0}
-.combined-home-row>i{font-style:normal;color:var(--dim)}
-.combined-home-step{border:1px solid var(--line);border-radius:5px;padding:4px 9px;font-size:12.5px;color:var(--dim);min-width:150px}
+.combined-home-row>i{font-style:normal;color:var(--fg-muted)}
+.combined-home-step{border:1px solid var(--edge);border-radius:5px;padding:4px 9px;font-size:var(--size-caption);color:var(--fg-muted);min-width:150px}
 .combined-home-pieces{display:flex;flex-wrap:wrap;gap:5px;margin-top:0}
-html body.wbf-on #project-library .combined-home-pieces button{border:1px solid var(--line);border-radius:5px;padding:3px 7px;min-height:30px;text-align:left;font:400 12.5px/1.5 var(--ar-ui);color:var(--dim);background:transparent;overflow-wrap:anywhere}
-html body.wbf-on #project-library .combined-home-pieces button:hover{color:var(--ink);border-color:var(--warm)}
+html body.wbf-on #project-library .combined-home-pieces button{border:1px solid var(--edge);border-radius:5px;padding:3px 7px;min-height:30px;text-align:left;font:400 var(--size-caption)/var(--lh-ui) var(--font-ui);color:var(--fg-muted);background:transparent;overflow-wrap:anywhere}
+html body.wbf-on #project-library .combined-home-pieces button:hover{color:var(--fg-main);border-color:var(--edge-accent)}
 
 /* Home as threads: the numbered list on the left, the chosen thread on the right. */
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list){display:grid!important;grid-template-columns:minmax(300px,440px) minmax(0,1fr)!important;gap:0 28px!important;align-items:start}
@@ -114,50 +114,50 @@ html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench:has(.thread-list)>.wbf-bench-story{display:block!important;grid-column:2!important;grid-row:1!important;min-width:0}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench:has(.thread-list) .combined-home-lists{display:grid!important;grid-column:auto!important;grid-row:auto!important;margin-top:12px}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench:has(.thread-list)>.wbf-bench-story>.thead{display:none}
-.thread-tabs{display:flex;gap:20px;align-items:baseline;border-bottom:1px solid var(--line);margin-bottom:8px}
-html body.wbf-on #project-library .thread-tabs button{white-space:nowrap;background:none;border:0;border-bottom:2px solid transparent;border-radius:0;padding:10px 0 8px;color:var(--dim);font:inherit;font-size:15px;cursor:pointer;min-height:0}
-html body.wbf-on #project-library .thread-tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--warm)}
+.thread-tabs{display:flex;gap:20px;align-items:baseline;border-bottom:1px solid var(--edge);margin-bottom:8px}
+html body.wbf-on #project-library .thread-tabs button{white-space:nowrap;background:none;border:0;border-bottom:2px solid transparent;border-radius:0;padding:10px 0 8px;color:var(--fg-muted);font:inherit;font-size:var(--size-body);cursor:pointer;min-height:0}
+html body.wbf-on #project-library .thread-tabs button[aria-selected="true"]{color:var(--fg-main);border-bottom-color:var(--edge-accent)}
 .thread-tabs b{font-weight:600;margin-left:3px}
-.thread-keys{margin-left:auto;font-size:11.5px}
+.thread-keys{margin-left:auto;font-size:var(--size-label)}
 .thread-list .thread-row{display:grid;grid-template-columns:30px minmax(0,1fr) 84px;gap:10px;align-items:start;cursor:pointer}
-html body.wbf-on #project-library .thread-list .thread-row.is-selected{border-left:2px solid var(--warm);background:var(--sel,rgba(255,255,255,.04))}
-.thread-n{color:var(--dim);font-size:13px;padding-top:3px;font-variant-numeric:tabular-nums}
+html body.wbf-on #project-library .thread-list .thread-row.is-selected{border-left:2px solid var(--edge-accent);background:var(--surface-chosen)}
+.thread-n{color:var(--fg-muted);font-size:var(--size-detail);padding-top:3px;font-variant-numeric:tabular-nums}
 .thread-main{min-width:0}
-.thread-title{display:block;font-weight:600;font-size:14.5px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thread-title{display:block;font-weight:600;font-size:var(--size-ui);line-height:var(--lh-snug);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .thread-list .thread-row{padding-top:10px;padding-bottom:10px}
 .thread-bars{padding-top:6px}
 .thread-bars{gap:5px;width:64px;justify-self:end}
 .thread-bars i{height:2px;width:100%;background:linear-gradient(90deg,var(--warm) var(--done),color-mix(in srgb,var(--dim) 45%,transparent) var(--done))}
 .thread-tabs{min-width:0}.thread-keys{min-width:0;overflow:hidden;text-overflow:ellipsis}
-html body.wbf-on #project-library .thread-row header button{border:0!important;background:none!important;padding:0!important;min-height:0!important;color:var(--ink)!important;font-weight:600;font-size:14.5px;text-align:left;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body.wbf-on #project-library .thread-row header button{border:0!important;background:none!important;padding:0!important;min-height:0!important;color:var(--fg-main)!important;font-weight:600;font-size:var(--size-ui);text-align:left;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html body.wbf-on #project-library .thread-row{min-height:0!important;padding-top:9px!important;padding-bottom:9px!important}
 .thread-keys{white-space:nowrap}
 .thread-box .thread-add{margin-left:14px}
 .wbf-active-title:not(:has(h2)){justify-content:flex-end}
-.thread-next{display:block;color:var(--dim);font-size:12.5px;margin:2px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thread-next{display:block;color:var(--fg-muted);font-size:var(--size-caption);margin:2px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .thread-bars{display:grid;gap:4px;padding-top:8px}
 .thread-bars i{display:block;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--warm) var(--done),var(--line) var(--done))}
 .thread-head{display:flex;align-items:baseline;gap:12px;margin:4px 0 10px}
-.thread-head h2{margin:0;font-size:20px;font-weight:600}
-.thread-track{border:1px solid var(--line);border-radius:8px;margin-top:10px;overflow:hidden}
-.thread-track header{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
-.thread-track ol{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
-html body.wbf-on #project-library .thread-track li button{width:100%;text-align:left;padding:10px 10px 9px;border:0;border-top:3px solid var(--line);border-radius:0;background:none;color:var(--dim);font:inherit;font-size:13px;min-height:0;cursor:pointer}
-html body.wbf-on #project-library .thread-track li.is-done button{border-top-color:var(--warm);color:var(--ink)}
-.thread-box{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:10px}
-.thread-box .lab,.thread-next-box .lab{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.thread-head h2{margin:0;font-size:var(--size-section);font-weight:600}
+.thread-track{border:1px solid var(--edge);border-radius:8px;margin-top:10px;overflow:hidden}
+.thread-track header{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;font-size:var(--size-label);letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted)}
+.thread-track ol{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);list-style:none;margin:0;padding:0;border-top:1px solid var(--edge)}
+html body.wbf-on #project-library .thread-track li button{width:100%;text-align:left;padding:10px 10px 9px;border:0;border-top:3px solid var(--edge);border-radius:0;background:none;color:var(--fg-muted);font:inherit;font-size:var(--size-button);min-height:0;cursor:pointer}
+html body.wbf-on #project-library .thread-track li.is-done button{border-top-color:var(--edge-accent);color:var(--fg-main)}
+.thread-box{border:1px solid var(--edge);border-radius:8px;padding:10px 12px;margin-top:10px}
+.thread-box .lab,.thread-next-box .lab{font-size:var(--size-label);letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted)}
 /* Revision 4: the subject list is flat rows divided by thin lines, not boxed cards; the open subject keeps its gold edge. */
-html:not(#wb):not(#wb) body.wbf-on #project-library .thread-list{gap:0!important;border-top:1px solid var(--line)}
-html:not(#wb):not(#wb) body.wbf-on #project-library .thread-list .thread-row{border:0!important;border-bottom:1px solid var(--line)!important;border-radius:0!important;background:none!important;box-shadow:none!important;padding:12px 14px 12px 16px!important}
-html:not(#wb):not(#wb) body.wbf-on #project-library .thread-list .thread-row:hover:not(.is-selected){background:color-mix(in srgb,var(--ink) 3%,transparent)!important}
-html:not(#wb):not(#wb) body.wbf-on #project-library .thread-list .thread-row.is-selected{background:var(--sel,rgba(255,255,255,.04))!important;box-shadow:inset 2px 0 0 var(--warm)!important}
+html:not(#wb):not(#wb) body.wbf-on #project-library .thread-list{gap:0!important;border-top:1px solid var(--edge)}
+html:not(#wb):not(#wb) body.wbf-on #project-library .thread-list .thread-row{border:0!important;border-bottom:1px solid var(--edge)!important;border-radius:0!important;background:none!important;box-shadow:none!important;padding:12px 14px 12px 16px!important}
+html:not(#wb):not(#wb) body.wbf-on #project-library .thread-list .thread-row:hover:not(.is-selected){background:color-mix(in srgb,var(--surface-ink) 3%,transparent)!important}
+html:not(#wb):not(#wb) body.wbf-on #project-library .thread-list .thread-row.is-selected{background:var(--surface-chosen)!important;box-shadow:inset 2px 0 0 var(--warm)!important}
 
 /* Revision 4 Home on desktop: tabs across the top, the subject list flush left behind a divider,
    the chosen subject as titled boxes (Next, Ready for your eye, each output's steps, Thread). */
 @media(min-width:901px){
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list){position:relative!important;padding:44px 0 40px!important;column-gap:0!important;row-gap:0!important;grid-template-columns:minmax(300px,440px) minmax(0,1fr)!important;align-items:stretch!important}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-active{display:flex!important;flex-direction:column;position:static!important;border-right:1px solid var(--line);padding:0!important}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs{position:absolute;top:0;left:0;right:0;height:44px;margin:0!important;padding:0 24px;gap:0!important;align-items:stretch!important;background:var(--rail);border-bottom:1px solid var(--line);z-index:2}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-active{display:flex!important;flex-direction:column;position:static!important;border-right:1px solid var(--edge);padding:0!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs{position:absolute;top:0;left:0;right:0;height:44px;margin:0!important;padding:0 24px;gap:0!important;align-items:stretch!important;background:var(--surface-panel);border-bottom:1px solid var(--edge);z-index:2}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs button{padding:0 14px!important;font-size:inherit!important;margin-bottom:-1px!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs button[aria-selected="true"]{font-weight:600}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-keys{align-self:center;margin-left:auto;overflow:visible;max-width:none;flex:none}
@@ -165,9 +165,9 @@ html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-active>.wbf-active-title{order:2;padding:12px 16px 0;justify-content:flex-start!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-active>.ht-homebar{order:3;margin:8px 16px 0}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-list .thread-row{grid-template-columns:34px minmax(0,1fr) 84px!important;gap:12px!important;align-items:center!important;padding:12px 16px 12px 0!important;box-shadow:none!important;border-left:3px solid transparent!important}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-list .thread-row.is-selected{background:var(--paper)!important;border-left-color:var(--warm)!important}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-n{text-align:right;font-size:var(--t-label,12.5px);padding-top:0}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-row.is-selected .thread-n{color:var(--warm);font-weight:600}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-list .thread-row.is-selected{background:var(--surface-card)!important;border-left-color:var(--edge-accent)!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-n{text-align:right;font-size:var(--size-detail);padding-top:0}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-row.is-selected .thread-n{color:var(--fg-accent);font-weight:600}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-bars{width:84px!important;gap:3px!important;padding-top:0!important;align-self:center}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-bars i{height:5px!important;border-radius:0!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story{padding:20px 24px 0!important;max-width:860px;display:flex!important;flex-direction:column;gap:12px}
@@ -175,56 +175,56 @@ html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-
 /* The chosen subject as titled boxes, at every width. */
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-head{flex-direction:column;align-items:flex-start;gap:2px;margin:0}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-head h2{margin:0}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-next-box{display:flex!important;flex-direction:row!important;align-items:center;gap:12px;padding:8px 8px 8px 12px!important;border:1px solid var(--warm)!important;border-radius:5px!important;background:color-mix(in srgb,var(--warm) 10%,var(--paper))!important;margin:0!important;min-height:0!important}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-next-box>.lab{font-size:11px!important;letter-spacing:.08em;text-transform:uppercase;color:var(--warm)!important;font-weight:700;flex:none;width:auto;margin:0}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-next-box>h2{flex:1;min-width:0;font-size:var(--t-body,14.5px)!important;font-weight:400!important;margin:0!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-next-box{display:flex!important;flex-direction:row!important;align-items:center;gap:12px;padding:8px 8px 8px 12px!important;border:1px solid var(--edge-accent)!important;border-radius:5px!important;background:color-mix(in srgb,var(--warm) 10%,var(--surface-card))!important;margin:0!important;min-height:0!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-next-box>.lab{font-size:var(--size-label)!important;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-accent)!important;font-weight:700;flex:none;width:auto;margin:0}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-next-box>h2{flex:1;min-width:0;font-size:var(--size-body)!important;font-weight:400!important;margin:0!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-next-box>.acts{flex:none;margin:0!important}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story :is(.thread-ready,.thread-track,.thread-box,.combined-home-list){border:1px solid var(--line)!important;border-radius:5px!important;background:var(--paper)!important;overflow:hidden;padding:0!important;margin:0!important}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-ready{border-color:color-mix(in srgb,var(--good,#7fae7a) 50%,var(--line))!important}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story :is(.thread-ready,.thread-track,.thread-box)>header,html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .combined-home-list>h2{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:5px 12px!important;border:0;border-bottom:1px solid var(--line);font:600 11px/1.5 var(--ar-ui)!important;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)!important;background:color-mix(in srgb,var(--paper) 55%,var(--rail));margin:0!important}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story :is(.thread-ready,.thread-track,.thread-box)>header :is(.dim,b,.lnk){letter-spacing:0;text-transform:none;font-weight:500;font-size:var(--t-label,12.5px)!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story :is(.thread-ready,.thread-track,.thread-box,.combined-home-list){border:1px solid var(--edge)!important;border-radius:5px!important;background:var(--surface-card)!important;overflow:hidden;padding:0!important;margin:0!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-ready{border-color:color-mix(in srgb,var(--good) 50%,var(--edge))!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story :is(.thread-ready,.thread-track,.thread-box)>header,html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .combined-home-list>h2{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:5px 12px!important;border:0;border-bottom:1px solid var(--edge);font:600 var(--size-label)/var(--lh-ui) var(--font-ui)!important;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-muted)!important;background:color-mix(in srgb,var(--surface-card) 55%,var(--surface-panel));margin:0!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story :is(.thread-ready,.thread-track,.thread-box)>header :is(.dim,b,.lnk){letter-spacing:0;text-transform:none;font-weight:500;font-size:var(--size-detail)!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story :is(.thread-ready,.thread-box)>header>.lab{font:inherit!important;color:inherit!important;letter-spacing:inherit;text-transform:inherit;margin:0}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-box>header>.dim{margin-left:auto}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-ready ul{margin:0;padding:0;list-style:none}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-ready li{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--line)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-ready li{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--edge)}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-ready li:first-child{border-top:0}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-ready li::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--good,#7fae7a);flex:none}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-ready li::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-ready li>.move{flex:1;min-width:0;padding:0!important;border:0!important;background:none!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story :is(.thread-ready,.combined-home-list)>:not(header):not(h2):not(ul){margin:0!important;padding:8px 12px!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .combined-home-list>ol{margin:0!important;padding:8px 12px 8px 30px!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .combined-home-lists{display:flex!important;flex-direction:column;gap:12px;margin:0!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track ol{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:0;padding:0;list-style:none}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li{margin:0;padding:0;border:0!important;background:none!important}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li button{display:flex!important;flex-direction:column;align-items:stretch;gap:6px;width:100%;padding:8px 9px!important;font-size:var(--t-label,12.5px)!important;color:var(--dim)!important;border:0!important;border-left:1px solid var(--line)!important;border-radius:0!important;background:none!important;text-align:left;line-height:1.25;min-height:0!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li button{display:flex!important;flex-direction:column;align-items:stretch;gap:6px;width:100%;padding:8px 9px!important;font-size:var(--size-button)!important;color:var(--fg-muted)!important;border:0!important;border-left:1px solid var(--edge)!important;border-radius:0!important;background:none!important;text-align:left;line-height:var(--lh-tight);min-height:0!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li:first-child button{border-left:0!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li button::before{content:'';display:block;height:4px;background:var(--line)}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li.is-done button{color:var(--ink)!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li.is-done button{color:var(--fg-main)!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li.is-done button::before{background:var(--warm)}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li button:hover:not(:disabled){background:var(--sel)!important;color:var(--ink)!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li button:hover:not(:disabled){background:var(--surface-chosen)!important;color:var(--fg-main)!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain{display:flex!important;flex-wrap:wrap;align-items:flex-start!important;padding:10px 12px;row-gap:12px;gap:0 0!important;margin:0!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>i{display:none}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>:is(.combined-home-step,.thread-node){display:flex!important;flex-direction:column;align-items:flex-start;flex:1 1 150px;position:relative;padding:15px 12px 0 0!important;line-height:1.3;min-width:0!important;min-height:0!important;border:0!important;border-radius:0!important;background:none!important;color:var(--ink)!important;font-size:var(--t-body,14.5px)!important;text-align:left;margin:0!important}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>:is(.combined-home-step,.thread-node)::before{content:'';position:absolute;top:2px;left:0;width:9px;height:9px;box-sizing:border-box;border:1.5px solid var(--dim);background:var(--paper)}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>:is(.combined-home-step,.thread-node)::after{content:'';position:absolute;top:7px;left:10px;right:0;border-top:1px solid var(--line)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>:is(.combined-home-step,.thread-node){display:flex!important;flex-direction:column;align-items:flex-start;flex:1 1 150px;position:relative;padding:15px 12px 0 0!important;line-height:var(--lh-snug);min-width:0!important;min-height:0!important;border:0!important;border-radius:0!important;background:none!important;color:var(--fg-main)!important;font-size:var(--size-body)!important;text-align:left;margin:0!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>:is(.combined-home-step,.thread-node)::before{content:'';position:absolute;top:2px;left:0;width:9px;height:9px;box-sizing:border-box;border:1.5px solid var(--dim);background:var(--surface-card)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>:is(.combined-home-step,.thread-node)::after{content:'';position:absolute;top:7px;left:10px;right:0;border-top:1px solid var(--edge)}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>:last-child::after{display:none}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>.thread-node.here::before{border-color:var(--warm);background:var(--warm)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>.thread-node.here::before{border-color:var(--edge-accent);background:var(--warm)}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>.thread-node.ghost::before{border-style:dashed}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>.thread-node.ghost b{color:var(--dim);font-weight:500}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>.thread-node.ghost:hover:not(:disabled) b{color:var(--warm)}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>.thread-node .dim{font-size:var(--t-label,12.5px)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>.thread-node.ghost b{color:var(--fg-muted);font-weight:500}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>.thread-node.ghost:hover:not(:disabled) b{color:var(--fg-accent)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-chain>.thread-node .dim{font-size:var(--size-detail)}
 @media(max-width:900px){
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story{padding:0 16px!important;display:flex!important;flex-direction:column;gap:12px}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track ol{grid-auto-flow:row;grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li button{border-left:0!important;border-top:1px solid var(--line)!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li button{border-left:0!important;border-top:1px solid var(--edge)!important}
 }
 /* A dot marks a subject with something ready for your eye; the keyboard hint shows its keys. */
-.thread-next .thread-eye{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good,#7fae7a);margin-right:6px;vertical-align:1px}
-.thread-keys kbd{display:inline-block;min-width:16px;padding:0 4px;margin:0 1px;border:1px solid var(--line);border-radius:3px;font:500 11px/16px var(--ar-ui);text-align:center;color:var(--dim);background:var(--paper)}
+.thread-next .thread-eye{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:1px}
+.thread-keys kbd{display:inline-block;min-width:16px;padding:0 4px;margin:0 1px;border:1px solid var(--edge);border-radius:3px;font:500 var(--size-label)/16px var(--font-ui);text-align:center;color:var(--fg-muted);background:var(--surface-card)}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-next-box>.lab,html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story :is(.thread-ready,.thread-box)>header>.lab{text-transform:uppercase!important;letter-spacing:.08em!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-next-box>.acts .btn.primary::after{content:' ›'}
 @media(min-width:901px){
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-row header :is(button,.thread-title){font-size:15px!important}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-next{font-size:var(--t-label,12.5px);margin:2px 0 0}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-row header :is(button,.thread-title){font-size:var(--size-body)!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-next{font-size:var(--size-detail);margin:2px 0 0}
 }
 /* Phone and narrow windows: one column, the chosen subject under the list (Revision 4 stacks them). */
 @media(max-width:900px){
@@ -235,24 +235,24 @@ html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-
 
 /* Home, option A: one toolbar (tabs + find + quiet actions), quiet rows, the idea line, the step waiting on you. */
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tools{display:flex;align-items:center;gap:4px;margin-left:auto;align-self:center;min-width:0}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs input[data-wbf-bench-search]{width:210px;max-width:100%;height:28px;box-sizing:border-box;padding:0 9px;border:1px solid var(--line);border-radius:5px;background:transparent;color:var(--ink);font:400 var(--t-label,12.5px)/1 var(--ar-ui);margin-right:6px}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs input[data-wbf-bench-search]::placeholder{color:var(--dim)}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tool{width:auto;padding:5px 8px!important;margin:0!important;border:0!important;border-radius:5px!important;background:none!important;color:var(--dim)!important;font:400 var(--t-label,12.5px)/1.2 var(--ar-ui)!important;white-space:nowrap;cursor:pointer;min-height:0!important;align-self:center}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tool:hover{color:var(--ink)!important;background:var(--sel)!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs input[data-wbf-bench-search]{width:210px;max-width:100%;height:28px;box-sizing:border-box;padding:0 9px;border:1px solid var(--edge);border-radius:5px;background:transparent;color:var(--fg-main);font:400 var(--size-detail)/var(--lh-solid) var(--font-ui);margin-right:6px}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs input[data-wbf-bench-search]::placeholder{color:var(--fg-muted)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tool{width:auto;padding:5px 8px!important;margin:0!important;border:0!important;border-radius:5px!important;background:none!important;color:var(--fg-muted)!important;font:400 var(--size-detail)/var(--lh-tight) var(--font-ui)!important;white-space:nowrap;cursor:pointer;min-height:0!important;align-self:center}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tool:hover{color:var(--fg-main)!important;background:var(--surface-chosen)!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-next{display:flex;align-items:baseline;min-width:0}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-next .tn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-next .tw{flex:none;white-space:pre;color:var(--ink)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-next .tw{flex:none;white-space:pre;color:var(--fg-main)}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-next .thread-eye{flex:none;align-self:center}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-eye.is-q,html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-ready li.is-question::before{background:var(--warm)!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-head{gap:3px}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-idea{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dim);font:400 var(--t-body,14.5px)/1.4 var(--ar-ui)}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-head>.dim{font-size:var(--t-label,12.5px)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-idea{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg-muted);font:400 var(--size-body)/var(--lh-snug) var(--font-ui)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-head>.dim{font-size:var(--size-detail)}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-more{display:flex;align-items:baseline;gap:8px;margin:-4px 0 0;padding:0 2px}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-more .lnk{padding:0;border:0;background:none;color:var(--warm);font:inherit;cursor:pointer;min-height:0}
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li.is-now button{color:var(--warm)!important;background:color-mix(in srgb,var(--warm) 9%,transparent)!important;font-weight:600}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-more .lnk{padding:0;border:0;background:none;color:var(--fg-accent);font:inherit;cursor:pointer;min-height:0}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li.is-now button{color:var(--fg-accent)!important;background:color-mix(in srgb,var(--warm) 9%,transparent)!important;font-weight:600}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li.is-now button::before{background:color-mix(in srgb,var(--warm) 50%,transparent)}
 @media(max-width:900px){
-html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs{flex-wrap:wrap;gap:0 11px!important;padding:0 16px}html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs button{font-size:13px!important;padding-left:0!important;padding-right:0!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs{flex-wrap:wrap;gap:0 11px!important;padding:0 16px}html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs button{font-size:var(--size-button)!important;padding-left:0!important;padding-right:0!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tools{flex:1 1 100%;margin:0 0 8px;order:5;flex-wrap:wrap;row-gap:4px}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs input[data-wbf-bench-search]{flex:1 1 100%;width:auto;margin:0 0 2px}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tool{padding-left:0!important;margin-right:6px!important}

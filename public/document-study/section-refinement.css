@@ -6,26 +6,26 @@
   #workspace.wb-source .source-presentation .sp-toolbar>select {flex:1 1 240px;width:auto;max-width:560px;}
   #workspace.wb-source .source-presentation .sp-toolbar>div {flex:none;gap:4px;}
   #workspace.wb-source .source-presentation .sp-tools>button:not(:first-child) {
-    background:transparent!important;border:0!important;border-bottom:1px solid var(--line)!important;
+    background:transparent!important;border:0!important;border-bottom:1px solid var(--edge)!important;
     border-radius:0!important;box-shadow:none!important;padding:10px 0!important;
     justify-content:flex-start;font-weight:500!important;
   }
-  #workspace.wb-source .source-presentation .sp-tools>button:not(:first-child):hover {background:var(--sel)!important;}
+  #workspace.wb-source .source-presentation .sp-tools>button:not(:first-child):hover {background:var(--surface-chosen)!important;}
 
   #workspace.wb-direction .combined-direction-layout {grid-template-rows:min-content 1fr;}
-  #workspace.wb-direction .combined-direction-author>h2 {font-size:14px!important;}
+  #workspace.wb-direction .combined-direction-author>h2 {font-size:var(--size-ui)!important;}
   #workspace.wb-direction .direction-visible-scope {display:flex;align-items:center;gap:10px;margin:0 0 12px;min-width:0;}
-  #workspace.wb-direction .direction-visible-scope>label {display:flex;align-items:center;gap:8px;min-width:0;font:500 12px/1.5 var(--ar-ui);color:var(--dim);}
+  #workspace.wb-direction .direction-visible-scope>label {display:flex;align-items:center;gap:8px;min-width:0;font:500 var(--size-caption)/var(--lh-ui) var(--font-ui);color:var(--fg-muted);}
   #workspace.wb-direction .direction-visible-scope select {max-width:100%;min-width:0;}
   #workspace.wb-direction .direction-own-page {padding:0!important;border:0!important;background:transparent!important;margin:0 0 16px!important;}
   #workspace.wb-direction .direction-page-section {margin:0 0 16px!important;}
   #workspace.wb-direction .direction-page-section h3,
-  #workspace.wb-direction .direction-planning-scope>h3 {font:600 14px/1.5 var(--ar-ui)!important;margin:0 0 6px!important;}
-  #workspace.wb-direction .direction-page-section h4 {font:500 14px/1.5 var(--ar-ui)!important;}
-  #workspace.wb-direction .direction-page-empty {font:400 12px/1.5 var(--ar-ui)!important;margin:4px 0!important;}
-  #workspace.wb-direction .direction-own-page .human-direction-words textarea {height:260px!important;min-height:240px!important;font:400 14px/1.65 var(--ar-ui)!important;}
+  #workspace.wb-direction .direction-planning-scope>h3 {font:600 var(--size-ui)/var(--lh-ui) var(--font-ui)!important;margin:0 0 6px!important;}
+  #workspace.wb-direction .direction-page-section h4 {font:500 var(--size-ui)/var(--lh-ui) var(--font-ui)!important;}
+  #workspace.wb-direction .direction-page-empty {font:400 var(--size-caption)/var(--lh-ui) var(--font-ui)!important;margin:4px 0!important;}
+  #workspace.wb-direction .direction-own-page .human-direction-words textarea {height:260px!important;min-height:240px!important;font:400 var(--size-ui)/var(--lh-page) var(--font-ui)!important;}
   #workspace.wb-direction .human-direction-actions {display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap!important;}
-  #workspace.wb-direction .human-direction-actions [role=status] {font:400 12px/1.5 var(--ar-ui)!important;color:var(--dim);}
+  #workspace.wb-direction .human-direction-actions [role=status] {font:400 var(--size-caption)/var(--lh-ui) var(--font-ui)!important;color:var(--fg-muted);}
 
   .rt-learning .rt-question-work {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px;margin:12px 0;}
   .rt-learning .rt-question-work>label {min-width:0;margin:0;}
@@ -36,8 +36,8 @@
   .rt-learning .rt-learning-heading {margin-bottom:12px;}
   .rt-learning :is(.rt-native-learning,.rt-learning-answer) {margin-top:20px;}
   .rt-learning .rt-native-learning:has(>p:only-of-type):not(:has(article)) {padding-block:12px;min-height:0;}
-  .rt-learning :is(h3,h4) {font-size:14px;font-weight:600;}
-  .rt-learning .rt-m {font-size:12px;}
+  .rt-learning :is(h3,h4) {font-size:var(--size-ui);font-weight:600;}
+  .rt-learning .rt-m {font-size:var(--size-caption);}
 
   #workspace .draft-check-room .draft-check-heading {align-items:baseline;gap:12px;}
   #workspace .draft-check-room>.flow-row {gap:8px;}
@@ -52,12 +52,12 @@
   #workspace.wb-share .share-stage-connected .sp-context:empty {display:none;}
   #workspace.wb-share .share-stage-connected .sp-secondary {gap:8px!important;align-items:center;}
   #workspace.wb-share .share-stage-connected .sp-actions {align-items:center;gap:8px;}
-  #workspace.wb-share .share-stage-connected .sp-section-title h3 {font-size:14px;}
+  #workspace.wb-share .share-stage-connected .sp-section-title h3 {font-size:var(--size-ui);}
 
   #workspace.wb-output .oo-heading {align-items:center;gap:12px;}
   #workspace .oo-row .oo-title {text-align:left;white-space:normal!important;font-weight:600!important;}
   #workspace .oo-row .oo-actions {gap:6px;align-items:center;}
-  #workspace .oo-row .oo-meta {font-size:12px;}
+  #workspace .oo-row .oo-meta {font-size:var(--size-caption);}
   #workspace :is(.oo-row,.oss-surface,.rt-learning,.source-presentation) {min-width:0;}
   @media(max-width:900px) {
     #workspace.wb-source .source-presentation .sp-toolbar>select {flex-basis:0;}
@@ -89,13 +89,13 @@
   }
   #workspace.wb-arrange .cwb-tabs[aria-label="Composition tools"]>button {
     --graphite-button:transparent!important;--graphite-label:var(--ink)!important;
-    background:transparent!important;color:var(--ink)!important;
+    background:transparent!important;color:var(--fg-main)!important;
     border:1px solid transparent!important;box-shadow:none!important;
-    font:500 13px/1.4 var(--ar-ui)!important;
+    font:500 var(--size-button)/var(--lh-snug) var(--font-ui)!important;
   }
   #workspace.wb-arrange .cwb-tabs[aria-label="Composition tools"]>button:nth-child(-n+2) {
-    background:var(--rail)!important;border-color:var(--graphite-border)!important;
-    border-radius:var(--graphite-radius)!important;color:var(--dim)!important;
+    background:var(--surface-panel)!important;border-color:var(--graphite-border)!important;
+    border-radius:var(--graphite-radius)!important;color:var(--fg-muted)!important;
   }
   #workspace.wb-arrange .cwb-tabs[aria-label="Composition tools"]>button:nth-child(-n+2)[aria-selected="true"] {
     background:var(--graphite-ink)!important;color:var(--graphite-inverse)!important;
@@ -107,12 +107,12 @@
     margin-left:8px;background:var(--graphite-secondary)!important;
     border-color:var(--graphite-border)!important;font-weight:600!important;
   }
-  #workspace.wb-arrange .cwb-tabs[aria-label="Composition tools"]>button:nth-child(4)[aria-selected="true"] {border-color:var(--warm)!important;}
+  #workspace.wb-arrange .cwb-tabs[aria-label="Composition tools"]>button:nth-child(4)[aria-selected="true"] {border-color:var(--edge-accent)!important;}
   #workspace.wb-arrange .cwb-tabs[aria-label="Composition tools"]>button:not(:disabled):hover {filter:brightness(.96);}
   #workspace.wb-arrange .ma-toolbar {display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-  #workspace.wb-arrange .ma-toolbar>[role="status"] {font-size:12px;color:var(--dim);}
+  #workspace.wb-arrange .ma-toolbar>[role="status"] {font-size:var(--size-caption);color:var(--fg-muted);}
   #workspace.wb-arrange .ma-toolbar :is([data-ma-write],[data-ma-undo],[data-ma-cancel]) {
-    background:transparent!important;color:var(--ink)!important;
+    background:transparent!important;color:var(--fg-main)!important;
     border-color:transparent!important;box-shadow:none!important;
   }
   #workspace.wb-arrange .ma-toolbar [data-ma-retry] {
@@ -122,23 +122,23 @@
   /* Media browsing stays distinct from exact-photo placement and the explicit
      multi-slot picker. These rules never change selection or target ownership. */
   #workspace .k-media :is(.wfb-title,.wfb-crumbs button,.wfb-vhead button) {
-    background:transparent!important;color:var(--ink)!important;
+    background:transparent!important;color:var(--fg-main)!important;
     border:0!important;box-shadow:none!important;text-align:left;
   }
   #workspace .k-media .wfb-title {padding:3px 0!important;white-space:normal!important;}
   #workspace .k-media .wfb-title:hover {text-decoration:underline;text-underline-offset:3px;}
   #workspace .k-media :is([data-wfb-action="media-actions"],[data-wfb-action="media-list"],[data-wfb-action="folders"],[data-wfb-action="selectionclear"]) {
-    background:transparent!important;color:var(--ink)!important;
+    background:transparent!important;color:var(--fg-main)!important;
     border-color:transparent!important;box-shadow:none!important;
   }
   #workspace .k-media .wfb-media-toolbar {display:flex;align-items:center;gap:8px;}
   #workspace .k-media .wfb-media-toolbar .wfb-fsearch {flex:1 1 240px;min-width:120px;}
   #workspace .k-media .wfb-mtog {
     display:inline-flex;align-items:center;gap:2px;padding:2px;
-    border:1px solid var(--graphite-border);border-radius:var(--graphite-radius);background:var(--rail);
+    border:1px solid var(--graphite-border);border-radius:var(--graphite-radius);background:var(--surface-panel);
   }
   #workspace .k-media .wfb-mtog>button {
-    background:transparent!important;color:var(--dim)!important;
+    background:transparent!important;color:var(--fg-muted)!important;
     border:1px solid transparent!important;box-shadow:none!important;
   }
   #workspace .k-media .wfb-mtog>button[aria-pressed="true"] {
@@ -149,11 +149,11 @@
     border-color:var(--graphite-ink)!important;font-weight:600!important;
   }
   #workspace .k-media.wfb-picker-browser .wfb-bulk {gap:8px;align-items:center;}
-  #workspace .k-media .wfb-count {font:400 12px/1.5 var(--ar-ui);font-variant-numeric:tabular-nums;color:var(--dim);}
+  #workspace .k-media .wfb-count {font:400 var(--size-caption)/var(--lh-ui) var(--font-ui);font-variant-numeric:tabular-nums;color:var(--fg-muted);}
   body:has(#workspace>.k-media) #wb-panel .wfb-tl {
     background:transparent!important;border-color:transparent!important;box-shadow:none!important;
   }
-  body:has(#workspace>.k-media) #wb-panel .wfb-tc {font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums;}
+  body:has(#workspace>.k-media) #wb-panel .wfb-tc {font-size:var(--size-caption);color:var(--fg-muted);font-variant-numeric:tabular-nums;}
   @media(max-width:760px) {
     #workspace.wb-arrange .cwb-tabs[aria-label="Composition tools"]>button,
     #workspace.wb-arrange .ma-toolbar button,
@@ -176,7 +176,7 @@
   #app #workspace .k-media .wfb-fsearch>input#wfb-media-query {
     border:0!important;background:transparent!important;box-shadow:none!important;
     outline:0!important;padding:0!important;border-radius:0!important;
-    min-height:0!important;height:auto!important;font:400 13px/1.5 var(--ar-ui)!important;
+    min-height:0!important;height:auto!important;font:400 var(--size-detail)/var(--lh-ui) var(--font-ui)!important;
   }
   #workspace .k-media .wfb-fsearch {
     border:1px solid var(--graphite-border)!important;

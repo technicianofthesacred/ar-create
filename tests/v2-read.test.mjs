@@ -210,7 +210,7 @@ test('a failed re-read says newer words exist only when a save was announced; ot
 
 test('the page leaves no grey band under a short piece on a phone',()=>{
  const css=read('public/v2/screens/read.css');
- assert.match(css,/@media \(max-width:850px\)\{[^@]*\.rd\.v2-page\{[^}]*background:var\(--paper\)[^}]*min-height:calc\(100dvh - var\(--v2-top\)\)/);
+ assert.match(css,/@media \(max-width:850px\)\{[^@]*\.rd\.v2-page\{[^}]*background:var\(--(?:paper|surface-card)\)[^}]*min-height:calc\(100dvh - var\(--v2-top\)\)/);
 });
 
 test('Edit words is in one place per width: the bar on a computer, under the text on a phone',()=>{

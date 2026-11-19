@@ -86,16 +86,16 @@ test('the style sheet keeps to the system: sizes 13 and 14, weights 400 and 600,
   for(const m of body.matchAll(/(?:^|[;\s!])font:\s*([^;]+)/g)){
    const parts=m[1].replace(/!important/,'').trim().split(/\s+/);
    assert.ok(['400','600'].includes(parts[0]),'weight 400 or 600 in "font:'+m[1]+'" ('+selector+')');
-   assert.match(parts[1],/^1[34]px(\/|$)/,'size 13 or 14 in "font:'+m[1]+'" ('+selector+')');
+   assert.match(parts[1],/^(1[34]px|var\(--size-(ui|nav|detail|button|table)\))(\/|$)/,'size 13 or 14 in "font:'+m[1]+'" ('+selector+')');
   }
-  for(const m of body.matchAll(/font-size:\s*([^;]+)/g))assert.match(m[1].trim(),/^1[34]px/,'font-size '+m[1]);
+  for(const m of body.matchAll(/font-size:\s*([^;]+)/g))assert.match(m[1].trim(),/^(1[34]px|var\(--size-(ui|nav|detail|button|table)\))/,'font-size '+m[1]);
   for(const m of body.matchAll(/font-weight:\s*([^;!]+)/g))assert.match(m[1].trim(),/^(400|600)$/,'font-weight '+m[1]);
   for(const m of body.matchAll(/border-radius:\s*([^;]+)/g))assert.match(m[1].replace(/!important/,'').trim(),/^(0|6px|8px|50%)$/,'radius '+m[1]+' ('+selector+')');
  }
  assert.doesNotMatch(css,/\u2014/,'no em dash');assert.doesNotMatch(read('public/v3/screens/home.js'),/\u2014/);
  assert.doesNotMatch(css,/font-style:\s*italic/);
  for(const token of css.match(/var\(--[\w-]+/g)||[]){
-  assert.ok(/^var\(--(ink|dim|warm|paper|bg|line|ar-ui|p|h3-dot|v3-fill2?|v3-edge)$/.test(token),'only the app\'s tokens: '+token);
+  assert.ok(/^var\(--(ink|dim|warm|paper|bg|line|ar-ui|p|h3-dot|v3-fill2?|v3-edge|size-(ui|nav|detail|button|table)|lh-[a-z]+|fg-[a-z-]+|surface-[a-z-]+|edge(-[a-z]+)?|font-ui|dur(-fast)?)$/.test(token),'only the app\'s tokens: '+token);
  }
 });
 
