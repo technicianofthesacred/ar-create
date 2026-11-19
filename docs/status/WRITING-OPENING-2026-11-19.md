@@ -25,3 +25,12 @@ The invented-data browser regression checks Write and Read, closed article quest
 The regression suite also covers stale provenance, foreign parents, fixture exclusions, safe Markdown, safe native formatting and hidden original-only text. The build passed. The final renderer suite passed 14 tests; the Read/story/shell suite passed 74 tests, and the UI/editing/recovery suite passed 89 tests. The broader `npm run test:changed` run completed across 196 files: 1,888 passed, one skipped, zero failures. After the header correction, the focused actor-permission and shell tests passed again, and the invented-data browser check verified the editing link reaches the same article and retains the return address.
 
 After approval and an authorized release, remeasure the exact installed article and verify the live manuscript and question answers remain unchanged. Do not report the live delay fixed from invented-data timings alone.
+
+
+## Release recovery, 19 November
+
+The rebased release candidate's 198-file local run hit the publisher's 90-minute process limit without a final suite result. Its partial log is not a pass. The final emitted cases belonged to the unchanged v2 starting-Article tests. A traced complete run of that file passed all 13 cases and closed its server normally. The main-control v3 starting-Article file also passed all 13 cases and closed normally.
+
+The candidate's complete v3 starting-Article diagnostic exposed one stale UI expectation: the assistant-empty-page test still required the routine actor paragraph Adrian asked to remove. Its expectation now checks that paragraph is absent and that the useful empty-Article guidance remains. Every existing read-only, no-save, no-local-storage and no-article-creation assertion is retained. The corrected focused guard passed. This is a test expectation repair for the approved interface, not permission to change author-only behavior.
+
+The same durable publisher retains the interrupted log and control diagnostics. Its one recovery run waits for host capacity before starting the complete affected suite, with cleanup diagnostics retained. Assertion timeouts, required GitHub CI, the publication lock, exact-revision checks and real-article preservation checks remain enforced. No local timeout is treated as success.
