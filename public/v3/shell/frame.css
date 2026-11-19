@@ -8,9 +8,9 @@
    place on hover or focus; the band keeps one line at one height. */
 
 :root,:root[data-theme="light"]{
- --v3-band:color-mix(in srgb,var(--bg) 92%,var(--ink));--v3-edge:var(--c3-line2);
+ --v3-band:var(--band);--v3-edge:var(--line-strong);
  --v3-fill:color-mix(in srgb,var(--ink) 7%,var(--v3-band));--v3-fill2:color-mix(in srgb,var(--ink) 12%,var(--v3-band));
- --v3-top:48px;--v3-phone:60px}
+ --v3-phone:60px}
 :root[data-theme="dark"]{
  --v3-band:color-mix(in srgb,var(--bg) 55%,#000);
  --v3-fill:color-mix(in srgb,var(--ink) 11%,var(--v3-band));--v3-fill2:color-mix(in srgb,var(--ink) 17%,var(--v3-band))}
@@ -18,25 +18,25 @@
 :root{--v2-top:var(--v3-top)}
 
 /* ---------- the band ---------- */
-.v3-band{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:6px;height:var(--v3-top);padding:0 28px;min-width:0;overflow:hidden;background:var(--v3-band);border-bottom:1px solid var(--v3-edge);color:var(--ink);font:400 14px/1.5 var(--ar-ui);white-space:nowrap}
+.v3-band{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:6px;height:var(--v3-top);padding:0 28px;min-width:0;overflow:hidden;background:var(--v3-band);border-bottom:1px solid var(--v3-edge);color:var(--fg-main);font:400 var(--size-ui)/var(--lh-ui) var(--font-ui);white-space:nowrap}
 .v3-band a{text-decoration:none}
-.v3-band :focus-visible,.v3-phone :focus-visible,.v3-skip:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:6px}
+.v3-band :focus-visible,.v3-phone :focus-visible,.v3-skip:focus-visible{outline:2px solid var(--edge-ink);outline-offset:-2px;border-radius:6px}
 .v3-logo{flex:none;display:grid;place-items:center;width:32px;height:32px;margin-left:-7px;border-radius:6px}
-.v3-logo i{display:block;width:18px;height:18px;border-radius:6px;background:var(--ink)}
+.v3-logo i{display:block;width:18px;height:18px;border-radius:6px;background:var(--surface-ink)}
 .v3-places{display:flex;flex:none;align-self:stretch}
 /* Navigation is plain text: quiet, and main with a line under it where he is. Never a pill. */
-.v3-place,.v3-chip{display:inline-flex;align-items:center;gap:6px;position:relative;height:100%;padding:0 10px;font:600 14px/1 var(--ar-ui);color:var(--dim);white-space:nowrap}
-.v3-place:hover,.v3-chip:hover{color:var(--ink)}
-.v3-place[aria-current],.v3-chip[aria-current]{color:var(--ink)}
-.v3-place[aria-current]::after,.v3-chip[aria-current]::after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;background:var(--ink)}
+.v3-place,.v3-chip{display:inline-flex;align-items:center;gap:6px;position:relative;height:100%;padding:0 10px;font:600 var(--size-nav)/var(--lh-solid) var(--font-ui);color:var(--fg-muted);white-space:nowrap}
+.v3-place:hover,.v3-chip:hover{color:var(--fg-main)}
+.v3-place[aria-current],.v3-chip[aria-current]{color:var(--fg-main)}
+.v3-place[aria-current]::after,.v3-chip[aria-current]::after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;background:var(--surface-ink)}
 /* On your desk: whole subjects; the ones that do not fit go into "+n". */
-.v3-desk{display:flex;flex-wrap:nowrap;align-items:stretch;align-self:stretch;overflow:hidden;min-width:0;flex:0 1 auto;margin-left:10px;padding-left:10px;border-left:1px solid var(--line)}
+.v3-desk{display:flex;flex-wrap:nowrap;align-items:stretch;align-self:stretch;overflow:hidden;min-width:0;flex:0 1 auto;margin-left:10px;padding-left:10px;border-left:1px solid var(--edge)}
 .v3-chip{width:156px;flex:none;padding:0 10px 0 8px}
 .v3-chip>i,.v3-chip>img{width:18px;height:18px;border-radius:6px;flex:none;background:var(--v3-edge);object-fit:cover}
 .v3-chip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .v3-chip[aria-current]::after{left:8px}
 .v3-grow{flex:1 1 0;min-width:0}
-.v3-band kbd{font:400 13px/1 var(--ar-ui);color:var(--dim)}
+.v3-band kbd{font:400 var(--size-detail)/var(--lh-solid) var(--font-ui);color:var(--fg-muted)}
 .v3-needs>i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warm);flex:none}
 .v3-needs b{font-weight:600}
 .v3-band .v2-ic,.v3-phone .v2-ic{width:16px;height:16px}
@@ -44,22 +44,22 @@
 /* ---------- the quiet control: no fill, quiet tone, 32 tall; the same look for a button and a link ----------
    Graphite's control layer sets every plain button with !important, so the button look is declared in version two's
    control layer (named first by shell.css), which wins over it. Hover and focus change colour and background only. */
-a.v3-q{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 10px;border-radius:6px;font:600 14px/1 var(--ar-ui);color:var(--dim);white-space:nowrap;flex:none}
-a.v3-q:hover{background:var(--v3-fill);color:var(--ink)}
+a.v3-q{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 10px;border-radius:6px;font:600 var(--size-ui)/var(--lh-solid) var(--font-ui);color:var(--fg-muted);white-space:nowrap;flex:none}
+a.v3-q:hover{background:var(--v3-fill);color:var(--fg-main)}
 a.v3-q:active{background:var(--v3-fill2)}
 a.v3-other{font-weight:600}
 @layer v2-controls{
- button.v3-q,button.v3-pq{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;box-sizing:border-box!important;height:32px!important;min-height:32px!important;max-height:none!important;width:auto!important;min-width:0!important;padding:0 10px!important;margin:0!important;border:0!important;border-radius:6px!important;background:transparent!important;color:var(--dim)!important;font:600 14px/1 var(--ar-ui)!important;letter-spacing:0!important;white-space:nowrap!important;box-shadow:none!important;filter:none!important;transform:none!important;transition:none!important;flex:none!important;background-clip:border-box!important;cursor:pointer!important}
- button.v3-q:hover,button.v3-pq:hover{background:var(--v3-fill)!important;color:var(--ink)!important}
+ button.v3-q,button.v3-pq{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;box-sizing:border-box!important;height:32px!important;min-height:32px!important;max-height:none!important;width:auto!important;min-width:0!important;padding:0 10px!important;margin:0!important;border:0!important;border-radius:6px!important;background:transparent!important;color:var(--fg-muted)!important;font:600 var(--size-ui)/var(--lh-solid) var(--font-ui)!important;letter-spacing:0!important;white-space:nowrap!important;box-shadow:none!important;filter:none!important;transform:none!important;transition:none!important;flex:none!important;background-clip:border-box!important;cursor:pointer!important}
+ button.v3-q:hover,button.v3-pq:hover{background:var(--v3-fill)!important;color:var(--fg-main)!important}
  button.v3-q:active,button.v3-pq:active{background:var(--v3-fill2)!important}
- button.v3-q:focus-visible,button.v3-pq:focus-visible{outline:2px solid var(--ink)!important;outline-offset:-2px!important;box-shadow:none!important}
+ button.v3-q:focus-visible,button.v3-pq:focus-visible{outline:2px solid var(--edge-ink)!important;outline-offset:-2px!important;box-shadow:none!important}
  button.v3-icon{width:32px!important;padding:0!important}
  button.v3-q[hidden]{display:none!important}
  button.v3-more{padding:0 8px!important;align-self:center!important}
 }
 
 /* ---------- the skip link ---------- */
-.v3-skip{position:absolute;left:8px;top:-60px;z-index:80;padding:8px 12px;border-radius:6px;background:var(--paper);color:var(--ink);font:600 14px/1 var(--ar-ui);text-decoration:none}
+.v3-skip{position:absolute;left:8px;top:-60px;z-index:80;padding:8px 12px;border-radius:6px;background:var(--surface-card);color:var(--fg-main);font:600 var(--size-ui)/var(--lh-solid) var(--font-ui);text-decoration:none}
 .v3-skip:focus{top:8px}
 
 /* ---------- the phone bar: four quiet places, part of the band ---------- */
@@ -72,15 +72,15 @@ a.v3-other{font-weight:600}
  .v3-places,.v3-desk,.v3-wide{display:none!important}
  .v3-phone{position:fixed;left:0;right:0;bottom:0;z-index:35;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;align-items:center;height:calc(var(--v3-phone) + env(safe-area-inset-bottom,0px));padding:0 8px env(safe-area-inset-bottom,0px);background:var(--v3-band);border-top:1px solid var(--v3-edge)}
  /* Each place is the quiet kind, 44 tall for the thumb: the icon over its name, so four fit at 390. */
- .v3-pq{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:44px;min-width:0;border-radius:6px;font:600 13px/16px var(--ar-ui);color:var(--dim);text-decoration:none}
- .v3-pq:hover{background:var(--v3-fill);color:var(--ink)}
- .v3-pq[aria-current]{background:var(--v3-fill);color:var(--ink)}
+ .v3-pq{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:44px;min-width:0;border-radius:6px;font:600 var(--size-button)/16px var(--font-ui);color:var(--fg-muted);text-decoration:none}
+ .v3-pq:hover{background:var(--v3-fill);color:var(--fg-main)}
+ .v3-pq[aria-current]{background:var(--v3-fill);color:var(--fg-main)}
  .v3-pq span{max-width:100%;white-space:nowrap}
- .v3-pq em{position:absolute;top:3px;left:calc(50% + 9px);min-width:16px;padding:0 4px;border-radius:8px;background:var(--warm);color:var(--paper);font:600 13px/16px var(--ar-ui);font-style:normal;text-align:center}
+ .v3-pq em{position:absolute;top:3px;left:calc(50% + 9px);min-width:16px;padding:0 4px;border-radius:8px;background:var(--warm);color:var(--fg-on-ink);font:600 var(--size-button)/16px var(--font-ui);font-style:normal;text-align:center}
 }
 @layer v2-controls{
  @media (max-width:850px){button.v3-q.v3-wide,.v3-band .v3-needs{display:none!important}}
- @media (max-width:850px){button.v3-pq{flex-direction:column!important;gap:2px!important;height:44px!important;min-height:44px!important;width:100%!important;padding:0!important;font:600 13px/16px var(--ar-ui)!important}}
+ @media (max-width:850px){button.v3-pq{flex-direction:column!important;gap:2px!important;height:44px!important;min-height:44px!important;width:100%!important;padding:0!important;font:600 var(--size-button)/16px var(--font-ui)!important}}
  @media (max-width:850px),(pointer:coarse){button.v3-icon{width:44px!important;height:44px!important}}
 }
 @media (max-width:850px),(pointer:coarse){.v3-band a.v3-q{height:44px}}

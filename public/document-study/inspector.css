@@ -2,26 +2,26 @@
 body.c3-tabs .workspace .desk.c3-insp-desk>:not(#c3-insp-head):not(#margin):not(.ci-panel){grid-column:1;grid-row:1/span 2}
 body.c3-tabs .workspace .desk.c3-insp-desk:not([data-insp="decisions"])>#c3-insp-decisions{display:none}
 body.c3-tabs .workspace .desk.c3-insp-desk:not([data-insp="readiness"])>#c3-insp-readiness{display:none}
-#c3-insp-head .ci-tab{flex:1 1 0;min-height:30px;padding:0 8px;border:0;border-radius:7px;background:none;color:var(--c3-ink2,var(--dim));font:var(--c3-t1,13px)/1.2 var(--ar-ui);cursor:pointer;white-space:nowrap}
-#c3-insp-head .ci-tab[aria-selected="true"]{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--c3-line2,var(--line))}
-#c3-insp-head .ci-tab:focus-visible{outline:2px solid var(--warm);outline-offset:1px}
-body.c3-tabs .workspace .desk.c3-insp-desk>.ci-panel{font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--ink)}
+#c3-insp-head .ci-tab{flex:1 1 0;min-height:30px;padding:0 8px;border:0;border-radius:7px;background:none;color:var(--fg-soft);font:var(--size-button)/var(--lh-tight) var(--font-ui);cursor:pointer;white-space:nowrap}
+#c3-insp-head .ci-tab[aria-selected="true"]{background:var(--surface-card);color:var(--fg-main);font-weight:600;box-shadow:0 0 0 1px var(--c3-line2,var(--line))}
+#c3-insp-head .ci-tab:focus-visible{outline:2px solid var(--edge-accent);outline-offset:1px}
+body.c3-tabs .workspace .desk.c3-insp-desk>.ci-panel{font:var(--size-detail)/var(--lh-ui) var(--font-ui);color:var(--fg-main)}
 body.c3-tabs .workspace .desk.c3-insp-desk>.ci-panel #downstream-human-direction{margin:0;max-width:none}
-.ci-panel .ci-empty,.ci-panel .ci-lead{color:var(--dim);margin:0 0 12px}
-.ci-panel .ci-row{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.ci-panel .ci-empty,.ci-panel .ci-lead{color:var(--fg-muted);margin:0 0 12px}
+.ci-panel .ci-row{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid var(--edge)}
 .ci-panel .ci-row strong{display:block;font-weight:600}
-.ci-panel .ci-row span{color:var(--dim)}
-.ci-panel .ci-go{align-self:flex-start;min-height:36px;padding:0 14px;border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--paper);color:var(--ink);font:500 var(--c3-t1,13px) var(--ar-ui);cursor:pointer}
+.ci-panel .ci-row span{color:var(--fg-muted)}
+.ci-panel .ci-go{align-self:flex-start;min-height:36px;padding:0 14px;border:1px solid var(--edge-strong);border-radius:var(--c3-r);background:var(--surface-card);color:var(--fg-main);font:500 var(--size-detail) var(--font-ui);cursor:pointer}
 .ci-panel .ci-go:hover{border-color:var(--c3-ink2,var(--ink))}
 @media(min-width:851px){
  body.c3-tabs .workspace .desk.c3-insp-desk{grid-template-columns:minmax(0,1fr) var(--ci-w,328px);grid-template-rows:auto minmax(0,1fr);gap:0;padding:0;justify-content:stretch;align-items:stretch;min-height:calc(100dvh - var(--ht-strip,44px) - 60px)}
  body.c3-tabs .workspace .desk.c3-insp-desk>:not(#c3-insp-head):not(#margin):not(.ci-panel){width:100%;max-width:780px;margin:0 auto;padding:28px 40px 96px;box-sizing:border-box;align-self:start}
- body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head{grid-column:2;grid-row:1;display:flex;gap:2px;margin:0;padding:12px 16px 10px;background:var(--c3-lift,var(--rail));border-left:1px solid var(--line);position:sticky;top:60px;z-index:5}
- body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head::before{content:"";position:absolute;inset:12px 16px 10px;border:1px solid var(--line);border-radius:9px;pointer-events:none}
+ body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head{grid-column:2;grid-row:1;display:flex;gap:2px;margin:0;padding:12px 16px 10px;background:var(--surface-panel);border-left:1px solid var(--edge);position:sticky;top:60px;z-index:5}
+ body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head::before{content:"";position:absolute;inset:12px 16px 10px;border:1px solid var(--edge);border-radius:9px;pointer-events:none}
  body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head .ci-tab{position:relative;margin:2px 0}
  body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head .ci-tab:first-child{margin-left:2px}
  body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head .ci-tab:last-child{margin-right:2px}
- body.c3-tabs .workspace .desk.c3-insp-desk>#margin,body.c3-tabs .workspace .desk.c3-insp-desk>.ci-panel{grid-column:2;grid-row:2;align-self:stretch;min-width:0;box-sizing:border-box;padding:8px 16px 48px;background:var(--c3-lift,var(--rail));border-left:1px solid var(--line)}
+ body.c3-tabs .workspace .desk.c3-insp-desk>#margin,body.c3-tabs .workspace .desk.c3-insp-desk>.ci-panel{grid-column:2;grid-row:2;align-self:stretch;min-width:0;box-sizing:border-box;padding:8px 16px 48px;background:var(--surface-panel);border-left:1px solid var(--edge)}
  body.c3-tabs .workspace .desk.c3-insp-desk:not([data-insp="margin"])>#margin{display:none}
 }
 @media(min-width:851px) and (max-width:1100px){body.c3-tabs .workspace .desk.c3-insp-desk{--ci-w:272px}body.c3-tabs .workspace .desk.c3-insp-desk>:not(#c3-insp-head):not(#margin):not(.ci-panel){padding:24px 24px 80px}}
@@ -30,7 +30,7 @@ body.c3-tabs[data-draft-focus="true"] .workspace .desk.c3-insp-desk>#c3-insp-hea
 @media(max-width:850px){body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head,body.c3-tabs .workspace .desk.c3-insp-desk>.ci-panel{display:none}}
 
 /* A sample never opens by itself; when shown it says Sample, and its Accept is not the screen's filled button. */
-#margin .ci-sample-gate{display:flex;flex-direction:column;gap:8px;margin:12px 0;padding:12px;border:1px dashed var(--c3-line2,var(--line));border-radius:8px;color:var(--dim);font:400 13px/1.45 var(--ar-ui)}
-#margin .ci-sample-gate button{align-self:flex-start;min-height:34px;padding:0 12px;border:1px solid var(--c3-line2,var(--line));border-radius:6px;background:none;color:var(--ink);font:500 13px/1 var(--ar-ui);cursor:pointer}
-.ci-badge,#margin .ci-sample .tag{align-self:flex-start;display:inline-block;padding:2px 8px;border-radius:10px;background:color-mix(in srgb,var(--c3-warn) 18%,transparent);color:var(--c3-warn);font:700 11px/1.4 var(--ar-ui);letter-spacing:.02em;text-transform:uppercase}
-#app #margin .ci-sample .primary{background:none!important;color:var(--ink)!important;border:1px solid var(--c3-line2,var(--line))!important}
+#margin .ci-sample-gate{display:flex;flex-direction:column;gap:8px;margin:12px 0;padding:12px;border:1px dashed var(--edge-strong);border-radius:8px;color:var(--fg-muted);font:400 var(--size-detail)/var(--lh-ui) var(--font-ui)}
+#margin .ci-sample-gate button{align-self:flex-start;min-height:34px;padding:0 12px;border:1px solid var(--edge-strong);border-radius:6px;background:none;color:var(--fg-main);font:500 var(--size-button)/var(--lh-solid) var(--font-ui);cursor:pointer}
+.ci-badge,#margin .ci-sample .tag{align-self:flex-start;display:inline-block;padding:2px 8px;border-radius:10px;background:color-mix(in srgb,var(--c3-warn) 18%,transparent);color:var(--fg-warn);font:700 var(--size-label)/var(--lh-snug) var(--font-ui);letter-spacing:.02em;text-transform:uppercase}
+#app #margin .ci-sample .primary{background:none!important;color:var(--fg-main)!important;border:1px solid var(--edge-strong)!important}

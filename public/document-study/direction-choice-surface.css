@@ -1,18 +1,18 @@
 /* Combined Direction: the existing author page beside inline, source-bound choices. */
 html body.wbf-on #workspace.combined-direction .combined-direction-layout{display:grid;grid-template-columns:minmax(260px,.9fr) minmax(0,1.2fr);gap:24px;padding:0 32px 24px;align-items:start;min-width:0}
 .combined-direction-layout>section{min-width:0}
-html body.wbf-on #workspace.combined-direction .combined-direction-author>h2{font:600 15px/1.5 var(--ar-ui);margin:0 0 12px}
+html body.wbf-on #workspace.combined-direction .combined-direction-author>h2{font:600 var(--size-body)/var(--lh-ui) var(--font-ui);margin:0 0 12px}
 html body.wbf-on #workspace.combined-direction .source-continuation{margin:0!important;padding:0!important;display:block!important;border:0!important;max-width:none!important}
-html body.wbf-on #workspace.combined-direction :is(.source-continuation-header,.source-continuation-sources,.source-continuation>footer){font-size:12px;color:var(--dim)}
+html body.wbf-on #workspace.combined-direction :is(.source-continuation-header,.source-continuation-sources,.source-continuation>footer){font-size:var(--size-caption);color:var(--fg-muted)}
 html body.wbf-on #workspace.combined-direction .human-direction-edit{display:block!important;background:transparent;border:0;padding:0}
 html body.wbf-on #workspace.combined-direction .human-direction-edit>h3{display:none}
-html body.wbf-on #workspace.combined-direction .human-direction-words textarea{width:100%;box-sizing:border-box;min-height:250px!important;background:var(--paper);border:1px solid var(--line);border-radius:5px;resize:vertical}
+html body.wbf-on #workspace.combined-direction .human-direction-words textarea{width:100%;box-sizing:border-box;min-height:250px!important;background:var(--surface-card);border:1px solid var(--edge);border-radius:5px;resize:vertical}
 html body.wbf-on #workspace.combined-direction :is(.human-direction-actions,[data-direction-primary-actions]){display:flex;gap:7px;flex-wrap:wrap}
-html body.wbf-on #workspace.combined-direction :is(.human-direction-actions button,[data-direction-original-map],[data-direction-source-context]){border:1px solid var(--line);border-radius:5px;padding:4px 9px;min-height:30px;background:transparent;color:var(--ink);font:400 12px/1.5 var(--ar-ui)}
+html body.wbf-on #workspace.combined-direction :is(.human-direction-actions button,[data-direction-original-map],[data-direction-source-context]){border:1px solid var(--edge);border-radius:5px;padding:4px 9px;min-height:30px;background:transparent;color:var(--fg-main);font:400 var(--size-caption)/var(--lh-ui) var(--font-ui)}
 html body.wbf-on #workspace.combined-direction [data-direction-original-map]{margin-top:12px}
 html body.wbf-on #workspace.combined-direction-ready :is(.recordedDirection,.wb-direction-empty-angles){display:none!important}
 html body.wbf-on #workspace.combined-direction #direction-writing-tools{margin:12px 0!important;padding:0!important}
-html body.wbf-on #workspace.combined-direction .inline-direction-option.is-chosen{border-left:0;background:var(--sel);padding:10px;border-radius:5px}
+html body.wbf-on #workspace.combined-direction .inline-direction-option.is-chosen{border-left:0;background:var(--surface-chosen);padding:10px;border-radius:5px}
 @media(max-width:900px){html body.wbf-on #workspace.combined-direction .combined-direction-layout{grid-template-columns:minmax(0,1fr);padding:0 16px 24px;gap:24px}}
 
 /* The same source selection remains available in Research; Direction shows its author page once. */
@@ -22,31 +22,31 @@ html body.wbf-on #workspace.combined-direction-ready #stage-working-lane>:is(.fl
 html body.wbf-on #workspace.combined-direction [data-direction-source-context]{margin:12px 0 0 8px}
 
 /* Existing contributions remain visible, with their saved attribution. */
-html body.wbf-on #workspace.combined-direction .direction-own-page{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin:10px 0 16px}
+html body.wbf-on #workspace.combined-direction .direction-own-page{background:var(--surface-card);border:1px solid var(--edge);border-radius:8px;padding:18px 20px;margin:10px 0 16px}
 html body.wbf-on #workspace.combined-direction .direction-page-section{margin:0 0 20px}
 html body.wbf-on #workspace.combined-direction .direction-page-section:last-child{margin-bottom:0}
-html body.wbf-on #workspace.combined-direction .direction-page-section h3{font:600 14px/1.5 var(--ar-ui);margin:0 0 6px}
-html body.wbf-on #workspace.combined-direction .direction-page-prose{white-space:normal;overflow-wrap:anywhere;font:400 15px/1.65 var(--ar-ui)}
-html body.wbf-on #workspace.combined-direction .direction-page-empty{font:400 12px/1.55 var(--ar-ui);color:var(--dim);margin:6px 0}
-html body.wbf-on #workspace.combined-direction .direction-page-section blockquote{font:400 14px/1.6 Lora,Georgia,serif;white-space:pre-wrap;margin:6px 0}
+html body.wbf-on #workspace.combined-direction .direction-page-section h3{font:600 var(--size-ui)/var(--lh-ui) var(--font-ui);margin:0 0 6px}
+html body.wbf-on #workspace.combined-direction .direction-page-prose{white-space:normal;overflow-wrap:anywhere;font:400 var(--size-body)/var(--lh-page) var(--font-ui)}
+html body.wbf-on #workspace.combined-direction .direction-page-empty{font:400 var(--size-caption)/var(--lh-ui) var(--font-ui);color:var(--fg-muted);margin:6px 0}
+html body.wbf-on #workspace.combined-direction .direction-page-section blockquote{font:400 var(--size-ui)/var(--lh-page) var(--font-words);white-space:pre-wrap;margin:6px 0}
 html body.wbf-on #workspace.combined-direction .direction-source-reference{overflow-wrap:anywhere}
-html body.wbf-on #workspace.combined-direction .direction-piece-grid{grid-column:2;border:1px solid var(--line);border-radius:7px;padding:12px;min-width:0;font:400 12px/1.5 var(--ar-ui)}
-html body.wbf-on #workspace.combined-direction .direction-piece-grid :is(h3,p){margin:0 0 8px}.direction-piece-grid ul{list-style:none;padding:0;margin:0}.direction-piece-grid li{display:flex;gap:8px;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line)}.direction-piece-grid li span{color:var(--dim)}.direction-piece-grid button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:5px;min-height:32px;padding:4px 7px}
+html body.wbf-on #workspace.combined-direction .direction-piece-grid{grid-column:2;border:1px solid var(--edge);border-radius:7px;padding:12px;min-width:0;font:400 var(--size-caption)/var(--lh-ui) var(--font-ui)}
+html body.wbf-on #workspace.combined-direction .direction-piece-grid :is(h3,p){margin:0 0 8px}.direction-piece-grid ul{list-style:none;padding:0;margin:0}.direction-piece-grid li{display:flex;gap:8px;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--edge)}.direction-piece-grid li span{color:var(--fg-muted)}.direction-piece-grid button{font:inherit;color:var(--fg-main);background:transparent;border:1px solid var(--edge);border-radius:5px;min-height:32px;padding:4px 7px}
 @media(min-width:901px){html body.wbf-on #workspace.combined-direction .combined-direction-author{grid-row:1 / span 2}}
 @media(max-width:900px){html body.wbf-on #workspace.combined-direction .direction-piece-grid{grid-column:1}.direction-piece-grid li{align-items:start;flex-direction:column}}
 
 html body.wbf-on #workspace.combined-direction .direction-own-page .human-direction-words{display:block;margin:8px 0}
 html body.wbf-on #workspace.combined-direction .direction-own-page .human-direction-words textarea{min-height:180px!important}
-html body.wbf-on #workspace.combined-direction .direction-planning-scope{font:400 12px/1.5 var(--ar-ui);border-top:1px solid var(--line);padding:12px 0;margin-top:16px}
-html body.wbf-on #workspace.combined-direction .direction-planning-scope>h3{font:600 13px/1.5 var(--ar-ui);margin:0 0 8px}
+html body.wbf-on #workspace.combined-direction .direction-planning-scope{font:400 var(--size-caption)/var(--lh-ui) var(--font-ui);border-top:1px solid var(--edge);padding:12px 0;margin-top:16px}
+html body.wbf-on #workspace.combined-direction .direction-planning-scope>h3{font:600 var(--size-detail)/var(--lh-ui) var(--font-ui);margin:0 0 8px}
 html body.wbf-on #workspace.combined-direction .direction-planning-scope .source-continuation-header{display:block;margin:10px 0;padding:0}
 
-.direction-piece-grid table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px;line-height:1.5}
-.direction-piece-grid caption{text-align:left;color:var(--dim);padding:0 0 8px}
-.direction-piece-grid th,.direction-piece-grid td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:8px;overflow-wrap:anywhere}
+.direction-piece-grid table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:var(--size-table);line-height:var(--lh-ui)}
+.direction-piece-grid caption{text-align:left;color:var(--fg-muted);padding:0 0 8px}
+.direction-piece-grid th,.direction-piece-grid td{text-align:left;vertical-align:top;border-bottom:1px solid var(--edge);padding:8px;overflow-wrap:anywhere}
 .direction-piece-grid th:first-child,.direction-piece-grid thead td{width:20%}
 .direction-piece-grid th button{padding:0;border:0;background:transparent;text-align:left;font:inherit;min-height:32px}
-@media(max-width:650px){.direction-piece-grid thead{display:none}.direction-piece-grid tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-bottom:1px solid var(--line)}.direction-piece-grid tbody th{grid-column:1/-1;width:auto!important;border:0;padding-bottom:0}.direction-piece-grid td{border:0}.direction-piece-grid td::before{content:attr(data-piece);display:block;color:var(--dim);font-size:11px}}
+@media(max-width:650px){.direction-piece-grid thead{display:none}.direction-piece-grid tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-bottom:1px solid var(--edge)}.direction-piece-grid tbody th{grid-column:1/-1;width:auto!important;border:0;padding-bottom:0}.direction-piece-grid td{border:0}.direction-piece-grid td::before{content:attr(data-piece);display:block;color:var(--fg-muted);font-size:var(--size-label)}}
 /* A half-width comparison must adapt to its container, not the whole window. */
 html body.wbf-on #workspace.combined-direction .direction-piece-grid{container:direction-grid / inline-size}
 .direction-piece-grid th button{white-space:normal;overflow-wrap:normal;word-break:normal;width:100%;max-width:100%}
@@ -61,8 +61,8 @@ html body.wbf-on #workspace.combined-direction [data-direction-scope]{min-width:
  .direction-piece-grid table,.direction-piece-grid tbody{display:block;width:100%}
  .direction-piece-grid caption{display:block;box-sizing:border-box;width:100%;max-width:100%;white-space:normal;overflow-wrap:normal;word-break:normal}
  .direction-piece-grid table>thead{display:none}
- .direction-piece-grid tbody tr{display:block;border-bottom:1px solid var(--line)}
+ .direction-piece-grid tbody tr{display:block;border-bottom:1px solid var(--edge)}
  .direction-piece-grid tbody th{display:block;width:100%!important;border:0;padding:12px 0 4px;overflow-wrap:normal;word-break:normal}
  .direction-piece-grid td{display:block;width:100%;box-sizing:border-box;border:0;padding:8px 0;overflow-wrap:normal;word-break:normal}
- .direction-piece-grid table td::before{content:attr(data-piece-title);display:block;font-weight:600;color:var(--ink);font-size:inherit;margin-bottom:4px;overflow-wrap:break-word}
+ .direction-piece-grid table td::before{content:attr(data-piece-title);display:block;font-weight:600;color:var(--fg-main);font-size:inherit;margin-bottom:4px;overflow-wrap:break-word}
 }

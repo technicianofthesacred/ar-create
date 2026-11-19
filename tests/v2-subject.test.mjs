@@ -1145,6 +1145,6 @@ test('the source list has its small heading with a count, rows with the kind\'s 
  const rows=[...doc.querySelectorAll('.subj-cs-list>li')];assert.equal(rows.length,2);for(const r of rows)assert.ok(r.querySelector('svg.v2-ic'),'the kind\'s icon');
  const css=fs.readFileSync(path.join(repo,'public/v2/screens/subject.css'),'utf8').slice(fs.readFileSync(path.join(repo,'public/v2/screens/subject.css'),'utf8').indexOf('capture sources: BEGIN'));
  assert.match(css,/\.subj-cs-btns button\.subj-btn[^{]*\{[^}]*white-space:nowrap!important/,'Confirm this transcript and Use it for Check never wrap');
- assert.match(css,/\.subj-cs-h h3\{font:600 var\(--v2-t15\)/);assert.match(css,/\.subj-cs-list b\{font:500 var\(--v2-t14\)/);assert.match(css,/padding:7px 8px;border-radius:8px/);
+ assert.match(css,/\.subj-cs-h h3\{font:600 var\(--(?:v2-t15|size-body)\)/);assert.match(css,/\.subj-cs-list b\{font:500 var\(--(?:v2-t14|size-ui)\)/);assert.match(css,/padding:7px 8px;border-radius:8px/);
  assert.equal(doc.querySelector('[data-cs=capture]').classList.contains('pri'),false,'the card\'s Next stays its one primary');
 });

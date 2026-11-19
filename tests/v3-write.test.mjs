@@ -284,7 +284,7 @@ test('Write follows the house rules: six sizes, no em dash, no fetch, escaped re
  const css=read('public/v3/screens/write.css'),js=['write','write-page','write-margin','write-versions'].map(f=>read('public/v3/screens/'+f+'.js')).join('\n');
  const sizes=new Set([...css.matchAll(/font:\s*(?:italic\s+)?\d{3}\s+(\d+(?:\.\d+)?px)/g)].map(m=>m[1]));
  assert.deepEqual([...sizes],[],'every size is a --v2-t token');
- for(const m of css.matchAll(/font-size:\s*([^;}]+)/g))assert.match(m[1],/^var\(--v2-t(12|13|14|15|18|22)\)$/,m[0]);
+ for(const m of css.matchAll(/font-size:\s*([^;}]+)/g))assert.match(m[1],/^var\(--(?:v2-t(12|13|14|15|18|22)|size-(caption|detail|button|table|ui|nav|body|card-title|page-title))\)$/,m[0]);
  for(const m of css.matchAll(/font:[^;}]*?(var\(--v2-t\d+\))/g))assert.match(m[1],/--v2-t(12|13|14|15|18|22)\)/);
  assert.doesNotMatch(css+js,/\u2014/,'no em dash');
  assert.doesNotMatch(js,/\bfetch\s*\(/,'a command is never fetched');

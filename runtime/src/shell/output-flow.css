@@ -2,9 +2,9 @@
 .application-shell .program-context>nav.writing-context-groups{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;min-width:0}
 .writing-context-group{display:flex;align-items:center;gap:3px;min-width:0}
 .writing-context-group+.writing-context-group{border-left:1px solid #504637;padding-left:10px}
-.writing-context-group>span{font-size:10px;color:#b8a98f;margin-right:3px}
+.writing-context-group>span{font-size:var(--size-micro);color:#b8a98f;margin-right:3px}
 .program-context .writing-context-group button{white-space:nowrap;min-height:34px;padding:5px 7px}
-.cwb-manuscript-receipt{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;padding:8px 16px;border-bottom:1px solid #39332a;background:#211d16;color:#b0a592;font:12px/1.5 'Schibsted Grotesk',sans-serif;flex:none;min-width:0}
+.cwb-manuscript-receipt{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;padding:8px 16px;border-bottom:1px solid #39332a;background:#211d16;color:#b0a592;font:var(--size-caption)/var(--lh-ui) 'Schibsted Grotesk',sans-serif;flex:none;min-width:0}
 .cwb-manuscript-receipt>div{display:flex;align-items:baseline;gap:6px 12px;flex-wrap:wrap;min-width:0}
 .cwb-manuscript-receipt strong{font-weight:600;color:#e3d9c8}
 .cwb-manuscript-receipt.is-stale{background:#302719}
@@ -27,22 +27,22 @@
 .cwb-output-identity>strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ar-donor-workspace .ar-composition-workbench .cwb-output-identity small{padding-left:0}
 .ar-donor-workspace .ar-composition-workbench .cwb-new-output{margin-left:0}
-.ar-donor-workspace .ar-composition-workbench .cwb-new-output>summary{min-height:40px;padding:0 10px;font-size:12px;gap:6px}
-.ar-donor-workspace .ar-composition-workbench .cwb-back{flex:none;min-height:40px;padding:0 10px;font-size:12px;white-space:nowrap}
+.ar-donor-workspace .ar-composition-workbench .cwb-new-output>summary{min-height:40px;padding:0 10px;font-size:var(--size-caption);gap:6px}
+.ar-donor-workspace .ar-composition-workbench .cwb-back{flex:none;min-height:40px;padding:0 10px;font-size:var(--size-caption);white-space:nowrap}
 .ar-donor-workspace .ar-composition-workbench .cwb-new-options{max-height:min(65vh,560px);overflow:auto;padding:12px;right:-120px;gap:8px}
-.ar-donor-workspace .ar-composition-workbench .cwb-new-options button{min-height:40px;padding:8px 10px;font-size:12px}
+.ar-donor-workspace .ar-composition-workbench .cwb-new-options button{min-height:40px;padding:8px 10px;font-size:var(--size-caption)}
 .ar-donor-workspace .ar-composition-workbench .cwb-new-options .cwb-output select{width:100%;max-width:none;min-height:40px}
 .ar-donor-workspace .ar-composition-workbench .cwb-new-options .cwb-size button{flex:1;text-align:center}
-.cwb-rename{display:flex;flex-direction:column;gap:5px;font-size:11px;color:#b0a592}
-.ar-donor-workspace .ar-composition-workbench .cwb-rename input{width:100%;box-sizing:border-box;min-height:36px;min-width:0;padding:5px 8px;border:1px solid #504637;background:#171510;color:#e3d9c8;border-radius:3px;font:13px 'Instrument Sans',sans-serif}
-.cwb-menu-label{font-size:11px;color:#b0a592;margin-top:4px;padding-top:8px;border-top:1px solid #39332a}
-.ar-donor-workspace .ar-composition-workbench .cwb-manuscript-receipt{padding:4px 12px;min-height:34px;box-sizing:border-box;flex-wrap:nowrap;align-items:center;gap:8px;font-size:11px}
-.ar-donor-workspace .ar-composition-workbench .cwb-manuscript-receipt button{min-height:34px;font-size:11px;padding:4px 8px}
+.cwb-rename{display:flex;flex-direction:column;gap:5px;font-size:var(--size-label);color:#b0a592}
+.ar-donor-workspace .ar-composition-workbench .cwb-rename input{width:100%;box-sizing:border-box;min-height:36px;min-width:0;padding:5px 8px;border:1px solid #504637;background:#171510;color:#e3d9c8;border-radius:3px;font:var(--size-detail) 'Instrument Sans',sans-serif}
+.cwb-menu-label{font-size:var(--size-label);color:#b0a592;margin-top:4px;padding-top:8px;border-top:1px solid #39332a}
+.ar-donor-workspace .ar-composition-workbench .cwb-manuscript-receipt{padding:4px 12px;min-height:34px;box-sizing:border-box;flex-wrap:nowrap;align-items:center;gap:8px;font-size:var(--size-label)}
+.ar-donor-workspace .ar-composition-workbench .cwb-manuscript-receipt button{min-height:34px;font-size:var(--size-label);padding:4px 8px}
 @media(max-width:700px){
  .ar-donor-workspace .ar-composition-workbench .cwb-toolbar{padding:6px 10px}
- .ar-donor-workspace .ar-composition-workbench .cwb-output-identity>strong{font-size:13px}
- .ar-donor-workspace .ar-composition-workbench .cwb-output-identity small{font-size:10px}
+ .ar-donor-workspace .ar-composition-workbench .cwb-output-identity>strong{font-size:var(--size-detail)}
+ .ar-donor-workspace .ar-composition-workbench .cwb-output-identity small{font-size:var(--size-micro)}
  .ar-donor-workspace .ar-composition-workbench .cwb-new-options{right:-118px;max-width:calc(100vw - 40px)}
  .ar-donor-workspace .ar-composition-workbench .cwb-tabs{min-height:40px}
- .ar-donor-workspace .ar-composition-workbench .cwb-tabs button{min-height:40px;font-size:12px}
+ .ar-donor-workspace .ar-composition-workbench .cwb-tabs button{min-height:40px;font-size:var(--size-caption)}
 }

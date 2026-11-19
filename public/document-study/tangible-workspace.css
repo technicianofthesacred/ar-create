@@ -1,20 +1,20 @@
 /* Shared geometry for the maintained stage tools, not manuscript/platform canvases. */
-:root{--ar-control-height:36px;--ar-touch-height:44px;--ar-tool-gap:8px;--ar-tool-radius:5px;--ar-tool-focus:var(--green,#697958)}
+:root{--ar-control-height:36px;--ar-touch-height:44px;--ar-tool-gap:8px;--ar-tool-radius:5px;--ar-tool-focus:var(--green)}
 .workspace :is(.sws-work-tools,.oss-surface,.research-work-tools,.research-work-brief,.oo-stage,.direction-writing-tools,.mot-surface){min-width:0}
-.workspace :is(.sws-tool,.oss-disclosure,.research-work-tools,.research-work-brief)>summary{min-height:var(--ar-control-height);display:flex;align-items:center;gap:8px;padding-block:4px;box-sizing:border-box;list-style:revert;font-size:14px}
+.workspace :is(.sws-tool,.oss-disclosure,.research-work-tools,.research-work-brief)>summary{min-height:var(--ar-control-height);display:flex;align-items:center;gap:8px;padding-block:4px;box-sizing:border-box;list-style:revert;font-size:var(--size-ui)}
 .workspace :is(.sws-fields,.oss-tool-row,.research-work-actions){gap:var(--ar-tool-gap);align-items:center}
-.workspace :is(.sws-tool,.oss-surface,.research-work-tools,.research-work-brief,.direction-writing-tools,.mot-surface) :is(button,input,select){box-sizing:border-box;min-height:var(--ar-control-height);max-width:100%;border-radius:var(--ar-tool-radius);font-family:var(--sans,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif);font-size:14px;line-height:1.35}
+.workspace :is(.sws-tool,.oss-surface,.research-work-tools,.research-work-brief,.direction-writing-tools,.mot-surface) :is(button,input,select){box-sizing:border-box;min-height:var(--ar-control-height);max-width:100%;border-radius:var(--ar-tool-radius);font-family:var(--sans,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif);font-size:var(--size-ui);line-height:var(--lh-snug)}
 .workspace :is(.sws-tool,.oss-surface,.research-work-tools,.research-work-brief,.direction-writing-tools,.mot-surface) :is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--ar-tool-focus);outline-offset:3px}
 .workspace :is(.sws-tool,.oss-surface,.research-work-tools,.research-work-brief,.direction-writing-tools,.mot-surface) :is(button,summary){overflow-wrap:normal;word-break:normal}
 .workspace :is(.oss-status,.sws-status):empty{display:none}
 .workspace .oss-heading{gap:12px}
-.workspace .oss-heading h2{margin:0;font-size:22px}
-.workspace .oss-heading p{margin:3px 0 0;max-width:60ch;font-size:14px;line-height:1.5}
+.workspace .oss-heading h2{margin:0;font-size:var(--size-page-title)}
+.workspace .oss-heading p{margin:3px 0 0;max-width:60ch;font-size:var(--size-ui);line-height:var(--lh-ui)}
 .workspace .oo-row{align-items:center;padding-block:10px;min-height:58px}
 .workspace .oo-actions>.oo-action{min-height:var(--ar-control-height)!important}
 .workspace .oo-more summary{min-height:var(--ar-control-height)}
-.workspace .oo-identity .oo-title{min-height:32px;font-size:16px!important;line-height:1.4;max-width:100%}
-.workspace .oo-meta{font-size:12px;line-height:1.4;margin-top:2px}
+.workspace .oo-identity .oo-title{min-height:32px;font-size:var(--size-reading)!important;line-height:var(--lh-snug);max-width:100%}
+.workspace .oo-meta{font-size:var(--size-caption);line-height:var(--lh-snug);margin-top:2px}
 @media(max-width:650px),(pointer:coarse){
  .workspace :is(.sws-tool,.oss-surface,.research-work-tools,.research-work-brief,.direction-writing-tools,.mot-surface) :is(button,input,select),
  .workspace :is(.sws-tool,.oss-disclosure,.research-work-tools,.research-work-brief)>summary{min-height:var(--ar-touch-height)}
@@ -22,4 +22,4 @@
  .workspace .oss-heading{align-items:flex-start}
 }
 
-.workspace .dwt-sheet{font:400 18px/1.8 var(--shared-prose-font,'AR Atlas Lora',Georgia,serif);max-width:680px;margin-inline:auto;white-space:pre-wrap}
+.workspace .dwt-sheet{font:400 var(--size-card-title)/var(--lh-loose) var(--font-words);max-width:680px;margin-inline:auto;white-space:pre-wrap}

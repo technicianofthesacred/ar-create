@@ -7,18 +7,17 @@
    ids and !important, and this is the one place the scale has to win. */
 :root:root:root{
  --z:1;
- --t-label:calc(13px * var(--z));
- --t-body:calc(15px * var(--z));
- --t-reading:calc(16px * var(--z));
- --t-head:calc(15px * var(--z));
- --t-title:calc(17px * var(--z));
- --lh-ui:1.45;--lh-read:1.65;
+ /* sizes come from the master style file (/ui/tokens.css), which scales them by --z */
+ --t-label:var(--t-detail);
+ --t-reading:var(--t-page);
+ --t-head:var(--t-body);
+ --lh-read:var(--lh-page);
  --measure:calc(640px * var(--z));
  --wb-doc-left:64px;--wb-doc-top:48px;
  /* The C3 tokens every look module already reads now come from the one scale. */
  --c3-t1:var(--t-label);--c3-t2:var(--t-body);
 }
-body{font-size:var(--t-body)}
+body{font-size:var(--size-body)}
 body.c3-tabs{--c3-doc-font:var(--ar-ui)}
 
 /* ---------- the manuscript: Write, Read and Check are one document ----------
@@ -26,16 +25,16 @@ body.c3-tabs{--c3-doc-font:var(--ar-ui)}
    padding. Paragraph margins, padding and borders never change on focus, highlight or a margin note, so nothing moves. */
 html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)){
  padding:var(--wb-doc-top) 48px 120px var(--wb-doc-left)!important;margin:0!important;max-width:none!important;width:auto!important;
- border:0!important;border-radius:0!important;box-shadow:none!important;background:var(--paper)!important;box-sizing:border-box}
+ border:0!important;border-radius:0!important;box-shadow:none!important;background:var(--surface-card)!important;box-sizing:border-box}
 html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(.manuscript,.recordBody,#manuscript,.draft-read-words,.manuscript-prose){
  margin:0!important;padding:0!important;max-width:var(--measure)!important;font-family:var(--c3-doc-font)!important;font-size:var(--t-reading)!important;line-height:var(--lh-read)!important;letter-spacing:0!important;border:0!important}
 html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(p,li,blockquote,.shared-prose-block,#manuscript>div){
  font-family:var(--c3-doc-font)!important;font-size:var(--t-reading)!important;font-weight:400!important;line-height:var(--lh-read)!important;letter-spacing:0!important;
  margin:0 0 calc(var(--t-reading) * .75)!important;padding:0!important;border:0!important;max-width:var(--measure)!important;box-sizing:border-box}
 html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(ul,ol){margin:0 0 calc(var(--t-reading) * .75)!important;max-width:var(--measure)!important}
-html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) blockquote{color:var(--dim)!important;font-style:normal!important}
+html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) blockquote{color:var(--fg-muted)!important;font-style:normal!important}
 html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h1{
- font-family:var(--c3-doc-font)!important;font-size:var(--t-title)!important;font-weight:600!important;line-height:1.35!important;letter-spacing:0!important;margin:0 0 calc(var(--t-reading) * 1)!important;padding:0!important;max-width:var(--measure)!important}
+ font-family:var(--c3-doc-font)!important;font-size:var(--t-title)!important;font-weight:600!important;line-height:var(--lh-snug)!important;letter-spacing:0!important;margin:0 0 calc(var(--t-reading) * 1)!important;padding:0!important;max-width:var(--measure)!important}
 html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h2,h3,h4,h5,h6){
  font-family:var(--c3-doc-font)!important;font-size:var(--t-head)!important;font-weight:600!important;line-height:var(--lh-read)!important;letter-spacing:0!important;margin:calc(var(--t-reading) * 1.5) 0 calc(var(--t-reading) * .25)!important;padding:0!important;max-width:var(--measure)!important}
 html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(#manuscript,.draft-read-words)>:is(h1,h2,h3,h4,h5,h6):first-child{margin-top:0!important}
@@ -46,7 +45,7 @@ html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.phaseReader.c3
 @media(max-width:850px){
  :root:root:root{--wb-doc-left:16px;--wb-doc-top:24px}
  html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)){padding:var(--wb-doc-top) 16px 96px var(--wb-doc-left)!important}
- html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app .workspace :is(.document,.recordPage).prose-document>:is(h1,h2):first-of-type,html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app .workspace .recordBody.shared-prose-surface>h1.shared-prose-block:first-child{font-size:var(--t-title)!important;line-height:1.35!important}
+ html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app .workspace :is(.document,.recordPage).prose-document>:is(h1,h2):first-of-type,html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app .workspace .recordBody.shared-prose-surface>h1.shared-prose-block:first-child{font-size:var(--t-title)!important;line-height:var(--lh-snug)!important}
  html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app .workspace :is(.document,.recordPage) :is(h2,h3):not(:first-of-type){font-size:var(--t-head)!important}
  html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app .workspace :is(.manuscript,.recordBody,.recordPage) p{font-size:var(--t-reading)!important;line-height:var(--lh-read)!important}
 }
@@ -57,91 +56,91 @@ html:not(#wb):not(#wb):not(#wb) body #app #workspace .draft-read-words>section[d
 html:not(#wb):not(#wb):not(#wb) body #app #workspace .draft-read-words>section[data-draft-passage]>:last-child{margin-bottom:calc(var(--t-reading) * .75)!important}
 
 /* Shared notes use the same interface family. Serif is reserved for spoken words. */
-html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.draft-context-words,.recordBody){font-family:var(--ar-ui)!important}
-html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.draft-context-words,.recordBody) :is(p,li,h1,h2,h3,h4,h5,h6,.shared-prose-block){font-family:var(--ar-ui)!important}
-html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.source-turn-speech,.source-turn-text,.rpb-quote,.source-quote,.rs-quote){font-family:var(--atlas-prose-font)!important;font-size:var(--t-body)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.draft-context-words,.recordBody){font-family:var(--font-ui)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.draft-context-words,.recordBody) :is(p,li,h1,h2,h3,h4,h5,h6,.shared-prose-block){font-family:var(--font-ui)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.source-turn-speech,.source-turn-text,.rpb-quote,.source-quote,.rs-quote){font-family:var(--atlas-prose-font)!important;font-size:var(--size-body)!important}
 
 /* ---------- long-form notes and shared prose: the one reading size ---------- */
 html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.draft-context-words,.recordBody) :is(p,li,blockquote,.shared-prose-block,del,ins){font-size:var(--t-reading)!important;line-height:var(--lh-read)!important;font-weight:400!important}
 html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.draft-context-words,.recordBody){font-size:var(--t-reading)!important;line-height:var(--lh-read)!important}
-html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.recordBody) :is(h1,h2,h3,h4,h5,h6).shared-prose-block{font-size:var(--t-title)!important;font-weight:600!important;line-height:1.35!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.recordBody) :is(h1,h2,h3,h4,h5,h6).shared-prose-block{font-size:var(--t-title)!important;font-weight:600!important;line-height:var(--lh-snug)!important}
 
 /* ---------- weights: 400, 500, 600 only ---------- */
 body :is(b,strong,th,h1,h2,h3,h4,h5,h6,dt,legend):not(:where(.car-single-slide,.car-lineup,.car-stage,.ig-render,.c3-template,[data-template-render],.ma-article-quote) *){font-weight:600}
 html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog,.ht-menu) :is(b,strong):not(:where(.car-single-slide,.car-lineup,.car-stage,.ig-render,.c3-template,[data-template-render],.ma-article-quote) *){font-weight:600!important}
 
 /* ---------- the interface: every remaining size on one of the tokens ---------- */
-html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(small,.small,.c3t-line,.ce-step,.ce-n,.ce-arr,.docfooter span,.sws-revision,.material-boundary,.material-intake span,.flow-lane-head span,.sourceGuard,.why,.draft-surface-ai-state,.c3-tool-d,.sb-why,.draft-check-status span,.flow-row>.small,.c3-sr){font-size:var(--t-label)!important;line-height:var(--lh-ui)!important}
-html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(details.flow-retained>summary,details.oss-retained>summary,.c3-mirror-btn,.c3-mirror-row,.draft-surface-margin-head>button,.head>button.quiet,.c3-page-notes,.c3-page-notes *,.tr-state,.ce-btn,.oo-meta,.oo-state,.oo-action,.oo-more>summary,.mot-bar label,.mot-bar button,.mot-context,.mot-status){font-size:var(--t-label)!important}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(small,.small,.c3t-line,.ce-step,.ce-n,.ce-arr,.docfooter span,.sws-revision,.material-boundary,.material-intake span,.flow-lane-head span,.sourceGuard,.why,.draft-surface-ai-state,.c3-tool-d,.sb-why,.draft-check-status span,.flow-row>.small,.c3-sr){font-size:var(--size-detail)!important;line-height:var(--lh-ui)!important}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(details.flow-retained>summary,details.oss-retained>summary,.c3-mirror-btn,.c3-mirror-row,.draft-surface-margin-head>button,.head>button.quiet,.c3-page-notes,.c3-page-notes *,.tr-state,.ce-btn,.oo-meta,.oo-state,.oo-action,.oo-more>summary,.mot-bar label,.mot-bar button,.mot-context,.mot-status){font-size:var(--size-button)!important}
 html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(details.flow-retained>summary,details.oss-retained>summary,.c3-mirror-btn,.draft-surface-margin-head>button,.head>button.quiet,.ce-btn,.oo-action){font-weight:500!important}
-html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .c3-page-notes .c3-mirror-row::before,html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .wn-check-findings>details.flow-retained::before{font-size:var(--t-label)!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important}
-html:not(#wb):not(#wb):not(#wb) body #app #margin :is(p,.why,.draft-surface-ai-state,small,.small,.sourceGuard,.marginHint){font-size:var(--t-label)!important;line-height:var(--lh-ui)!important}
-html:not(#wb):not(#wb):not(#wb) body #app #margin strong{font-size:var(--t-label)!important}
-html:not(#wb):not(#wb):not(#wb) body #app #margin [data-surface-action],html:not(#wb):not(#wb):not(#wb) body #app #margin button.quiet,html:not(#wb):not(#wb):not(#wb) body #app #margin .draft-surface-margin-body button{font-size:var(--t-label)!important}
-html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(.c3-tool-t,.c3-tool-t .c3-sr){font-size:var(--t-body)!important;font-weight:500!important}
-html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(#c3-next .c3-next-go,#c3-next .c3-next-go span){font-size:var(--t-label)!important;font-weight:500!important}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .c3-page-notes .c3-mirror-row::before,html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .wn-check-findings>details.flow-retained::before{font-size:var(--size-detail)!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important}
+html:not(#wb):not(#wb):not(#wb) body #app #margin :is(p,.why,.draft-surface-ai-state,small,.small,.sourceGuard,.marginHint){font-size:var(--size-detail)!important;line-height:var(--lh-ui)!important}
+html:not(#wb):not(#wb):not(#wb) body #app #margin strong{font-size:var(--size-detail)!important}
+html:not(#wb):not(#wb):not(#wb) body #app #margin [data-surface-action],html:not(#wb):not(#wb):not(#wb) body #app #margin button.quiet,html:not(#wb):not(#wb):not(#wb) body #app #margin .draft-surface-margin-body button{font-size:var(--size-button)!important}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(.c3-tool-t,.c3-tool-t .c3-sr){font-size:var(--size-body)!important;font-weight:500!important}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(#c3-next .c3-next-go,#c3-next .c3-next-go span){font-size:var(--size-detail)!important;font-weight:500!important}
 html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) summary>span{font-size:inherit}
 html:not(#wb):not(#wb):not(#wb) body #project-library.c3-home .pl-results.ht-grid .ht-cover span,html:not(#wb):not(#wb):not(#wb) body #project-library .ht-cover>span{font-size:var(--t-title)!important;font-weight:500!important}
-html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .material-heading .small,html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .material-heading span{font-size:var(--t-label)!important}
-html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(.material-index,.material-layout) :is(strong,b){font-size:var(--t-body)!important}
-html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .draft-check-status strong,html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .sws-check-scope strong{font-size:var(--t-label)!important;font-weight:600!important}
-html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .ht-find-row small,html:not(#wb):not(#wb):not(#wb) body .ht-menu small{font-size:var(--t-label)!important}
-html:not(#wb):not(#wb):not(#wb) body :is(#app,.ht-menu) .ht-find input{font-size:var(--t-body)!important}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .material-heading .small,html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .material-heading span{font-size:var(--size-detail)!important}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(.material-index,.material-layout) :is(strong,b){font-size:var(--size-body)!important}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .draft-check-status strong,html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .sws-check-scope strong{font-size:var(--size-detail)!important;font-weight:600!important}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) .ht-find-row small,html:not(#wb):not(#wb):not(#wb) body .ht-menu small{font-size:var(--size-detail)!important}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,.ht-menu) .ht-find input{font-size:var(--size-body)!important}
 
 /* The surface bar and its More menu. */
-html:not(#wb):not(#wb):not(#wb) #c3-surface-bar{font-size:var(--t-label)!important}
+html:not(#wb):not(#wb):not(#wb) #c3-surface-bar{font-size:var(--size-detail)!important}
 /* The Workbench frame owns its 17px section title; output names keep the compact body scale. */
 html:not(#wb):not(#wb):not(#wb) body:not(.wbf-on) #c3-surface-bar .sb-cp-name,
-html:not(#wb):not(#wb):not(#wb) #c3-surface-bar .sb-out strong{font-size:var(--t-body)!important;font-weight:600!important}
-html:not(#wb):not(#wb):not(#wb) #c3-surface-bar .sb-cp-n{font-size:var(--t-label)!important}
-html:not(#wb):not(#wb):not(#wb) #c3-surface-bar :is(.sb-piece,.sb-on,.sb-ret,.sb-status,.sb-agent,.sb-msg,.sb-sep2,.sb-oselect,.sb-item,.sb-gh,.sb-sec,.sb-sel,.sb-select,.sb-btn,.sb-mode,.sb-act,.sb-primary,.cb-size output,.cb-size button){font-size:var(--t-label)!important}
+html:not(#wb):not(#wb):not(#wb) #c3-surface-bar .sb-out strong{font-size:var(--size-body)!important;font-weight:600!important}
+html:not(#wb):not(#wb):not(#wb) #c3-surface-bar .sb-cp-n{font-size:var(--size-detail)!important}
+html:not(#wb):not(#wb):not(#wb) #c3-surface-bar :is(.sb-piece,.sb-on,.sb-ret,.sb-status,.sb-agent,.sb-msg,.sb-sep2,.sb-oselect,.sb-item,.sb-gh,.sb-sec,.sb-sel,.sb-select,.sb-btn,.sb-mode,.sb-act,.sb-primary,.cb-size output,.cb-size button){font-size:var(--size-button)!important}
 html:not(#wb):not(#wb):not(#wb) #c3-surface-bar :is(.sb-primary,.sb-btn,.sb-act,.sb-item,.cb-size button){font-weight:500!important}
 html:not(#wb):not(#wb):not(#wb) #c3-surface-bar .sb-gh{font-weight:600!important;text-transform:none!important;letter-spacing:0!important}
 @media(max-width:650px){html:not(#wb):not(#wb):not(#wb) #c3-surface-bar .sb-right>.sb-btn:not(.sb-mode),#c3-surface-bar .sb-morew>button{font-size:0!important}}
 
 /* Dialogs the look opens (Everything that's here, Receipts, Recent changes). */
 html:not(#wb):not(#wb):not(#wb) :is(#c3-everything,#c3-receipts) .te-head h2{font-size:var(--t-title)!important;font-weight:600!important}
-html:not(#wb):not(#wb):not(#wb) :is(#c3-everything,#c3-receipts) .te-head p,:is(#c3-everything,#c3-receipts) .te-row div span{font-size:var(--t-label)!important}
-html:not(#wb):not(#wb):not(#wb) :is(#c3-everything,#c3-receipts) .te-row strong{font-size:var(--t-body)!important;font-weight:600!important}
-html:not(#wb):not(#wb):not(#wb) :is(#c3-everything,#c3-receipts) :is(.te-group h3,.te-tone,.te-close,.te-row button){font-size:var(--t-label)!important}
+html:not(#wb):not(#wb):not(#wb) :is(#c3-everything,#c3-receipts) .te-head p,:is(#c3-everything,#c3-receipts) .te-row div span{font-size:var(--size-detail)!important}
+html:not(#wb):not(#wb):not(#wb) :is(#c3-everything,#c3-receipts) .te-row strong{font-size:var(--size-body)!important;font-weight:600!important}
+html:not(#wb):not(#wb):not(#wb) :is(#c3-everything,#c3-receipts) :is(.te-group h3,.te-tone,.te-close,.te-row button){font-size:var(--size-button)!important}
 html:not(#wb):not(#wb):not(#wb) :is(#c3-everything,#c3-receipts) .te-tone{font-weight:500!important}
 
 /* Field labels, notes and disclosures inside the work tools. */
-html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(label,.sws-field,.flow-field,.sws-status,.sws-tool>p,.human-direction-words,.c3-tool-banner,.c3-tool-banner strong,.sws-resources label,.material-author p,.human-direction-edit p){font-size:var(--t-label)!important;line-height:var(--lh-ui)!important}
-html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(details>summary:not(.c3-tool),.human-direction-edit>summary){font-size:var(--t-label)!important;font-weight:500!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(label,.sws-field,.flow-field,.sws-status,.sws-tool>p,.human-direction-words,.c3-tool-banner,.c3-tool-banner strong,.sws-resources label,.material-author p,.human-direction-edit p){font-size:var(--size-detail)!important;line-height:var(--lh-ui)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(details>summary:not(.c3-tool),.human-direction-edit>summary){font-size:var(--size-detail)!important;font-weight:500!important}
 html:not(#wb):not(#wb):not(#wb) body #app .workspace .c3-tool-banner strong{font-weight:600!important}
-html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog,.ht-menu) :is(.ht-find-h,#project-library summary>span,.ht-facets summary>span){font-size:var(--t-label)!important}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog,.ht-menu) :is(.ht-find-h,#project-library summary>span,.ht-facets summary>span){font-size:var(--size-detail)!important}
 /* Retained records outside the manuscript (Share feedback, earlier records): interface sizes, not display sizes. */
-html:not(#wb):not(#wb):not(#wb) body #app .workspace .recordPage:not(.prose-document) :is(h1,h2){font-size:var(--t-title)!important;font-weight:600!important;line-height:1.35!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace .recordPage:not(.prose-document) :is(h1,h2){font-size:var(--t-title)!important;font-weight:600!important;line-height:var(--lh-snug)!important}
 html:not(#wb):not(#wb):not(#wb) body #app .workspace .recordPage:not(.prose-document) :is(h3,h4){font-size:var(--t-head)!important;font-weight:600!important}
-html:not(#wb):not(#wb):not(#wb) body #app .workspace .recordPage:not(.prose-document)>p{font-size:var(--t-body)!important;line-height:var(--lh-ui)!important}
-html:not(#wb):not(#wb):not(#wb) body #app .workspace .flow-details>p,html:not(#wb):not(#wb):not(#wb) body #app .workspace details>p{font-size:var(--t-label)!important;line-height:var(--lh-ui)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace .recordPage:not(.prose-document)>p{font-size:var(--size-body)!important;line-height:var(--lh-ui)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace .flow-details>p,html:not(#wb):not(#wb):not(#wb) body #app .workspace details>p{font-size:var(--size-detail)!important;line-height:var(--lh-ui)!important}
 /* Controls and status lines in the work column scale with the rest (templates and slide renders excluded). */
 html:not(#wb):not(#wb):not(#wb) body #app .workspace button:not(.workflowStep):not(:where(.car-single-slide,.car-lineup,.car-stage,.ig-render,.c3-template,[data-template-render]) *){font-size:var(--t-label)!important}
-html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.material-readiness,.human-direction-actions,.sws-check-scope) :is(span,strong){font-size:var(--t-label)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.material-readiness,.human-direction-actions,.sws-check-scope) :is(span,strong){font-size:var(--size-detail)!important}
 html:not(#wb):not(#wb):not(#wb) body #app .workspace .c3-empty .ce-copy h3{font-size:var(--t-title)!important;font-weight:600!important}
 
 /* Tool descriptions remain interface copy, including unclassed donor paragraphs. */
-html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.mot-surface,.mot-tools,.sws-tool,.flow-tool,.photos-stage-room) p{font-size:var(--t-body)!important;font-weight:400!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.mot-surface,.mot-tools,.sws-tool,.flow-tool,.photos-stage-room) p{font-size:var(--size-body)!important;font-weight:400!important}
 
 /* The approved text controls live on the title line, not behind More. */
-#c3-surface-bar .wb-text-size{display:inline-flex;align-items:center;gap:2px;flex:none;font:400 var(--t-label)/1 var(--ar-ui)}
-#c3-surface-bar .wb-text-size button{min-width:30px;min-height:32px;padding:0 5px;border:0;border-radius:6px;background:transparent;color:var(--ink);font:500 var(--t-label)/1 var(--ar-ui);cursor:pointer}
+#c3-surface-bar .wb-text-size{display:inline-flex;align-items:center;gap:2px;flex:none;font:400 var(--size-detail)/var(--lh-solid) var(--font-ui)}
+#c3-surface-bar .wb-text-size button{min-width:30px;min-height:32px;padding:0 5px;border:0;border-radius:6px;background:transparent;color:var(--fg-main);font:500 var(--size-button)/var(--lh-solid) var(--font-ui);cursor:pointer}
 #c3-surface-bar .wb-text-size button:hover:not(:disabled){background:var(--wb-sel,var(--line))}
-#c3-surface-bar .wb-text-size button:focus-visible{outline:2px solid var(--warm);outline-offset:-2px}
+#c3-surface-bar .wb-text-size button:focus-visible{outline:2px solid var(--edge-accent);outline-offset:-2px}
 #c3-surface-bar .wb-text-size button:disabled{opacity:.4;cursor:default}
-#c3-surface-bar .wb-text-size output{min-width:3.3em;text-align:center;color:var(--dim)}
+#c3-surface-bar .wb-text-size output{min-width:3.3em;text-align:center;color:var(--fg-muted)}
 #c3-surface-bar .sb-cp-n{display:none!important}
 @media(max-width:650px){#c3-surface-bar .wb-text-size output{display:none}#c3-surface-bar .wb-text-size{gap:0}}
 /* Existing material previews and the phone's section picker share the same scale. */
-html:not(#wb):not(#wb):not(#wb) body #app .mrb-meta{font-size:var(--t-label)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .mrb-meta{font-size:var(--size-detail)!important}
 html:not(#wb):not(#wb):not(#wb) body #app .mrb-icon{font-size:var(--t-head)!important}
-html:not(#wb):not(#wb):not(#wb) body #app .mrb-reading{font:400 var(--t-reading)/var(--lh-read) var(--ar-ui)!important}
-html:not(#wb):not(#wb):not(#wb) body #app .workflowNavigation .cr-picker strong{font:600 var(--t-head)/var(--lh-ui) var(--ar-ui)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .mrb-reading{font:400 var(--t-reading)/var(--lh-read) var(--font-ui)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workflowNavigation .cr-picker strong{font:600 var(--t-head)/var(--lh-ui) var(--font-ui)!important}
 
 /* Retained manuscript headings and margin labels obey the same scale on narrow screens. */
 html:not(#wb):not(#wb):not(#wb) body #app #workspace :is(.document,.recordPage) :is(h2,h3,h4,h5,h6):not(:where(.car-single-slide,.car-lineup,.car-stage,.ig-render,.c3-template,[data-template-render]) *){font-size:var(--t-head)!important;font-weight:600!important}
-html:not(#wb):not(#wb):not(#wb) body #app #margin .draft-surface-margin-summary span{font-size:var(--t-label)!important;font-weight:400!important}
+html:not(#wb):not(#wb):not(#wb) body #app #margin .draft-surface-margin-summary span{font-size:var(--size-detail)!important;font-weight:400!important}
 /* The mobile decorators must not put a second toolbar or source summary between identical words.
    Their real controls remain mirrored in the bar/More and the source-and-brief tool. */
 @media(max-width:850px){
@@ -154,7 +153,7 @@ html:not(#wb):not(#wb):not(#wb) body #app #margin .draft-surface-margin-summary 
 @media(max-width:650px){
  #c3-surface-bar .sb-left{width:90px!important}
  html body.wb-on #app .workflowNavigation .cr-picker{width:90px!important;max-width:90px!important}
- html:not(#wb):not(#wb):not(#wb) body #app .workflowNavigation .cr-picker strong{font-size:var(--t-label)!important}
+ html:not(#wb):not(#wb):not(#wb) body #app .workflowNavigation .cr-picker strong{font-size:var(--size-detail)!important}
  html:not(#wb):not(#wb):not(#wb) body #app #c3-surface-bar .sb-primary{font-size:0!important;max-width:100px;padding-inline:10px}
- html:not(#wb):not(#wb):not(#wb) body #app #c3-surface-bar .sb-primary::after{content:attr(data-short);font:500 var(--t-label)/1.45 var(--ar-ui)}
+ html:not(#wb):not(#wb):not(#wb) body #app #c3-surface-bar .sb-primary::after{content:attr(data-short);font:500 var(--size-detail)/var(--lh-ui) var(--font-ui)}
 }

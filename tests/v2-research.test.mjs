@@ -134,7 +134,7 @@ test('the match pass: the sample\'s subtitle, an always-present week section, th
  assert.ok(r.doc.querySelector('button.rs-fieldbox[data-rs-write]'),'his line sits in a box');
  assert.match(r.doc.querySelector('.rs-take').textContent,/Only you write here\. That is all Research asks of you\./);
  const css=fs.readFileSync(path.join(v2dir,'screens/research.css'),'utf8');
- assert.match(css,/\.rs-topic \.rs-lead\{font:500 var\(--v2-t15\)/,'the lead stands out at weight 500');
+ assert.match(css,/\.rs-topic \.rs-lead\{font:500 var\(--(?:v2-t15|size-body)\)/,'the lead stands out at weight 500');
  assert.doesNotMatch(fs.readFileSync(path.join(v2dir,'screens/research.js'),'utf8')+css,/—/,'no em dash');
 });
 

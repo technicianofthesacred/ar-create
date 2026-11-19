@@ -47,7 +47,7 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 test('index.html lists every screen file in order, after the shell, and every file it names exists',()=>{
  const html=read('public/v2/index.html'),scripts=scriptsOf(html),styles=stylesOf(html);
  assert.deepEqual(scripts,['/document-study/recovery-storage.js','shell/client.js','shell/parts.js','shell/capture.js','shell/shell.js',...SCREENS.map(s=>`screens/${s}.js`)]);
- assert.deepEqual(styles,['/document-study/c3-theme.css','shell/shell.css','shell/capture.css','/document-study/graphite-controls.css',...SCREENS.map(s=>`screens/${s}.css`)]);
+ assert.deepEqual(styles,['/ui/tokens.css','/document-study/c3-theme.css','shell/shell.css','shell/capture.css','/document-study/graphite-controls.css',...SCREENS.map(s=>`screens/${s}.css`)]);
  for(const file of [...scripts,...styles])assert.ok(fs.existsSync(file.startsWith('/')?path.join(repo,'public',file):path.join(v2dir,file)),file+' exists');
  assert.doesNotMatch(html,/<script>(?!<)/,'no inline script: the page runs under the app\'s strict script policy');
  assert.ok(fs.existsSync(path.join(v2dir,'README.md')),'the one page later workers read');
@@ -197,9 +197,9 @@ test('a desk chip with no photograph is a plain chip, with no empty box; with on
 });
 
 test('light-theme grey stays the app\'s own #5e6257: the sample\'s #686c61 reads below 4.5 to 1 on the tinted surfaces',()=>{
- const shell=read('public/v2/shell/shell.css'),theme=read('public/document-study/c3-theme.css');
+ const shell=read('public/v2/shell/shell.css'),theme=read('public/ui/tokens.css');
  assert.doesNotMatch(shell,/--dim\s*:/,'the shell does not set its own grey: the surfaces that tint (Looks, hover rows) are in other files');
- const m=theme.match(/:root,:root\[data-theme="light"\]\{[^}]*--dim:(#[0-9a-f]{6})/i);assert.ok(m);
+ const m=theme.match(/:root:root:root,[^{]*\{[^}]*--dim:\s*(#[0-9a-f]{6})/i);assert.ok(m);
  const lum=h=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.03928?v/12.92:((v+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2];};
  const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
  for(const surface of ['#fffefb','#efede6','#e9e8e2','#e9e4d7'])assert.ok(ratio(m[1],surface)>=4.5,'the app grey on '+surface);

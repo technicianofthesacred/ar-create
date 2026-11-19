@@ -1,22 +1,22 @@
-.ar-context-handoff{border-top:1px solid var(--line,#d8d2c8);margin:8px 0;padding:8px 0;font-size:13px;min-width:0}.ar-context-handoff summary{cursor:pointer;font-weight:600}.ach-body{padding-top:6px;max-width:68ch}.ach-body p{line-height:1.5;margin:4px 0 10px;color:var(--muted,#69665f)}.ach-list{display:grid;gap:6px}.ach-list>label{display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;align-items:start;padding:5px 0}.ach-list input{margin:3px 0}.ach-list strong{font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}.ach-list small,.ach-files small{display:block;font-size:11px;color:var(--muted,#69665f);line-height:1.4}.ach-search{display:grid;gap:4px;margin-bottom:8px}.ach-search input{width:100%;box-sizing:border-box;min-width:0}.ach-files{list-style:none;padding:0;margin:4px 0 10px}.ach-files li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}.ach-body button{min-height:30px;white-space:nowrap}@media(pointer:coarse){.ach-body button,.ach-list>label{min-height:44px}}
+.ar-context-handoff{border-top:1px solid var(--edge);margin:8px 0;padding:8px 0;font-size:var(--size-detail);min-width:0}.ar-context-handoff summary{cursor:pointer;font-weight:600}.ach-body{padding-top:6px;max-width:68ch}.ach-body p{line-height:var(--lh-ui);margin:4px 0 10px;color:var(--muted,#69665f)}.ach-list{display:grid;gap:6px}.ach-list>label{display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;align-items:start;padding:5px 0}.ach-list input{margin:3px 0}.ach-list strong{font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}.ach-list small,.ach-files small{display:block;font-size:var(--size-label);color:var(--muted,#69665f);line-height:var(--lh-snug)}.ach-search{display:grid;gap:4px;margin-bottom:8px}.ach-search input{width:100%;box-sizing:border-box;min-width:0}.ach-files{list-style:none;padding:0;margin:4px 0 10px}.ach-files li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}.ach-body button{min-height:30px;white-space:nowrap}@media(pointer:coarse){.ach-body button,.ach-list>label{min-height:44px}}
 
 /* Staged questions share the terminal chrome; supplementary context stays folded. */
-.ar-terminal-room .ach-attached{flex:none;margin:8px 24px;color:#c5baa9;font:400 13px/1.5 system-ui,sans-serif;overflow-wrap:anywhere}
+.ar-terminal-room .ach-attached{flex:none;margin:8px 24px;color:#c5baa9;font:400 var(--size-detail)/var(--lh-ui) system-ui,sans-serif;overflow-wrap:anywhere}
 .ar-terminal-room .ach-attached strong{font-weight:500;color:#ddd5c8}
 .ar-terminal-room .ach-staged-panel{box-sizing:border-box;margin:12px 24px;padding:14px 16px 4px;border:1px solid #38342c;border-radius:6px;background:#24211c;min-width:0;color:#ddd5c8}
 .ar-terminal-room .ach-staged-panel .ach-attached{margin:0 0 10px}
-.ar-terminal-room .ach-staged-question{display:grid;gap:6px;padding:0;min-width:0;font:400 14px/1.5 system-ui,sans-serif}
+.ar-terminal-room .ach-staged-question{display:grid;gap:6px;padding:0;min-width:0;font:400 var(--size-ui)/var(--lh-ui) system-ui,sans-serif}
 .ar-terminal-room .ach-staged-question>span{color:#ddd5c8;font-weight:500}
-.ar-terminal-room .ach-staged-question textarea{box-sizing:border-box;display:block;width:100%;height:88px;min-height:80px;max-height:240px;resize:vertical;padding:10px 12px;border:1px solid #484136;border-radius:4px;background:#201e19;color:#ddd5c8;font:400 14px/1.5 system-ui,sans-serif;letter-spacing:normal}
+.ar-terminal-room .ach-staged-question textarea{box-sizing:border-box;display:block;width:100%;height:88px;min-height:80px;max-height:240px;resize:vertical;padding:10px 12px;border:1px solid #484136;border-radius:4px;background:#201e19;color:#ddd5c8;font:400 var(--size-ui)/var(--lh-ui) system-ui,sans-serif;letter-spacing:normal}
 .ar-terminal-room .ach-staged-question textarea:focus{outline:1px solid #bfa98c;outline-offset:1px}
 .ar-terminal-room .ach-staged-question textarea::placeholder{color:#a49b8e}
 .ar-terminal-room .ach-staged-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin-top:10px}
-.ar-terminal-room .ach-staged-actions small{color:#b8afa1;font:400 12px/1.5 system-ui,sans-serif;overflow-wrap:anywhere}
-.ar-terminal-room .ach-staged-actions .ar-terminal-start{min-height:36px;padding:6px 12px;font:500 13px/1.4 system-ui,sans-serif;white-space:nowrap}
-.ar-terminal-room .ar-context-handoff{border-color:#38342c;color:#c5baa9;margin:8px 24px;padding:6px 0;font:400 13px/1.5 system-ui,sans-serif;flex:none}
+.ar-terminal-room .ach-staged-actions small{color:#b8afa1;font:400 var(--size-caption)/var(--lh-ui) system-ui,sans-serif;overflow-wrap:anywhere}
+.ar-terminal-room .ach-staged-actions .ar-terminal-start{min-height:36px;padding:6px 12px;font:500 var(--size-detail)/var(--lh-snug) system-ui,sans-serif;white-space:nowrap}
+.ar-terminal-room .ar-context-handoff{border-color:#38342c;color:#c5baa9;margin:8px 24px;padding:6px 0;font:400 var(--size-detail)/var(--lh-ui) system-ui,sans-serif;flex:none}
 .ar-terminal-room .ach-staged-panel .ar-context-handoff{margin:10px 0 0}
 .ar-terminal-room .ar-context-handoff>summary{font-weight:400;min-height:30px;padding:4px 0;box-sizing:border-box}
 .ar-terminal-room .ach-body p,.ar-terminal-room .ach-list small,.ar-terminal-room .ach-files small{color:#b8afa1}
-.ar-terminal-room .ach-search input{background:#201e19;color:#ddd5c8;border:1px solid #484136;padding:6px 8px;font:400 14px/1.5 system-ui,sans-serif}
+.ar-terminal-room .ach-search input{background:#201e19;color:#ddd5c8;border:1px solid #484136;padding:6px 8px;font:400 var(--size-ui)/var(--lh-ui) system-ui,sans-serif}
 @media(max-width:650px){.ar-terminal-room .ach-staged-panel{margin:10px 12px;padding:12px 12px 4px}.ar-terminal-room .ach-attached,.ar-terminal-room .ar-context-handoff{margin-inline:12px}.ar-terminal-room .ach-staged-actions{gap:8px}}
 @media(pointer:coarse){.ar-terminal-room .ach-staged-actions .ar-terminal-start,.ar-terminal-room .ar-context-handoff>summary{min-height:44px}}

@@ -360,7 +360,7 @@ test('real server: a save made elsewhere arrives from the stream and the saved c
 
 test('Check follows the house rules: six sizes, no em dash, no fetch, escaped records, no speech, nothing written but the check',()=>{
  const css=read('public/v2/screens/check.css'),js=read('public/v2/screens/check.js');
- for(const m of css.matchAll(/font-size:\s*([^;}]+)/g))assert.match(m[1],/^var\(--v2-t(12|13|14|15|18|22)\)$/,m[0]);
+ for(const m of css.matchAll(/font-size:\s*([^;}]+)/g))assert.match(m[1],/^var\(--(?:v2-t(12|13|14|15|18|22)|size-(caption|detail|button|table|ui|nav|body|card-title|page-title))\)$/,m[0]);
  for(const m of css.matchAll(/font:[^;}]*?(var\(--v2-t\d+\))/g))assert.match(m[1],/--v2-t(12|13|14|15|18|22)\)/);
  assert.deepEqual([...css.matchAll(/font:\s*(?:italic\s+)?\d{3}\s+(\d+(?:\.\d+)?px)/g)].map(m=>m[1]),[],'every size is a --v2-t token');
  assert.doesNotMatch(css+js,/\u2014/,'no em dash');

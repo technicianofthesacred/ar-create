@@ -72,7 +72,7 @@ test('index.html loads one shell only, version two\'s client, parts, Capture and
  const html=read('public/v3/index.html'),scripts=scriptsOf(html),styles=stylesOf(html);
  assert.deepEqual(scripts,['/document-study/recovery-storage.js','/ui/kit/coss-classes.js','/v2/shell/client.js','/v2/shell/parts.js','/v2/shell/capture.js','shell/frame.js',...SCREENS.flatMap(scriptOf)]);
  assert.ok(!scripts.some(s=>/shell\.js$/.test(s)),'version two\'s shell.js and its top bar are never loaded here');
- assert.deepEqual(styles,['/document-study/c3-theme.css','/v2/shell/shell.css','/v2/shell/capture.css','/document-study/graphite-controls.css',...SCREENS.flatMap(styleOf),'shell/frame.css','/ui/kit/app-parts.css']);
+ assert.deepEqual(styles,['/ui/tokens.css','/document-study/c3-theme.css','/v2/shell/shell.css','/v2/shell/capture.css','/document-study/graphite-controls.css',...SCREENS.flatMap(styleOf),'shell/frame.css','/ui/kit/app-parts.css']);
  for(const file of [...scripts,...styles])assert.ok(fs.existsSync(fileOf(file,v3dir)),file+' exists');
  assert.doesNotMatch(html,/<script>(?!<)/,'no inline script: the page runs under the app\'s strict script policy');
  assert.ok(fs.existsSync(path.join(v3dir,'README.md')));
