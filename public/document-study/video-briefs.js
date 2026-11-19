@@ -14,6 +14,37 @@
     anchor.href=href;
     return anchor;
   };
+  const collectionAddress=(parentStudyId,collectionId)=>'/document-study/index.html?'+new URLSearchParams({subject:parentStudyId,collection:collectionId,...window.arCreateUiActor?.explicit?{reviewActor:window.arCreateUiActor.actor}:{}});
+  async function inquiryConnection(section,scope,brief) {
+    const host=node('section'),status=node('p','Reading working inquiries…');
+    host.setAttribute('aria-label','Working inquiry');host.append(node('h3','Working inquiry'),status);section.append(host);
+    try {
+      const catalog=await request('/api/inquiries/catalog?input='+encodeURIComponent('{}'));
+      if(!Array.isArray(catalog.collections))throw Error('The inquiry catalog is unavailable.');
+      const current=catalog.collections.find(row=>row.id===brief.collectionId);
+      if(brief.collectionId&&!current)throw Error('The linked inquiry is unavailable. Its saved connection has been retained.');
+      const actions=node('div');actions.className='video-brief-actions';
+      const render=()=>{
+        host.replaceChildren(node('h3','Working inquiry'));
+        const selected=catalog.collections.find(row=>row.id===brief.collectionId);
+        if(selected){const resume=node('div');resume.className='video-brief-actions';resume.append(link('Resume inquiry',collectionAddress(scope.parentStudyId,selected.id)));host.append(node('p',selected.name),resume);}
+        const label=node('label','Choose inquiry '),select=node('select');select.setAttribute('aria-label','Working inquiry');
+        select.append(Object.assign(node('option','Choose a saved inquiry'),{value:''}));
+        for(const row of catalog.collections)select.append(Object.assign(node('option',row.name),{value:row.id}));
+        select.value=brief.collectionId||'';label.append(select);
+        const save=node('button',brief.collectionId?'Change inquiry':'Link inquiry');save.type='button';save.className='btn quiet';
+        const message=node('p');message.setAttribute('role','status');
+        save.onclick=async()=>{
+          if(!select.value){message.textContent='Choose an existing inquiry first.';return;}
+          const exact={...scope,id:brief.id,expectedCollectionId:brief.collectionId??null,collectionId:select.value};save.disabled=true;
+          try{const pending=await operationFor(exact),result=await request(endpoint+'/inquiry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...exact,operationId:pending.operationId})});Object.assign(brief,result.brief);clearOperation(pending.operationId);render();}
+          catch(error){message.textContent=error.message;}finally{save.disabled=false;}
+        };
+        actions.replaceChildren(label,save);host.append(actions,message);
+      };
+      render();
+    }catch(error){status.textContent=error.message;}
+  }
   const address = (parentStudyId,id,source=false) => {
     const query=new URLSearchParams({subject:parentStudyId});
     if(id)query.set('brief',id);
@@ -174,6 +205,7 @@
         actions.className='video-brief-actions';
         actions.append(link('Open exact source passage',address(parentStudyId,id,true)));
         section.append(node('p','Proposed passage'),node('blockquote',brief.quote),actions);
+        void inquiryConnection(section,scope,brief);
         return;
       }
       nav.replaceChildren(link('Back to brief',address(parentStudyId,id)),link('All briefs',address(parentStudyId)));

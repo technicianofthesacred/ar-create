@@ -54,7 +54,7 @@ function briefIn(record,id,projectKey) {
   return record?.brief ?? null;
 }
 
-export function createStudyVideoBriefs({dataDir, originals, findings} = {}) {
+export function createStudyVideoBriefs({dataDir, originals, findings, inquiries} = {}) {
   if (!dataDir || !originals?.list) throw new TypeError('Private data and the original source catalog are required.');
 
   function directory(projectKey, create = false) {
@@ -181,5 +181,46 @@ export function createStudyVideoBriefs({dataDir, originals, findings} = {}) {
     });
     pending=task.catch(()=>{});return task;
   }
-  return {list, add, resolve, relink};
+  function linkInquiry(input) {
+    const task=pending.then(async()=>{
+      scope(input,['id','operationId','expectedCollectionId','collectionId']);
+      const id=identity(input.id);identity(input.operationId);
+      for(const key of ['expectedCollectionId','collectionId']){
+        if(input[key]!==null&&(typeof input[key]!=='string'||!UUID.test(input[key])))fail('Choose one exact saved inquiry or no inquiry.',400);
+      }
+      if(!inquiries?.read)fail('Saved inquiry linking is unavailable.',503);
+      const room=directory(input.projectKey);
+      if(!room)fail('This Video Editing brief could not be found.',404);
+      const file=path.join(room,id+'.json');
+      if(!fs.existsSync(file))fail('This Video Editing brief could not be found.',404);
+      regular(file);
+      const bytes=fs.readFileSync(file),envelope=JSON.parse(bytes.toString('utf8'));
+      const prior=briefIn(envelope,id,input.projectKey);
+      if(!prior)fail('This Video Editing brief could not be found.',404);
+      const expectedHash=digest(bytes);
+      const requestHash=digest(JSON.stringify([input.projectKey,input.parentStudyId,id,input.expectedCollectionId,input.collectionId]));
+      const operations=prior.inquiryLink?.operations||[];
+      const committed=operations.find(operation=>operation.operationId===input.operationId);
+      if(committed){
+        if(committed.requestHash!==requestHash)fail('This operation already linked a different inquiry.');
+        return {brief:prior};
+      }
+      if((prior.collectionId??null)!==input.expectedCollectionId)fail('The brief inquiry changed. Refresh before linking.');
+      await original(input.projectKey,prior);
+      if(input.collectionId!==null){
+        const inquiry=await inquiries.read({collectionId:input.collectionId});
+        if(inquiry?.collection?.id!==input.collectionId||inquiry.record?.scope?.collectionId!==input.collectionId)fail('The saved inquiry changed identity. Refresh before linking.');
+        // The inquiry is an independent learning record. Linking it neither copies
+        // its words nor creates a Project association or editorial inheritance.
+        await original(input.projectKey,prior);
+      }
+      const author=provenance();
+      const operation={operationId:input.operationId,requestHash,from:prior.collectionId??null,to:input.collectionId,provenance:author};
+      const brief={...prior,collectionId:input.collectionId,inquiryLink:{operations:[...operations,operation]}};
+      atomicWrite(file,JSON.stringify({...envelope,brief},null,2)+'\n',{expectedHash});
+      return {brief};
+    });
+    pending=task.catch(()=>{});return task;
+  }
+  return {list, add, resolve, relink, linkInquiry};
 }

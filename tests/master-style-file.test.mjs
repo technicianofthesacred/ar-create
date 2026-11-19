@@ -89,7 +89,7 @@ test('the master style file defines every token group and exactly the nine butto
 });
 
 test('every front links the master style file before any other stylesheet', () => {
-  for (const page of ['public/v3/index.html', 'public/v2/index.html', 'public/document-study/index.html']) {
+  for (const page of ['public/v3/index.html', 'public/v2/index.html', 'public/document-study/index.html', 'public/document-study/video-editing.html']) {
     const first = read(page).match(/<link rel="stylesheet" href="([^"]+)"/);
     assert.equal(first?.[1], '/ui/tokens.css', `${page} links the master first`);
   }

@@ -261,7 +261,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   const materialFolder=createMaterialFolder({dataDir,bindings:studyBindings,library,store,...(materialHostActions?.openFolder?{openFolder:materialHostActions.openFolder}:{})});
   const studyOriginals=studyOriginalRoots?createStudyOriginals(studyOriginalRoots):null;
   const studyDerivedFindings=studyOriginals?createStudyDerivedFindings({dataDir,originals:studyOriginals}):null;
-  const studyVideoBriefs=studyOriginals?createStudyVideoBriefs({dataDir,originals:studyOriginals,findings:studyDerivedFindings}):null;
+  const studyVideoBriefs=studyOriginals?createStudyVideoBriefs({dataDir,originals:studyOriginals,findings:studyDerivedFindings,inquiries:{read:input=>inquiryInterface.methods.read(input)}}):null;
   const studyDrafts=studyOriginals?createStudyDraftCopies({dataDir,originals:studyOriginals,studyRelocation,vaultBound:source=>magazineVault.vaultBound(source)}):null;
   const studyHumanDirection=studyDrafts?createStudyHumanDirection({dataDir,store,bindings:studyBindings,drafts:studyDrafts,library,validateDecisionTarget:input=>createStudyDirectionTarget({drafts:studyDrafts,bindings:studyBindings,outputs:studyOutputs,structureTests})(input),loadDirectionOptions:input=>createStudyDirectionOptions({drafts:studyDrafts,bindings:studyBindings,firstFlow})(input),...sharedArticles?{readOutputDocument:input=>store.readArticle(input)}:{}}):null;
   const collectionDirection=studyHumanDirection||createStudyHumanDirection({dataDir,library});

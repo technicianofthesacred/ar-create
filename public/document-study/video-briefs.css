@@ -15,7 +15,7 @@
 .video-brief-picker h2,.video-brief-page h1 { margin: 0 0 .5rem; line-height: var(--lh-tight); }
 .video-brief-picker p,.video-brief-page p { margin: .5rem 0; }
 .video-brief-picker label { display: block; margin-block: .6rem; }
-.video-brief-picker :is(select,textarea) {
+.video-brief-picker :is(select,textarea),.video-brief-actions select {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -29,7 +29,7 @@
 }
 .video-brief-picker textarea { height: min(32dvh,15rem); resize: vertical; }
 .video-brief-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; margin-block: .5rem; }
-.video-brief-picker button,.video-brief-actions a {
+.video-brief-picker button,.video-brief-actions a,.video-brief-actions button {
   min-height: 2.5rem;
   display: inline-flex;
   align-items: center;

@@ -10,7 +10,7 @@
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const icon=(d,s=18)=>`<svg aria-hidden="true" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
  const I={x:'<path d="M7 7l10 10M17 7 7 17"/>',search:'<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',quote:'<path d="M7 11h4v6H5v-4a6 6 0 0 1 2-4.5"/><path d="M15 11h4v6h-6v-4a6 6 0 0 1 2-4.5"/>',doc:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/>',more:'<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>',chev:'<path d="m7 10 5 5 5-5"/>'};
- const nativeBindings=new Map(),nativeRooms=new Map();let nativeEpoch=0;
+ const nativeBindings=new Map(),nativeRooms=new Map(),subjectLoads=new Map();let nativeEpoch=0;
  let atlasOwner=null,learningReturn=null;
  let open=false,data=new Map(),loading=null,ui={forId:'',q:'',ev:'all',src:'',panel:'sources',reader:null,moreOpen:false,cardMenu:null,nativeView:'request',sourceId:'',learningRequested:false};
  const connected=()=>state.projects.filter(p=>(KEYS[p.id]||nativeBindings.has(p.id))&&!p.archived);
@@ -64,6 +64,18 @@
   catch{return {ok:false,failed:true,reason:'Research could not be read. Your pieces are unchanged.'};}
  }
  async function load(){if(loading)return loading;loading=(async()=>{await discoverNative();for(const p of connected())data.set(p.id,await readPiece(p));if(ui.forId&&nativeBindings.has(ui.forId))try{await readNotebook(ui.forId);}catch(error){nativeRoom(ui.forId).error=error.message;}})().finally(()=>{loading=null;paint();});return loading;}
+ // A subject return must not wait for unrelated pieces in the global Research board.
+ function loadSubject(parentStudyId){
+  if(subjectLoads.has(parentStudyId))return subjectLoads.get(parentStudyId);
+  const pending=(async()=>{
+   await discoverNative();
+   const p=project(parentStudyId);
+   if(!p||!retainedKey(parentStudyId)&&!nativeBindings.has(parentStudyId))return;
+   data.set(parentStudyId,await readPiece(p));
+   if(nativeBindings.has(parentStudyId))try{await readNotebook(parentStudyId);}catch(error){nativeRoom(parentStudyId).error=error.message;}
+  })().finally(()=>{subjectLoads.delete(parentStudyId);paint();});
+  subjectLoads.set(parentStudyId,pending);return pending;
+ }
  function points(){const ids=ui.forId?[ui.forId]:connected().map(p=>p.id);return ids.flatMap(id=>data.get(id)?.ok?data.get(id).points:[]);}
  function visible(){const q=ui.q.trim().toLocaleLowerCase();return points().filter(p=>(ui.ev==='all'||(ui.ev==='supported'?p.supported:p.uncertain))&&(!ui.src||p.sources.some(s=>s.name===ui.src))&&(!q||[p.title,p.quote,p.speaker,p.piece].join(' ').toLocaleLowerCase().includes(q)));}
  const cap=s=>String(s).charAt(0).toUpperCase()+String(s).slice(1).replace(/[-_]/g,' ');
@@ -135,7 +147,7 @@ ${p.text?`<div class="rt-fh">Passage</div><div class="rt-psg">${esc(p.text).spli
   if(saved.range&&saved.editor.contains(saved.range.commonAncestorContainer)){saved.editor.focus({preventScroll:true});const selection=window.getSelection();selection.removeAllRanges();selection.addRange(saved.range);}else if(saved.focus?.isConnected)saved.focus.focus?.({preventScroll:true});
   for(const row of saved.scroll)if(row.node.isConnected){row.node.scrollTop=row.top;row.node.scrollLeft=row.left;}return true;
  }
- function show(){window.combinedNavigation?.closePhone?.({restoreFocus:false});if(window.combinedSheets?.state?.()?.kind==='research')window.combinedSheets.close();open=true;ui.reader=null;paint();window.combinedNavigation?.decorate?.();void load();}
+ function show({parentStudyId}={}){window.combinedNavigation?.closePhone?.({restoreFocus:false});if(window.combinedSheets?.state?.()?.kind==='research')window.combinedSheets.close();open=true;ui.reader=null;paint();window.combinedNavigation?.decorate?.();void (parentStudyId?loadSubject(parentStudyId):load());}
  function hide(){return restoreLearningReturn(()=>{nativeEpoch++;open=false;ui.reader=null;ui.moreOpen=false;paint();window.combinedNavigation?.decorate?.();});}
  async function decide(id){
   hide();
@@ -176,17 +188,19 @@ ${p.text?`<div class="rt-fh">Passage</div><div class="rt-psg">${esc(p.text).spli
   if(point)void window.studyVideoBriefs?.choosePassage(point);
  });
  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('.video-brief-picker[open]')||!open||document.getElementById('project-library')?.open)return;event.preventDefault();event.stopImmediatePropagation();if(ui.cardMenu!=null){const k=ui.cardMenu;ui.cardMenu=null;paint();document.querySelector(`#c3-research [data-rt-cmore="${k}"]`)?.focus();}else if(ui.moreOpen){ui.moreOpen=false;paint();}else if(ui.reader!=null){ui.reader=null;paint();}else if(ui.nativeView!=='request'){ui.nativeView='request';ui.panel='sources';paint();}else hide();},true);
- async function openPoint({parentStudyId,pointId,origin}){if(!project(parentStudyId)||!origin?.recordPath||!origin.recordHash||!origin.originalText)throw Error('Choose a retained research point.');await discoverNative();if(!nativeBindings.has(parentStudyId))throw Error('This subject has no current Research connection.');const result=await readPiece(project(parentStudyId));const point=result.points?.find(p=>p.id===pointId&&['recordPath','recordHash','originalText'].every(k=>p.origin?.[k]===origin[k]));if(!result.ok||!point||point.stale)throw Error('This retained research point changed. Reopen Research.');if(current().id!==parentStudyId)throw Error('The selected research subject changed.');data.set(parentStudyId,result);ui.forId=parentStudyId;ui.panel='sources';ui.q='';ui.ev='all';ui.src='';nativeRoom(parentStudyId).question='About '+point.title+'\n\nRetained interpretation, not primary evidence:\n'+point.text;show();ui.reader=points().findIndex(p=>p.id===point.id);paint();}
+ async function openPoint({parentStudyId,pointId,origin}){if(!project(parentStudyId)||!origin?.recordPath||!origin.recordHash||!origin.originalText)throw Error('Choose a retained research point.');await discoverNative();if(!nativeBindings.has(parentStudyId))throw Error('This subject has no current Research connection.');const result=await readPiece(project(parentStudyId));const point=result.points?.find(p=>p.id===pointId&&['recordPath','recordHash','originalText'].every(k=>p.origin?.[k]===origin[k]));if(!result.ok||!point||point.stale)throw Error('This retained research point changed. Reopen Research.');if(current().id!==parentStudyId)throw Error('The selected research subject changed.');data.set(parentStudyId,result);ui.forId=parentStudyId;ui.panel='sources';ui.q='';ui.ev='all';ui.src='';nativeRoom(parentStudyId).question='About '+point.title+'\n\nRetained interpretation, not primary evidence:\n'+point.text;show({parentStudyId});ui.reader=points().findIndex(p=>p.id===point.id);paint();}
  async function openLearning({parentStudyId=current().id,bindingId}={}){
   if(!project(parentStudyId))throw Error('This subject is unavailable.');
   const query=new URLSearchParams(location.search);
   const finding=query.get('section')==='research'&&query.get('subject')===parentStudyId&&query.getAll('finding').length===1?query.get('finding'):null;
+  const ticket=++nativeEpoch;
   holdLearningReturn();
   if(bindingId)nativeBindings.set(parentStudyId,bindingId);
   await discoverNative();
-  ui.forId=parentStudyId;ui.learningRequested=true;ui.nativeView='request';ui.panel='sources';show();
-  await load();
-  if(finding&&open&&current().id===parentStudyId&&ui.forId===parentStudyId){
+  if(ticket!==nativeEpoch||current().id!==parentStudyId)return;
+  ui.forId=parentStudyId;ui.learningRequested=true;ui.nativeView='request';ui.panel='sources';show({parentStudyId});
+  await loadSubject(parentStudyId);
+  if(finding&&ticket===nativeEpoch&&open&&current().id===parentStudyId&&ui.forId===parentStudyId){
    ui.nativeView='findings';
    const index=visible().findIndex(point=>point.id===finding);
    ui.reader=index>=0?index:null;
@@ -194,5 +208,5 @@ ${p.text?`<div class="rt-fh">Passage</div><div class="rt-psg">${esc(p.text).spli
    if(index>=0)document.querySelector('#c3-research .rt-drawer [data-rt-close-reader]')?.focus();
   }
  }
- window.c3Research={openLearning,openPoint,openBrief:async({bindingId,parentStudyId})=>{if(!project(parentStudyId))throw Error('This subject is unavailable.');nativeBindings.set(parentStudyId,bindingId);ui.forId=parentStudyId;ui.panel='brief';ui.nativeView='tools';show();await load();await nativeAction(parentStudyId,()=>readBrief(parentStudyId));},show,hide,load,isOpen:()=>open,whenIdle:()=>loading||Promise.resolve(),points};
+ window.c3Research={openLearning,openPoint,openBrief:async({bindingId,parentStudyId})=>{if(!project(parentStudyId))throw Error('This subject is unavailable.');nativeBindings.set(parentStudyId,bindingId);ui.forId=parentStudyId;ui.panel='brief';ui.nativeView='tools';show({parentStudyId});await loadSubject(parentStudyId);await nativeAction(parentStudyId,()=>readBrief(parentStudyId));},show,hide,load,isOpen:()=>open,whenIdle:()=>Promise.all([loading,...subjectLoads.values()]),points};
 })();
