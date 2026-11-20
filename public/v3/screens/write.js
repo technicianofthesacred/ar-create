@@ -173,12 +173,22 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   mount(el,ctx){live=openAny(el.querySelector('[data-wr]'),ctx);return live.ready;},
   unmount(){live?.leave();live=null;}});
 
+ /** An explicit main Article can be opened by its registered owner before the full subject is gathered.
+     The address only selects a read; its returned selection and authority must establish the owner. */
+ async function quickStory(id,pieceId){
+  if(typeof id!=='string'||!/^mag-[a-z0-9][a-z0-9-]*$/.test(id)||pieceId!==id+':article')return null;
+  let read;try{read=await v2.call('magazine.working-draft.read',{storyId:id,pieceId,edition:'working'});}catch{return null;}
+  const selection=read?.selection,owner=read?.authority;
+  if(selection?.storyId!==id||selection.pieceId!==pieceId||selection.edition!=='working'||owner?.kind!=='magazine'||owner.storyId!==id||owner.pieceId!==pieceId||owner.partKey!=='article'||typeof owner.path!=='string'||!owner.path||typeof owner.title!=='string'||!owner.title.trim()||typeof read.document?.text!=='string'||!/^[a-f0-9]{64}$/.test(read.document?.hash||'')||!Array.isArray(read.projection))return null;
+  const form={key:'mag:'+pieceId,id:pieceId,kind:'article',name:'Article',title:owner.title,owner:{kind:'magazine',storyId:id,pieceId}};
+  return {standing:{title:owner.title},forms:[form],form,piece:null,bindingId:null,native:false,story:{storyId:id,pieceId},initialRead:read,refreshStanding:true};
+ }
  /** Finds the piece first: a Magazine story's words have their own editor, any other subject's use the draft one. */
  function openAny(page,ctx){
   let inner=null,gone=false;
   const ready=(async()=>{
    let found=null;
-   try{found=await locate(ctx.params.id,ctx.query.piece);}catch{/* the draft screen shows the reason below */}
+   try{found=await quickStory(ctx.params.id,ctx.query.piece)||await locate(ctx.params.id,ctx.query.piece);}catch{/* the draft screen shows the reason below */}
    if(gone||ctx.signal.aborted)return;
    inner=found&&found.story?openStory(page,ctx,found):open(page,ctx,found);
    await inner.ready;
@@ -993,6 +1003,19 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   function plainText(text,withLink=true){
    page.innerHTML=`<div class="wr-none"><p role="status">${esc(text)}</p><p><a class="wr-btn" href="${esc(v2.href('subject/:id',{id}))}">${icon('back')}Back to the subject</a>${withLink?` <a class="wr-btn" href="${esc(adv('write'))}">Open in Advanced${icon('out')}</a>`:''}</p></div>`;
   }
+  async function refreshStanding(){
+   try{
+    const full=await locate(id,story.pieceId);
+    if(gone||ctx.signal.aborted||full.story?.storyId!==story.storyId||full.story.pieceId!==story.pieceId||!full.form)return;
+    st.standing=full.standing;st.forms=full.forms;st.form=full.form;st.piece=full.piece;
+    ctx.setTitle(st.standing.title||'Write');if(st.standing.look)v2.brand(st.standing.look);
+    // Only navigation metadata changes. The saved words and Question bar keep their DOM,
+    // including an answer being typed, its focus and selection, and any saved answers.
+    const holder=doc.createElement('div');holder.innerHTML=bar({id,forms:st.forms,form:st.form,piece:st.piece,mode:'write',title:st.standing.title||''});
+    for(const selector of ['.wr-back','.wr-tabs']){const current=$(selector),next=holder.querySelector(selector);if(current&&next)current.replaceWith(next);}
+    const focusTitle=$('.wr-focusbar>span');if(focusTitle)focusTitle.textContent=(st.standing.title||'')+' / '+(tabNames(st.forms).get(st.form?.key)||'Article');
+   }catch{/* Optional subject metadata never displaces the exact owner's saved words. */}
+  }
   async function ready(){
    try{
     ctx.setTitle(st.standing.title||'Write');if(st.standing.look)v2.brand(st.standing.look);
@@ -1000,7 +1023,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     if(ctx.query.piece&&!st.form){plainText('This piece is not one of this subject’s Articles, or it does not exist. Go back to the subject to choose one.',false);return;}
     let read;
     const none=async()=>{st.none=true;shell();$('[data-wr-text]').innerHTML=`<p class="wr-dim" role="status">${esc('This story has no draft yet, so there are no words to write on here. A draft is started in the Magazine; it is not started from here.')}</p>`;$('.wr-todo')?.remove();};
-    try{read=await readStory();}
+    try{read=found.initialRead||await readStory();}
     catch(error){
      if(ctx.signal.aborted)return;
      if(await storyHasNoDraft(story)){await none();return;}
@@ -1012,7 +1035,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     const kept=unstash();
     for(const e of kept){if(e.sending)st.ops.add(e.sending.op);st.edits.set(e.k,e);}
     if(kept.length)adopt(read);
-    shell();stash();void loadQuestions();
+    shell();stash();void loadQuestions().then(()=>{if(found.refreshStanding&&!gone&&!ctx.signal.aborted)void refreshStanding();});
     if(kept.length&&dirty()){say('Your unsaved words from earlier are back.','info');schedule(300);}
     presence(true);loadProps();
    }catch(error){if(ctx.signal.aborted)return;plainText(error.message||'This story’s words could not be opened.');}
