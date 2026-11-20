@@ -259,7 +259,7 @@ test('every version two screen opens and draws inside the frame against the real
 
 test('initial writing paints before global desk and needs reads are started',async()=>{
  let release;const ready=new Promise(resolve=>{release=resolve;});
- const {calls,doc}=await page({url:'http://local.test/v3/index.html#/quick-writing',beforeStart(w){w.v2.screen({id:'quick-writing',route:'quick-writing',title:'Writing',render:()=>'<p data-writing-loading>Opening</p>',async mount(el){await ready;el.innerHTML='<p data-writing-ready>Invented saved words.</p>';}});}});
+ const {calls,doc}=await page({url:'http://local.test/v3/index.html#/write/quick-writing/article',beforeStart(w){w.v2.screen({id:'quick-writing',route:'write/quick-writing/:piece',title:'Writing',render:()=>'<p data-writing-loading>Opening</p>',async mount(el){await ready;el.innerHTML='<p data-writing-ready>Invented saved words.</p>';}});}});
  try{
   assert.ok(doc.querySelector('[data-writing-loading]'));
   assert.equal(calls.some(c=>/^\/api\/(needs-you|subject-places|study-draft\/catalog)/.test(c.path)),false,'background filesystem reads must not queue before the saved writing');
@@ -267,4 +267,15 @@ test('initial writing paints before global desk and needs reads are started',asy
  await until(()=>doc.querySelector('[data-writing-ready]'));
  await until(()=>calls.some(c=>c.path.startsWith('/api/needs-you')));
  await until(()=>calls.some(c=>c.path.startsWith('/api/study-draft/catalog')));
+});
+
+
+test('Home and other non-writing screens retain their original concurrent background reads',async()=>{
+ let release;const ready=new Promise(resolve=>{release=resolve;});
+ const {calls,doc}=await page({url:'http://local.test/v3/index.html#/quick-home',beforeStart(w){w.v2.screen({id:'quick-home',route:'quick-home',title:'Home',render:()=>'<p data-home-opening>Opening</p>',async mount(el){await ready;el.innerHTML='<p data-home-ready>Invented Home.</p>';}});}});
+ try{
+  assert.ok(doc.querySelector('[data-home-opening]'));
+  for(const path of ['/api/needs-you','/api/subject-places','/api/study-draft/catalog'])assert.ok(calls.some(c=>c.path.startsWith(path)),path+' remains independent of Home readiness');
+ }finally{release();}
+ await until(()=>doc.querySelector('[data-home-ready]'));
 });
