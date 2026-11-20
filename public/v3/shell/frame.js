@@ -308,7 +308,8 @@
   live.on({kinds:['subject-places*','study-draft*','concept*']},e=>{if(!e?.reset)refreshDesk();});
   live.on({},e=>{if(e.reset&&Date.now()-startedAt>3000){refreshNeeds();refreshDesk();}});
   if(!client.actor())P.say('This page was opened with an assistant name the app does not know, so nothing can be read or changed. Open it again with a listed name.',{tone:'bad'});
-  refreshNeeds();refreshDesk();route();
+  // The saved writing gets the first read; global lists must not delay its paint.
+  void route().finally(()=>{refreshNeeds();refreshDesk();});
  }
 
  // The screen contract, name for name as version two's shell gives it (public/v2/README.md).

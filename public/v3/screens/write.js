@@ -591,7 +591,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     <article class="wr-paper"><div class="wr-sheet">
      <div class="wr-conflict" data-wr-conflict hidden></div>
      <p class="wr-saved wr-saved-m" data-wr-saved role="status"></p>
-     <header class="wr-src-h" data-wr-story-heading><h1 class="wr-title">${esc(st.read?.authority?.title||st.form?.title||st.standing?.title||'')}</h1>${!STORY_EDITING?`<a class="wr-btn" href="${esc(adv('write'))}">Edit in Magazine${icon('out')}</a>`:''}</header>
+     <header class="wr-src-h" data-wr-story-heading><h1 class="wr-title">${esc(st.read?.authority?.title||st.form?.title||st.standing?.title||'')}</h1></header>
      <p class="wr-ro" data-wr-locked role="status" hidden></p>
      <div class="wr-loose wr-props" data-wr-props></div>
      <section class="wr-questions" data-wr-questions aria-label="Article questions" hidden></section>

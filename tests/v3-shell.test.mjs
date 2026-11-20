@@ -25,7 +25,7 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 const keysOf=v2=>({top:Object.keys(v2).sort(),desk:Object.keys(v2.desk).sort(),needs:Object.keys(v2.needs).sort(),ui:Object.keys(v2.ui).sort()});
 
 /** A front's page in a DOM. fetch is answered by the table, or sent to a real server when base is given. */
-async function page({front='v3',url,answers={},base=null,storage={},beforeResponse}={}){
+async function page({front='v3',url,answers={},base=null,storage={},beforeResponse,beforeStart}={}){
  const html=read(`public/${front}/index.html`),dir=front==='v3'?v3dir:v2dir;
  const errors=[],virtualConsole=new VirtualConsole();
  virtualConsole.on('error',(...a)=>errors.push(a.map(String).join(' ')));virtualConsole.on('jsdomError',e=>errors.push(String(e?.message||e)));
@@ -48,6 +48,7 @@ async function page({front='v3',url,answers={},base=null,storage={},beforeRespon
   const answer=u.pathname==='/api/capabilities'?{commands}:answers[u.pathname]??{};const [status,body]=Array.isArray(answer)?answer:[200,answer];
   return {ok:status>=200&&status<300,status,text:async()=>JSON.stringify(body)};};
  for(const src of scriptsOf(html))w.eval(fs.readFileSync(fileOf(src,dir),'utf8'));
+ if(beforeStart)beforeStart(w);
  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
  await settle();
  return {w,doc:w.document,calls,errors};
@@ -253,4 +254,17 @@ test('every version two screen opens and draws inside the frame against the real
  assert.ok(w.v2.route(),'a version three route opened');
  assert.ok(doc.querySelector('[data-v3-band]'));
  assert.deepEqual(errors.filter(e=>!/Not implemented|scrollTo/.test(e)),[],'no errors in the console');
+});
+
+
+test('initial writing paints before global desk and needs reads are started',async()=>{
+ let release;const ready=new Promise(resolve=>{release=resolve;});
+ const {calls,doc}=await page({url:'http://local.test/v3/index.html#/quick-writing',beforeStart(w){w.v2.screen({id:'quick-writing',route:'quick-writing',title:'Writing',render:()=>'<p data-writing-loading>Opening</p>',async mount(el){await ready;el.innerHTML='<p data-writing-ready>Invented saved words.</p>';}});}});
+ try{
+  assert.ok(doc.querySelector('[data-writing-loading]'));
+  assert.equal(calls.some(c=>/^\/api\/(needs-you|subject-places|study-draft\/catalog)/.test(c.path)),false,'background filesystem reads must not queue before the saved writing');
+ }finally{release();}
+ await until(()=>doc.querySelector('[data-writing-ready]'));
+ await until(()=>calls.some(c=>c.path.startsWith('/api/needs-you')));
+ await until(()=>calls.some(c=>c.path.startsWith('/api/study-draft/catalog')));
 });
