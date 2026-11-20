@@ -6,6 +6,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
+import {createRequire} from 'node:module';
+const {JSDOM}=createRequire(new URL('../runtime/package.json',import.meta.url))('jsdom');
 import {buildMagazineFixture} from './helpers/magazine-fixture.mjs';
 import {planRegistration,INDEX_SCHEMA} from '../runtime/services/magazine-vault/projects.mjs';
 import {createServer} from '../runtime/server.mjs';
@@ -21,9 +23,12 @@ test('real runtime and review proxy retain large working HTML, expose restart re
  await close(proxy);await close(authority);await start();let list=await (await fetch(origin+'/api/magazine/working-draft/exports?'+new URLSearchParams(input))).json();assert.equal(list.artifacts.length,1);assert.equal(list.artifacts[0].stale,false);fs.writeFileSync(file,raw+'\nLater invented wording.');const current={...input,expectedHash:sha(fs.readFileSync(file,'utf8'))};list=await (await fetch(origin+'/api/magazine/working-draft/exports?'+new URLSearchParams(current))).json();assert.equal(list.artifacts[0].stale,true);assert.equal(list.artifacts[0].url,artifact.url);assert.equal(await (await fetch(origin+artifact.url)).text(),body);assert.equal(list.artifacts[0].publicationProof,undefined);
 });
 
-test('the installed authority prepares an exact private working export without a review proxy or a second root configuration',async t=>{
+test('the installed authority exports native unaccepted text with separated descriptive pull notes without a review proxy',async t=>{
  const f=buildMagazineFixture();t.after(f.cleanup);
  const publication=path.join(f.dir,'publication');fs.mkdirSync(publication);
+ const draft=path.join(f.vault,'Workflow/3-Develop/DEV - Clay Teacher (story).md');
+ const unfinished='---\ntype: DEV\ntitle: Invented unfinished teacher\n---\n# Invented unfinished teacher\n\nFirst exact invented paragraph.\n\n%%pull: l, the hook, on the cover%%\n\n> A **complete** invented quotation.\n\nSecond ==pending **approval**== paragraph.\n\n%%was: Keep this **exact** earlier wording.%%\n\nFinal invented paragraph 瓷 😀.\n';
+ fs.writeFileSync(draft,unfinished);
  const plan=planRegistration({vault:f.vault,files:f.files});
  fs.mkdirSync(path.join(f.data,'magazine/projects'),{recursive:true});
  fs.writeFileSync(path.join(f.data,'magazine/index.json'),JSON.stringify({schema:INDEX_SCHEMA,vaultRoot:f.vault,filesRoot:f.files,stories:plan.stories.map(p=>({storyId:p.storyId,name:p.name}))}));
@@ -36,6 +41,7 @@ test('the installed authority prepares an exact private working export without a
  const response=await post(input);assert.equal(response.status,200,await response.clone().text());
  const {artifact}=await response.json();assert.equal(artifact.exportKind,'magazine-working-html');assert.equal(artifact.provenance.actor,'agent:codex');assert.equal(artifact.sourceBinding.sourceHash,input.expectedHash);assert.equal(artifact.publicationProof,undefined);
  const downloaded=await fetch(origin+artifact.url);assert.equal(downloaded.status,200);const body=await downloaded.text();assert.equal(sha(body),artifact.hash);assert.ok(body.startsWith('<!doctype html>'));
+ const dom=new JSDOM(body);try{const d=dom.window.document;for(const words of ['First exact invented paragraph.','A complete invented quotation.','Second pending approval paragraph.','Final invented paragraph 瓷 😀.'])assert.ok(d.body.textContent.includes(words),words);assert.equal([...d.querySelectorAll('mark[data-pending-wording]')].map(n=>n.textContent).join(''),'pending approval');assert.equal(d.querySelector('mark strong,strong mark').textContent,'approval');const notes=d.querySelector('[data-working-notes]');assert.ok(notes.textContent.includes('pull: l, the hook, on the cover'));assert.ok(notes.textContent.includes('was: Keep this exact earlier wording.'));assert.equal(d.body.textContent.split('A complete invented quotation.').length-1,1);assert.equal(d.querySelector('script,img,input,textarea,[contenteditable=true]'),null);}finally{dom.window.close();}
  assert.equal(fs.readFileSync(file,'utf8'),raw);
  const list=await(await fetch(origin+'/api/magazine/working-draft/exports?'+new URLSearchParams({storyId:input.storyId,pieceId:input.pieceId,expectedHash:input.expectedHash}))).json();assert.equal(list.artifacts.length,1);assert.equal(list.artifacts[0].stale,false);
  assert.equal((await post({...input,expectedHash:'f'.repeat(64)})).status,409);

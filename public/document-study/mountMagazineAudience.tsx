@@ -18,15 +18,15 @@ const hash=(v:unknown)=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v);
 // Audience-only typography and review presentation. Input remains the exact
 // owner snapshot; only React's already escaped, read-only markup is projected.
 const layoutNote=/^%%\/?(?:pull|photo|photos|side|glyph|on-photo|saying|ending|close)(?::|%%)/;
-const editorialNotes=(raw:string)=>[...raw.matchAll(/%%([\s\S]*?)%%/g)].filter(m=>!layoutNote.test(m[0])).map(m=>m[1].trim()).filter(Boolean);
-const withoutNotes=(raw:string)=>raw.replace(/%%[\s\S]*?%%/g,note=>layoutNote.test(note)?note:'');
+const editorialNotes=(raw:string,retainLayout=false)=>[...raw.matchAll(/%%([\s\S]*?)%%/g)].filter(m=>retainLayout||!layoutNote.test(m[0])).map(m=>m[1].trim()).filter(Boolean);
+const withoutNotes=(raw:string,retainLayout=false)=>raw.replace(/%%[\s\S]*?%%/g,note=>!retainLayout&&layoutNote.test(note)?note:'');
 const withoutPlaceholder=(raw:string)=>raw.split('\n').filter(line=>plain(line).trim()!=='Published: on the day it goes live').join('\n');
 function noteDocument(text:string){try{return markdownToDoc(text,{links:true});}catch{return {type:'doc',content:[{type:'paragraph',content:[{type:'text',text}]}]};}}
 function notesView(notes:string[]){return !!notes.length&&<section className="ar-working-records" data-working-notes><h2>Editorial notes · retained for review</h2>{notes.map((text,i)=><AcceptedProse key={i} paragraphId={'note:'+i} document={noteDocument(text)}/>)}</section>;}
-function proseDocument(document:any):any{
+function proseDocument(document:any,retainLayout=false):any{
  const copy=structuredClone(document),leaves:{node:any;from:number;to:number}[]=[];let text='';
  const walk=(node:any)=>{if(typeof node.text==='string'){const from=text.length;text+=node.text;leaves.push({node,from,to:text.length});}for(const child of node.content||[])walk(child);};walk(copy);
- const notes=[...text.matchAll(/%%[\s\S]*?%%/g)].filter(m=>!layoutNote.test(m[0])).map(m=>({from:m.index!,to:m.index!+m[0].length}));
+ const notes=[...text.matchAll(/%%[\s\S]*?%%/g)].filter(m=>retainLayout||!layoutNote.test(m[0])).map(m=>({from:m.index!,to:m.index!+m[0].length}));
  for(const leaf of leaves){let cursor=leaf.from,value='';for(const note of notes){if(note.to<=cursor||note.from>=leaf.to)continue;value+=text.slice(cursor,Math.max(cursor,note.from));cursor=Math.min(leaf.to,note.to);}value+=text.slice(cursor,leaf.to);leaf.node.text=value;}
  return copy;
 }
@@ -71,7 +71,7 @@ function magazineSourceView(read:any){
  if(read?.renderKind==='manuscript'){
   const owner=read.ownerRef,media=read.media,blocks=read.manuscript?.blocks;
   if(read.schema!=='ar-create.magazine-working-edition.v1'||!hash(read.revision)||!hash(owner?.hash)||owner.editionId!=='working'||media?.schema!=='ar-create.magazine-media-inspection.v1'||media.revision!==read.revision||JSON.stringify(media.ownerRef)!==JSON.stringify(owner)||!Array.isArray(media.sources)||media.sources.length||!Array.isArray(blocks)||blocks.length>4096||blocks.some((b:any)=>typeof b.id!=='string'||typeof b.raw!=='string')||new Set(blocks.map((b:any)=>b.id)).size!==blocks.length)throw Error('The saved manuscript could not be verified.');
-  if(typeof read.manuscript.raw==='string'){
+  if(typeof read.manuscript.raw==='string'&&!blocks.length){
    // Projection only: reuse the existing DEV reader and layout capture without
    // accepting, creating or saving another Article or manuscript.
    const raw=read.manuscript.raw,base:any={id:owner.artifactId,title:read.spec.title,revision:0,paragraphs:[],outputs:[]};
@@ -87,7 +87,11 @@ function magazineSourceView(read:any){
    const view=<div className="ar-donor-workspace"><main className="ar-magazine-reader ar-working-article" data-template-render="magazine" data-manuscript-preview={owner.hash}><p className="ar-working-notice">Working draft · pending wording remains marked.</p><LocalStoryProvider placements={[]} editing={false} onPlacements={()=>{}}><ConversationCanvas spec={spec} paragraphs={paragraphs}/></LocalStoryProvider>{!!credits.length&&<section className="ar-working-records" data-working-credits aria-label="Saved credits">{credits.map((b,i)=><AcceptedProse key={i} paragraphId={'credits:'+i} document={markdownToDoc(b.raw,{links:true})}/>)}</section>}{notesView(notes)}</main></div>;
    return {view,placements:[]};
   }
-  const view=<main className="ar-working-manuscript" data-manuscript-preview={owner.hash} style={{maxWidth:760,margin:'0 auto',boxSizing:'border-box',padding:'32px 24px',background:'var(--bg,#151b18)',color:'var(--ink,#f1efe8)',fontFamily:'sans-serif',fontSize:17,lineHeight:1.65}}><p style={{fontSize:13}}>Working draft · pending marks and retained notes remain visible.</p>{!blocks.some((b:any)=>b.doc?.content?.some((n:any)=>n.type==='heading'&&n.attrs?.level===1))&&<h1>{read.spec.title}</h1>}{blocks.map((b:any)=>b.doc?<AcceptedProse key={b.id} paragraphId={b.id} document={proseDocument(b.doc)}/>:withoutNotes(b.raw).trim()?<AcceptedProse key={b.id} paragraphId={b.id} document={markdownToDoc(withoutPlaceholder(withoutNotes(b.raw)),{links:true})}/>:null)}{notesView(blocks.flatMap((b:any)=>editorialNotes(b.raw)))}</main>;
+  // Native blocks are the exact private working projection. They are not an
+  // accepted Article receipt: retain opaque layout instructions as review notes
+  // instead of guessing a composition or sending them through publication guards.
+  const retainLayout=typeof read.manuscript.raw==='string';
+  const view=<main className="ar-working-manuscript" data-manuscript-preview={owner.hash} style={{maxWidth:760,margin:'0 auto',boxSizing:'border-box',padding:'32px 24px',background:'var(--bg,#151b18)',color:'var(--ink,#f1efe8)',fontFamily:'sans-serif',fontSize:17,lineHeight:1.65}}><p style={{fontSize:13}}>Working draft · pending marks and retained notes remain visible.</p>{!blocks.some((b:any)=>b.doc?.content?.some((n:any)=>n.type==='heading'&&n.attrs?.level===1))&&<h1>{read.spec.title}</h1>}{blocks.map((b:any)=>b.doc?<AcceptedProse key={b.id} paragraphId={b.id} document={proseDocument(b.doc,retainLayout)}/>:withoutNotes(b.raw,retainLayout).trim()?<AcceptedProse key={b.id} paragraphId={b.id} document={markdownToDoc(withoutPlaceholder(withoutNotes(b.raw,retainLayout)),{links:true})}/>:null)}{notesView(blocks.flatMap((b:any)=>editorialNotes(b.raw,retainLayout)))}</main>;
   return {view,placements:[]};
  }
  const {spec,placements}=occurrenceView(read),owner=read.ownerRef;spec.credit=spec.credit.filter((line:string)=>plain(line).trim()!=='Published: on the day it goes live');
