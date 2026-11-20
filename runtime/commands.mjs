@@ -91,7 +91,7 @@ const BODY = {
   '/api/study/outputs/stand-in-refresh':['rootBindingId','parentStudyId','selectedOutputId','operationId','expectedOutput','expectedNative'],
   '/api/study/outputs/stand-in-create':['rootBindingId','parentStudyId','operationId','expectedOutput','kind','sourceBindingId','expectedNative'],
   '/api/study/outputs/stand-in-save':['rootBindingId','parentStudyId','selectedOutputId','operationId','expectedOutput','expectedNative?','changes'],
-  '/api/study/video-briefs':['projectKey','parentStudyId','operationId','findingId','title','sourcePath','sourceHash','from','to','quote'],
+  '/api/study/video-briefs':['projectKey','parentStudyId','operationId','findingId','title','sourcePath','sourceHash','from','to','quote','collectionId?'],
   '/api/study/video-briefs/relink':['projectKey','parentStudyId','id','operationId','expectedFindingId','findingId'],
   '/api/study/video-briefs/inquiry':['projectKey','parentStudyId','id','operationId','expectedCollectionId','collectionId'],
   '/api/study-research/findings/save':['projectKey','parentStudyId','operationId','expectedExportHash','title','sourcePath','sourceHash','from','to','quote','speaker','location','clarity'],
