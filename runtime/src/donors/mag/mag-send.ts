@@ -1,4 +1,5 @@
 // Code-only maintained magSend.ts copy; upstream SHA256 ffdb7750eef1bbd91b9e0ff22284c3d9ab019ed98f4e7aa999cac67e683772ef.
+// Includes adjacent-block quote handling from upstream d176923ccc98f3e3ad28c07500f453b107a9bed4fbc8251f670d367fcd4d3840.
 // Optional source-origin inspection does not alter the returned article.
 /**
  * mag-send: the magazine draft becomes the page.
@@ -173,7 +174,7 @@ export function parseDraft(body: string, prev: Ids = { byText: new Map(), slots:
   const chunks = body.split(/\n\s*\n/).map((c) => c.trim()).filter(Boolean);
   const chunkRanges = onPhoto ? originalChunkRanges(body) : [];
   const origins: { shot: Shot; origin: ShotOrigin }[] = [];
-  let chunkIndex = -1, noteEnd = 0;
+  let chunkIndex = -1, cursor = 0, noteEnd = 0;
   let portrait: Shot | undefined;
   let intro: string | undefined;
   let hook: string | undefined;
@@ -212,14 +213,16 @@ export function parseDraft(body: string, prev: Ids = { byText: new Map(), slots:
     }) });
   };
   const pullQuote = (c: string) => {
+    if (!c.includes('\n') && chunks[cursor + 1]?.startsWith('>')) c += '\n' + chunks[++cursor];
     const q = c.split('\n').slice(1).join(' ').replace(/^>\s*/, '').trim();
     const inner = unquote(q);
     if (inner === null) throw new DraftError(`A pull quote must sit in quotation marks: ${q.slice(0, 60)}`);
     return pageText(inner);
   };
 
-  for (const c of chunks) {
-    chunkIndex++;
+  for (; cursor < chunks.length; cursor++) {
+    chunkIndex = cursor;
+    const c = chunks[cursor];
     if (c.startsWith('## ')) {
       if (where === 'ending' || where === 'closing') throw new DraftError('A part heading after %%ending%%.');
       where = 'parts';

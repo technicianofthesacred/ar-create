@@ -97,13 +97,15 @@ function placements(story, origins = null) {
 // Origin tracing is optional read-only evidence. Any disagreement preserves the
 // maintained parser's original photo view, never an inferred editable placement.
 const UPSTREAM_PARSER = 'ffdb7750eef1bbd91b9e0ff22284c3d9ab019ed98f4e7aa999cac67e683772ef';
+const SEPARATED_QUOTES_PARSER = 'd176923ccc98f3e3ad28c07500f453b107a9bed4fbc8251f670d367fcd4d3840';
 const UPSTREAM_SPEC = '71bee216b1066f44392c82d691fffa43cb0d28d132fe15d038fb07f69e115eae';
 function includedOriginCode() {
   const root=fs.realpathSync(new URL('../runtime/src/donors/mag/',import.meta.url));
   return {parserHash:readChecked(root,'mag-send.ts',1024*1024).hash,specHash:readChecked(root,'spec.ts',1024*1024).hash};
 }
 const knownOriginPair=(parserHash,specHash,included)=>[
-  {parserHash:UPSTREAM_PARSER,specHash:UPSTREAM_SPEC},included
+  {parserHash:UPSTREAM_PARSER,specHash:UPSTREAM_SPEC},
+  {parserHash:SEPARATED_QUOTES_PARSER,specHash:UPSTREAM_SPEC},included
 ].some(pair=>pair.parserHash===parserHash&&pair.specHash===specHash);
 // Code identity only; origin eligibility still requires parser parity, complete
 // source coverage and the before/after code guards below. No request pins.
