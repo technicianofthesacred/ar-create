@@ -98,11 +98,15 @@ export function createStudyVideoBriefs({dataDir, originals, findings, inquiries}
   }
 
   async function add(input) {
-    scope(input, ADD_FIELDS);
+    const hasInquiry=Object.hasOwn(input??{},'collectionId');
+    scope(input, [...ADD_FIELDS,...hasInquiry?['collectionId']:[]]);
     const fields = briefFields(input);
+    if(hasInquiry&&(typeof input.collectionId!=='string'||!UUID.test(input.collectionId)))fail('Choose one exact saved inquiry.',400);
+    const collectionId=hasInquiry?input.collectionId:null;
     function replay(prior) {
       if (Object.entries(fields).some(([key, value]) =>
-        (key==='findingId'?(prior.findingLink?.createdFindingId??prior.findingId):prior[key])!==value)) {
+        (key==='findingId'?(prior.findingLink?.createdFindingId??prior.findingId):prior[key])!==value) ||
+        (prior.inquiryOrigin?.collectionId??null)!==collectionId) {
         fail('This operation already saved a different Video Editing brief.');
       }
       return {brief: prior};
@@ -113,8 +117,16 @@ export function createStudyVideoBriefs({dataDir, originals, findings, inquiries}
     if (prior) return replay(prior);
 
     await original(input.projectKey, fields);
+    if(hasInquiry){
+      if(!inquiries?.read)fail('Saved inquiry linking is unavailable.',503);
+      const inquiry=await inquiries.read({collectionId});
+      if(inquiry?.collection?.id!==collectionId||inquiry.record?.scope?.collectionId!==collectionId)fail('The saved inquiry changed identity. Refresh before saving.');
+      // An independent inquiry is linked, never copied or editorially adopted.
+      // Recheck the source after the awaited owner read before publishing one brief.
+      await original(input.projectKey,fields);
+    }
     const file = path.join(directory(input.projectKey, true), fields.id + '.json');
-    const brief = {...fields, status: 'proposed', provenance: provenance()};
+    const brief = {...fields,...hasInquiry?{collectionId,inquiryOrigin:{collectionId}}:{},status: 'proposed', provenance: provenance()};
     try {
       atomicWrite(file, JSON.stringify({schema: 'ar-create.study-video-brief.v1', projectKey: input.projectKey, brief}, null, 2) + '\n', {exclusive: true});
     } catch (error) {
