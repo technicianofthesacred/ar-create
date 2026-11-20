@@ -20,3 +20,25 @@ test('real runtime and review proxy retain large working HTML, expose restart re
  assert.equal((await post({origin:'http://foreign.invalid'})).status,403);const originalBody=payload.body;payload.body='<!doctype html><html>Unrelated invented bytes</html>';assert.equal((await post()).status,409);payload.body=originalBody;const response=await post();assert.equal(response.status,200,await response.clone().text());const {artifact}=await response.json();assert.equal(artifact.hash,sha(body));assert.equal(artifact.provenance.actor,'human:adrian');assert.equal(artifact.deliveryState,'created');assert.equal(fs.readFileSync(file,'utf8'),raw);assert.equal((await fetch(origin+artifact.url)).status,200);assert.equal(await (await fetch(origin+artifact.url)).text(),body);
  await close(proxy);await close(authority);await start();let list=await (await fetch(origin+'/api/magazine/working-draft/exports?'+new URLSearchParams(input))).json();assert.equal(list.artifacts.length,1);assert.equal(list.artifacts[0].stale,false);fs.writeFileSync(file,raw+'\nLater invented wording.');const current={...input,expectedHash:sha(fs.readFileSync(file,'utf8'))};list=await (await fetch(origin+'/api/magazine/working-draft/exports?'+new URLSearchParams(current))).json();assert.equal(list.artifacts[0].stale,true);assert.equal(list.artifacts[0].url,artifact.url);assert.equal(await (await fetch(origin+artifact.url)).text(),body);assert.equal(list.artifacts[0].publicationProof,undefined);
 });
+
+test('the installed authority prepares an exact private working export without a review proxy or a second root configuration',async t=>{
+ const f=buildMagazineFixture();t.after(f.cleanup);
+ const publication=path.join(f.dir,'publication');fs.mkdirSync(publication);
+ const plan=planRegistration({vault:f.vault,files:f.files});
+ fs.mkdirSync(path.join(f.data,'magazine/projects'),{recursive:true});
+ fs.writeFileSync(path.join(f.data,'magazine/index.json'),JSON.stringify({schema:INDEX_SCHEMA,vaultRoot:f.vault,filesRoot:f.files,stories:plan.stories.map(p=>({storyId:p.storyId,name:p.name}))}));
+ for(const p of plan.stories)fs.writeFileSync(path.join(f.data,'magazine/projects',p.storyId+'.json'),JSON.stringify(p));
+ const authority=await createServer({dataDir:f.data,publicDir:path.resolve('public'),connections:[],researchEnabled:false,magazineVault:{vaultRoot:f.vault,filesRoot:f.files,writable:false,machine:'invented-direct-export',magSendRepo:publication}});
+ const origin=await listen(authority);t.after(()=>close(authority));
+ const file=path.join(f.vault,'Workflow/3-Develop/DEV - Clay Teacher (story).md'),raw=fs.readFileSync(file,'utf8');
+ const input={storyId:'mag-clay-teacher',pieceId:'mag-clay-teacher:article',expectedHash:sha(raw),name:'invented-working.html'};
+ const post=payload=>fetch(origin+'/api/magazine/working-draft/export',{method:'POST',headers:{'Content-Type':'application/json',Origin:origin,'X-AR-Actor':'agent:codex','X-AR-Client':'cli'},body:JSON.stringify(payload)});
+ const response=await post(input);assert.equal(response.status,200,await response.clone().text());
+ const {artifact}=await response.json();assert.equal(artifact.exportKind,'magazine-working-html');assert.equal(artifact.provenance.actor,'agent:codex');assert.equal(artifact.sourceBinding.sourceHash,input.expectedHash);assert.equal(artifact.publicationProof,undefined);
+ const downloaded=await fetch(origin+artifact.url);assert.equal(downloaded.status,200);const body=await downloaded.text();assert.equal(sha(body),artifact.hash);assert.ok(body.startsWith('<!doctype html>'));
+ assert.equal(fs.readFileSync(file,'utf8'),raw);
+ const list=await(await fetch(origin+'/api/magazine/working-draft/exports?'+new URLSearchParams({storyId:input.storyId,pieceId:input.pieceId,expectedHash:input.expectedHash}))).json();assert.equal(list.artifacts.length,1);assert.equal(list.artifacts[0].stale,false);
+ assert.equal((await post({...input,expectedHash:'f'.repeat(64)})).status,409);
+ assert.equal((await post({...input,body:'<!doctype html><html>Unverified caller bytes</html>'})).status,400);
+ const send=await fetch(origin+'/api/magazine/send',{method:'POST',headers:{'Content-Type':'application/json',Origin:origin,'X-AR-Actor':'agent:codex','X-AR-Client':'cli'},body:JSON.stringify({path:'Workflow/3-Develop/DEV - Clay Teacher (story).md',piece:'invented',expectedHash:input.expectedHash,operationId:crypto.randomUUID()})});assert.equal(send.status,403);
+});

@@ -52,3 +52,21 @@ test('overwritten cover and opener shots do not acquire current-placement origin
 for(const newline of ['\n','\r\n'])test('draftBody reports the exact original DEV body range with delimiter whitespace: '+JSON.stringify(newline),()=>{const body=newline+BODY.replaceAll('\n',newline)+newline;const prefix='---  '+newline+'type: DEV'+newline+'---\t '+newline+'Invented metadata '+body+newline+'--- \t';const dev=prefix+body+'---   '+newline+'Invented notes repeat '+body;const seen=[],plain=parser.draftBody(dev),traced=parser.draftBody(dev,r=>seen.push(r));assert.deepEqual(traced,plain);assert.deepEqual(Object.keys(plain),['head','body','tail']);assert.equal(plain.body,body);assert.equal(plain.tail,newline+'Invented notes repeat '+body);assert.equal(seen.length,1);assert.deepEqual(seen[0],{start:prefix.length,end:prefix.length+body.length,offsetUnit:'utf16'});assert.equal(dev.slice(seen[0].start,seen[0].end),plain.body);assert.ok(dev.indexOf(body)<seen[0].start,'matching earlier text cannot choose the body span');assert.ok(Object.isFrozen(seen[0]));const rows=[];parser.parseDraft(traced.body,undefined,(shot,o)=>rows.push({shot,o}));assert.ok(rows.length);for(const {o}of rows)assert.equal(dev.slice(seen[0].start+o.directiveStart,seen[0].start+o.directiveEnd),traced.body.slice(o.directiveStart,o.directiveEnd));});
 test('draftBody missing boundaries refuses before reporting any body range',()=>{const seen=[];assert.throws(()=>parser.draftBody('Invented plain text',r=>seen.push(r)));assert.equal(seen.length,0);});
 test('observer failure cannot leak trace state into the next parse',()=>{assert.throws(()=>parser.parseDraft(BODY,undefined,()=>{throw Error('Invented observer failure');}),/Invented observer failure/);const rows=[];parser.parseDraft(BODY,undefined,(shot,o)=>rows.push({shot,o}));assert.equal(rows.length,11);});
+
+test('separated quote-layout blocks retain story bytes and exact directive origins',()=>{
+ const direct=BODY.replace('An invented paragraph about a quiet kiln.','%%pull: l%%\n> "An invented part pull."\n\nAn invented paragraph about a quiet kiln.');
+ for(const newline of ['\n','\r\n']){
+  const body=direct.replace(/(%%(?:pull|on-photo|saying)[^\n]*%%)\n>/g,'$1\n\n>').replaceAll('\n',newline),records=[];
+  const story=parser.parseDraft(body,undefined,(shot,origin)=>records.push({shot,origin}));
+  assert.deepEqual(story,parser.parseDraft(direct));assert.equal(records.length,shots(story).length);
+  for(const {shot,origin}of records){
+   const directive=body.slice(origin.directiveStart,origin.directiveEnd);
+   assert.ok(directive.startsWith('%%'+origin.kind+':'));assert.ok(directive.endsWith('%%'));assert.ok(directive.includes(shot.file));
+   if(['on-photo','saying'].includes(origin.kind))assert.equal(body.slice(origin.chunkStart,origin.chunkEnd),directive,'the consumed quote never replaces the photograph marker origin');
+  }
+ }
+});
+test('separated quote-layout parsing cannot skip prose or notes or accept an unquoted pull',()=>{
+ for(const between of ['Invented intervening prose.\n\n','%%An intervening private note%%\n\n'])assert.throws(()=>parser.parseDraft('%%pull: hook%%\n\n'+between+'> "Invented words."'),/quotation marks/);
+ assert.throws(()=>parser.parseDraft('%%pull: hook%%\n\n> Invented unquoted words.'),/quotation marks/);
+});

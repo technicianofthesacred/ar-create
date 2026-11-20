@@ -450,6 +450,8 @@ test('configured HTTP same publication origin aggregates original and inserted i
 
 test('origin code gate preserves the exact old pair and current included pair, rejects mixed and unknown pins',()=>{
  const oldParser='ffdb7750eef1bbd91b9e0ff22284c3d9ab019ed98f4e7aa999cac67e683772ef',oldSpec='71bee216b1066f44392c82d691fffa43cb0d28d132fe15d038fb07f69e115eae',currentParser=sha(parserCode),currentSpec=sha(specCode);
+ const separatedParser='d176923ccc98f3e3ad28c07500f453b107a9bed4fbc8251f670d367fcd4d3840';
+ assert.equal(supportedMagazineOriginCode(separatedParser,oldSpec),true);assert.equal(supportedMagazineOriginCode(separatedParser,currentSpec),false);
  assert.equal(supportedMagazineOriginCode(oldParser,oldSpec),true);assert.equal(supportedMagazineOriginCode(currentParser,currentSpec),true);
  for(const pair of [[oldParser,currentSpec],[currentParser,oldSpec],['0'.repeat(64),oldSpec],[currentParser,'0'.repeat(64)]])assert.equal(supportedMagazineOriginCode(...pair),false);
 });
