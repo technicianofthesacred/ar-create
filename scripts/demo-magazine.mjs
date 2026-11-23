@@ -96,7 +96,9 @@ export async function addMagazineToSyntheticHome(home) {
   fs.mkdirSync(data, {recursive: true});
   const done = await apply({mag: vault, files, data, verification: path.join(dir, 'magazine-demo', 'proof')});
   if (!done.applied) throw new Error('The invented Magazine could not be registered: ' + JSON.stringify(done));
-  fs.writeFileSync(path.join(data, 'magazine-vault.json'), JSON.stringify({vaultRoot: vault, filesRoot: files, writable: true, machine: 'synthetic-demo'}));
+  // An empty publication folder stands in for the site, so the working article can be rendered and downloaded.
+  const publication = path.join(dir, 'magazine-demo', 'publication'); fs.mkdirSync(publication, {recursive: true});
+  fs.writeFileSync(path.join(data, 'magazine-vault.json'), JSON.stringify({vaultRoot: vault, filesRoot: files, magSendRepo: publication, writable: true, machine: 'synthetic-demo'}));
   return {vault, files, data, stories: done.stories};
 }
 

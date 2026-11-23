@@ -11,7 +11,7 @@
  const NAMES={'agent:claude-code':'Claude','agent:claude-design':'Claude Design','agent:codex':'Codex','agent:hermes':'Hermes','agent:grok':'Grok','agent:chatgpt':'ChatGPT'};
  function actorName(actor){actor=String(actor||'');if(actor.startsWith('human:'))return 'You';if(NAMES[actor])return NAMES[actor];if(actor.startsWith('cron:'))return 'A scheduled job';if(actor.startsWith('import:'))return 'An import';if(actor.startsWith('agent:'))return actor.slice(6);return 'Someone';}
  // Commands that take no operationId: the server rejects any key outside their small list.
- const NO_OPERATION_ID=new Set(['presence.post','study-ai.reject']);
+ const NO_OPERATION_ID=new Set(['presence.post','study-ai.reject','magazine.working-draft.export']);
  const optional=field=>String(field).endsWith('?')?String(field).slice(0,-1):String(field);
 
  /** The actor for this tab, read exactly as the existing page reads it. */

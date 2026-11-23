@@ -766,6 +766,40 @@ test('a Magazine story\'s page: a direction is chosen in the Magazine and not sh
  }
 });
 
+test('a Magazine story answers Your yes on its own page, downloads its working article from Publish, and its step count matches its tab', {timeout: 300000}, async t => {
+ const {addMagazineToSyntheticHome} = await import('../scripts/demo-magazine.mjs');
+ const fixture = syntheticHome(); t.after(() => fs.rmSync(fixture.dir, {recursive: true, force: true}));
+ const {vault} = await addMagazineToSyntheticHome(fixture);
+ const config = JSON.parse(fs.readFileSync(fixture.config, 'utf8'));
+ const s = await createServer({dataDir: config.dataDir, publicDir: path.join(repo, 'public'), studyOriginalRoots: config.studyOriginalRoots, researchEnabled: false, packageView: {syntheticFixtures: true}});
+ await new Promise(r => s.listen(0, '127.0.0.1', r)); t.after(() => new Promise(r => {s.closeAllConnections?.(); s.close(r);}));
+ const base = 'http://127.0.0.1:' + s.address().port, id = 'mag-kiln-keeper', draft = path.join(vault, 'Workflow/3-Develop/DEV - Kiln Keeper (story).md'), before = fs.readFileSync(draft, 'utf8');
+ const {doc, calls} = await page(base, '#/subject/' + id);
+ await until(() => doc.querySelector('.subj-row') && doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
+ // The count in the header is the form's own count, as the tab shows it.
+ for (const [d, which] of [[doc, id], [(await page(base, '#/subject/hk')).doc, 'hk']]) {
+  await until(() => d.querySelector('.subj-form[data-subj-form]') && d.querySelector('[data-subj-glance]'));
+  const [, done, total] = d.querySelector('.subj-form[data-subj-form]').getAttribute('aria-label').match(/(\d+) of (\d+) steps done/);
+  assert.match(d.querySelector('[data-subj-glance]').textContent, new RegExp(done + ' of ' + total + ' steps done'), which + ': the header and the tab agree');
+ }
+ // Your yes: the story's own consent desk is placed on the page, not sent to Advanced.
+ doc.querySelector('.subj-row [data-subj-step="yes"]').click();
+ const yes = await until(() => doc.querySelector('[data-subj-panel]:not([hidden]) [data-subj-embed="consent"]'));
+ assert.ok(yes, 'the consent desk is on the page');
+ assert.equal(yes.closest('[data-subj-panel]').querySelector('[data-subj-soon]'), null, 'nothing in Your yes is said to be elsewhere');
+ // Publish: a download of the working article; the words in the Magazine are unchanged.
+ doc.querySelector('.subj-row [data-subj-step="publish"]').click();
+ const button = await until(() => doc.querySelector('[data-subj-panel]:not([hidden]) [data-subj-magdownload]'));
+ assert.match(button.textContent, /Download the article/);
+ const clicked = [];doc.defaultView.HTMLAnchorElement.prototype.click = function() {clicked.push({href: this.getAttribute('href'), name: this.download});};
+ button.click();
+ await until(() => clicked.length);
+ assert.match(clicked[0].href, /^\/api\/magazine\/working-draft\/export-file\?/);assert.match(clicked[0].name, /^where-the-ash-settles-[a-f0-9]{8}\.html$/);
+ const file = await fetch(base + clicked[0].href);assert.equal(file.status, 200);assert.match(await file.text(), /^<!doctype html>/);
+ assert.ok(calls.includes('/api/magazine/working-draft/export'), 'the app made the export itself');
+ assert.equal(fs.readFileSync(draft, 'utf8'), before, 'downloading changes no words');
+});
+
 test('Add a form: Article is offered to any subject with a draft, with or without a source or words (Write starts it)',()=>{
  const art=facts=>S.addable(facts).find(k=>k.kind==='article');
  const fromSource=art({bindingId:'b',material:{total:1,recordings:0,notes:1,links:0,photos:0},words:{paragraphs:0}});

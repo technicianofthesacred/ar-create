@@ -619,8 +619,9 @@
    const f=s.facts||{},m=f.material,bits=[];
    if(m)for(const [count,one] of [[m.recordings,'recording'],[m.notes,'note'],[m.links,'link'],[m.photos,'photograph']])if(count)bits.push(`<span><b>${count}</b> ${count===1?one:one+'s'}</span>`);
    if(f.words?.count)bits.push(`<span><b>${Number(f.words.count).toLocaleString('en-GB')}</b> ${f.words.count===1?'word':'words'}</span>`);
-   const steps=current().steps.filter(x=>x.state!=='unknown'),done=steps.filter(x=>x.state==='done').length;
-   if(steps.length)bits.push(`<span><b>${done} of ${steps.length}</b> steps done</span>`);
+   // The count is the form's own, as its tab shows it: every step, known or not, so the two never disagree.
+   const all=current().steps,steps=all.filter(x=>x.state!=='unknown'),done=all.filter(x=>x.state==='done').length;
+   if(all.length)bits.push(`<span><b>${done} of ${all.length}</b> steps done</span>`);
    if(s.asks)bits.push(`<a class="subj-link" href="#/">${plural(s.asks,'question')} waiting on you${icon('chev')}</a>`);
    const nx=steps.find(x=>x.state==='flag')||steps.find(x=>x.state==='next');
    if(nx)bits.push(`<button type="button" class="subj-link" data-subj-step="${esc(nx.id)}">Next: ${esc(nx.name)}${icon('chev')}</button>`);
@@ -702,7 +703,10 @@
   const embeds=new Map();// kind|binding -> {node, instance}: the node is kept and put back when its section is drawn again
   // The photograph tools and the reader view work on a piece's own saved place, so they need the subject to have one.
   const NEEDS_PLACE=new Set(['photos','arrange','audience']);
-  const borrowed=(kind,covers,piece='')=>!mag()&&(ids().bindingId||!NEEDS_PLACE.has(kind))&&typeof document.createElement==='function'?`<div class="subj-embed" data-subj-embed="${kind}" data-subj-covers="${covers}"${piece?` data-piece="${esc(piece)}"`:''}></div>`:'';
+  // A Magazine story keeps its words, photographs and layout in the Magazine, so those tools stay there. Its consent desk is
+  // the story's own (the desk is read by the story id, and the Magazine's publish and send hold on it), so it is answered here.
+  const FOR_STORY=new Set(['consent']);
+  const borrowed=(kind,covers,piece='')=>(!mag()||FOR_STORY.has(kind))&&(ids().bindingId||!NEEDS_PLACE.has(kind))&&typeof document.createElement==='function'?`<div class="subj-embed" data-subj-embed="${kind}" data-subj-covers="${covers}"${piece?` data-piece="${esc(piece)}"`:''}></div>`:'';
   /** The borrowed tool asks by address; here every address is one of the app's named commands, asked through the page's own
       client like everything else (the same actor, the same checks). An address with no command is refused, never fetched. */
   const asMe=(url,input)=>{const [path,query]=String(url).split('?'),m=/^\/api\/study\/photos(\/[a-z-]+)?$/.exec(path);if(!m)return Promise.reject(new Error('That is not available on this page.'));
@@ -1206,7 +1210,26 @@
    const rows=need.map(t=>{const tv=stepView(t);return `<li>${tv.mark?mark(tv.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<span>${esc(t.name)}</span><button type="button" class="subj-link" data-subj-step="${esc(t.id)}">Open${icon('chev')}</button></li>`;}).join('');
    const posting=['instagram','post'].includes(form?.kind)?`<p class="subj-quiet">Posting is not connected.</p>`:'';
    const reader=/^out:/.test(form?.key||'')&&['article','carousel'].includes(form.kind)?borrowed('audience','audience',form.id):'';
-   return (rows?`<ul class="subj-waitl">${rows}</ul>`:'')+posting+reader+links(out('outputs',form),out('audience',form));
+   // A Magazine story's working article is downloaded here, as the app renders it. The consent desk still holds it.
+   const story=mag()&&form?.owner?.kind==='magazine'?`<div class="subj-actions" data-subj-covers="outputs"><button type="button" class="${CB} subj-btn" data-subj-magdownload>Download the article${icon('down')}</button></div><p class="subj-quiet">The words as they are saved now, as one page. Nothing is sent or published.</p>`:'';
+   return (rows?`<ul class="subj-waitl">${rows}</ul>`:'')+posting+reader+story+links(out('outputs',form),out('audience',form));
+  }
+  /** The working article of a Magazine story, downloaded: read its exact saved words, have the app render and keep that
+      edition, then fetch the kept file. A held story (consent unanswered) or a changed draft is refused in the app's words. */
+  async function magazineDownload(button){
+   const owner=current().form?.owner;if(!owner||owner.kind!=='magazine')return;
+   const label=button.innerHTML;button.disabled=true;button.textContent='Preparing the article';
+   try{
+    const q={storyId:owner.storyId,pieceId:owner.pieceId};
+    const read=await v2.call('magazine.working-draft.read',{...q,edition:'working'});
+    const hash=read?.document?.hash;if(read?.authority?.storyId!==q.storyId||read.authority.pieceId!==q.pieceId||!/^[a-f0-9]{64}$/.test(hash||''))throw new Error('The saved article could not be read. Nothing was downloaded.');
+    const title=String(read.authority.title||st.standing?.title||'article'),name=(title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'article')+'-'+hash.slice(0,8)+'.html';
+    const made=await v2.call('magazine.working-draft.export',{...q,parentStudyId:id,expectedHash:hash,name});
+    const a=made?.artifact;if(!a||a.sourceBinding?.sourceHash!==hash||typeof a.url!=='string'||!a.url.startsWith('/api/magazine/working-draft/export-file?'))throw new Error('The saved download could not be confirmed. Nothing was downloaded.');
+    const link=document.createElement('a');link.href=a.url;link.download=name;link.hidden=true;document.body.append(link);link.click();link.remove();
+    v2.ui.say('The article is downloading. Nothing was sent or published.',{tone:'good'});
+   }catch(error){v2.ui.say(error?.message||'The article could not be downloaded. Nothing was changed.',{tone:'bad'});}
+   finally{if(button.isConnected){button.disabled=false;button.innerHTML=label;}}
   }
 
   // ---------- the slides, drawn by the app's own renderer ----------
@@ -1241,6 +1264,7 @@
      act(['recordings','tree','brief'],async()=>{let kept;try{const check=await v2.call('transcript-check.id',{id:job});kept=await v2.call('recordings.source',{jobId:job,expected:check.expected});}catch(error){throw new Error(sourceRefusal(error));}await keepWithSubject(kept?.source?.id);v2.ui.say('The transcript is now one of your sources.',{tone:'good'});});return;}
     act(['recordings','tree'],async()=>{await v2.call('.transcription.id.action',{id:job,action});v2.ui.say(action==='start'?'The transcript is being made.':'Trying the transcript again.',{tone:'good'});});return;}
    if(e.target.closest('[data-subj-look]')){e.preventDefault();chooseLook();return;}
+   const md=e.target.closest('[data-subj-magdownload]');if(md){e.preventDefault();if(!md.disabled)magazineDownload(md);return;}
    if(e.target.closest('[data-subj-readclose]')){e.preventDefault();const s=st.reader?.sec;st.reader=null;paintNow();secOf(s)?.querySelector('h2')?.focus({preventScroll:true});return;}
    const bw=e.target.closest('[data-subj-borrow]');
    if(bw){e.preventDefault();if(bw.dataset.subjBorrow==='simmer')openSimmer(bw);return;}
