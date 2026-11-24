@@ -4,13 +4,13 @@ This records the first accuracy measurement for the transcript check, the step w
 
 ## What was run
 
-A separate local experiment on `main` at `643113e`, in a clean checkout, ran the production `suggestionPrompt`, `executeClaude` (Sonnet) and `validateSuggestions` once. No transcript or model reply was saved. The provider was not run again for this note.
+A separate local experiment on `main` at `643113e`, in a clean checkout, ran the production `suggestionPrompt`, `executeClaude` (Sonnet) and `validateSuggestions` once. The experiment retained its synthetic scoring results locally without writing an AR Create transcript or review record. The provider was not run again for this note.
 
 The invented fixture:
 
 - Title: *Tea and bread by the river*. Vocabulary: Yixing, oolong.
 - Six lines starting at 0, 5, 10, 15, 20 and 25 seconds, each four seconds long.
-- Words marked uncertain (probability 0.35): *you*, *shing*, *bred*, and *fifteen*. *Fifteen* is correctly transcribed, so the check also had to leave an uncertain but correct word alone.
+- Three word entries were marked uncertain (probability 0.35): *you shing*, *bred*, and *fifteen*. The first entry contains two words. *Fifteen* is correctly transcribed, so the check also had to leave an uncertain but correct word alone.
 
 | Line | Transcript given to the check | Reference, fixed before the call |
 | --- | --- | --- |
@@ -39,7 +39,7 @@ Each line is compared with its reference by word edit distance (insertions, dele
 
 ## Independent checks for this note
 
-- The scoring was recomputed with a separate script, written fresh, that builds the fixture above, passes the two recorded proposals through the production `validateSuggestions` (two kept, both sure, none dropped), applies them and scores each line. It gave 51 reference words, 3 before and 0 after. It also confirmed that the production `suggestionPrompt` marks *you, shing*, *bred* and *fifteen* as unsure on their lines. The provider was not called.
+- The scoring was recomputed with a separate script, written fresh, that builds the fixture above, passes the two recorded proposals through the production `validateSuggestions` (two kept, both sure, none dropped), applies them and scores each line. It gave 51 reference words, 3 before and 0 after. It also confirmed that the production `suggestionPrompt` shows *you shing*, *bred* and *fifteen* as unsure on their lines. The provider was not called.
 - The existing transcript check tests pass: `npm run setup`, `npm run build`, `node --test tests/transcript-check.test.mjs` (9 of 9).
 
 ## What this does and does not show
