@@ -168,6 +168,7 @@ const VERB = { GET: 'get', POST: 'post', PUT: 'put', DELETE: 'delete', HEAD: 'he
 export const CUSTOM_COMMANDS = [
   ['GET','/api/current-work/contract'],['POST','/api/current-work/read'],['POST','/api/current-work/validate'],['POST','/api/conversation/capture'],
   ['GET', '/api/magazine/working-draft/export-file', ['storyId','pieceId','expectedHash','exportId']],
+  ['GET', '/api/magazine/photos/file', ['storyId','name','hash']],
   ['GET','/api/study/footage/preview',['bindingId','parentStudyId','sourceId','expectedHash']],
   ['GET', '/api/study/photos/available-preview', ['projectId','documentId','bindingId','parentStudyId','sourceId','expectedHash']],
   ['GET', '/api/study/photos/preview', ['projectId','documentId','bindingId','parentStudyId','sourceId','expectedHash']],

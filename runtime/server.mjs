@@ -668,6 +668,14 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
         const artifact=url.searchParams.has('rootBindingId')?await studyOutputExports.file({...outputQuery(),exportId:id,format:'carousel',name}):carousel.file(id,name);response.writeHead(200,{'Content-Type':artifact.mimeType,'Content-Length':artifact.sizeBytes,'Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(name)}`,'Cache-Control':'no-store'});
         if(request.method==='HEAD')return response.end();const stream=createReadStream(artifact.file);stream.on('error',()=>response.destroy());response.on('close',()=>stream.destroy());stream.pipe(response);return;
       }
+      if(pathname==='/api/magazine/photos/file'){
+        if(!['GET','HEAD'].includes(request.method))throw new StateError('Method is not supported.',405);
+        if(!magazineVault?.configured)throw new StateError('The Magazine is not configured in this AR Create.',503);
+        const keys=[...url.searchParams.keys()];if(keys.some(k=>!['storyId','name','hash'].includes(k))||keys.some(k=>url.searchParams.getAll(k).length!==1))throw new StateError('Use one story, one photo name and its hash.',400);
+        const photo=magazineVault.photos.file(Object.fromEntries(url.searchParams));
+        response.writeHead(200,{'Content-Type':photo.contentType,'Content-Length':photo.bytes.length,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; sandbox"});
+        return response.end(request.method==='HEAD'?undefined:photo.bytes);
+      }
       if(pathname==='/api/magazine/working-draft/export-file'){
         if(!['GET','HEAD'].includes(request.method))throw new StateError('Method is not supported.',405);
         consentDesk.assertNotHeld([{parentStudyId:url.searchParams.get('storyId')}],'Downloading this export');
@@ -778,7 +786,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
         if (['POST','DELETE'].includes(request.method)) {
           if (request.method === 'POST' && READ_ONLY_POSTS.has(pathname)) checkWriteOrigin(request, server); else checkWrite(request, server);
           if (!(request.headers['content-type'] || '').toLowerCase().startsWith('application/json')) throw new StateError('Use Content-Type: application/json.', 415);
-          input = await body(request, pathname === '/api/study/outputs/copy-browser-carousel' ? 512 * 1024 : pathname === '/api/sources/import' ? 90 * 1024 * 1024 : ['/api/exports','/api/study/outputs/export','/api/magazine/working-draft/export'].includes(pathname) ? MAX_EXPORT_BYTES + 1024 * 1024 : MAX_BODY_BYTES);
+          input = await body(request, pathname === '/api/study/outputs/copy-browser-carousel' ? 512 * 1024 : pathname === '/api/sources/import' ? 90 * 1024 * 1024 : pathname === '/api/magazine/photos/add' ? 28 * 1024 * 1024 : ['/api/exports','/api/study/outputs/export','/api/magazine/working-draft/export'].includes(pathname) ? MAX_EXPORT_BYTES + 1024 * 1024 : MAX_BODY_BYTES);
           if (!input || typeof input !== 'object' || Array.isArray(input)) throw new StateError('Request body must be an object.');
           if (!READ_ONLY_POSTS.has(pathname)) { const command = findCommand(commandList(), request.method, pathname); leases.check(pathname==='/api/magazine/library-photos/album'?{kind:'library',id:'folders-media'}:scopeOf({ input, query: url.searchParams, section: command?.section }), request.arActor); }
         }

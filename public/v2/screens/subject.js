@@ -238,14 +238,14 @@
  const TOUCHES=Object.freeze([
   ['study-draft.check',['check']],['study-draft',['read','check']],['study-ai',['read']],['study.outputs',['read']],
   ['study.human-direction',['direction','board']],['concept',['direction']],['simmer',['board','direction']],['instagram',['planRecords']],
-  ['consent',['desk']],['words',['wordChecks']],['transcript-check',['wordChecks']],
+  ['consent',['desk']],['magazine.photos',['magPhotos']],['magazine.undo',['magPhotos']],['words',['wordChecks']],['transcript-check',['wordChecks']],
   ['sources',['tree','brief','recordings']],['recordings',['tree','brief','recordings']],['transcription',['recordings']],['research-topics',['topics']],['first-flow',['brief','tree']],['study.material',['brief','tree']],['study.research',['brief']],['study.photos',['tree']],['inquiries',['topics']],
  ]);
- const READS=Object.freeze(['tree','brief','planRecords','wordChecks','board','direction','read','check','desk','topics','recordings']);
+ const READS=Object.freeze(['tree','brief','planRecords','wordChecks','board','direction','read','check','desk','topics','recordings','magPhotos']);
  function touched(kind){const k=String(kind||'');let best=null;for(const [start,keys] of TOUCHES)if(k.startsWith(start)&&(!best||start.length>best[0].length))best=[start,keys];return best?[...best[1]]:[];}
  /** The reads each step's tool needs, in the order they are asked. */
  const STEP_READS=Object.freeze({
-  have:['tree','brief','planRecords','recordings'],transcript:['tree','planRecords','wordChecks'],facts:['brief','topics'],dish:['board','direction'],
+  have:['tree','brief','planRecords','recordings','magPhotos'],transcript:['tree','planRecords','wordChecks'],facts:['brief','topics'],dish:['board','direction'],
   words:['read'],check:['check'],story:['planRecords'],slides:['planRecords'],yes:['desk'],
  });
 
@@ -454,6 +454,8 @@
   read:ids=>ids.bindingId?call('study-draft.read',{bindingId:ids.bindingId,parentStudyId:ids.id}):null,
   check:ids=>ids.bindingId?call('study-draft.check.get',{bindingId:ids.bindingId,parentStudyId:ids.id}):null,
   desk:ids=>call('consent.desk',{parentStudyId:ids.id}),
+  // A Magazine story's own photographs: the files in its Photos folder. Other subjects keep theirs in the Library.
+  magPhotos:ids=>ids.story?call('magazine.photos',{storyId:ids.story}):null,
  };
  /** Research topics tied to this subject (read only for its Facts step): only those that share a source with it. */
  async function topicsOf(ids,brief){
@@ -498,7 +500,7 @@
    try{root.history.replaceState(root.history.state,'',v2.href('subject/:id',{id},{form,step}));}catch{}
    try{root.sessionStorage.setItem(KEEP,JSON.stringify({form,step,y:Math.round(root.scrollY||0)}));}catch{}
   }
-  const ids=()=>({id,bindingId:st.standing?.facts?.bindingId||null,projectId:st.standing?.facts?.projectId||null});
+  const ids=()=>({id,bindingId:st.standing?.facts?.bindingId||null,projectId:st.standing?.facts?.projectId||null,story:isMagazine(st.standing)?st.standing.origin.storyId:null});
 
   // ---- asking: one command for the standing, then only the reads the open step's tool needs ----
   async function refresh(){
@@ -1083,7 +1085,33 @@
   /** A Magazine story's material is kept in the Magazine; the page says what is there and where to add to it. */
   function toolHaveMagazine(s,form){
    const m=st.standing?.facts?.material,n=m?[m.notes&&plural(m.notes,'written source'),m.photos&&plural(m.photos,'photograph')].filter(Boolean).join(' · '):'';
-   return `<p class="subj-quiet">${m?(n||'Nothing yet')+'. ':'Not known. '}This story's material is kept in the Magazine, so it is added there.</p>`+links(out('addMaterial',form),out('readSources',form));
+   const pics=ok(rec('magPhotos'))?rec('magPhotos'):null,cap=st.zoom==='have'?Infinity:12,story=ids().story;
+   const src=x=>'/api/magazine/photos/file?'+new URLSearchParams({storyId:story,name:x.name,hash:x.hash});
+   const tray=pics?.photos?.length?`<div class="subj-tray" data-subj-magphotos>${pics.photos.slice(0,cap).map(x=>`<img src="${esc(src(x))}" alt="${esc(x.name)}" title="${esc(x.name)}" loading="lazy">`).join('')}${pics.photos.length>cap?`<span>+${pics.photos.length-cap}</span>`:''}</div>`:'';
+   // Photos go into the story's own Photos folder in Files, as new files beside the ones there; nothing is replaced.
+   const add=`<div class="subj-actions" data-subj-covers="addMaterial"><label class="${CB} subj-btn" data-subj-magadd>${icon('plus')}<span data-subj-maglabel>Add photographs</span><input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif" multiple hidden data-subj-magfiles></label></div>`;
+   return `<p class="subj-quiet">${m?(n||'Nothing yet')+'. ':'Not known. '}This story's material is kept in its Magazine folders.</p>`+(rec('magPhotos')===undefined?reading():'')+tray+add+links(out('addMaterial',form),out('readSources',form));
+  }
+  /** Each chosen photo, one at a time, into the story's Photos folder. A photo already there is not added twice. */
+  async function addMagazinePhotos(input){
+   const files=[...(input.files||[])];input.value='';const story=ids().story;if(!files.length||!story||st.busy)return;
+   const label=input.closest('[data-subj-magadd]')?.querySelector('[data-subj-maglabel]'),ops=[];let added=0,already=0;const refused=[];
+   st.busy=true;
+   try{
+    for(const [i,f] of files.entries()){
+     if(label)label.textContent=`Adding ${i+1} of ${files.length}`;
+     try{
+      const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).replace(/^data:[^,]*,/,''));r.onerror=()=>reject(new Error('That photo could not be read.'));r.readAsDataURL(f);});
+      const out=await v2.call('magazine.photos.add',{storyId:story,name:f.name,data},{timeoutMs:120000});
+      if(out?.added){added++;ops.push(out.operationId);}else already++;
+     }catch(error){refused.push(f.name+': '+(error?.message||'not added'));}
+    }
+   }finally{st.busy=false;if(label)label.textContent='Add photographs';}
+   ask('magPhotos',true);await refresh();
+   const said=[added&&plural(added,'photograph')+' added to this story\u2019s Photos folder',already&&plural(already,'photograph')+' already there'].filter(Boolean).join('. ');
+   if(refused.length)v2.ui.say([said,'Not added: '+refused.join('; ')].filter(Boolean).join('. '),{tone:'bad'});
+   else if(ops.length)v2.ui.undo(said+'.',async()=>{for(const op of ops.reverse())await v2.call('magazine.undo',{undoOperationId:op});ask('magPhotos',true);await refresh();v2.ui.say('Taken out again.',{tone:'good'});});
+   else if(said)v2.ui.say(said+'.',{tone:'good'});
   }
   function toolHave(s,form){
    if(mag())return toolHaveMagazine(s,form);
@@ -1251,6 +1279,7 @@
   }
 
   // ---------- doing things ----------
+  page.addEventListener('change',e=>{const f=e.target.closest?.('[data-subj-magfiles]');if(f)addMagazinePhotos(f);});
   page.addEventListener('click',e=>{
    // The ways in open the Capture sheet for this subject when the app has one; without it they open Material in Advanced.
    const csb=e.target.closest('[data-cs]');
@@ -1264,7 +1293,7 @@
      act(['recordings','tree','brief'],async()=>{let kept;try{const check=await v2.call('transcript-check.id',{id:job});kept=await v2.call('recordings.source',{jobId:job,expected:check.expected});}catch(error){throw new Error(sourceRefusal(error));}await keepWithSubject(kept?.source?.id);v2.ui.say('The transcript is now one of your sources.',{tone:'good'});});return;}
     act(['recordings','tree'],async()=>{await v2.call('.transcription.id.action',{id:job,action});v2.ui.say(action==='start'?'The transcript is being made.':'Trying the transcript again.',{tone:'good'});});return;}
    if(e.target.closest('[data-subj-look]')){e.preventDefault();chooseLook();return;}
-   const md=e.target.closest('[data-subj-magdownload]');if(md){e.preventDefault();if(!md.disabled)magazineDownload(md);return;}
+   const md=e.target.closest('[data-subj-magdownload]');if(e.target.closest('[data-subj-magadd]')&&st.busy){e.preventDefault();return;}if(md){e.preventDefault();if(!md.disabled)magazineDownload(md);return;}
    if(e.target.closest('[data-subj-readclose]')){e.preventDefault();const s=st.reader?.sec;st.reader=null;paintNow();secOf(s)?.querySelector('h2')?.focus({preventScroll:true});return;}
    const bw=e.target.closest('[data-subj-borrow]');
    if(bw){e.preventDefault();if(bw.dataset.subjBorrow==='simmer')openSimmer(bw);return;}

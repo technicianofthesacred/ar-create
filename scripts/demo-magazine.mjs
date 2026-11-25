@@ -11,6 +11,7 @@
 //   Bamboo Carver      a recording's source only, no draft yet
 // Every word is invented. Nothing is read from a real Magazine, and the files exist only inside the temporary home.
 import fs from 'node:fs';
+import zlib from 'node:zlib';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
@@ -66,6 +67,17 @@ He works from dusk until the light goes thin, and the cloth grows by a hand's wi
 const src = (story, who, line) => `---\ntype: SRC\nstory: ${story}\n---\n\n## Full Transcript\n\n**${who}:** ${line}\n`;
 const map = (story, decision) => `---\ntype: MAP\nstory: ${story}\ncreated: 2026-10-18\n---\n\n# MAP - ${story}\n\n## Directions\n\n1. The fire's handwriting\n2. Waiting as craft\n\n## Adrian's decisions (dated, never overwritten)\n\n${decision}`;
 
+/** An invented photograph: a plain two-colour wash as a real PNG, so the demo's photos can be seen. */
+function demoPhoto(width, height, top, bottom) {
+  const crcTable = Array.from({length: 256}, (_, n) => {let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0;});
+  const crc = buf => {let c = 0xffffffff; for (const b of buf) c = crcTable[(c ^ b) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0;};
+  const chunk = (type, data) => {const len = Buffer.alloc(4); len.writeUInt32BE(data.length); const body = Buffer.concat([Buffer.from(type), data]); const sum = Buffer.alloc(4); sum.writeUInt32BE(crc(body)); return Buffer.concat([len, body, sum]);};
+  const rows = [];
+  for (let y = 0; y < height; y++) {const t = y / (height - 1), row = Buffer.alloc(1 + width * 3); for (let x = 0; x < width; x++) for (let c = 0; c < 3; c++) row[1 + x * 3 + c] = Math.round(top[c] + (bottom[c] - top[c]) * t + 10 * Math.sin(x / 37 + c)); rows.push(row);}
+  const head = Buffer.alloc(13); head.writeUInt32BE(width, 0); head.writeUInt32BE(height, 4); head[8] = 8; head[9] = 2;
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', head), chunk('IDAT', zlib.deflateSync(Buffer.concat(rows))), chunk('IEND', Buffer.alloc(0))]);
+}
+
 /** Builds the invented Magazine under `dir` and returns its two folders. */
 export function buildDemoMagazine(dir) {
   const vault = path.join(dir, 'magazine-demo', 'Brands', 'Teajia', 'Magazine'), files = path.join(dir, 'magazine-demo', 'files');
@@ -86,7 +98,7 @@ export function buildDemoMagazine(dir) {
   put('Workflow/0-Inbox/RAW - Bamboo Carver.md', '---\ntype: RAW\ntitle: "Bamboo Carver"\nrecorded: "2026-10-22"\n---\n\n# RAW - Bamboo Carver\n\nThe knife follows the grain, and the grain never lies.\n');
   put('Workflow/1-Source/SRC - Bamboo Carver.md', src('Bamboo Carver', 'Lian', 'The knife follows the grain, and the grain never lies. I only keep it company.'));
   fs.mkdirSync(path.join(files, 'Kiln Keeper', 'Photos'), {recursive: true});
-  fs.writeFileSync(path.join(files, 'Kiln Keeper', 'Photos', 'bowl.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xe0]));
+  fs.writeFileSync(path.join(files, 'Kiln Keeper', 'Photos', 'bowl.png'), demoPhoto(640, 427, [176, 122, 84], [58, 44, 38]));
   return {vault, files};
 }
 

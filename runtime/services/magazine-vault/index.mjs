@@ -27,6 +27,7 @@ import {planTidy} from './tidy.mjs';
 import {createReconcile} from './reconcile.mjs';
 import {createMagazineIntake} from './intake.mjs';
 import {createMagazineChecks} from './checks.mjs';
+import {createMagazinePhotos} from './photos.mjs';
 
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const stable = v => JSON.stringify(v, (_, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x);
@@ -628,6 +629,8 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     // study-draft-copies asks before making a new working copy (only while AR Create writes the vault).
     vaultBound: source => (configured && writable ? projects.vaultBound(source) : null),
     status: () => ({configured, writable, vaultRoot: configured ? vaultRoot : null, filesRoot, drops, lock: configured ? roots().lock.status() : null}),
+    // A story's own photographs in its Files folder: list, read one, add one (journalled, never over another file).
+    photos: createMagazinePhotos({projects, io, operation, requireWritable}),
     board, read, write, edit, articleQuestions, askAnswer, askSet, requestsAdd, pageFeedback, lineupSave, approve, exportSave, albumLink,
     statusRefresh, statusInstall, statusTable: () => { const cur = io('mag').read('STATUS.md'); return {hash: cur.hash, ...findTable(cur.exists ? cur.bytes.toString('utf8') : '')}; },
     issueWrite, proposalList, proposalRead, proposalAccept, proposalReject, undo, draftHistory,
