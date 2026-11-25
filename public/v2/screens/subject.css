@@ -367,3 +367,7 @@ dialog.subj-sheetdlg{width:min(560px,100%)}
 .subj .subj-convo{min-width:0;max-width:100%}
 .subj .subj-convos{min-width:0}
 .subj .subj-convos [aria-pressed="true"]{text-decoration:underline;text-underline-offset:3px}
+/* Add a note on a Magazine story: his words, full width, with the same type as the page's other fields. */
+.subj-noteform{display:grid;gap:8px}
+.subj-noteform label{font:600 var(--size-caption)/var(--lh-snug) var(--font-ui);color:var(--fg-muted)}
+.subj-noteform textarea{width:100%;box-sizing:border-box;min-height:140px;padding:10px;border:1px solid var(--edge-strong);border-radius:7px;background:var(--surface-card);color:var(--fg-main);font:400 var(--size-ui)/var(--lh-snug) var(--font-ui);resize:vertical}

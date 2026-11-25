@@ -1089,8 +1089,29 @@
    const src=x=>'/api/magazine/photos/file?'+new URLSearchParams({storyId:story,name:x.name,hash:x.hash});
    const tray=pics?.photos?.length?`<div class="subj-tray" data-subj-magphotos>${pics.photos.slice(0,cap).map(x=>`<img src="${esc(src(x))}" alt="${esc(x.name)}" title="${esc(x.name)}" loading="lazy">`).join('')}${pics.photos.length>cap?`<span>+${pics.photos.length-cap}</span>`:''}</div>`:'';
    // Photos go into the story's own Photos folder in Files, as new files beside the ones there; nothing is replaced.
-   const add=`<div class="subj-actions" data-subj-covers="addMaterial"><label class="${CB} subj-btn" data-subj-magadd>${icon('plus')}<span data-subj-maglabel>Add photographs</span><input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif" multiple hidden data-subj-magfiles></label></div>`;
+   const add=`<div class="subj-actions" data-subj-covers="addMaterial"><label class="${CB} subj-btn" data-subj-magadd>${icon('plus')}<span data-subj-maglabel>Add photographs</span><input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif" multiple hidden data-subj-magfiles></label><button type="button" class="${CB} subj-btn" data-subj-magnote>${ownIcon('note')}Add a note</button></div>`;
    return `<p class="subj-quiet">${m?(n||'Nothing yet')+'. ':'Not known. '}This story's material is kept in its Magazine folders.</p>`+(rec('magPhotos')===undefined?reading():'')+tray+add+links(out('addMaterial',form),out('readSources',form));
+  }
+  /** A note in his words, added at the end of the story's context note with the date. His save is written at once (with
+      Undo); an assistant's words wait in the Magazine as a proposal for his yes, as every other write of theirs does there. */
+  function addMagazineNote(){
+   const story=ids().story;if(!story)return;
+   const sheet=v2.ui.sheet({title:'Add a note',body:`<form class="subj-noteform" data-subj-noteform><label for="subj-note">Your words, added to this story\u2019s context note with today\u2019s date</label><textarea id="subj-note" rows="6" data-subj-notetext></textarea><div class="subj-actions"><button type="submit" class="${CP} subj-btn pri">Add the note</button></div></form>`});
+   sheet.el.classList.add('subj-sheetdlg');sheet.body.querySelector('textarea')?.focus();
+   sheet.body.addEventListener('submit',async e=>{
+    e.preventDefault();const form=e.target.closest('[data-subj-noteform]'),text=form?.querySelector('textarea').value.trim(),button=form?.querySelector('button');if(!text||!button||button.disabled)return;button.disabled=true;
+    try{
+     const info=await v2.call('magazine.story',{id:story});
+     const rel=[].concat(info?.vaultRecords?.context||[])[0]?.rel||`Workflow/1-Source/CONTEXT - ${info.name}.md`;
+     const cur=await v2.call('magazine.read',{path:rel});if(cur.exists&&typeof cur.text!=='string')throw new Error('The context note could not be read as text. Nothing was added.');
+     const add=`\n\n## Note, ${new Date().toISOString().slice(0,10)}\n\n${text}\n`;
+     const content=cur.exists?cur.text.replace(/\s*$/,'')+add:`---\ntype: CONTEXT\nstory: ${info.name}\n---\n`+add;
+     const out=await v2.call('magazine.write',{path:rel,content,expectedHash:cur.exists?cur.hash:null});
+     sheet.close();
+     if(out?.written)v2.ui.undo('The note is added to this story\u2019s context note.',async()=>{await v2.call('magazine.undo',{undoOperationId:out.operationId});v2.ui.say('The note is taken out again.',{tone:'good'});});
+     else v2.ui.say('The note waits in the Magazine for Adrian\u2019s yes. Nothing was changed yet.',{tone:'good'});
+    }catch(error){button.disabled=false;v2.ui.say(error?.message||'The note could not be added. Nothing was changed.',{tone:'bad'});}
+   });
   }
   /** Each chosen photo, one at a time, into the story's Photos folder. A photo already there is not added twice. */
   async function addMagazinePhotos(input){
@@ -1293,7 +1314,7 @@
      act(['recordings','tree','brief'],async()=>{let kept;try{const check=await v2.call('transcript-check.id',{id:job});kept=await v2.call('recordings.source',{jobId:job,expected:check.expected});}catch(error){throw new Error(sourceRefusal(error));}await keepWithSubject(kept?.source?.id);v2.ui.say('The transcript is now one of your sources.',{tone:'good'});});return;}
     act(['recordings','tree'],async()=>{await v2.call('.transcription.id.action',{id:job,action});v2.ui.say(action==='start'?'The transcript is being made.':'Trying the transcript again.',{tone:'good'});});return;}
    if(e.target.closest('[data-subj-look]')){e.preventDefault();chooseLook();return;}
-   const md=e.target.closest('[data-subj-magdownload]');if(e.target.closest('[data-subj-magadd]')&&st.busy){e.preventDefault();return;}if(md){e.preventDefault();if(!md.disabled)magazineDownload(md);return;}
+   const md=e.target.closest('[data-subj-magdownload]');if(e.target.closest('[data-subj-magadd]')&&st.busy){e.preventDefault();return;}if(e.target.closest('[data-subj-magnote]')){e.preventDefault();addMagazineNote();return;}if(md){e.preventDefault();if(!md.disabled)magazineDownload(md);return;}
    if(e.target.closest('[data-subj-readclose]')){e.preventDefault();const s=st.reader?.sec;st.reader=null;paintNow();secOf(s)?.querySelector('h2')?.focus({preventScroll:true});return;}
    const bw=e.target.closest('[data-subj-borrow]');
    if(bw){e.preventDefault();if(bw.dataset.subjBorrow==='simmer')openSimmer(bw);return;}
