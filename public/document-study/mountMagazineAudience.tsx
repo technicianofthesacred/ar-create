@@ -67,10 +67,34 @@ function occurrenceView(read:any){
  if(paths.size!==shots.size)throw Error('The saved article photo coverage is incomplete.');
  return {spec,placements};
 }
+// An unpublished draft's photo notes name the story's own photographs, each served by exact name and hash.
+const storyPhotoNote=/%%\s*(photo|photos|side|on-photo|saying)\s*:\s*([^%]*)%%/gi;
+function storyPhotoUrls(owner:any,sources:any[]){
+ const urls=new Map<string,string>();
+ for(const source of sources){
+  const ref=source?.sourceRef;
+  if(source?.previewKind!=='story-photo'||ref?.kind!=='story-photos'||ref.storyId!==owner.projectId||typeof source.name!=='string'||ref.name!==source.name||!hash(ref.hash)||urls.has(source.name))throw Error('A story photograph could not be verified.');
+  urls.set(source.name,'/api/magazine/photos/file?'+new URLSearchParams({storyId:ref.storyId,name:ref.name,hash:ref.hash}));
+ }
+ return urls;
+}
+function storyPhotoFigures(raw:string,urls:Map<string,string>,key:string){
+ const figures:any[]=[];
+ for(const m of raw.matchAll(storyPhotoNote)){
+  const notes=m[1].toLowerCase()==='photos'?m[2].split(' | '):[m[2]];
+  notes.forEach((note,i)=>{
+   const [file='',caption='',...rest]=note.split(' · '),url=urls.get(file.trim());
+   if(!url)throw Error('A story photograph is missing from the saved draft.');
+   const words=rest.join(' ').split(/\s+/),role=words.includes('cover')?'cover':words.includes('opener')?'opener':m[1].toLowerCase();
+   figures.push(<figure key={key+':'+figures.length+':'+i} className="ar-working-photo" data-working-photo={role} style={{margin:'28px 0'}}><img src={url} alt={caption.trim()} style={{display:'block',width:'100%',height:'auto',borderRadius:4}}/>{caption.trim()&&<figcaption style={{fontSize:14,opacity:.75,marginTop:8}}>{caption.trim()}</figcaption>}</figure>);
+  });
+ }
+ return figures;
+}
 function magazineSourceView(read:any){
  if(read?.renderKind==='manuscript'){
   const owner=read.ownerRef,media=read.media,blocks=read.manuscript?.blocks;
-  if(read.schema!=='ar-create.magazine-working-edition.v1'||!hash(read.revision)||!hash(owner?.hash)||owner.editionId!=='working'||media?.schema!=='ar-create.magazine-media-inspection.v1'||media.revision!==read.revision||JSON.stringify(media.ownerRef)!==JSON.stringify(owner)||!Array.isArray(media.sources)||media.sources.length||!Array.isArray(blocks)||blocks.length>4096||blocks.some((b:any)=>typeof b.id!=='string'||typeof b.raw!=='string')||new Set(blocks.map((b:any)=>b.id)).size!==blocks.length)throw Error('The saved manuscript could not be verified.');
+  if(read.schema!=='ar-create.magazine-working-edition.v1'||!hash(read.revision)||!hash(owner?.hash)||owner.editionId!=='working'||media?.schema!=='ar-create.magazine-media-inspection.v1'||media.revision!==read.revision||JSON.stringify(media.ownerRef)!==JSON.stringify(owner)||!Array.isArray(media.sources)||media.sources.length>256||media.sources.length&&!(Array.isArray(blocks)&&blocks.length)||!Array.isArray(blocks)||blocks.length>4096||blocks.some((b:any)=>typeof b.id!=='string'||typeof b.raw!=='string')||new Set(blocks.map((b:any)=>b.id)).size!==blocks.length)throw Error('The saved manuscript could not be verified.');
   if(typeof read.manuscript.raw==='string'&&!blocks.length){
    // Projection only: reuse the existing DEV reader and layout capture without
    // accepting, creating or saving another Article or manuscript.
@@ -90,9 +114,10 @@ function magazineSourceView(read:any){
   // Native blocks are the exact private working projection. They are not an
   // accepted Article receipt: retain opaque layout instructions as review notes
   // instead of guessing a composition or sending them through publication guards.
-  const retainLayout=typeof read.manuscript.raw==='string';
-  const view=<main className="ar-working-manuscript" data-manuscript-preview={owner.hash} style={{maxWidth:760,margin:'0 auto',boxSizing:'border-box',padding:'32px 24px',background:'var(--bg,#151b18)',color:'var(--ink,#f1efe8)',fontFamily:'sans-serif',fontSize:17,lineHeight:1.65}}><p style={{fontSize:13}}>Working draft · pending marks and retained notes remain visible.</p>{!blocks.some((b:any)=>b.doc?.content?.some((n:any)=>n.type==='heading'&&n.attrs?.level===1))&&<h1>{read.spec.title}</h1>}{blocks.map((b:any)=>b.doc?<AcceptedProse key={b.id} paragraphId={b.id} document={proseDocument(b.doc,retainLayout)}/>:withoutNotes(b.raw,retainLayout).trim()?<AcceptedProse key={b.id} paragraphId={b.id} document={markdownToDoc(withoutPlaceholder(withoutNotes(b.raw,retainLayout)),{links:true})}/>:null)}{notesView(blocks.flatMap((b:any)=>editorialNotes(b.raw,retainLayout)))}</main>;
-  return {view,placements:[]};
+  const retainLayout=typeof read.manuscript.raw==='string',urls=storyPhotoUrls(owner,media.sources);
+  const shown=(b:any)=>urls.size?storyPhotoFigures(b.raw,urls,b.id):null,notesOf=(raw:string)=>editorialNotes(urls.size?raw.replace(storyPhotoNote,''):raw,retainLayout);
+  const view=<main className="ar-working-manuscript" data-manuscript-preview={owner.hash} style={{maxWidth:760,margin:'0 auto',boxSizing:'border-box',padding:'32px 24px',background:'var(--bg,#151b18)',color:'var(--ink,#f1efe8)',fontFamily:'sans-serif',fontSize:17,lineHeight:1.65}}><p style={{fontSize:13}}>Working draft · pending marks and retained notes remain visible.</p>{!blocks.some((b:any)=>b.doc?.content?.some((n:any)=>n.type==='heading'&&n.attrs?.level===1))&&<h1>{read.spec.title}</h1>}{blocks.map((b:any)=><React.Fragment key={b.id}>{shown(b)}{b.doc?<AcceptedProse paragraphId={b.id} document={proseDocument(b.doc,retainLayout)}/>:withoutNotes(b.raw,retainLayout).trim()?<AcceptedProse paragraphId={b.id} document={markdownToDoc(withoutPlaceholder(withoutNotes(b.raw,retainLayout)),{links:true})}/>:null}</React.Fragment>)}{notesView(blocks.flatMap((b:any)=>notesOf(b.raw)))}</main>;
+  return {view,placements:[...urls.values()].map(url=>({url}))};
  }
  const {spec,placements}=occurrenceView(read),owner=read.ownerRef;spec.credit=spec.credit.filter((line:string)=>plain(line).trim()!=='Published: on the day it goes live');
  const view=<div className="ar-donor-workspace"><main className="ar-magazine-reader" data-template-render="magazine" data-magazine-working-preview={owner.hash}><LocalStoryProvider placements={placements} editing={false} onPlacements={()=>{}}><ConversationCanvas spec={spec} showByline/></LocalStoryProvider></main></div>;

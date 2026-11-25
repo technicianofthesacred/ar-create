@@ -156,7 +156,20 @@ function exactOrigins(resolved, body, range, observations) {
   for(const group of groups.values()) if(group.indexes.size!==group.size) throw Error('group-mismatch');
   return origins;
 }
-export function createMagazineMediaInspection({repoRoot, resolveWorking, originTrace, libraryPhotos = null}) {
+// Photo notes an unpublished draft may hold. Their files are the story's own photographs (FILES/<story>/Photos), read
+// through the Magazine's photo owner by exact name and hash; nothing is looked up anywhere else.
+const STORY_PHOTO_NOTE = /%%\s*(photo|photos|side|on-photo|saying)\s*:\s*([^%]*)%%/gi;
+export function storyPhotoNames(body) {
+  const names = [];
+  for (const m of String(body).matchAll(STORY_PHOTO_NOTE)) {
+    for (const note of m[1].toLowerCase() === 'photos' ? m[2].split(' | ') : [m[2]]) {
+      const file = note.split(' · ')[0].trim();
+      if (file && !names.includes(file)) names.push(file);
+    }
+  }
+  return names;
+}
+export function createMagazineMediaInspection({repoRoot, resolveWorking, originTrace, libraryPhotos = null, storyPhotos = null}) {
   if (typeof repoRoot !== 'string' || !path.isAbsolute(repoRoot) || typeof resolveWorking !== 'function') throw new TypeError('Supply a trusted checkout and exact working resolver.');
   if (fs.lstatSync(repoRoot).isSymbolicLink()) throw new TypeError('The configured checkout must be a direct directory.');
   // Trusted constructor-only test capability. It is never read from a request,
@@ -365,13 +378,24 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     const front=raw.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1]||'';
     if(!/^published:/m.test(front)){
       const captured=native.capture(raw,input.pieceId),body=raw.slice(captured.prefix.length);
-      if(/%%\s*(?:photo|photos|cover|opener|wide|bleed|side|on-photo|ending|saying)\s*:|!\[|<(?:img|picture|video|audio|source)\b/i.test(body))fail('An unpublished manuscript with media needs its exact connected layout before HTML export.');
+      // Photo notes name the story's own photographs. Any other media, or a photo note without the story's photo owner,
+      // still needs a connected layout.
+      const notes=storyPhotos?body.replace(STORY_PHOTO_NOTE,''):body;
+      if(/%%\s*(?:photo|photos|cover|opener|wide|bleed|side|on-photo|ending|saying)\s*:|!\[|<(?:img|picture|video|audio|source)\b/i.test(notes))fail('An unpublished manuscript with media needs its exact connected layout before HTML export.');
       const projected=native.projection(captured),ownerRef={projectId:input.storyId,pieceId:input.pieceId,editionId:'working',artifactId:current.target.artifactId,hash:input.expectedHash};
+      const sources=[];
+      for(const name of storyPhotoNames(body)){
+        if(path.basename(name)!==name||!MIME[path.extname(name).toLowerCase()])fail(`The photo note names “${name.slice(0,120)}”, which is not a photo file name.`);
+        let photo;try{photo=await storyPhotos.file({storyId:input.storyId,name});}catch(error){fail(error.status===404?`The photo “${name}” is not in this story’s Photos folder.`:error.message||'A story photograph could not be read.',error.status===404?409:error.status||409);}
+        if(!Buffer.isBuffer(photo?.bytes)||sha(photo.bytes)!==photo.hash)fail('A story photograph changed while it was read.');
+        sources.push({id:digest(['story-photo',input.storyId,name]),name,previewKind:'story-photo',contentType:imageType(photo.bytes,path.extname(name).toLowerCase()),size:photo.bytes.length,sourceRef:{kind:'story-photos',storyId:input.storyId,name,hash:photo.hash}});
+        if(sources.length>256)fail('Too many story photographs in one draft.',413);
+      }
       const blocks=captured.blocks.filter(b=>b.raw.trim()).map((b,i)=>({id:'manuscript:'+i,raw:b.raw,doc:b.raw.includes('==')?null:projected.find(p=>p.id===b.id)?.doc||null}));
       const title=typeof current.authority.title==='string'&&current.authority.title.trim()?current.authority.title:'Working article';
-      const revision=digest(['unpublished-manuscript-v2-native-layout',ownerRef,blocks,title]);
+      const revision=sources.length?digest(['unpublished-manuscript-v3-story-photos',ownerRef,blocks,title,sources.map(s=>[s.name,s.sourceRef.hash])]):digest(['unpublished-manuscript-v2-native-layout',ownerRef,blocks,title]);
       const after=await working(input);if(after.authority.path!==current.authority.path||after.target.artifactId!==current.target.artifactId||after.authority.title!==current.authority.title)fail('The exact working manuscript changed.');
-      return {schema:'ar-create.magazine-working-edition.v1',renderKind:'manuscript',revision,ownerRef,spec:{title},manuscript:{raw,blocks},media:{schema:'ar-create.magazine-media-inspection.v1',revision,ownerRef,sources:[]}};
+      return {schema:'ar-create.magazine-working-edition.v1',renderKind:'manuscript',revision,ownerRef,spec:{title},manuscript:{raw,blocks},media:{schema:'ar-create.magazine-media-inspection.v1',revision,ownerRef,sources}};
     }
     const {media,parsed,spec,code,files}=await inspectEdition(input);
     // Nested Words delegates the same known blocks to BlockView; keep its

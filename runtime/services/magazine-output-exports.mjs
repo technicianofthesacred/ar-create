@@ -7,7 +7,7 @@ import {prepareMagazineHtml} from './render-helper.mjs';
 import {createExportAssetReader,exportRendererHash} from './exports.mjs';
 const HEX=/^[a-f0-9]{64}$/;
 const fail=(message,status=409)=>{throw new StateError(message,status);};
-export function createMagazineOutputExports({working,exports:register,repoRoot,roots=[],registeredRoot=null,libraryPhotos}){
+export function createMagazineOutputExports({working,exports:register,repoRoot,roots=[],registeredRoot=null,libraryPhotos,storyPhotos=null}){
  function fields(input,extra=[]){const keys=['storyId','pieceId','expectedHash',...extra];if(!input||Array.isArray(input)||Object.keys(input).some(k=>!keys.includes(k))||['storyId','pieceId'].some(k=>typeof input[k]!=='string'||!input[k]||input[k].length>256)||!HEX.test(input.expectedHash||''))fail('Choose the exact Magazine article and working hash.',400);}
  async function scope(input,{checkHash=true}={}){
   const catalog=await working.catalog(),root=catalog.rootIdentity;
@@ -21,7 +21,7 @@ export function createMagazineOutputExports({working,exports:register,repoRoot,r
  const inspected=async action=>{try{return await action();}catch(error){if(error instanceof StateError)throw error;fail(error.message||'The exact working Article is unavailable.',Number.isInteger(error.status)?error.status:409);}};
  function renderer(){
   if(!repoRoot)fail('The exact working Article renderer is not configured.',503);
-  return createMagazineMediaInspection({repoRoot,libraryPhotos,resolveWorking:async input=>{
+  return createMagazineMediaInspection({repoRoot,libraryPhotos,storyPhotos,resolveWorking:async input=>{
    const exportRoots=roots.length?roots:registeredRoot?[{id:'registered-magazine-vault',path:registeredRoot}]:[];
    const s=await scope(input),matches=exportRoots.filter(root=>typeof root.id==='string'&&typeof root.path==='string'&&!fs.lstatSync(root.path).isSymbolicLink()&&digest(fs.realpathSync(root.path))===s.owner.rootFingerprint);
    if(matches.length!==1)fail('The registered Article has no unique configured export root.');
@@ -38,6 +38,12 @@ export function createMagazineOutputExports({working,exports:register,repoRoot,r
    const s=await scope(input),selection={storyId:input.storyId,pieceId:input.pieceId,expectedHash:input.expectedHash},media=await inspected(()=>renderer()),edition=await inspected(()=>media.workingEdition(selection)),assets=[];
    if(!prepareHere&&edition.revision!==input.renderRevision)fail('The working Article render revision changed. Prepare its export again.');
    const rendererHash=exportRendererHash(),readAsset=createExportAssetReader({assets,image:async url=>{
+    if(url.pathname==='/api/magazine/photos/file'&&storyPhotos){
+     // A story's own photograph, by the exact name and hash the edition named.
+     const q=Object.fromEntries(url.searchParams),source=edition.media.sources.find(x=>x.previewKind==='story-photo'&&x.name===q.name&&x.sourceRef.hash===q.hash);
+     if(Object.keys(q).sort().join()!=='hash,name,storyId'||q.storyId!==input.storyId||!source)fail('Unknown working Article photograph.');
+     const photo=await inspected(()=>storyPhotos.file(q));return {body:photo.bytes,hash:photo.hash,contentType:photo.contentType};
+    }
     if(url.pathname!=='/api/review/magazine-media/file')fail('Unknown working Article photograph.');
     return inspected(()=>media.preview(Object.fromEntries(url.searchParams)));
    }}),body=await prepareMagazineHtml(edition,{origin:'http://localhost',readAsset});
