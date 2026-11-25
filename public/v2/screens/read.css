@@ -21,3 +21,8 @@
  .rd .rd-edit{display:none}
  .rd .rd-foot .rd-edit-foot{display:inline-flex}
 }
+/* A Magazine story's placed photographs, where its photo notes put them. */
+.rd .rd-photo{margin:28px 0}
+.rd .rd-photo img{display:block;width:100%;height:auto;border-radius:6px;background:var(--surface-panel)}
+.rd .rd-photo figcaption{margin-top:8px;font:400 var(--size-caption)/var(--lh-snug) var(--font-ui);color:var(--fg-muted)}
+.rd .rd-photo-missing{margin:20px 0;padding:10px 12px;border:1px dashed var(--edge-strong);border-radius:6px;font:400 var(--size-caption)/var(--lh-snug) var(--font-ui);color:var(--fg-muted)}

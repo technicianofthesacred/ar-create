@@ -39,9 +39,27 @@
   if(r.kind==='blockquote')return `<blockquote class="rd-q" data-row="${esc(r.id)}">${esc(r.words)}</blockquote>`;
   return `<p class="rd-p" data-row="${esc(r.id)}">${esc(r.words)}</p>`;
  }
+ /** A Magazine story's rows with its placed photographs between them: each photo note of the draft (%%photo: FILE ·
+     CAPTION%%, or a pair) where it sits, as a row of kind "photo". Rows keep their order; nothing else is added. */
+ function withPhotoRows(read,rows){
+  const byId=new Map((rows||[]).map(r=>[r.id,r])),out=[],used=new Set();
+  for(const b of read?.projection||[]){
+   const m=/^\s*%%\s*(photo|photos)\s*:\s*([^%]*)%%\s*$/i.exec(String(b.raw||''));
+   if(m)out.push({id:b.id,kind:'photo',words:'',photos:(m[1].toLowerCase()==='photos'?m[2].split(' | '):[m[2]]).map(n=>{const [file='',caption='']=n.split(' · ');return {file:file.trim(),caption:caption.trim()};})});
+   else if(byId.has(b.id)){out.push(byId.get(b.id));used.add(b.id);}
+  }
+  for(const r of rows||[])if(!used.has(r.id))out.push(r);
+  return out;
+ }
+ /** A photo row: each photograph from the story's Photos folder, by its exact name and hash, with its caption. */
+ function photoRowHTML(row,storyId,have){
+  return row.photos.map(p=>{const hash=have?.get(p.file);
+   return hash?`<figure class="rd-photo" data-row="${esc(row.id)}"><img src="${esc('/api/magazine/photos/file?'+new URLSearchParams({storyId,name:p.file,hash}))}" alt="${esc(p.caption)}" loading="lazy">${p.caption?`<figcaption>${esc(p.caption)}</figcaption>`:''}</figure>`
+    :`<p class="rd-photo-missing" data-row="${esc(row.id)}">A photo note names ${esc(p.file)}, which is not in this story’s Photos folder.</p>`;}).join('');
+ }
  /** Whether a change of this kind alters the saved words (a save, undo, restore, recover); a check, inspect or read does not. */
  const changesWords=kind=>/^study-draft[.-]/.test(String(kind||''))&&!/^study-draft[.-](check|inspect|read|catalog|history-preview|root-recovery\.get)/.test(String(kind));
- v2.shared.read=Object.freeze({wordCount,countLabel,unsavedIn,unsavedForBinding,draftSlot,storyUnsaved,rowHTML,changesWords});
+ v2.shared.read=Object.freeze({wordCount,countLabel,unsavedIn,unsavedForBinding,draftSlot,storyUnsaved,rowHTML,changesWords,withPhotoRows,photoRowHTML});
 
  v2.screen({id:'read',route:'read/:id',title:'Read',
   render:()=>'<div class="v2-page wr rd" data-rd><p class="wr-wait" role="status">Opening the reading.</p></div>',
@@ -51,7 +69,7 @@
 
  function open(page,ctx){
   const id=ctx.params.id;
-  const st={standing:null,forms:[],form:null,piece:null,bindingId:null,story:null,none:false,base:null,rows:[],unsaved:false};
+  const st={standing:null,forms:[],form:null,piece:null,bindingId:null,story:null,none:false,base:null,rows:[],unsaved:false,photos:null};
   let timer=null,gone=false,newerKnown=false;
   const $=sel=>page.querySelector(sel);
   const write=()=>v2.shared.write;
@@ -61,7 +79,9 @@
   // A Magazine story's words are the Magazine's own (magazine.working-draft.read); any other subject's are its draft's.
   const readDraft=()=>st.story?v2.call('magazine.working-draft.read',{storyId:st.story.storyId,pieceId:st.story.pieceId,edition:'working'}):v2.call('study-draft.read',scope());
   const sameRevision=(a,b)=>st.story?a?.document?.hash===b?.document?.hash:JSON.stringify(a?.expected)===JSON.stringify(b?.expected);
-  const rowsOf=read=>st.story?write().storyRows(read):write().rowsOf(read);
+  const rowsOf=read=>st.story?withPhotoRows(read,write().storyRows(read)):write().rowsOf(read);
+  // The story's photographs by name, with their exact hashes, so the placed ones can be shown. Unreadable: none shown.
+  const readPhotos=async()=>{if(!st.story)return;try{const l=await v2.call('magazine.photos',{storyId:st.story.storyId});st.photos=new Map((l?.photos||[]).map(x=>[x.name,x.hash]));}catch{st.photos=new Map();}};
   const watching=()=>st.story?st.story.storyId:st.bindingId;
 
   function plain(text,{advanced=true}={}){
@@ -91,7 +111,7 @@
     text.innerHTML=`<p class="rd-empty" role="status">This piece has no saved words yet.</p>`;
     $('[data-rd-foot]').innerHTML=`<a class="wr-btn rd-edit-foot" href="${esc(to('write'))}">Write the first words</a>`;
    }else{
-    text.innerHTML=st.rows.map(r=>st.story&&root.studyReadableMarkdown?`<div data-row="${esc(r.id)}">${root.V2Parts.storyProse(r)}</div>`:rowHTML(r)).join('');
+    text.innerHTML=st.rows.map(r=>r.kind==='photo'?photoRowHTML(r,st.story.storyId,st.photos):st.story&&root.studyReadableMarkdown?`<div data-row="${esc(r.id)}">${root.V2Parts.storyProse(r)}</div>`:rowHTML(r)).join('');
     $('[data-rd-foot]').innerHTML=`<a class="wr-btn rd-edit-foot" href="${esc(to('write'))}">Edit words</a><a class="wr-btn" href="${esc(to('check'))}">Check this piece</a>`;
    }
   }
@@ -111,6 +131,7 @@
    const stale=$('[data-rd-stale]');if(stale){stale.hidden=true;stale.textContent='';}
    newerKnown=false;
    if(!sameRevision(fresh,st.base)){st.base=fresh;st.rows=rowsOf(fresh);}
+   await readPhotos();if(gone||ctx.signal.aborted)return;
    paint();
   }
   /** Only a change to this piece's words (a draft change carries the draft's id as its scope) is worth reading again; a change
@@ -148,7 +169,7 @@
       if(ctx.signal.aborted)return;
       throw Object.assign(error,{message:(S?.storyWords(error))||error.message});
      }
-     if(ctx.signal.aborted)return;
+     await readPhotos();if(ctx.signal.aborted)return;
      st.base=read;st.rows=rowsOf(read);frame();paint();return;
     }
     if(!found.native||!st.bindingId){frame();$('[data-rd-text]').innerHTML=`<p class="rd-empty" role="status">The words of this piece are not kept where Read can open them. They open in Advanced.</p>`;$('[data-rd-foot]').innerHTML=`<a class="wr-btn" href="${esc(adv('read'))}">Open in Advanced${icon('out')}</a>`;return;}

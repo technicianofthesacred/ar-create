@@ -238,15 +238,15 @@
  const TOUCHES=Object.freeze([
   ['study-draft.check',['check']],['study-draft',['read','check']],['study-ai',['read']],['study.outputs',['read']],
   ['study.human-direction',['direction','board']],['concept',['direction']],['simmer',['board','direction']],['instagram',['planRecords']],
-  ['consent',['desk']],['magazine.photos',['magPhotos']],['magazine.undo',['magPhotos']],['words',['wordChecks']],['transcript-check',['wordChecks']],
+  ['consent',['desk']],['magazine.photos',['magPhotos']],['magazine.undo',['magPhotos','magDraft']],['magazine.write',['magDraft']],['magazine.edit',['magDraft']],['words',['wordChecks']],['transcript-check',['wordChecks']],
   ['sources',['tree','brief','recordings']],['recordings',['tree','brief','recordings']],['transcription',['recordings']],['research-topics',['topics']],['first-flow',['brief','tree']],['study.material',['brief','tree']],['study.research',['brief']],['study.photos',['tree']],['inquiries',['topics']],
  ]);
- const READS=Object.freeze(['tree','brief','planRecords','wordChecks','board','direction','read','check','desk','topics','recordings','magPhotos']);
+ const READS=Object.freeze(['tree','brief','planRecords','wordChecks','board','direction','read','check','desk','topics','recordings','magPhotos','magDraft']);
  function touched(kind){const k=String(kind||'');let best=null;for(const [start,keys] of TOUCHES)if(k.startsWith(start)&&(!best||start.length>best[0].length))best=[start,keys];return best?[...best[1]]:[];}
  /** The reads each step's tool needs, in the order they are asked. */
  const STEP_READS=Object.freeze({
   have:['tree','brief','planRecords','recordings','magPhotos'],transcript:['tree','planRecords','wordChecks'],facts:['brief','topics'],dish:['board','direction'],
-  words:['read'],check:['check'],story:['planRecords'],slides:['planRecords'],yes:['desk'],
+  words:['read'],photos:['magPhotos','magDraft'],check:['check'],story:['planRecords'],slides:['planRecords'],yes:['desk'],
  });
 
  /** Where one recording is, said plainly, from the job `recordings` holds for it. `registered`: the transcript is already a
@@ -320,7 +320,61 @@
   return adoptedWords(direction?.body);
  }
 
- const pure=Object.freeze({isMagazine,pieceFor,magazineHref,inMagazine,topicStatus,topicLine,topicNote,recordingView,registeredJobs,adoptedWords,adoptedRaw,sentenceOf,TWELVE,SECTION_LABEL,GROUPS,HANDOFFS,STEP_OUT,STATE_SAY,KINDS,READS,STEP_READS,ownHandoff,stepView,chooseForm,stepsOfForm,firstOpen,pillView,pieceOf,tellApart,outputStudio,findingsOf,factsView,transcriptAct,sourceRefusal,concerns,addable,materialFrom,carouselMaterial,partsOf,kindOf,touched,plural});
+ // ---------- a Magazine draft's photo notes (%%photo: FILE · CAPTION · words%%), placed and removed in its body ----------
+ /** The body of a DEV draft: after its frontmatter and metadata block (each closed by ---), up to its next rule. */
+ function draftBody(text){
+  const rules=[...String(text).matchAll(/^---[ \t]*$/gm)];
+  if(rules.length<2)throw new Error('This draft has no frontmatter, so photos cannot be placed in it here.');
+  const start=rules.length>=3?rules[2].index+rules[2][0].length:rules[1].index+rules[1][0].length;
+  return {start,end:rules.length>=4?rules[3].index:String(text).length};
+ }
+ /** Each block of the body (lines with words, between blank lines): its place, its words, and what kind it is. */
+ function draftBlocks(text){
+  const {start,end}=draftBody(text),body=String(text).slice(start,end),out=[];
+  for(const m of body.matchAll(/[^\n]*\S[^\n]*(?:\n[^\n]*\S[^\n]*)*/g)){
+   const raw=m[0],from=start+m.index,photo=/^\s*%%\s*(photo|photos)\s*:\s*([^%]*)%%\s*$/i.exec(raw);
+   const kind=photo?'photo':/^\s*%%/.test(raw)&&/%%\s*$/.test(raw)?'note':/^\s*#{1,6}\s/.test(raw)?'heading':/^\s*---\s*$/.test(raw)?'rule':'words';
+   const notes=photo?(photo[1].toLowerCase()==='photos'?photo[2].split(' | '):[photo[2]]).map(n=>{const [file='',caption='',...rest]=n.split(' · '),words=rest.join(' ').split(/\s+/).filter(Boolean);return {file:file.trim(),caption:caption.trim(),role:words.includes('cover')?'cover':words.includes('opener')?'opener':'wide'};}):[];
+   out.push({from,to:from+raw.length,raw,kind,notes,group:photo?.[1].toLowerCase()==='photos'});
+  }
+  return out;
+ }
+ /** The photographs a draft places, in reading order: each with its file, caption, role and the block it sits in. */
+ const placedPhotos=text=>draftBlocks(text).flatMap((b,block)=>b.notes.map((n,i)=>({...n,block,index:i,group:b.group})));
+ /** A caption kept to one plain line that cannot end or split its note. */
+ const captionOf=value=>String(value||'').replace(/[%\r\n]+/g,' ').replace(/\s*[·|]\s*/g,', ').replace(/\s+/g,' ').trim().slice(0,300);
+ /** The draft with one photo note added: as the cover, at the opening (before the first words), or after block `after`. */
+ function placePhoto(text,{file,caption='',where,after=-1}){
+  text=String(text);
+  if(typeof file!=='string'||!file||/[%·|\n]/.test(file))throw new Error('That photo’s name cannot go in a photo note.');
+  const blocks=draftBlocks(text),cap=captionOf(caption);
+  if(where==='cover'&&placedPhotos(text).some(p=>p.role==='cover'))throw new Error('This story already has a cover photograph. Take it out first.');
+  const note=`%%photo: ${file} · ${cap}${where==='cover'?' · cover':''}%%`;
+  if(where==='cover'||where==='opening'){
+   const first=where==='cover'?blocks[0]:blocks.find(b=>b.kind==='words'||b.kind==='heading');
+   if(!first){const {end}=draftBody(text);return text.slice(0,end).replace(/\s*$/,'')+'\n\n'+note+'\n'+(end<text.length?'\n'+text.slice(end):'');}
+   return text.slice(0,first.from)+note+'\n\n'+text.slice(first.from);
+  }
+  const b=blocks[after];if(!b||b.kind!=='words')throw new Error('Choose the paragraph the photo goes after.');
+  return text.slice(0,b.to)+'\n\n'+note+text.slice(b.to);
+ }
+ /** The draft without one photo: its note goes, with the blank line before it. In a pair, only that photo goes. */
+ function removePhoto(text,{block,index,file}){
+  text=String(text);
+  const blocks=draftBlocks(text),b=blocks[block];
+  if(!b||b.kind!=='photo'||b.notes[index]?.file!==file)throw new Error('That photo is no longer where it was. Nothing was changed.');
+  if(b.notes.length>1){
+   const m=/^(\s*%%\s*photos\s*:\s*)([^%]*)(%%\s*)$/i.exec(b.raw),parts=m[2].split(' | ');parts.splice(index,1);
+   const raw=parts.length===1?m[1].replace(/photos/i,'photo')+parts[0].replace(/\s*·\s*(?:stagger|narrow)\b/g,'')+m[3]:m[1]+parts.join(' | ')+m[3];
+   return text.slice(0,b.from)+raw+text.slice(b.to);
+  }
+  const prev=blocks[block-1],next=blocks[block+1];
+  if(prev&&text.slice(prev.to,b.from).trim()==='')return text.slice(0,prev.to)+text.slice(b.to);
+  if(next)return text.slice(0,b.from)+text.slice(next.from);
+  return text.slice(0,b.from)+text.slice(b.to).replace(/^\s*\n/,'');
+ }
+
+ const pure=Object.freeze({draftBlocks,placedPhotos,captionOf,placePhoto,removePhoto,isMagazine,pieceFor,magazineHref,inMagazine,topicStatus,topicLine,topicNote,recordingView,registeredJobs,adoptedWords,adoptedRaw,sentenceOf,TWELVE,SECTION_LABEL,GROUPS,HANDOFFS,STEP_OUT,STATE_SAY,KINDS,READS,STEP_READS,ownHandoff,stepView,chooseForm,stepsOfForm,firstOpen,pillView,pieceOf,tellApart,outputStudio,findingsOf,factsView,transcriptAct,sourceRefusal,concerns,addable,materialFrom,carouselMaterial,partsOf,kindOf,touched,plural});
  if(typeof module==='object'&&module.exports)module.exports=pure;
  const v2=root.v2;if(!v2||typeof v2.screen!=='function')return;
 
@@ -456,6 +510,8 @@
   desk:ids=>call('consent.desk',{parentStudyId:ids.id}),
   // A Magazine story's own photographs: the files in its Photos folder. Other subjects keep theirs in the Library.
   magPhotos:ids=>ids.story?call('magazine.photos',{storyId:ids.story}):null,
+  // Its working article, whose photo notes say where each photograph sits.
+  magDraft:ids=>ids.story?call('magazine.working-draft.read',{storyId:ids.story,pieceId:ids.piece,edition:'working'}):null,
  };
  /** Research topics tied to this subject (read only for its Facts step): only those that share a source with it. */
  async function topicsOf(ids,brief){
@@ -500,7 +556,7 @@
    try{root.history.replaceState(root.history.state,'',v2.href('subject/:id',{id},{form,step}));}catch{}
    try{root.sessionStorage.setItem(KEEP,JSON.stringify({form,step,y:Math.round(root.scrollY||0)}));}catch{}
   }
-  const ids=()=>({id,bindingId:st.standing?.facts?.bindingId||null,projectId:st.standing?.facts?.projectId||null,story:isMagazine(st.standing)?st.standing.origin.storyId:null});
+  const ids=()=>({id,bindingId:st.standing?.facts?.bindingId||null,projectId:st.standing?.facts?.projectId||null,story:isMagazine(st.standing)?st.standing.origin.storyId:null,piece:isMagazine(st.standing)?(current().form?.owner?.kind==='magazine'&&current().form.owner.pieceId||st.standing.origin.storyId+':article'):null});
 
   // ---- asking: one command for the standing, then only the reads the open step's tool needs ----
   async function refresh(){
@@ -1050,7 +1106,7 @@
   // ===== confirm a transcript and use it for Check: END =====
 
   function tool(s,form,steps){
-   if(s.state==='unknown'&&s.id!=='publish')return notKnown(s,form);
+   if(s.state==='unknown'&&s.id!=='publish'&&!(mag()&&s.id==='photos'))return notKnown(s,form);
    switch(s.id){
     case 'have':return toolHave(s,form);
     case 'transcript':return toolTranscript(s,form);
@@ -1058,7 +1114,7 @@
     case 'dish':return toolDish(s,steps,form);
     case 'form':return waitsFor(s,steps)+`<div class="subj-actions"><button type="button" class="pri" data-subj-add>Add a form</button></div>`+links(own(s,form));
     case 'words':return toolWords(s,form);
-    case 'photos':return waitsFor(s,steps)+borrowed('photos','media addPhotos')+(form?.kind==='article'&&/^out:/.test(form.key||'')?borrowed('arrange','arrange',form.id):'')+links(...(s.missing?[out('addPhotos',form)]:[]),out('media',form),out('arrange',form));
+    case 'photos':if(mag())return toolPhotosMagazine(s,form);return waitsFor(s,steps)+borrowed('photos','media addPhotos')+(form?.kind==='article'&&/^out:/.test(form.key||'')?borrowed('arrange','arrange',form.id):'')+links(...(s.missing?[out('addPhotos',form)]:[]),out('media',form),out('arrange',form));
     case 'check':return toolCheck(s,steps,form);
     case 'story':return toolStory(s,form);
     case 'slides':return form?.kind==='instagram'?toolSlides(s,form,steps):outputStudio(form)?toolOutputSlides(s,form):links(own(s,form));
@@ -1091,6 +1147,72 @@
    // Photos go into the story's own Photos folder in Files, as new files beside the ones there; nothing is replaced.
    const add=`<div class="subj-actions" data-subj-covers="addMaterial"><label class="${CB} subj-btn" data-subj-magadd>${icon('plus')}<span data-subj-maglabel>Add photographs</span><input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif" multiple hidden data-subj-magfiles></label><button type="button" class="${CB} subj-btn" data-subj-magnote>${ownIcon('note')}Add a note</button></div>`;
    return `<p class="subj-quiet">${m?(n||'Nothing yet')+'. ':'Not known. '}This story's material is kept in its Magazine folders.</p>`+(rec('magPhotos')===undefined?reading():'')+tray+add+links(out('addMaterial',form),out('readSources',form));
+  }
+  /** A Magazine story's Photographs: where each photo of its Photos folder sits in the working article (the draft's photo
+      notes), and the ones not placed yet. Placing or taking one out changes only that photo note; his change is saved at
+      once with Undo, and an assistant's waits in the Magazine for his yes. */
+  const PHOTO_ROLE={cover:'Cover',opener:'Opening a chapter',wide:'Between paragraphs'};
+  function toolPhotosMagazine(s,form){
+   if(rec('magPhotos')===undefined||rec('magDraft')===undefined)return reading();
+   const pics=ok(rec('magPhotos'))?rec('magPhotos').photos||[]:null,draft=ok(rec('magDraft'))?rec('magDraft'):null,story=ids().story;
+   const src=x=>'/api/magazine/photos/file?'+new URLSearchParams({storyId:story,name:x.name,hash:x.hash});
+   const have=new Map((pics||[]).map(x=>[x.name,x]));
+   let placed=[],why='';
+   try{placed=typeof draft?.document?.text==='string'?placedPhotos(draft.document.text):[];}catch(error){why=error.message;}
+   if(!draft)why='The working article could not be read just now, so where its photographs sit is not shown.';
+   const thumb=(x,alt)=>x?`<img src="${esc(src(x))}" alt="${esc(alt||x.name)}" loading="lazy">`:`<span class="subj-nophoto">Not in the Photos folder</span>`;
+   const rows=placed.map(p=>`<li>${thumb(have.get(p.file),p.caption)}<div><b>${esc(PHOTO_ROLE[p.role]||PHOTO_ROLE.wide)}</b><span>${esc(p.caption||'No caption')}</span><small>${esc(p.file)}</small></div><button type="button" class="${CB} subj-btn" data-subj-unplace="${p.block}:${p.index}" data-file="${esc(p.file)}">Take out</button></li>`).join('');
+   const used=new Set(placed.map(p=>p.file)),free=(pics||[]).filter(x=>!used.has(x.name));
+   const add=`<label class="${CB} subj-btn" data-subj-magadd>${icon('plus')}<span data-subj-maglabel>Add photographs</span><input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif" multiple hidden data-subj-magfiles></label>`;
+   return (why?`<p class="subj-quiet">${esc(why)}</p>`:'')
+    +(rows?`<p class="subj-label">In the article</p><ul class="subj-placed">${rows}</ul>`:draft&&!why?`<p class="subj-quiet">No photographs are placed in the article yet.</p>`:'')
+    +(free.length?`<p class="subj-label">Not placed yet</p><div class="subj-picks">${free.map(x=>`<button type="button" data-subj-place="${esc(x.name)}" title="Place ${esc(x.name)} in the article">${thumb(x)}<span>Place</span></button>`).join('')}</div>`
+     :pics&&!pics.length?`<p class="subj-quiet">This story's Photos folder is empty. Add photographs and they can be placed here.</p>`:'')
+    +`<div class="subj-actions" data-subj-covers="addPhotos">${add}</div>`;
+  }
+  /** The story's working article as saved now, read fresh with its file's exact hash, for a photo change. */
+  async function freshDraft(){
+   const story=ids().story,read=await v2.call('magazine.working-draft.read',{storyId:story,pieceId:ids().piece,edition:'working'});
+   const rel=read?.authority?.path;if(typeof rel!=='string'||typeof read?.document?.text!=='string')throw new Error('The working article could not be read. Nothing was changed.');
+   const file=await v2.call('magazine.read',{path:rel});
+   if(!file?.exists||file.text!==read.document.text)throw new Error('The working article changed while it was read. Nothing was changed.');
+   return {rel,text:file.text,hash:file.hash};
+  }
+  async function writeDraft(d,content,done){
+   const out=await v2.call('magazine.write',{path:d.rel,content,expectedHash:d.hash});
+   ask('magDraft',true);await refresh();
+   if(out?.written)v2.ui.undo(done,async()=>{await v2.call('magazine.undo',{undoOperationId:out.operationId});ask('magDraft',true);await refresh();v2.ui.say('Put back as it was.',{tone:'good'});});
+   else v2.ui.say('The change waits in the Magazine for Adrian’s yes. Nothing was changed yet.',{tone:'good'});
+  }
+  /** Where a photo goes and its caption, then the one photo note is added to the draft. */
+  function placeMagazinePhoto(name){
+   const draft=ok(rec('magDraft'))?rec('magDraft'):null,x=(rec('magPhotos')?.photos||[]).find(p=>p.name===name);if(!draft||!x)return;
+   let blocks=[];try{blocks=draftBlocks(draft.document.text);}catch(error){v2.ui.say(error.message,{tone:'bad'});return;}
+   const cover=placedPhotos(draft.document.text).some(p=>p.role==='cover'),seen=draft.document.text;
+   const short=w=>{const t=String(w).replace(/[*_=>#`]/g,'').replace(/\s+/g,' ').trim();return t.length>70?t.slice(0,68).replace(/\s\S*$/,'')+'…':t;};
+   const options=[cover?'':`<option value="cover">As the cover</option>`,`<option value="opening">At the opening, before the first words</option>`,...blocks.map((b,i)=>b.kind==='words'?`<option value="after:${i}">After “${esc(short(b.raw))}”</option>`:'')].join('');
+   const src='/api/magazine/photos/file?'+new URLSearchParams({storyId:ids().story,name:x.name,hash:x.hash});
+   const sheet=v2.ui.sheet({title:'Place a photograph',body:`<form class="subj-noteform subj-placeform" data-subj-placeform><img src="${esc(src)}" alt=""><label for="subj-where">Where it goes</label><select id="subj-where" data-subj-where>${options}</select><label for="subj-caption">Caption</label><input id="subj-caption" type="text" maxlength="300" autocomplete="off" data-subj-caption><div class="subj-actions"><button type="submit" class="${CP} subj-btn pri">Place it</button></div></form>`});
+   sheet.el.classList.add('subj-sheetdlg');sheet.body.querySelector('select')?.focus();
+   sheet.body.addEventListener('submit',async e=>{
+    e.preventDefault();const f=e.target.closest('[data-subj-placeform]'),button=f?.querySelector('button');if(!button||button.disabled)return;button.disabled=true;
+    try{
+     const d=await freshDraft();if(d.text!==seen)throw new Error('The article changed since this was opened. Close this and place the photo again.');
+     const pick=f.querySelector('[data-subj-where]').value,[where,after]=pick.startsWith('after:')?['after',Number(pick.slice(6))]:[pick,-1];
+     const content=placePhoto(d.text,{file:x.name,caption:f.querySelector('[data-subj-caption]').value,where,after});
+     sheet.close();await writeDraft(d,content,'The photograph is placed in the article.');
+    }catch(error){button.disabled=false;v2.ui.say(error?.message||'The photograph could not be placed. Nothing was changed.',{tone:'bad'});}
+   });
+  }
+  /** One photo note out of the draft; the photo stays in the Photos folder. */
+  async function unplaceMagazinePhoto(button){
+   const [block,index]=String(button.dataset.subjUnplace).split(':').map(Number),seen=rec('magDraft')?.document?.text;if(st.busy)return;
+   st.busy=true;button.disabled=true;
+   try{
+    const d=await freshDraft();if(d.text!==seen)throw new Error('The article changed since this page read it. Look again, then take the photo out.');
+    await writeDraft(d,removePhoto(d.text,{block,index,file:button.dataset.file}),'The photograph is taken out of the article. It is still in the Photos folder.');
+   }catch(error){if(button.isConnected)button.disabled=false;v2.ui.say(error?.message||'The photograph could not be taken out. Nothing was changed.',{tone:'bad'});}
+   finally{st.busy=false;}
   }
   /** A note in his words, added at the end of the story's context note with the date. His save is written at once (with
       Undo); an assistant's words wait in the Magazine as a proposal for his yes, as every other write of theirs does there. */
@@ -1314,7 +1436,7 @@
      act(['recordings','tree','brief'],async()=>{let kept;try{const check=await v2.call('transcript-check.id',{id:job});kept=await v2.call('recordings.source',{jobId:job,expected:check.expected});}catch(error){throw new Error(sourceRefusal(error));}await keepWithSubject(kept?.source?.id);v2.ui.say('The transcript is now one of your sources.',{tone:'good'});});return;}
     act(['recordings','tree'],async()=>{await v2.call('.transcription.id.action',{id:job,action});v2.ui.say(action==='start'?'The transcript is being made.':'Trying the transcript again.',{tone:'good'});});return;}
    if(e.target.closest('[data-subj-look]')){e.preventDefault();chooseLook();return;}
-   const md=e.target.closest('[data-subj-magdownload]');if(e.target.closest('[data-subj-magadd]')&&st.busy){e.preventDefault();return;}if(e.target.closest('[data-subj-magnote]')){e.preventDefault();addMagazineNote();return;}if(md){e.preventDefault();if(!md.disabled)magazineDownload(md);return;}
+   const md=e.target.closest('[data-subj-magdownload]');if(e.target.closest('[data-subj-magadd]')&&st.busy){e.preventDefault();return;}if(e.target.closest('[data-subj-magnote]')){e.preventDefault();addMagazineNote();return;}const pl=e.target.closest('[data-subj-place]');if(pl){e.preventDefault();placeMagazinePhoto(pl.dataset.subjPlace);return;}const up=e.target.closest('[data-subj-unplace]');if(up){e.preventDefault();if(!up.disabled)unplaceMagazinePhoto(up);return;}if(md){e.preventDefault();if(!md.disabled)magazineDownload(md);return;}
    if(e.target.closest('[data-subj-readclose]')){e.preventDefault();const s=st.reader?.sec;st.reader=null;paintNow();secOf(s)?.querySelector('h2')?.focus({preventScroll:true});return;}
    const bw=e.target.closest('[data-subj-borrow]');
    if(bw){e.preventDefault();if(bw.dataset.subjBorrow==='simmer')openSimmer(bw);return;}

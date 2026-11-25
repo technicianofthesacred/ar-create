@@ -371,3 +371,20 @@ dialog.subj-sheetdlg{width:min(560px,100%)}
 .subj-noteform{display:grid;gap:8px}
 .subj-noteform label{font:600 var(--size-caption)/var(--lh-snug) var(--font-ui);color:var(--fg-muted)}
 .subj-noteform textarea{width:100%;box-sizing:border-box;min-height:140px;padding:10px;border:1px solid var(--edge-strong);border-radius:7px;background:var(--surface-card);color:var(--fg-main);font:400 var(--size-ui)/var(--lh-snug) var(--font-ui);resize:vertical}
+/* A Magazine story's Photographs: the photos the article places, and the ones still to place. */
+.subj .subj-placed{list-style:none;margin:0 0 4px;padding:0;display:grid;width:100%}
+.subj .subj-placed li{display:grid;grid-template-columns:96px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 0}
+.subj .subj-placed li+li{border-top:1px solid var(--edge)}
+.subj .subj-placed img,.subj .subj-placed .subj-nophoto{display:block;width:96px;aspect-ratio:4/3;object-fit:cover;border-radius:6px;background:var(--surface-panel)}
+.subj .subj-placed .subj-nophoto{display:grid;place-items:center;padding:4px;box-sizing:border-box;text-align:center;font-size:var(--size-detail);color:var(--fg-muted)}
+.subj .subj-placed div{display:grid;gap:2px;min-width:0}
+.subj .subj-placed b{font:600 var(--size-ui)/var(--lh-snug) var(--font-ui);color:var(--fg-main)}
+.subj .subj-placed span{font-size:var(--size-ui);color:var(--fg-main);overflow-wrap:anywhere}
+.subj .subj-placed small{font-size:var(--size-detail);color:var(--fg-muted);overflow-wrap:anywhere}
+.subj .subj-picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:4px}
+.subj .subj-picks button{display:grid;gap:4px;padding:0;border:0;background:none;color:var(--fg-main);font:500 var(--size-caption)/var(--lh-snug) var(--font-ui);cursor:pointer;text-align:left}
+.subj .subj-picks img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;background:var(--surface-panel)}
+.subj .subj-picks button:hover img,.subj .subj-picks button:focus-visible img{outline:2px solid var(--fg-accent);outline-offset:2px}
+@media (max-width:560px){.subj .subj-placed li{grid-template-columns:72px minmax(0,1fr)}.subj .subj-placed img,.subj .subj-placed .subj-nophoto{width:72px}.subj .subj-placed li button{grid-column:1/-1;justify-self:start}}
+.subj-placeform img{display:block;width:100%;max-height:220px;object-fit:contain;border-radius:6px;background:var(--surface-panel)}
+.subj-placeform select,.subj-placeform input{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--edge-strong);border-radius:7px;background:var(--surface-card);color:var(--fg-main);font:400 var(--size-ui)/var(--lh-snug) var(--font-ui)}

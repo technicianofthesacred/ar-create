@@ -1182,3 +1182,23 @@ test('the source list has its small heading with a count, rows with the kind\'s 
  assert.match(css,/\.subj-cs-h h3\{font:600 var\(--(?:v2-t15|size-body)\)/);assert.match(css,/\.subj-cs-list b\{font:500 var\(--(?:v2-t14|size-ui)\)/);assert.match(css,/padding:7px 8px;border-radius:8px/);
  assert.equal(doc.querySelector('[data-cs=capture]').classList.contains('pri'),false,'the card\'s Next stays its one primary');
 });
+
+test('a Magazine draft\'s photo notes: placed as cover, at the opening or after a paragraph, and taken out exactly', () => {
+ const draft='---\ntype: DEV\n---\n\nMetadata line.\n\n---\n\nFirst invented paragraph.\n\n## A part\n\nSecond invented paragraph.\n\n---\n';
+ let t=S.placePhoto(draft,{file:'kiln.png',caption:'Dawn · at the kiln | invented %',where:'cover'});
+ assert.match(t,/\n\n%%photo: kiln\.png · Dawn, at the kiln, invented · cover%%\n\nFirst invented paragraph\./,'a caption cannot split or end its note');
+ assert.throws(()=>S.placePhoto(t,{file:'b.png',where:'cover'}),/already has a cover/);
+ t=S.placePhoto(t,{file:'b.png',caption:'B',where:'opening'});
+ const after=S.draftBlocks(t).findIndex(b=>b.raw==='Second invented paragraph.');
+ t=S.placePhoto(t,{file:'c (2).png',caption:'C',where:'after',after});
+ assert.throws(()=>S.placePhoto(t,{file:'d.png',where:'after',after:S.draftBlocks(t).findIndex(b=>b.kind==='heading')}),/paragraph/);
+ const placed=S.placedPhotos(t);
+ assert.deepEqual(placed.map(p=>[p.file,p.role,p.caption]),[['kiln.png','cover','Dawn, at the kiln, invented'],['b.png','wide','B'],['c (2).png','wide','C']]);
+ assert.ok(t.endsWith('Second invented paragraph.\n\n%%photo: c (2).png · C%%\n\n---\n'),'the rule after the body stays where it was');
+ let back=t;for(const p of [...placed].reverse())back=S.removePhoto(back,p);
+ assert.equal(back,draft,'taking each photo out gives back the draft exactly');
+ assert.throws(()=>S.removePhoto(t,{...placed[0],file:'other.png'}),/no longer where it was/);
+ const pair='---\na\n---\nm\n---\n\nX.\n\n%%photos: a.jpg · one | b.jpg · two · stagger%%\n\nY.\n';
+ assert.equal(S.removePhoto(pair,S.placedPhotos(pair)[0]),'---\na\n---\nm\n---\n\nX.\n\n%%photo: b.jpg · two%%\n\nY.\n','from a pair only that photo goes');
+ assert.throws(()=>S.draftBlocks('No frontmatter at all.'),/no frontmatter/);
+});

@@ -311,3 +311,16 @@ test('real server: an assistant opens Read and sees the same saved words',{timeo
  assert.ok(doc.querySelectorAll('.rd-text > *').length>0);
  assert.equal(doc.querySelector('.rd-foot a')?.getAttribute('href').startsWith('#/write/')||doc.querySelector('.rd-foot a')?.getAttribute('href').startsWith('#/check/'),true);
 });
+
+test('a Magazine story\'s placed photographs are shown where its photo notes put them, from its Photos folder',async()=>{
+ const {w}=await page(),{withPhotoRows,photoRowHTML}=w.v2.shared.read;
+ const read={projection:[{id:'a',raw:'First.'},{id:'p',raw:'%%photo: kiln.png · The kiln · cover%%'},{id:'b',raw:'Second.'},{id:'q',raw:'%%photos: gone.png · x | kiln.png · y%%'}]};
+ const rows=plain(withPhotoRows(read,[{id:'a',kind:'paragraph',words:'First.'},{id:'b',kind:'paragraph',words:'Second.'}]));
+ assert.deepEqual(rows.map(r=>r.id+':'+r.kind),['a:paragraph','p:photo','b:paragraph','q:photo']);
+ const box=w.document.createElement('div');box.innerHTML=photoRowHTML(rows[1],'mag-invented',new w.Map([['kiln.png','f'.repeat(64)]]));
+ assert.equal(box.querySelector('img').getAttribute('src'),'/api/magazine/photos/file?storyId=mag-invented&name=kiln.png&hash='+'f'.repeat(64));
+ assert.equal(box.querySelector('figcaption').textContent,'The kiln');
+ box.innerHTML=photoRowHTML(rows[3],'mag-invented',new w.Map([['kiln.png','f'.repeat(64)]]));
+ assert.match(box.querySelector('.rd-photo-missing').textContent,/gone\.png, which is not in this story/);
+ assert.equal(box.querySelectorAll('img').length,1);
+});
