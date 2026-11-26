@@ -74,6 +74,8 @@ node "$CLI" status
 
 `status` starts with `release`, the commit of the running app; then the command count, who is present, whether Adrian has unsaved words open, and recent changes. `project list` shows the projects; `history` shows who did what (continue with returned `nextCursor` as `before`); `list-commands` lists every command. JSON goes in with `--input -` and comes out on stdout. MCP: `node "$HOME/Library/Application Support/i64os/ar-create/service/agents/mcp/server.mjs" --url ... --actor ...`.
 
+**Working through a story:** start with `node "$CLI" guide story <story id>` (MCP: `ar_create_guide`). It lists the story's steps in the order the story page shows them, each with its state now, what Adrian gives, what you do, the commands to read and to call, and the decisions that are his alone. The same guide, for every agent, is [docs/AGENT-STEPS.md](docs/AGENT-STEPS.md).
+
 `tools/concept-cli.mjs` and `mcp/study` still exist as aliases for older callers. Do not start from them.
 
 ## Driving the app in a browser

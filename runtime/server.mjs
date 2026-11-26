@@ -2,6 +2,7 @@ import {sharedSimmerServices} from './services/simmer-board.mjs';
 import {sharedInstagramStudio} from './services/instagram-studio.mjs';
 import {sharedNeedsYou} from './services/needs-you.mjs';
 import {createSubjectStanding,handleStanding} from './services/subject-standing.mjs';
+import {handleAgentGuide} from './services/agent-guide-http.mjs';
 import {sharedSubjectPlaces} from './services/subject-places.mjs';
 import {createConversationCapture} from './services/conversation-capture.mjs';
 import {createCurrentWork} from './services/current-work.mjs';
@@ -495,6 +496,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       if(await (await import('./services/transcript-check-http.mjs')).handleTranscriptCheck(request,response,{dataDir,recordings,events,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/phone-pickup-http.mjs')).handlePhonePickup(request,response,{dataDir,events,recordings,library,origin:()=>server.listening?'http://127.0.0.1:'+server.address().port:null,checkWrite:()=>checkWrite(request,server)}))return;
       if(await handleStanding(request,response,subjectStanding))return;
+      if(await handleAgentGuide(request,response,subjectStanding))return;
       if(await (await import('./services/subject-places.mjs')).handleSubjectPlaces(request,response,{dataDir,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/research-topics-http.mjs')).handleResearchTopics(request,response,{dataDir,library,inquiries:inquiryInterface,drafts:studyDrafts,bindings:studyBindings,membership:projectMembership,researchAnswers,findings:studyDerivedFindings,consent:consentDesk,atlas:localAtlas,events,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/simmer-board.mjs')).handleSimmer(request,response,{dataDir,library,concepts:conceptWork,leases}))return;

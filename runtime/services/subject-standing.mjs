@@ -402,7 +402,16 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   if (place) {facts.folder = place.folder || []; facts.archived = !!place.archived;}
   if (askList) facts.asks = askList.filter(a => a.scope?.id === id).length;
   let project = null; try {project = magazine.projects.project(m.storyId);} catch {}
-  const recs = key => [].concat(project?.vaultRecords?.[key] || []).map(r => r.rel).filter(Boolean);
+  // A story's records as registered, and also the files of the standard names made since (an agent's RESEARCH, a new SRC):
+  // registration is a snapshot, so without this a file written through magazine.write would not show on the story's steps.
+  let vaultRoot = null; try {vaultRoot = magazine.status?.().vaultRoot || null;} catch {}
+  const LIVE = {raw: ['0-Inbox', 'RAW'], src: ['1-Source', 'SRC'], context: ['1-Source', 'CONTEXT'], research: ['3-Develop', 'RESEARCH']};
+  const live = key => {
+   if (!vaultRoot || !project?.name || !LIVE[key] || /[\\/]|^\.\.?$/.test(project.name)) return [];
+   const [dir, kind] = LIVE[key], base = kind + ' - ' + project.name;
+   try {return fs.readdirSync(path.join(vaultRoot, 'Workflow', dir)).filter(n => n.endsWith('.md') && (n === base + '.md' || n.startsWith(base + ' (')) && !n.includes('.sync-conflict-')).map(n => `Workflow/${dir}/${n}`);} catch {return [];}
+  };
+  const recs = key => [...new Set([...[].concat(project?.vaultRecords?.[key] || []).map(r => r.rel).filter(Boolean), ...live(key)])];
   // The working draft's file (registered, so the same piece the bridge edits), read once; the words are counted from it.
   let file = null;
   if (project && m.rel) file = await quiet(async () => {const f = magazine.read({path: m.rel}); return f.exists && typeof f.text === 'string' && !f.conflicts?.length ? f : null;}) || null;

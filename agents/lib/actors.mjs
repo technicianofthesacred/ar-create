@@ -20,7 +20,8 @@ export function actorHeaders(actor, client) {
 export function actorFromClientInfo(info) {
   const name = String(info?.name || '').toLowerCase();
   if (/codex/.test(name)) return 'agent:codex';
-  if (/claude[-_ ]?code/.test(name)) return 'agent:claude-code';
+  // Claude Code reports claude-code; the Claude desktop app reports claude-ai.
+  if (/claude[-_ ]?(code|ai)/.test(name)) return 'agent:claude-code';
   if (/hermes/.test(name)) return 'agent:hermes';
   if (/grok/.test(name)) return 'agent:grok';
   if (/chatgpt|openai/.test(name)) return 'agent:chatgpt';

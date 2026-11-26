@@ -13,9 +13,10 @@ CLI="$HOME/Library/Application Support/i64os/ar-create/service/agents/cli/ar-cre
 node "$CLI" status
 node "$CLI" list-commands
 node "$CLI" project list
+node "$CLI" guide story <story id>
 ```
 
-Read `release`, present editors and unsaved-work state before acting. The live registry gives command names, schemas, read-only flags and actor restrictions. A newer source document is not proof that its commands are installed. Use `node "$CLI" call NAME --input -` with JSON matching the returned schema; do not guess IDs, required fields or route names. For read-only discovery, prefer the CLI over taking over Adrian's live tab.
+Read `release`, present editors and unsaved-work state before acting. Then read the step guide for the story you are working on ([AGENT-STEPS](AGENT-STEPS.md), live as `guide story <id>` or `ar_create_guide`): it gives each step's state now, what Adrian gives, what you do and which commands, in order. The live registry gives command names, schemas, read-only flags and actor restrictions. A newer source document is not proof that its commands are installed. Use `node "$CLI" call NAME --input -` with JSON matching the returned schema; do not guess IDs, required fields or route names. For read-only discovery, prefer the CLI over taking over Adrian's live tab.
 
 ## 2. Identify the work before preparing it
 

@@ -151,7 +151,7 @@ test('agents/mcp/server.mjs over real STDIO: registry tools plus the six manuscr
  const client=new Client({name:'codex-mcp-client',version:'1.0.0'}),transport=new StdioClientTransport({command:process.execPath,args:[path.join(repo,'agents/mcp/server.mjs'),'--url',f.url],env,stderr:'pipe'});
  await client.connect(transport);t.after(()=>client.close());
  const names=(await client.listTools()).tools.map(tool=>tool.name).sort();
- assert.deepEqual(names,['ar_create_call','ar_create_capture_contribution','ar_create_current_work','ar_create_events','ar_create_list_commands','ar_create_validate_work','study_draft_context','study_draft_prepare','study_draft_propose','study_draft_read','study_draft_review','study_draft_status']);
+ assert.deepEqual(names,['ar_create_call','ar_create_capture_contribution','ar_create_current_work','ar_create_events','ar_create_guide','ar_create_list_commands','ar_create_validate_work','study_draft_context','study_draft_prepare','study_draft_propose','study_draft_read','study_draft_review','study_draft_status']);
  const listed=await client.callTool({name:'ar_create_list_commands',arguments:{section:'draft'}});assert.equal(listed.isError,undefined);assert.ok(listed.structuredContent.count>5);
  const pid='mcp-'+randomUUID().slice(0,8),made=await client.callTool({name:'ar_create_call',arguments:{name:'concepts.post',input:{parentStudyId:pid,title:'Made over MCP',operationId:randomUUID()}}});
  assert.equal(made.isError,undefined,JSON.stringify(made.content));

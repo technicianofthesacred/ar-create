@@ -7,7 +7,7 @@
   },
   "scripts": {
     "setup": "npm ci --prefix runtime && npm ci --prefix mcp/study",
-    "build": "npm run build:document-study --prefix runtime && node scripts/gen-capabilities.mjs",
+    "build": "npm run build:document-study --prefix runtime && node scripts/gen-capabilities.mjs && node scripts/gen-agent-steps.mjs",
     "setup:ui": "npm ci --prefix ui-kit",
     "build:ui": "npm run build --prefix ui-kit",
     "start": "node serve.mjs",
@@ -18,7 +18,7 @@
     "demo:plain": "node scripts/demo.mjs",
     "demo:instagram": "node scripts/demo-instagram.mjs",
     "demo:fill": "node scripts/demo-fill.mjs",
-    "capabilities": "node scripts/gen-capabilities.mjs",
+    "capabilities": "node scripts/gen-capabilities.mjs && node scripts/gen-agent-steps.mjs",
     "status": "node scripts/gen-status.mjs"
   }
 }

@@ -12,6 +12,7 @@ import {TRANSCRIPT_CHECK_COMMANDS, TRANSCRIPT_CHECK_HUMAN_ONLY, TRANSCRIPT_CHECK
 import {PHONE_PICKUP_COMMANDS, PHONE_PICKUP_HUMAN_ONLY, PHONE_PICKUP_BODY} from './commands/phone-pickup.mjs';
 import {SUBJECT_PLACES_COMMANDS, SUBJECT_PLACES_HUMAN_ONLY, SUBJECT_PLACES_UNDO, SUBJECT_PLACES_BODY} from './commands/subject-places.mjs';
 import {STANDING_COMMANDS} from './commands/standing.mjs';
+import {AGENT_GUIDE_COMMANDS} from './commands/agent-guide.mjs';
 import {RESEARCH_TOPICS_COMMANDS, RESEARCH_TOPICS_HUMAN_ONLY, RESEARCH_TOPICS_READ_ONLY, RESEARCH_TOPICS_UNDO, RESEARCH_TOPICS_BODY} from './commands/research-topics.mjs';
 
 /**
@@ -198,6 +199,7 @@ export const CUSTOM_COMMANDS = [
   ...PHONE_PICKUP_COMMANDS,
   ...SUBJECT_PLACES_COMMANDS,
   ...STANDING_COMMANDS,
+  ...AGENT_GUIDE_COMMANDS,
   ...RESEARCH_TOPICS_COMMANDS,
   ['GET', '/api/simmer/board', ['subject']], ['POST', '/api/simmer/board', ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board']],
   // Simmer from a chat: an agent carries Adrian's photos and exact words in, proposes onto the board, and records the dish he names.
