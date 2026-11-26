@@ -108,8 +108,25 @@ export function createMagazineProjects({dataDir}) {
     return readJson(path.join(dir, 'projects', row.storyId + '.json'));
   }
   function byFile(rel) { const i = index(); if (!i) return null; for (const row of i.stories) { const p = readJson(path.join(dir, 'projects', row.storyId + '.json')); for (const value of Object.values(p.vaultRecords)) for (const r of [].concat(value)) if (r.rel === rel) return p; } return null; }
+  /** A story registered before it had a draft gets one: when its standard draft file (DEV - <story> (story).md) is first
+   * written, by Adrian or by his accepting a proposal, that file becomes the story's Article piece, as registration would
+   * have made it. Only an Article piece with no file yet is filled; an established piece is never moved. */
+  function adoptDraft(rel, sha256) {
+    let c; try { c = classify(rel); } catch { return null; }
+    const i = index(); if (c.kind !== 'DEV' || !i || !/^[a-f0-9]{64}$/.test(sha256 || '')) return null;
+    for (const row of i.stories) {
+      const file = path.join(dir, 'projects', row.storyId + '.json'), p = readJson(file);
+      if (p.archived || rel !== `Workflow/3-Develop/DEV - ${p.name} (story).md`) continue;
+      const piece = (p.pieces || []).find(x => x.kind === 'article' && !x.rel); if (!piece) return null;
+      if ([].concat(p.vaultRecords.draft || []).some(r => r.rel === rel)) return null;
+      piece.rel = rel; p.vaultRecords.draft = [...[].concat(p.vaultRecords.draft || []), {rel, sha256}];
+      const tmp = file + '.' + process.pid + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(p, null, 1) + '\n', {mode: 0o600}); fs.renameSync(tmp, file);
+      return {storyId: p.storyId, pieceId: piece.pieceId, rel};
+    }
+    return null;
+  }
   return {
-    index, project, byFile,
+    index, project, byFile, adoptDraft,
     list() { const i = index(); return {schema: 'ar-create.magazine-projects.v1', registered: !!i, stories: i ? i.stories.map(s => ({...s, ...(() => { const p = readJson(path.join(dir, 'projects', s.storyId + '.json')); return {pieces: p.pieces, origin: p.origin, brandId: p.brandId}; })()})) : []}; },
     /** Vault-bound guard for study-draft-copies: a registered story's DEV is edited in place, never copied. */
     vaultBound(source) {

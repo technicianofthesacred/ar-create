@@ -424,7 +424,8 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   else if (file) facts.words = (() => {try {return countWords(m.storyId, file);} catch {return null;}})();
   else facts.words = null;
   // Suggestions waiting: open Magazine proposals on this draft, made on its current words (an older one is stale).
-  if (!m.rel) facts.suggestions = 0;
+  // A story with no draft yet: a proposed first draft at its standard name is the suggestion waiting on its words.
+  if (!m.rel) facts.suggestions = !propList ? 0 : propList.filter(p => p.scope?.id === m.storyId && p.baseHash === null && project && p.path === `Workflow/3-Develop/DEV - ${project.name} (story).md`).length;
   else if (!propList || !file?.hash) facts.suggestions = null;
   else facts.suggestions = propList.filter(p => p.scope?.id === m.storyId && p.path === m.rel && p.baseHash === file.hash).length;
   // Material: the story's written sources (recording transcripts, raw intake, his context) and its photograph folder. The

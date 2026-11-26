@@ -97,7 +97,7 @@ export async function run(args, { fetchImpl = fetch, stdin = async () => {
   const base = localUrl(endpoint);
   // Writes name their author; reads do not need one. --actor wins over AR_CREATE_ACTOR.
   const actor = options.actor ?? process.env.AR_CREATE_ACTOR;
-  if (actor !== undefined && !validActor(actor)) throw new Error('--actor must be one of human:adrian, agent:claude-code, agent:codex, agent:claude-design, agent:hermes, agent:grok, agent:chatgpt, cron:<name>, import:<source>, release:<sha>.');
+  if (actor !== undefined && !validActor(actor)) throw new Error('--actor must be one of human:adrian, agent:claude-code, agent:codex, agent:claude-design, agent:hermes, agent:grok, agent:chatgpt, agent:duet, cron:<name>, import:<source>, release:<sha>.');
   if (!options.input && !['list', 'status'].includes(options.command)) throw new Error('This command requires --input FILE or --input -.');
   const input = validateInput(options.command, options.input ? await jsonFile(options.input, stdin) : {});
   const paths = { list: '/api/concepts', create: '/api/concepts', read: '/api/concept', save: '/api/concept/save', 'library-search': '/api/concept/sources/search', 'library-read': '/api/concept/source', status: '/api/concept/capabilities' };

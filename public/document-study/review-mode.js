@@ -3,7 +3,7 @@
 (()=>{
  // Actor labels belong to this tab, never the shared recovery cache. Agent
  // sessions override older owners' human literals rather than impersonating them.
- const actors=['human:adrian','agent:claude-code','agent:codex','agent:claude-design','agent:hermes','agent:grok','agent:chatgpt'];
+ const actors=['human:adrian','agent:claude-code','agent:codex','agent:claude-design','agent:hermes','agent:grok','agent:chatgpt','agent:duet'];
  const actorValues=window.location?new URLSearchParams(window.location.search).getAll('reviewActor'):[];
  let requestedActor=actorValues.length>1?'invalid:duplicate':actorValues[0]??null;
  try{if(requestedActor===null)requestedActor=window.sessionStorage.getItem('ar-create-ui-actor');else window.sessionStorage.setItem('ar-create-ui-actor',requestedActor);}catch{}

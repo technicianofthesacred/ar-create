@@ -27,7 +27,7 @@
  // Scroll something into view inside the work column and mark its arrival.
  function reveal(node){if(!node)return;node.scrollIntoView?.({block:'center'});node.querySelector?.('summary,button,input,textarea,select')?.focus?.({preventScroll:true});}
  // Who wrote something, in plain words. The UI is always Adrian; another window or the command line still reads "You".
- const NAMES={'agent:claude-code':'Claude','agent:claude-design':'Claude Design','agent:codex':'Codex','agent:hermes':'Hermes','agent:grok':'Grok','agent:chatgpt':'ChatGPT'};
+ const NAMES={'agent:claude-code':'Claude','agent:claude-design':'Claude Design','agent:codex':'Codex','agent:hermes':'Hermes','agent:grok':'Grok','agent:chatgpt':'ChatGPT','agent:duet':'Duet'};
  function actorName(actor){actor=String(actor||'');if(actor.startsWith('human:'))return 'You';if(NAMES[actor])return NAMES[actor];if(actor.startsWith('cron:'))return 'Scheduled job '+actor.slice(5);if(actor.startsWith('import:'))return 'Import from '+actor.slice(7);if(actor.startsWith('release:'))return 'Release '+actor.slice(8,15);if(actor.startsWith('agent:'))return actor.slice(6);return 'Someone earlier';}
  const isAgent=actor=>String(actor||'').startsWith('agent:');
  // Live sync: one event stream for the whole app (GET /api/events). Each surface subscribes for the records it shows and

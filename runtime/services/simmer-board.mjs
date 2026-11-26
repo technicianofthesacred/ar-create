@@ -12,7 +12,7 @@ import {simmerOperations} from './simmer-operations.mjs';
 const SCHEMA='ar-create.simmer-board.v1',PREFIX='/api/simmer/',MAX_BODY=2*1024*1024,UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i,HASH=/^[a-f0-9]{64}$/,ID=/^[A-Za-z0-9._:-]{1,160}$/;
 export const KINDS=Object.freeze(['photo','passage','mine','note','concept','question','choice','feeling','guidance','check','consent','voice','thread','letter']);
 // Who may carry Adrian's words from a chat into the board: Adrian himself, or an agent he is talking to. Never a cron or import.
-export const CARRIERS=Object.freeze(['human:adrian','agent:claude-code','agent:codex','agent:claude-design','agent:hermes','agent:grok','agent:chatgpt']);
+export const CARRIERS=Object.freeze(['human:adrian','agent:claude-code','agent:codex','agent:claude-design','agent:hermes','agent:grok','agent:chatgpt','agent:duet']);
 // Adrian's own words: only a human writes these kinds, and only a human sets these fields on any block.
 const HUMAN_KINDS=new Set(['mine','note']),HUMAN_FIELDS=['answer','reading','people','pick','held'],SENTENCE=['about','really','dish','reader'];
 const fail=(message,status=400)=>{throw new StateError(message,status);};

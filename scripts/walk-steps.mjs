@@ -13,8 +13,8 @@ import {fileURLToPath} from 'node:url';
 import {createClient} from '../agents/lib/client.mjs';
 
 const op = () => randomUUID();
-/** A known limit, reported to Adrian rather than counted as the walk failing. */
-const NO_DRAFT = 'This story has no draft yet. An agent can propose the first one (magazine.write to Workflow/3-Develop/DEV - <story> (story).md), but the story page and the Write tab only know a draft that was there when the Magazine was registered, so it would not show here until the story is registered again.';
+/** A story with no draft yet: the first one is proposed at its standard name, and becomes the story's Article when he accepts it. */
+const firstDraft = name => `Workflow/3-Develop/DEV - ${name} (story).md`;
 
 /** One walker per Magazine step id: reads, then the agent's moves, then one of his decisions (expected 403). */
 const WALK = {
@@ -45,7 +45,13 @@ const WALK = {
  },
  async words(w) {
   const story = await w.read('magazine.story', {id: w.storyId});
-  if (!story.draft?.exists) return w.gap(NO_DRAFT);
+  if (!story.draft?.exists) {
+   const rel = firstDraft(w.name), now = await w.read('magazine.read', {path: rel});
+   const p = await w.do('magazine.write', {path: rel, content: '---\ntype: DEV\nstory: ' + w.name + '\ntitle: "' + w.name + '"\n---\n\nA first draft the agent suggests, from the sources.\n', expectedHash: now.exists ? now.hash : null, operationId: op()});
+   w.expect(p.proposed === true, 'the first draft is a suggestion for him');
+   w.proposals.push(p.proposalId); w.firstDraft = p.proposalId;
+   return w.note('The first draft waits for his yes; once he accepts it, it is this story\'s Article.');
+  }
   const draft = await w.read('magazine.working-draft.read', {storyId: w.storyId, pieceId: w.pieceId, edition: 'working'});
   await w.read('magazine.proposals', {story: w.storyId});
   await w.read('magazine.article-questions', {storyId: w.storyId, pieceId: w.pieceId});
@@ -61,7 +67,7 @@ const WALK = {
  async photos(w) {
   await w.read('magazine.library-photos', {});
   const story = await w.read('magazine.story', {id: w.storyId});
-  if (!story.draft?.exists) return w.gap(NO_DRAFT);
+  if (!story.draft?.exists) return w.note('This story has no draft yet, so no photograph was placed.');
   const draft = await w.read('magazine.working-draft.read', {storyId: w.storyId, pieceId: w.pieceId, edition: 'working'});
   const doc = draft.document;
   if (!doc?.exists) return w.note('This story has no draft yet, so no photograph was placed.');
@@ -107,13 +113,13 @@ export async function walk({url, actor = 'agent:claude-code', story = null, fetc
  const before = await guide(id);
  if (before.story.kind !== 'magazine') throw new Error('The walk follows a Magazine story; ' + id + ' is a ' + before.story.kind + '.');
  const name = (await call('magazine.story', {id: before.story.ids.storyId})).body?.name;
- const report = {schema: 'ar-create.walk.v1', actor, story: {id, title: before.story.title, name}, steps: [], ok: true};
+ const report = {schema: 'ar-create.walk.v1', actor, story: {id, title: before.story.title, name}, steps: [], proposals: [], ok: true};
  const steps = before.forms[0].steps;
  for (const s of steps) {
   const row = {id: s.id, name: s.name, before: {state: s.state, note: s.note}, youGive: s.youGive, agentDoes: s.agentDoes, called: [], refused: [], checks: [], notes: [], gaps: [], problems: []};
   const allowed = new Set([...(s.read || []), ...(s.do || [])]), his = new Set(s.yours || []);
   const w = {
-   id, actor, name, storyId: before.story.ids.storyId, pieceId: before.story.ids.pieceId, proposals: [],
+   id, actor, name, storyId: before.story.ids.storyId, pieceId: before.story.ids.pieceId, proposals: report.proposals,
    async read(command, input) {if (!allowed.has(command) && !WIDE.has(command)) row.problems.push(`${command} is not in the guide for this step`); const r = await call(command, input); row.called.push({command, status: r.status}); if (!r.ok) throw Object.assign(new Error(`${command} answered ${r.status}: ${r.body?.error || ''}`), {row}); return r.body;},
    async do(command, input) {return w.read(command, input);},
    async yours(command, input) {if (!his.has(command)) row.problems.push(`${command} is not listed as his for this step`); const r = await call(command, input); row.refused.push({command, status: r.status}); if (r.status !== 403) row.problems.push(`${command} answered ${r.status} to an agent; it should be refused (403)`);},

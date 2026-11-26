@@ -1,7 +1,7 @@
 /* Sourced paragraph review beside the existing Magazine writer. No manuscript authority here. */
 const HASH=/^[a-f0-9]{64}$/i;
 const PREFIX='/api/magazine/working-draft/ai';
-const actorName=value=>({'agent:codex':'Codex','agent:claude-code':'Claude','agent:claude-design':'Claude','agent:claude':'Claude','agent:hermes':'Hermes','agent:gemini':'Gemini','agent:grok':'Grok','agent:chatgpt':'ChatGPT','human:adrian':'Adrian'}[typeof value==='string'?value:value?.actor]||'Assistant');
+const actorName=value=>({'agent:codex':'Codex','agent:claude-code':'Claude','agent:claude-design':'Claude','agent:claude':'Claude','agent:hermes':'Hermes','agent:gemini':'Gemini','agent:grok':'Grok','agent:chatgpt':'ChatGPT','agent:duet':'Duet','human:adrian':'Adrian'}[typeof value==='string'?value:value?.actor]||'Assistant');
 const stable=value=>JSON.stringify(value);
 export function createSourcedWriting({window:win,fetch:request=win.fetch.bind(win),current=()=>win.current?.()}={}){
  const doc=win.document,rooms=new Map();let mounted=null,generation=0,disposed=false,timer=null;

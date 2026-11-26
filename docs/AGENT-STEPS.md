@@ -15,6 +15,7 @@ This is how any agent (Claude, Codex, Hermes, Grok, ChatGPT and the rest) works 
 | Hermes | `agent:hermes` |
 | Grok and Grokbot | `agent:grok` |
 | ChatGPT and dot | `agent:chatgpt` |
+| Claude Duet (Anthropic's always-on agent app). It works from the cloud, so it reaches the app only through a connector; through the Claude connector it arrives as agent:claude-code. See docs/research/DUET.md | `agent:duet` |
 
 An agent not listed here has no name in the app yet, and every write from it is refused. Ask Adrian to add it rather than borrowing another agent's name.
 
@@ -149,7 +150,7 @@ Workflow/2-Guidance/MAP - <story>.md (the direction and its dated decisions) sav
 2. Do: `magazine.write`, `magazine.ask.set`
 3. His alone (refused to agents with 403): `magazine.proposal.accept`, `magazine.proposal.reject`, `magazine.edit`, `magazine.working-draft.edit`, `magazine.ask.answer`
 
-Workflow/3-Develop/DEV - <story> (story).md: an agent's write becomes a proposal on the words. A question for him on this article goes in Workflow/ASK - <story>.md through magazine.ask.set.
+Workflow/3-Develop/DEV - <story> (story).md: an agent's write becomes a proposal on the words. A story with no draft yet: propose the first one at that name (expectedHash null); when he accepts it, it becomes the story's Article and the step counts its words. A question for him on this article goes in Workflow/ASK - <story>.md through magazine.ask.set.
 
 **AR Create subject**
 

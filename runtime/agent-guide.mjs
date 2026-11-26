@@ -23,6 +23,7 @@ export const AGENTS = Object.freeze([
  {who: 'Hermes', actor: 'agent:hermes'},
  {who: 'Grok and Grokbot', actor: 'agent:grok'},
  {who: 'ChatGPT and dot', actor: 'agent:chatgpt'},
+ {who: 'Claude Duet (Anthropic\'s always-on agent app). It works from the cloud, so it reaches the app only through a connector; through the Claude connector it arrives as agent:claude-code. See docs/research/DUET.md', actor: 'agent:duet'},
 ].map(Object.freeze));
 
 /** How to reach the app, from any agent. */
@@ -125,7 +126,7 @@ export const STEPS = Object.freeze([
    read: ['magazine.working-draft.read', 'magazine.proposals', 'magazine.article-questions'],
    do: ['magazine.write', 'magazine.ask.set'],
    yours: ['magazine.proposal.accept', 'magazine.proposal.reject', 'magazine.edit', 'magazine.working-draft.edit', 'magazine.ask.answer'],
-   files: 'Workflow/3-Develop/DEV - <story> (story).md: an agent\'s write becomes a proposal on the words. A question for him on this article goes in Workflow/ASK - <story>.md through magazine.ask.set.',
+   files: 'Workflow/3-Develop/DEV - <story> (story).md: an agent\'s write becomes a proposal on the words. A story with no draft yet: propose the first one at that name (expectedHash null); when he accepts it, it becomes the story\'s Article and the step counts its words. A question for him on this article goes in Workflow/ASK - <story>.md through magazine.ask.set.',
   },
   subject: {
    read: ['study-draft.read', 'study-ai.requests', 'study-ai.review'],

@@ -612,7 +612,7 @@
 
 `node agents/cli/ar-create.mjs --url http://127.0.0.1:PORT --actor ACTOR COMMAND [--input FILE|-]`. JSON in, one JSON line out. `AR_CREATE_URL` and `AR_CREATE_ACTOR` are the defaults for `--url` and `--actor`.
 
-Actors: `human:adrian`, `agent:claude-code`, `agent:codex`, `agent:claude-design`, `agent:hermes`, `agent:grok`, `agent:chatgpt`, `cron:<name>`, `import:<source>`, `release:<sha>`.
+Actors: `human:adrian`, `agent:claude-code`, `agent:codex`, `agent:claude-design`, `agent:hermes`, `agent:grok`, `agent:chatgpt`, `agent:duet`, `cron:<name>`, `import:<source>`, `release:<sha>`.
 
 Exit codes: 0 = ok; 1 = failed; 2 = usage; 3 = conflict (re-read; never force); 4 = locked: by another actor, or held for consent (read the consent desk; never force); 5 = forbidden (human-only).
 

@@ -87,3 +87,27 @@ test('an agent following the guide walks a Magazine story from Gather to Publish
  for (const id of ['facts', 'words', 'yes', 'publish']) assert.ok(row(id).refused.length && row(id).refused.every(r => r.status === 403), id);
  await assert.rejects(walk({url: 'http://127.0.0.1:8841', story: 'x'}), /never runs against the installed app/);
 });
+
+test('a story with no draft yet: an agent proposes the first one, it shows as waiting, and once Adrian accepts it is the story\'s Article', {timeout: 180000}, async t => {
+ const h = await home(t);
+ const before = (await h.get('/api/subject/standing?parentStudyId=mag-river-potter')).value.forms[0].steps.find(s => s.id === 'words');
+ assert.equal(before.note, 'Not started');
+ const report = await walk({url: h.url, actor: 'agent:duet', story: 'mag-river-potter'});
+ assert.ok(report.ok, JSON.stringify(report.steps.filter(s => s.problems.length).map(s => [s.id, s.problems])));
+ const words = report.steps.find(s => s.id === 'words');
+ assert.match(words.after.note, /1 suggestion waiting/);
+ const open = (await h.get('/api/magazine/proposals?story=mag-river-potter')).value.proposals.find(p => p.path === 'Workflow/3-Develop/DEV - River Potter (story).md');
+ assert.equal(open.actor, 'agent:duet'); assert.equal(open.baseHash, null);
+ const accept = await fetch(h.url + '/api/magazine/proposal/accept', {method: 'POST', headers: {'content-type': 'application/json', Origin: h.url}, body: JSON.stringify({proposalId: open.proposalId, operationId: crypto.randomUUID()})});
+ const accepted = await accept.json();
+ assert.equal(accept.status, 200, JSON.stringify(accepted));
+ assert.deepEqual(accepted.adopted, {storyId: 'mag-river-potter', pieceId: 'mag-river-potter:article', rel: 'Workflow/3-Develop/DEV - River Potter (story).md'});
+ const after = (await h.get('/api/subject/standing?parentStudyId=mag-river-potter')).value.forms[0].steps.find(s => s.id === 'words');
+ assert.equal(after.state, 'done'); assert.match(after.note, /words/);
+ const read = await h.get('/api/magazine/working-draft/read?storyId=mag-river-potter&pieceId=mag-river-potter:article&edition=working');
+ assert.equal(read.status, 200, JSON.stringify(read.value)); assert.match(read.value.document.text, /A first draft the agent suggests/);
+ // An established piece is never moved by a second file of the same name.
+ const projects = (await import('../runtime/services/magazine-vault/projects.mjs')).createMagazineProjects({dataDir: h.f.data});
+ assert.equal(projects.adoptDraft('Workflow/3-Develop/DEV - River Potter (story).md', 'a'.repeat(64)), null);
+ assert.equal(projects.adoptDraft('Workflow/3-Develop/DEV - Clay Teacher (story).md', 'a'.repeat(64)), null);
+});

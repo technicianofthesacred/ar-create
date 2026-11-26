@@ -6,9 +6,9 @@
 (function(root){
  'use strict';
  // The same names the existing page accepts (public/document-study/review-mode.js); an unknown name blocks every request.
- const ACTORS=Object.freeze(['human:adrian','agent:claude-code','agent:codex','agent:claude-design','agent:hermes','agent:grok','agent:chatgpt']);
+ const ACTORS=Object.freeze(['human:adrian','agent:claude-code','agent:codex','agent:claude-design','agent:hermes','agent:grok','agent:chatgpt','agent:duet']);
  const ACTOR_KEY='ar-create-ui-actor';
- const NAMES={'agent:claude-code':'Claude','agent:claude-design':'Claude Design','agent:codex':'Codex','agent:hermes':'Hermes','agent:grok':'Grok','agent:chatgpt':'ChatGPT'};
+ const NAMES={'agent:claude-code':'Claude','agent:claude-design':'Claude Design','agent:codex':'Codex','agent:hermes':'Hermes','agent:grok':'Grok','agent:chatgpt':'ChatGPT','agent:duet':'Duet'};
  function actorName(actor){actor=String(actor||'');if(actor.startsWith('human:'))return 'You';if(NAMES[actor])return NAMES[actor];if(actor.startsWith('cron:'))return 'A scheduled job';if(actor.startsWith('import:'))return 'An import';if(actor.startsWith('agent:'))return actor.slice(6);return 'Someone';}
  // Commands that take no operationId: the server rejects any key outside their small list.
  const NO_OPERATION_ID=new Set(['presence.post','study-ai.reject']);

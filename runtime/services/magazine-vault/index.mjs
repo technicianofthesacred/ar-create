@@ -270,7 +270,8 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
       if (needsYes) { const cur = tx.read('mag', c.rel); if ((cur.hash || null) !== base) throw new StateError(`${c.rel} changed since it was read. Read it again; nothing was proposed.`, 409); return propose({rel: c.rel, kind: c.kind, content: input.content, baseHash: base, reason: input.reason, operationId: input.operationId}); }
       const put = tx.put('mag', c.rel, base, bytes);
       if (c.kind === 'RAW') events?.emit({kind: 'recording.filed', scope: scopeFor(c.rel) || {kind: 'system', id: null}, actor: ctx().actor, client: ctx().client, revision: null, operationId: input.operationId, path: c.rel});
-      return {written: true, path: c.rel, kind: c.kind, class: c.class, hash: put.afterHash, beforeHash: put.beforeHash};
+      const adopted = base === null && c.kind === 'DEV' ? projects.adoptDraft(c.rel, put.afterHash) : null;
+      return {written: true, path: c.rel, kind: c.kind, class: c.class, hash: put.afterHash, beforeHash: put.beforeHash, ...(adopted ? {adopted} : {})};
     });
   }
 
@@ -477,7 +478,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     }
     if (p.status !== 'open') throw new StateError(`That proposal is ${p.status}.`, 409);
     try {
-      const result = await operation({command: 'magazine.proposal.accept', operationId: input.operationId, input: {proposalId: p.proposalId}, rel: p.path, doing: 'Adrian accepts proposed words'}, async tx => ({written: true, path: p.path, hash: tx.put('mag', p.path, p.baseHash, textBytes(p.content)).afterHash, proposalId: p.proposalId, proposedBy: p.actor}));
+      const result = await operation({command: 'magazine.proposal.accept', operationId: input.operationId, input: {proposalId: p.proposalId}, rel: p.path, doing: 'Adrian accepts proposed words'}, async tx => {const hash = tx.put('mag', p.path, p.baseHash, textBytes(p.content)).afterHash, adopted = p.baseHash === null && p.kind === 'DEV' ? projects.adoptDraft(p.path, hash) : null; return {written: true, path: p.path, hash, proposalId: p.proposalId, proposedBy: p.actor, ...(adopted ? {adopted} : {})};});
       atomicWrite(file, JSON.stringify({...p, status: 'accepted', decidedBy: ctx().actor, decidedAt: new Date(now()).toISOString(), appliedOperationId: input.operationId}, null, 1) + '\n');
       return result;
     } catch (error) {

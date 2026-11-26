@@ -17,7 +17,7 @@ import {originOf} from './conversation-origin.mjs';
 export const LEGACY_ACTOR='unknown(pre-provenance)';
 export const IN_PROCESS_ACTOR='unknown(in-process)';
 export const HUMAN_ACTORS=Object.freeze(['human:adrian']);
-export const AGENT_ACTORS=Object.freeze(['agent:claude-code','agent:codex','agent:claude-design','agent:hermes','agent:grok','agent:chatgpt']);
+export const AGENT_ACTORS=Object.freeze(['agent:claude-code','agent:codex','agent:claude-design','agent:hermes','agent:grok','agent:chatgpt','agent:duet']);
 export const CLIENTS=Object.freeze(['ui','cli','mcp','http','file','mag-page']);
 const SLUG=/^[a-z0-9][a-z0-9._-]{0,63}$/;
 const SHA=/^[a-f0-9]{7,40}$/;
@@ -84,7 +84,7 @@ export function resolveRequestActor(request,{appOrigins}){
  const header=request.headers['x-ar-actor'],clientHeader=request.headers['x-ar-client'];
  if(header!==undefined){
   const actor=parseActor(Array.isArray(header)?header.join(','):header);
-  if(!actor)throw new StateError('X-AR-Actor must be human:adrian, agent:claude-code|codex|claude-design|hermes|grok|chatgpt, cron:<name>, import:<source> or release:<sha>.',400);
+  if(!actor)throw new StateError('X-AR-Actor must be human:adrian, agent:claude-code|codex|claude-design|hermes|grok|chatgpt|duet, cron:<name>, import:<source> or release:<sha>.',400);
   let client='http';
   if(clientHeader!==undefined){client=parseClient(Array.isArray(clientHeader)?clientHeader.join(','):clientHeader);if(!client)throw new StateError('X-AR-Client must be ui, cli, mcp, http, file or mag-page.',400);}
   return {actor,client};
