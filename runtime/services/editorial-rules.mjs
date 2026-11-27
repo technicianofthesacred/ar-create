@@ -10,7 +10,10 @@ import {StateError} from '../store.mjs';
  */
 export const EDITORIAL_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../editorial');
 export const ARTICLE_RULES = Object.freeze(['mag/stages/source.md', 'arcreate/stages/research.md', 'arcreate/stages/brief.md', 'mag/stages/develop.md', 'mag/LESSONS.md', 'mag/TEMPLATE.md', 'mag/SYSTEM.md']);
-export const CAROUSEL_RULES = Object.freeze(['arcreate/stages/make.md', 'arcreate/brands/teajia.md', 'mag/LESSONS.md']);
+export const CAROUSEL_RULES = Object.freeze(['arcreate/stages/make.md', 'arcreate/stages/carousel-guide.md', 'arcreate/brands/teajia.md', 'mag/LESSONS.md']);
+// The carousel guide (Adrian, 2026-11-27) is written in this repo only. An older skill folder set as editorialSkillsDir
+// never had it, so it is always read from the repo's editorial/ files, whatever folder overrides the others.
+const REPO_ONLY = new Set(['arcreate/stages/carousel-guide.md']);
 // These two live in the magazine itself, as /mag's instructions say; they are never copied into the repo.
 const MAGAZINE_FILES = new Set(['mag/TEMPLATE.md', 'mag/SYSTEM.md']);
 const IN_REPO = [
@@ -34,7 +37,7 @@ export function ruleLocation(name, {skillRoot = overrideRoot(), editorialRoot = 
     if (!magazineRoot()) throw new StateError(`The magazine rules (${path.basename(name)}) are in the magazine folder: set magazine.vaultRoot.`, 503);
     return {root: magazineRoot(), rel: path.basename(name)};
   }
-  if (skillRoot) return {root: skillRoot, rel: name};
+  if (skillRoot && !REPO_ONLY.has(name)) return {root: skillRoot, rel: name};
   for (const [pattern, to] of IN_REPO) { const m = name.match(pattern); if (m) return {root: editorialRoot, rel: to(m)}; }
   throw new StateError(`No editorial rule file is named ${name}.`, 500);
 }

@@ -4,6 +4,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify, isDeepStrictEqual } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import { scrollTest } from '../../public/lib/carousel-scroll-test.js';
 const execute = promisify(execFile);
 const guards = fileURLToPath(new URL('./guards/', import.meta.url));
 const pins = {'mag-article-body.mjs':'b6a172f65eb4d9bb906d429eb5792f76e3f9fb6114bd9335c59edce9d7dbae7e','mag-check-quotes.mjs':'a8c018750fefa2b6b41f9e5069b221c532c4be8ecf524cd4dc3cd91272536487','mag-check-splits.mjs':'44879f21c3591a52b9d371107dda9cd67d886d6749805c344b3e7bbbf3044ef8'};
@@ -168,6 +169,9 @@ export function createStudyDraftChecks({dataDir,drafts,outputs}) {
     const before=await inspect(args);if(!same(args.expected,before.expected))throw fail('Carousel changed before checking. Reopen its current saved words.');
     for(const [name,pin]of Object.entries(pins))if(hash(await fs.readFile(path.join(guards,name)))!==pin)throw fail('Quote safeguard module differs from reviewed revision.',500);
     const record={schema:'ar-create.study-draft-check.v1',targetKind:'carousel',requestHash:hash(JSON.stringify(args)),outputId:args.outputId,bindingId:args.bindingId,parentStudyId:args.parentStudyId,checkId:args.operationId,operationId:args.operationId,createdAt:new Date().toISOString(),status:'running',proof:before.proof,scope:{...scope,providers:'not-run',language:'ASCII-quoted-words-only'},guardHashes:pins,issues:before.issues.map((i,n)=>({...i,id:'evidence-'+n,locator:{kind:'check-output',reason:'Inspect this exact slide in Media or Write.'}}))};
+    // The scroll test (the carousel guide, Adrian 2026-11-27) is advice from the saved words only: it never adds an
+    // issue, so it never changes this check's status or holds the carousel.
+    try{record.scroll=scrollTest({slides:before.output?.slides,caption:before.output?.caption});}catch(error){record.scroll={status:'failed',error:error.message};}
     await save(file,record);await save(path.join(bucket,'current.json'),record);
     try{
       const snap=path.join(bucket,args.operationId);await fs.mkdir(snap,{recursive:true});await fs.writeFile(path.join(snap,'draft.md'),before.raw,{flag:'wx'});

@@ -18,6 +18,8 @@ If what he asks for needs something the brief holds back (a line without a speak
 
 ## Shapes
 
+Every carousel, in every shape below, also follows [the carousel guide](carousel-guide.md) (Adrian, 2026-11-27): the cover, the swipe, the visuals, and the scroll test before it is handed over. Where this file and the guide differ, the guide is the newer word.
+
 Each brand's profile may tighten these; the profile wins.
 
 - **Magazine story** (Teajia): hand it to `/mag`, which runs from the map onward. The brief's research is already done for it.
@@ -28,7 +30,7 @@ Each brand's profile may tighten these; the profile wins.
      - **Slide 1 hooks.** It's a tension or a question the story answers, readable in one glance with no context. It's never a summary or a title card.
      - **Slides 2 and 3 put the reader in the room.** Use the strongest photo, with few words (eight or fewer on a photo-led slide).
      - **The middle is 3 or 4 beats, each one new:** a voice line, a fact from research, a turn. Every slide earns the next swipe.
-     - **Hold the payoff back.** Raise the question the article answers and stop short of answering it. The second-to-last slide opens a loop the article closes.
+     - **Keep the cover's promise early, keep the depth for the article** (Adrian, 2026-11-27, replacing "hold the payoff back"). Slide 2 starts delivering what the cover promised; the carousel gives its own takeaway and the article goes deeper. See [the carousel guide](carousel-guide.md), point 8.
      - **The close gives one reason to read**, plus the story's title and its own page on teajia.com (teajia.com/read until it is live).
      - **The order is article, then Instagram, then photos** (Adrian, 2026-10-05: "content doesn't need photo to land but IG does"). The words come from the article's key points: the draft once there is one, and the brief's line, teach points and threads before that. A carousel or story is cut from the article. Photos are matched to the slides afterwards, in stop 2, from the story's own folder.
      - **Record what it was cut from**, in frontmatter: `cut-from: brief` or `cut-from: draft YYYY-MM-DD`.
