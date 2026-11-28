@@ -87,7 +87,14 @@
   {
    "path": "stages/arcreate/make.md",
    "source": "~/.claude/skills/arcreate/stages/make.md",
-   "sha256": "f954fefce0892173dbd2d476b0795bffcc9991cd203d5735db61927ea472ac6d"
+   "sha256": "f954fefce0892173dbd2d476b0795bffcc9991cd203d5735db61927ea472ac6d",
+   "editedSha256": "78e66933613b185717035391a30ddb90ddcefc44dcaf6b9fd92893c462fe378a",
+   "editedBecause": "carousel guide adopted by Adrian on 2026-11-27: Shapes points to carousel-guide.md, and \"hold the payoff back\" became \"keep the cover's promise early\""
+  },
+  {
+   "path": "stages/arcreate/carousel-guide.md",
+   "source": "repo:Adrian 2026-11-27, from youtu.be/QSNU1_71nLo",
+   "sha256": "64f990c80b1c4579c0deb98b9ce270202abc5cff06e5d1e60d284dcc010098ad"
   },
   {
    "path": "stages/arcreate/research.md",

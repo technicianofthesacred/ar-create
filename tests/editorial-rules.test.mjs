@@ -52,6 +52,21 @@ test('editorialSkillsDir overrides: the older layout wins, and the magazine pair
   } finally { fs.rmSync(dir, {recursive: true, force: true}); }
 });
 
+test('the carousel guide is always the repo\'s own, even when an older skill folder overrides the rest', () => {
+  assert.ok(CAROUSEL_RULES.includes('arcreate/stages/carousel-guide.md'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ar-skills-'));
+  try {
+    withEnv({AR_CREATE_EDITORIAL_SKILL_ROOT: dir, AR_CREATE_MAGAZINE_ROOT: null}, () => {
+      assert.deepEqual(ruleLocation('arcreate/stages/carousel-guide.md'), {root: EDITORIAL_ROOT, rel: 'stages/arcreate/carousel-guide.md'});
+      assert.deepEqual(ruleLocation('arcreate/stages/carousel-guide.md', {skillRoot: dir}), {root: EDITORIAL_ROOT, rel: 'stages/arcreate/carousel-guide.md'});
+      assert.deepEqual(ruleLocation('arcreate/stages/make.md'), {root: dir, rel: 'arcreate/stages/make.md'}, 'the others still follow the override');
+    });
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+  const guide = fs.readFileSync(path.join(EDITORIAL_ROOT, 'stages/arcreate/carousel-guide.md'), 'utf8');
+  for (const part of ['## 1. The cover', '## 2. The swipe', '## 3. The visuals', '## The scroll test']) assert.ok(guide.includes(part), part);
+  assert.doesNotMatch(guide, /\u2014/, 'no em dashes in Adrian\'s guide');
+});
+
 test('the two makers read their rules through the resolver, not from ~/.claude/skills', () => {
   for (const file of ['article-make.mjs', 'carousel-make.mjs']) {
     const text = fs.readFileSync(path.join(repo, 'runtime/services', file), 'utf8');

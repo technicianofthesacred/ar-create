@@ -69,7 +69,7 @@ test('the studio draws the slides, the layouts and the panel from the plan, and 
  assert.equal(doc.querySelectorAll('.sl-thumb').length,3);
  assert.ok(doc.querySelector('.sl-big iframe').getAttribute('src').startsWith('/api/instagram/render?'));
  assert.ok(doc.querySelectorAll('.sl-tile').length>=2, 'layouts are offered');
- assert.equal([...doc.querySelectorAll('[data-sl="ptab"]')].map(b=>b.textContent).join(),'Layout,Photographs,Add,Words');
+ assert.equal([...doc.querySelectorAll('[data-sl="ptab"]')].map(b=>b.textContent).join(),'Layout,Photographs,Add,Words,Scroll test');
  doc.querySelector('[data-sl="ptab"][data-id="words"]').click();
  assert.ok(doc.querySelector('.sl-field').textContent==='Words one');
  assert.equal(doc.querySelectorAll('.sl-pbody textarea, .sl-pbody [contenteditable]').length,0,'words are read-only');

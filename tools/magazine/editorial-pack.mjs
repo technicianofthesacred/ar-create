@@ -26,7 +26,7 @@ export const PACK = [
 ];
 /** Brand profiles written outside the skills (i64os door notes, answered by Adrian on 3 Nov 2026). They are in the
  * manifest with their own source; --copy keeps their entries instead of copying them from the skills. */
-export const REPO_ONLY = ['brands/art.md', 'brands/mandala-codes.md', 'brands/personal.md'];
+export const REPO_ONLY = ['brands/art.md', 'brands/mandala-codes.md', 'brands/personal.md', 'stages/arcreate/carousel-guide.md'];
 /** The skill entry files are replaced, not copied (editorial/skills-next); their hashes are kept so the installer can refuse a drifted original. */
 export const ENTRIES = ['mag/SKILL.md', 'arcreate/SKILL.md'];
 

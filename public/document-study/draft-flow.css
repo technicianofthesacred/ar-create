@@ -60,3 +60,26 @@ html body.wbf-on #app #workspace #draft-recovery-task button{background:transpar
 }
 
 #draft-recovery-task .draft-action{margin:4px 8px 4px 0}
+/* The scroll test (the carousel guide): advice beside the slides, read from the saved words. */
+.draft-check-room .st{display:grid;gap:10px;margin:14px 0 6px;padding:12px 0 0;border-top:1px solid var(--edge);font:var(--size-detail)/var(--lh-snug) var(--font-ui);color:var(--fg-main)}
+.draft-check-room .st .st-head{display:grid;gap:2px}
+.draft-check-room .st .st-title{font:600 var(--size-ui)/var(--lh-solid) var(--font-ui);margin:0}
+.draft-check-room .st .st-note,.st .st-label{font-size:var(--size-caption);color:var(--fg-muted);margin:0}
+.draft-check-room .st .st-label b{color:var(--fg-main);font-weight:600}
+.draft-check-room .st .st-fix{margin:0;padding:8px 10px;border-radius:6px;background:var(--v2-sec,var(--surface-raised))}
+.draft-check-room .st ul,.st ol{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:5px}
+.draft-check-room .st .st-checks li{display:grid;grid-template-columns:16px 1fr;gap:6px}
+.draft-check-room .st .st-mark{font-weight:700;color:var(--fg-good)}
+.draft-check-room .st .st-checks li[data-pass="false"] .st-mark{color:var(--fg-warn)}
+.draft-check-room .st .st-slides li{display:grid;grid-template-columns:20px 46px 1fr;gap:6px;align-items:baseline;padding:2px 4px;border-radius:5px}
+.draft-check-room .st .st-slides li[aria-current="true"]{background:var(--v2-sec,var(--surface-raised))}
+.draft-check-room .st .st-n{color:var(--fg-muted);font-variant-numeric:tabular-nums}
+.draft-check-room .st .st-v{font-weight:600;color:var(--fg-good)}
+.draft-check-room .st .st-slides li[data-verdict="leave"] .st-v{color:var(--fg-warn)}
+.draft-check-room .st .st-why{overflow-wrap:anywhere}
+.draft-check-room .st .st-cut,.st .st-guide{margin:0}
+.draft-check-room .st .st-deck li{color:var(--fg-warn)}
+.draft-check-room .st .st-eye summary{cursor:pointer;color:var(--fg-soft);font-weight:600}
+.draft-check-room .st .st-eye ul{margin-top:6px}
+.draft-check-room .st .st-eye li::before{content:"· ";color:var(--fg-muted)}
+.draft-check-room .st .st-guide a{color:var(--fg-soft);text-decoration:underline;text-underline-offset:2px}

@@ -15,6 +15,13 @@
  const listing=l=>l.length<2?l.join(''):l.slice(0,-1).join(', ')+' and '+l[l.length-1];
  const sig=x=>{const s=JSON.stringify(x)||'';let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36);};
  const q=o=>new URLSearchParams(o).toString();
+ /* The scroll test (the carousel guide, Adrian 2026-11-27): the app's own /lib module, read once. It reads the saved
+    words only and changes nothing; if it cannot load, the slides show as before without it. */
+ let scrollModule=null;
+ const scrollLib=()=>scrollModule?Promise.resolve(scrollModule):import('/lib/carousel-scroll-test.js').then(m=>(scrollModule=m)).catch(()=>null);
+ const captionText=c=>typeof c==='string'?c:Array.isArray(c?.parts)?c.parts.map(p=>String(p?.text||'')).join(''):'';
+ const GUIDE='https://github.com/technicianofthesacred/ar-create/blob/main/editorial/stages/arcreate/carousel-guide.md';
+ const scrollHTML=(slides,caption,current)=>scrollModule?scrollModule.scrollTestMarkup(scrollModule.scrollTest({slides,caption:captionText(caption)}),{current,guide:GUIDE}):'';
 
  /* ---------- an older Outputs carousel, read only ---------- */
  /* His real Carousels are entries in an article's outputs (study.outputs), not Instagram plans. This opens one in the
@@ -77,7 +84,7 @@
   if(!out)return noWay('This Carousel was not found',['Nothing on '+(stand?.title||'this subject')+' has this address. It may have been removed, or the address may be wrong.']);
   if(out.kind!=='carousel')return noWay('This piece is not a Carousel',['It is an '+(out.kind==='article'?'Article':out.kind)+', so there are no slides to show. Open it from the subject\'s page.']);
   const title=()=>String(out.title||stand?.title||'Carousel');
-  await loadRenderer();if(gone)return;
+  await loadRenderer();await scrollLib();if(gone)return;
   const build=()=>{slides=Array.isArray(out.slides)?out.slides:[];docs=slides.map(s=>slideDoc(s,title()));if(sel>=slides.length)sel=Math.max(0,slides.length-1);};
   build();
   ctx.setTitle(title());ctx.setAdvanced({subject:subjectId,piece:pieceId,section:'arrange'});
@@ -104,6 +111,7 @@
     +(s.label?field('Small label',s.label):'')+(s.credit?field('Who said it',s.credit):'')
     +'<p class="sl-dim">'+esc(ROLE[s.role]||'Inner')+' slide · layout '+esc(tplName(s.template))+' · '+(ph?ph+' photograph'+(ph===1?'':'s'):'no photographs')+'</p>'
     +(out.caption?field('Caption',out.caption):'')
+    +scrollHTML(slides,out.caption,sel+1)
     +'<p class="sl-label">About this Carousel</p><p class="sl-dim">'+esc(ownerLine(owner))+(pl?' '+pl+' placement'+(pl===1?'':'s')+' of the Article\'s paragraphs.':'')+'</p>'
     +'<div class="sl-ro" role="note"><p><b>This is a read only view.</b> Changing this Carousel, its words, layouts and photographs, is done in Advanced. Use Open in Advanced at the top; it lands on this Carousel.</p><div class="sl-row"><a class="v2-out" href="'+esc(subjectHref())+'">Back to '+esc(stand?.title||'the subject')+'</a></div></div></div>';
   }
@@ -196,7 +204,7 @@
    async function loadAll(){
     plan=await v2.call('instagram.plan.get',{id:ctx.params.id});
     if(!plan.layouts?.[FORMAT])return;
-    await loadCatalogue();await loadLook(lookId());
+    await Promise.all([loadCatalogue(),scrollLib()]);await loadLook(lookId());
     if(sel>=frames().length)sel=0;
    }
 
@@ -475,8 +483,8 @@
      +'<p class="sl-dim">These are his words from the transcript, kept exactly, so they are changed in Write, not here. Saying a line again, and three other lines from the recording, are not built yet.</p>';
    }
    function panelHTML(){
-    const fr=frames()[sel],body=tab==='photos'?photosTab(fr):tab==='add'?addTab(fr):tab==='words'?wordsTab(fr):layoutTab(fr);
-    return sayHTML()+'<div class="sl-ptabs" role="group" aria-label="Change this slide">'+[['layout','Layout'],['photos','Photographs'],['add','Add'],['words','Words']].map(([k,n])=>'<button type="button" data-sl="ptab" data-id="'+k+'" aria-pressed="'+(tab===k)+'">'+n+'</button>').join('')+'</div><div class="sl-pbody">'+body+'</div>';
+    const fr=frames()[sel],body=tab==='scroll'?scrollHTML(frames().map(f=>({role:f.role,words:f.words,photos:f.photos})),plan.layouts[FORMAT].caption,sel+1)||'<p class="sl-dim">The scroll test could not be loaded. The slides are unchanged.</p>':tab==='photos'?photosTab(fr):tab==='add'?addTab(fr):tab==='words'?wordsTab(fr):layoutTab(fr);
+    return sayHTML()+'<div class="sl-ptabs" role="group" aria-label="Change this slide">'+[['layout','Layout'],['photos','Photographs'],['add','Add'],['words','Words'],['scroll','Scroll test']].map(([k,n])=>'<button type="button" data-sl="ptab" data-id="'+k+'" aria-pressed="'+(tab===k)+'">'+n+'</button>').join('')+'</div><div class="sl-pbody">'+body+'</div>';
    }
 
    /* a region repaints only when what it shows has changed, so slides do not flash while he works */
